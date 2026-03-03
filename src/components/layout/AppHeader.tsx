@@ -26,7 +26,6 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const isOnTrade = location.pathname === "/trade";
 
-  // Sync search with URL ?q= when on /trade
   const [search, setSearch] = useState(() => isOnTrade ? (searchParams.get("q") || "") : "");
 
   useEffect(() => {
@@ -40,7 +39,6 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     if (isOnTrade) {
-      // Update URL param on /trade
       if (value.trim()) {
         setSearchParams({ q: value }, { replace: true });
       } else {
@@ -59,15 +57,15 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
 
   return (
     <header
-      className="sticky top-0 z-30 flex items-center gap-3 px-4 bg-background/80 backdrop-blur-md border-b border-border"
-      style={{ height: "52px" }}
+      className="sticky top-0 z-30 flex items-center gap-2 px-3 bg-background/90 backdrop-blur-md border-b border-border"
+      style={{ height: "44px" }}
     >
       {/* Mobile hamburger */}
       <button
-        className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-all duration-200"
+        className="md:hidden flex items-center justify-center h-7 w-7 rounded-sm text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-all duration-200"
         onClick={onMobileMenuOpen}
       >
-        <Menu className="h-4 w-4" />
+        <Menu className="h-3.5 w-3.5" />
       </button>
 
       {/* Chain switcher */}
@@ -76,27 +74,27 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
       </div>
 
       {/* Search input */}
-      <div className="flex-1 max-w-md relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none text-muted-foreground" />
+      <div className="flex-1 max-w-sm relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search for token..."
+          placeholder="Search token..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          className="w-full h-8 pl-9 pr-3 text-[13px] rounded-xl outline-none text-foreground placeholder-muted-foreground bg-surface border border-border transition-all duration-200 focus:border-accent-purple/40 focus:ring-2 focus:ring-accent-purple/20 focus-ring-purple"
+          className="w-full h-7 pl-8 pr-3 text-[11px] rounded-sm outline-none text-foreground placeholder-muted-foreground bg-surface border border-border transition-all duration-200 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 font-mono"
         />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-1.5 ml-auto">
         {chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
 
         <a
           href="https://x.com/clawmode"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-surface-hover hover:rotate-[8deg]"
+          className="flex items-center justify-center h-7 w-7 rounded-sm transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-surface-hover"
         >
           <XLogo className="h-3.5 w-3.5" weight="fill" />
         </a>
@@ -106,19 +104,19 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
         ) : (
           <button
             onClick={goToPanel}
-            className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded-xl text-[12px] font-bold transition-all duration-200 hover:bg-surface-hover hover-lift flex-shrink-0 border border-success/40 text-success cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[11px] font-bold transition-all duration-200 hover:bg-surface-hover flex-shrink-0 border border-primary/40 text-primary cursor-pointer"
           >
-            <img src={clawLogo} alt="" className="h-4 w-4 rounded-sm" />
+            <img src={clawLogo} alt="" className="h-3.5 w-3.5 rounded-sm" />
             Panel
           </button>
         )}
 
         <Link
           to="/?create=1"
-          className="hidden sm:flex items-center gap-1.5 h-8 px-4 rounded-xl text-[12px] font-bold text-white btn-gradient-green flex-shrink-0"
+          className="hidden sm:flex items-center gap-1 h-7 px-3 rounded-sm text-[11px] font-bold btn-gradient-green flex-shrink-0"
         >
-          <Plus className="h-3.5 w-3.5" />
-          Create Token
+          <Plus className="h-3 w-3" />
+          Create
         </Link>
       </div>
     </header>

@@ -2,9 +2,9 @@
 
 .gate-theme {
   /* Core Brand Colors */
-  --gate-primary: 0 84% 60%;
-  --gate-primary-hover: 0 84% 50%;
-  --gate-primary-light: 0 84% 8%;
+  --gate-primary: 72 100% 50%;
+  --gate-primary-hover: 72 100% 42%;
+  --gate-primary-light: 72 100% 8%;
 
   /* Semantic Colors */
   --gate-success: 142 60% 40%;

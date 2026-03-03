@@ -17,7 +17,7 @@ export function LaunchpadLayout({ children, hideFooter, noPadding }: LaunchpadLa
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Sidebar mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
-      <div className="md:ml-[160px] flex flex-col min-h-screen relative z-10">
+      <div className="md:ml-[48px] flex flex-col min-h-screen relative z-10">
         <AppHeader onMobileMenuOpen={() => setMobileMenuOpen(true)} />
         <main className={`flex-1 overflow-x-hidden relative z-10 ${noPadding ? '' : 'p-4 pb-16'}`}>
           {children}
