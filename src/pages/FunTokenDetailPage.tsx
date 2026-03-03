@@ -294,8 +294,8 @@ function ExternalTokenView({ token, mintAddress, solPrice }: { token: import("@/
               </span>
             )}
           </div>
-          <button onClick={() => setMobileTab('trade')} className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95" style={{ background: 'linear-gradient(135deg, hsl(160 84% 39%), hsl(187 80% 45%))', color: 'white' }}>BUY</button>
-          <button onClick={() => setMobileTab('trade')} className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95" style={{ background: 'hsl(222 20% 16%)', color: 'hsl(0 72% 60%)', border: '1px solid hsl(0 72% 40% / 0.3)' }}>SELL</button>
+          <button onClick={() => setMobileTab('trade')} className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95 bg-primary text-primary-foreground">BUY</button>
+          <button onClick={() => setMobileTab('trade')} className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95 bg-secondary text-destructive border border-destructive/30">SELL</button>
         </div>
       </div>
     </LaunchpadLayout>
@@ -887,8 +887,7 @@ export default function FunTokenDetailPage() {
             </div>
             <button
               onClick={() => setMobileTab('trade')}
-              className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, hsl(160 84% 39%), hsl(187 80% 45%))', color: 'white' }}
+              className="font-mono text-xs font-bold px-5 py-2.5 rounded-lg min-h-[44px] transition-all active:scale-95 bg-primary text-primary-foreground"
             >
               BUY
             </button>

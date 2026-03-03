@@ -55,18 +55,13 @@ export default function RecentNfaAgents() {
             border: "1px solid rgba(51,65,85,0.4)",
           }}
         >
-          <Bot className="h-16 w-16 mx-auto mb-4" style={{ color: "hsl(187 80% 55% / 0.5)" }} />
-          <p className="text-base font-semibold text-[#E2E8F0] mb-1.5">No NFA agents minted yet</p>
-          <p className="text-sm text-[#94A3B8] leading-relaxed mb-4">
+          <Bot className="h-16 w-16 mx-auto mb-4 text-primary/50" />
+          <p className="text-base font-semibold text-foreground mb-1.5">No NFA agents minted yet</p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             Be the first to mint an autonomous agent
           </p>
           <span
-            className="inline-block text-xs font-medium px-4 py-2 rounded-full"
-            style={{
-              background: "hsl(187 80% 55% / 0.1)",
-              color: "hsl(187 80% 55%)",
-              border: "1px solid hsl(187 80% 55% / 0.2)",
-            }}
+            className="inline-block text-xs font-medium px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20"
           >
             Mint from the NFAs tab above ↑
           </span>

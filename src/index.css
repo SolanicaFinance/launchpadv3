@@ -713,12 +713,12 @@
 }
 
 .terminal-panel-flush {
-  background: hsl(222 30% 7% / 0.6);
-  border: 1px solid hsl(222 20% 14%);
+  background: hsl(var(--card) / 0.6);
+  border: 1px solid hsl(var(--border));
 }
 
 .terminal-stat-teal {
-  color: hsl(187 80% 55%);
+  color: hsl(var(--primary));
 }
 
 .terminal-stat-orange {
@@ -735,18 +735,18 @@
   font-family: 'IBM Plex Mono', monospace;
   letter-spacing: 0.04em;
   border-radius: 9999px;
-  background: hsl(187 80% 53% / 0.08);
-  color: hsl(187 80% 55%);
-  border: 1px solid hsl(187 80% 53% / 0.2);
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.2);
 }
 
 .terminal-divider {
-  border-color: hsl(222 20% 14%);
+  border-color: hsl(var(--border));
 }
 
-/* Teal glow for active metrics */
+/* Chartreuse glow for active metrics */
 .teal-glow {
-  text-shadow: 0 0 12px hsl(187 80% 53% / 0.4);
+  text-shadow: 0 0 12px hsl(var(--primary) / 0.4);
 }
 
 /* Orange CTA button */
@@ -913,8 +913,8 @@
   justify-content: space-between;
   padding: 8px 12px;
   border-bottom: 1px solid hsl(var(--border));
-  background: hsl(0 0% 7%);
-  color: hsl(0 0% 95%);
+  background: hsl(var(--background-secondary));
+  color: hsl(var(--foreground));
 }
 
 .pulse-count-badge {
@@ -951,8 +951,8 @@
   display: flex;
   flex-direction: column;
   padding: 16px 20px;
-  border-radius: 8px;
-  border: 1px solid hsl(0 0% 16%);
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
   transition: all 180ms ease;
   cursor: pointer;
@@ -962,9 +962,9 @@
 
 .pulse-card:hover {
   background: hsl(var(--surface-hover));
-  border-color: hsl(var(--success) / 0.6);
+  border-color: hsl(var(--primary) / 0.6);
   transform: translateY(-2px) scale(1.008);
-  box-shadow: 0 0 0 3px hsl(var(--success) / 0.12), 0 8px 24px -4px rgb(0 0 0 / 0.5), inset 0 1px 0 0 hsl(0 0% 100% / 0.04);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12), 0 8px 24px -4px rgb(0 0 0 / 0.5), inset 0 1px 0 0 hsl(0 0% 100% / 0.04);
 }
 
 /* ── Avatar ── */
@@ -976,9 +976,9 @@
 .pulse-avatar {
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid hsl(0 0% 20%);
+  border: 1px solid hsl(var(--border));
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
 }
 
@@ -1050,15 +1050,15 @@
   font-size: 11px;
   font-weight: 700;
   font-family: 'IBM Plex Mono', monospace;
-  background: linear-gradient(135deg, hsl(217 91% 53%), hsl(217 91% 60%));
-  color: hsl(0 0% 100%);
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85));
+  color: hsl(var(--primary-foreground));
   transition: all 150ms ease;
   flex-shrink: 0;
 }
 
 .pulse-sol-btn:hover {
-  background: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 67%));
-  box-shadow: 0 4px 12px hsl(217 91% 53% / 0.35);
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary)));
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.35);
 }
 
 /* ── Skeleton ── */

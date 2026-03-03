@@ -188,7 +188,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
       </div>
 
       {/* Row 2: Bottom bar */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-[hsl(0_0%_16%)]">
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
           {/* Progress % */}
           <div className="flex items-center gap-1">
