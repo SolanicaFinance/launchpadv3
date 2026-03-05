@@ -233,61 +233,27 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   }
 
   return (
-    <Card className={`gate-card p-4 ${className}`}>
+    <div className={`border border-border/40 rounded-lg overflow-hidden bg-[hsl(var(--card))] ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Wallet className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold">Embedded Wallet</h3>
-            <p className="text-xs text-muted-foreground">Powered by Privy</p>
-          </div>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
+        <div className="flex items-center gap-2">
+          <Wallet className="h-3.5 w-3.5 text-[#c8ff00]" />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-foreground/80">Wallet</span>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchBalance} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fetchBalance} disabled={isLoading}>
+          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
-      {/* Balance */}
-      <div className="text-center py-4 bg-secondary/30 rounded-lg mb-4">
-        <p className="text-xs text-muted-foreground mb-1">Balance</p>
-        <div className="flex items-baseline justify-center gap-2">
-          <span className="text-3xl font-bold">
-            {isLoading ? "..." : (balance?.toFixed(4) ?? "0.0000")}
-          </span>
-          <span className="text-lg text-muted-foreground">SOL</span>
-        </div>
-      </div>
-
-      {/* Address */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="flex-1 bg-background/50 rounded-lg px-3 py-2 font-mono text-sm text-muted-foreground truncate">
-          {truncateAddress(walletAddress)}
-        </div>
-        <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handleCopy}>
-          {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 shrink-0"
-          onClick={() => window.open(`https://solscan.io/account/${walletAddress}`, "_blank")}
-        >
-          <ExternalLink className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Deposit / QR Code */}
+      {/* 2x2 Action Grid */}
+      <div className="p-2.5 grid grid-cols-2 gap-1.5">
+        {/* Deposit */}
         <Dialog open={showQR} onOpenChange={handleQROpenChange}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full gap-2">
-              <ArrowDownToLine className="h-4 w-4" />
-              Deposit
-            </Button>
+            <button className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
+              <ArrowDownToLine className="h-4 w-4 text-[#c8ff00]" />
+              <span className="text-[9px] font-mono font-bold text-muted-foreground">DEPOSIT</span>
+            </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -299,7 +265,6 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
                 Scan this QR code or copy the address to send SOL
               </DialogDescription>
             </DialogHeader>
-            
             {depositSuccess ? (
               <div className="flex flex-col items-center gap-4 py-8">
                 <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
@@ -308,9 +273,7 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-primary mb-2">Deposit Received!</h3>
                   <p className="text-2xl font-bold">+{depositSuccess.amount.toFixed(4)} SOL</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Your wallet has been updated
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">Your wallet has been updated</p>
                 </div>
               </div>
             ) : (
@@ -340,15 +303,12 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
         </Dialog>
 
         {/* Export Key */}
-        <Dialog open={showExport} onOpenChange={(open) => {
-          setShowExport(open);
-          if (!open) setConfirmText("");
-        }}>
+        <Dialog open={showExport} onOpenChange={(open) => { setShowExport(open); if (!open) setConfirmText(""); }}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full gap-2">
-              <Key className="h-4 w-4" />
-              Export Key
-            </Button>
+            <button className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
+              <Key className="h-4 w-4 text-[#c8ff00]" />
+              <span className="text-[9px] font-mono font-bold text-muted-foreground">EXPORT KEY</span>
+            </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -356,9 +316,7 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
                 <Shield className="h-5 w-5" />
                 Export Private Key
               </DialogTitle>
-              <DialogDescription>
-                Export your private key to use in other wallets
-              </DialogDescription>
+              <DialogDescription>Export your private key to use in other wallets</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
@@ -367,31 +325,13 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
                   <strong>WARNING:</strong> Never share your private key. Anyone with it has full control over your funds.
                 </AlertDescription>
               </Alert>
-
               <div className="space-y-2">
                 <Label className="text-sm">Type "EXPORT" to confirm</Label>
-                <Input
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                  placeholder="Type EXPORT"
-                  className="font-mono"
-                />
+                <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="Type EXPORT" className="font-mono" />
               </div>
-
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={handleExport}
-                disabled={isExporting || confirmText !== "EXPORT"}
-              >
-                {isExporting ? "Exporting..." : (
-                  <>
-                    <Key className="h-4 w-4 mr-2" />
-                    Export Private Key
-                  </>
-                )}
+              <Button variant="destructive" className="w-full" onClick={handleExport} disabled={isExporting || confirmText !== "EXPORT"}>
+                {isExporting ? "Exporting..." : (<><Key className="h-4 w-4 mr-2" />Export Private Key</>)}
               </Button>
-
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>• Keys are encrypted and only accessible by you</p>
                 <p>• Store exported keys in a secure location</p>
@@ -400,7 +340,19 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Copy Address */}
+        <button onClick={handleCopy} className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
+          {copied ? <Check className="h-4 w-4 text-[#c8ff00]" /> : <Copy className="h-4 w-4 text-[#c8ff00]" />}
+          <span className="text-[9px] font-mono font-bold text-muted-foreground">{copied ? 'COPIED' : 'COPY ADDR'}</span>
+        </button>
+
+        {/* Solscan */}
+        <button onClick={() => window.open(`https://solscan.io/account/${walletAddress}`, "_blank")} className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
+          <ExternalLink className="h-4 w-4 text-[#c8ff00]" />
+          <span className="text-[9px] font-mono font-bold text-muted-foreground">SOLSCAN</span>
+        </button>
       </div>
-    </Card>
+    </div>
   );
 }

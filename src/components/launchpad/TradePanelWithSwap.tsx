@@ -206,16 +206,16 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
 
       <div className="p-4 space-y-3">
         {/* Insta Buy Toggle */}
-        {isBuy && (
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={instaBuy}
-              onCheckedChange={setInstaBuy}
-              className="data-[state=checked]:bg-[#c8ff00] h-5 w-9"
-            />
-            <span className="text-xs font-mono font-bold text-[#c8ff00] tracking-wider">INSTA BUY</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={instaBuy}
+            onCheckedChange={setInstaBuy}
+            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-[#c8ff00]' : 'data-[state=checked]:bg-[#ff6666]'}`}
+          />
+          <span className={`text-xs font-mono font-bold tracking-wider ${isBuy ? 'text-[#c8ff00]' : 'text-[#ff6666]'}`}>
+            {isBuy ? 'INSTA BUY' : 'INSTA SELL'}
+          </span>
+        </div>
 
         {/* Quick Amount Presets */}
         <div className="flex gap-1.5">
@@ -239,8 +239,8 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
                   onClick={() => handleQuickAmount(v, i)}
                   className={`flex-1 text-[11px] font-mono font-bold py-2 rounded-md border transition-all ${
                     selectedPreset === i
-                      ? 'border-destructive bg-destructive/20 text-destructive'
-                      : 'border-destructive/30 text-destructive/70 hover:border-destructive/60 hover:bg-destructive/10 bg-transparent'
+                      ? 'border-[#5a2a2a] bg-[#4a1a1a] text-[#ff6666]'
+                      : 'border-[#3a1a1a] text-[#8a5a5a] hover:border-[#5a2a2a] hover:bg-[#2a0a0a]/50 bg-transparent'
                   }`}
                 >
                   {v}%
@@ -252,7 +252,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              {isBuy ? 'Amount to buy in SOL' : 'Amount to sell'}
+              {isBuy ? 'Amount to buy in SOL' : `Amount of ${token.ticker} to sell`}
             </span>
             <span className="text-[10px] font-mono text-muted-foreground">
               Bal: {isBuy
