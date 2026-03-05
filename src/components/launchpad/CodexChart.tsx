@@ -13,12 +13,11 @@ import { useCodexChart, type CodexBar } from "@/hooks/useCodexChart";
 import { CodexChartToolbar } from "./CodexChartToolbar";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Spacing constants (5x thinner than previous 4/8 defaults)
-const NORMAL_BAR_SPACING = 2;
-const NORMAL_MIN_BAR_SPACING = 0.5;
-const SPARSE_BAR_SPACING = 4;
-const SPARSE_MIN_BAR_SPACING = 1;
-const RIGHT_PADDING_BARS = 3;
+// Force thin candles: large visible window + low spacing
+const BAR_SPACING = 0.8;
+const MIN_BAR_SPACING = 0.2;
+const TARGET_VISIBLE_BARS = 260;
+const RIGHT_PADDING_BARS = 4;
 
 interface CodexChartProps {
   tokenAddress: string;
@@ -117,8 +116,8 @@ export function CodexChart({
         secondsVisible: resolution.includes("S"),
         borderColor: "#222",
         rightOffset: 4,
-        barSpacing: NORMAL_BAR_SPACING,
-        minBarSpacing: NORMAL_MIN_BAR_SPACING,
+        barSpacing: BAR_SPACING,
+        minBarSpacing: MIN_BAR_SPACING,
         fixLeftEdge: false,
         fixRightEdge: false,
       },
@@ -242,25 +241,15 @@ export function CodexChart({
       });
     }
 
-    // Position: anchor latest candles to the RIGHT side
-    const isSparseData = bars.length < 25;
-    if (isSparseData) {
-      chart.timeScale().applyOptions({ barSpacing: SPARSE_BAR_SPACING, minBarSpacing: SPARSE_MIN_BAR_SPACING });
-      const visibleBars = Math.max(bars.length, 14);
-      chart.timeScale().setVisibleLogicalRange({
-        from: Math.max(0, bars.length - visibleBars),
-        to: bars.length + RIGHT_PADDING_BARS,
-      });
-    } else if (!initialScrollDone.current) {
+    // Position: strict right-anchored viewport, thin candles always
+    if (!initialScrollDone.current) {
       initialScrollDone.current = true;
-      chart.timeScale().applyOptions({ barSpacing: NORMAL_BAR_SPACING, minBarSpacing: NORMAL_MIN_BAR_SPACING });
-      const visibleBars = Math.min(bars.length, 160);
+      chart.timeScale().applyOptions({ barSpacing: BAR_SPACING, minBarSpacing: MIN_BAR_SPACING });
       chart.timeScale().setVisibleLogicalRange({
-        from: bars.length - visibleBars,
+        from: bars.length - TARGET_VISIBLE_BARS,
         to: bars.length + RIGHT_PADDING_BARS,
       });
     } else {
-      // On refresh, keep user's pan position but ensure new bars are reachable
       chart.timeScale().scrollToRealTime();
     }
   }, [bars, showVolume]);
