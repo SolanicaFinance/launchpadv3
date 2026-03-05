@@ -1,45 +1,51 @@
 
-I hear you. The chart is fat/centered because the current viewport logic is forcing too few visible bars (`max(..., 14)` + clamping `from` to `0`), which makes each candle wide and visually centered.
 
-Plan (single file): `src/components/launchpad/CodexChart.tsx`
+## Professional Responsive Terminal Grid Redesign
 
-1) Replace sparse/dense split with one strict right-anchored viewport
-- Remove the current `isSparseData` branch and the `Math.max(0, ...)` clamp.
-- Use one fixed logical window so candles stay thin even with very few bars:
-  - `TARGET_VISIBLE_BARS = 260` (or similar high value)
-  - `RIGHT_PADDING_BARS = 4`
-  - `from = bars.length - TARGET_VISIBLE_BARS` (allow negative)
-  - `to = bars.length + RIGHT_PADDING_BARS`
-- This guarantees candles render near the right edge and do not sit in the middle.
+The current layout has two issues:
+1. **Mobile/tablet**: Simple tab switcher with basic styling -- not adaptive or professional
+2. **Desktop columns**: Functional but lack polish (no height management, basic headers, no visual hierarchy)
 
-2) Force thin candles by restoring low spacing values
-- Set spacing back to truly thin values:
-  - `NORMAL_BAR_SPACING = 0.8`
-  - `NORMAL_MIN_BAR_SPACING = 0.2`
-- Apply these consistently in chart creation and initial range setup (no separate “sparse fat” spacing).
+### Plan
 
-3) Stop re-centering on each refresh
-- Add a dedicated `initialViewportSet` ref.
-- First load/resolution change: set the fixed right-anchored logical range once.
-- Subsequent 5s updates: do not reapply range; only call realtime follow when user is already near right edge (so manual pan is preserved).
+**1. Responsive breakpoints (AxiomTerminalGrid.tsx)**
+- **Mobile (<640px)**: Swipeable single-column with premium tab bar (sticky, with active indicator animation)
+- **Tablet (640px-1279px)**: Two-column split -- "New Pairs" on left, togglable "Final Stretch / Migrated" on right via segmented control
+- **Desktop (1280px+)**: Three equal columns (keep current `xl:grid grid-cols-3`)
 
-4) Snapshot-driven verification loop (as requested)
-- Capture baseline screenshot on `/trade/9LTqPQigw8QZnvssqJcp6jHsSN75L2R2BjrcpQH2pNCH`.
-- Apply the above changes.
-- Capture post-change screenshot at same route/resolution.
-- If candles are still not thin/right-anchored, increment `TARGET_VISIBLE_BARS` (e.g., 260 → 320) and re-snapshot until:
-  - candle bodies are visually thin (line-like),
-  - latest candles are pinned to the right side with small right padding.
+**2. Upgraded column headers (AxiomTerminalGrid.tsx)**
+- Replace basic `PulseColumnHeader` with a premium version:
+  - Column icon with subtle gradient background pill
+  - Live count badge with pulse animation dot
+  - Remove P1/P2/P3 placeholder buttons (unused)
+  - Add subtle bottom highlight line matching column theme color (green for New, orange for Final Stretch, blue for Migrated)
 
-Technical detail:
-````text
-Current problem:
-- Sparse logic: visibleBars = max(bars.length, 14)
-- Range: from = max(0, bars.length - visibleBars), to = bars.length + 3
-=> Too few bars visible + clamp to zero => wide candles + centered look
+**3. Professional mobile tab bar (AxiomTerminalGrid.tsx)**
+- Sticky top position
+- Animated sliding underline indicator (not just border-b color swap)
+- Each tab gets a themed dot color indicator
+- Count badge redesigned as a small rounded pill with mono font
 
-Target behavior:
-- Fixed large window regardless of bars count
-- Range: from = bars.length - 260, to = bars.length + 4
-=> Thin candles + strict right anchoring, even with 3–10 candles
-````
+**4. Tablet two-column layout (AxiomTerminalGrid.tsx)**
+- New breakpoint class: `hidden sm:grid sm:grid-cols-2 xl:hidden`
+- Left column always shows "New Pairs"
+- Right column has an inline segmented toggle between "Final Stretch" and "Migrated"
+
+**5. Column scroll improvements (index.css)**
+- Add `scroll-behavior: smooth`
+- Add fade-out gradient at bottom of each column to indicate scrollability
+- Improve scrollbar styling with rounded thumb
+
+**6. Card spacing and density (index.css)**
+- Reduce card gap from `gap-3` to `gap-2` on mobile for density
+- Keep `gap-3` on tablet/desktop
+- Add a subtle left border accent to cards based on column (green/orange/blue)
+
+**7. Empty state upgrade (AxiomTerminalGrid.tsx)**
+- Replace emoji with a styled icon
+- Add subtle pulsing animation to indicate "waiting for data"
+
+### Files to modify
+- `src/components/launchpad/AxiomTerminalGrid.tsx` -- layout logic, breakpoints, headers, tabs
+- `src/index.css` -- new responsive styles, scroll improvements, animations
+
