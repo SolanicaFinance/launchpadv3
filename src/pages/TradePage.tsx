@@ -87,27 +87,6 @@ export default function TradePage() {
             <button className="pulse-toolbar-icon"><Volume2 className="h-3.5 w-3.5" /></button>
             <button className="pulse-toolbar-icon"><Settings className="h-3.5 w-3.5" /></button>
             <button className="pulse-toolbar-icon"><LayoutGrid className="h-3.5 w-3.5" /></button>
-            {/* Quick Buy Amount Input */}
-            <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-muted/50">
-              <Zap className="h-3 w-3 text-warning flex-shrink-0" />
-              <input
-                type="text"
-                inputMode="decimal"
-                value={quickBuyInput}
-                onChange={handleQuickBuyChange}
-                onBlur={() => {
-                  if (!quickBuyAmount || quickBuyAmount <= 0) {
-                    setQuickBuyAmount(DEFAULT_QUICK_BUY);
-                    setQuickBuyInput(String(DEFAULT_QUICK_BUY));
-                    localStorage.setItem(QUICK_BUY_KEY, String(DEFAULT_QUICK_BUY));
-                  } else {
-                    setQuickBuyInput(String(quickBuyAmount));
-                  }
-                }}
-                className="w-12 bg-transparent text-[11px] font-mono font-bold text-foreground outline-none border-none p-0"
-              />
-              <span className="text-[10px] font-mono text-muted-foreground">SOL</span>
-            </div>
             <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-muted/50 text-[10px] font-mono text-muted-foreground">
               <span className="text-foreground font-bold">1</span>
               <span>=</span>

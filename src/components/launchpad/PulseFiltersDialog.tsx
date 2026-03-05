@@ -29,7 +29,6 @@ interface PulseFiltersDialogProps {
   onColumnChange: (col: ColumnId) => void;
   onUpdate: (column: ColumnId, partial: Partial<PulseFilterConfig>) => void;
   onReset: (column: ColumnId) => void;
-  
 }
 
 function RangeRow({ label, min, max, onMinChange, onMaxChange, placeholder }: {
@@ -40,7 +39,7 @@ function RangeRow({ label, min, max, onMinChange, onMaxChange, placeholder }: {
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-mono text-foreground/60 w-20 shrink-0">{label}</span>
+      <span className="text-[10px] font-mono text-foreground/50 w-24 shrink-0 uppercase tracking-wider">{label}</span>
       <input
         type="number"
         placeholder="Min"
@@ -48,7 +47,7 @@ function RangeRow({ label, min, max, onMinChange, onMaxChange, placeholder }: {
         onChange={e => onMinChange(e.target.value ? Number(e.target.value) : undefined)}
         className="pulse-filter-input"
       />
-      <span className="text-[9px] text-muted-foreground">—</span>
+      <span className="text-[9px] text-muted-foreground/30">—</span>
       <input
         type="number"
         placeholder={placeholder ?? "Max"}
@@ -76,21 +75,21 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-lg p-0 gap-0 bg-background border-border sm:w-full max-h-[85vh] overflow-y-auto rounded-xl">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle className="text-sm font-bold">Filters</DialogTitle>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md p-0 gap-0 border-border/50 sm:w-full max-h-[85vh] overflow-y-auto rounded-xl pulse-filters-dialog">
+        <DialogHeader className="px-4 pt-4 pb-2">
+          <DialogTitle className="text-xs font-bold uppercase tracking-wider text-foreground/70">Filters</DialogTitle>
         </DialogHeader>
 
         {/* Column tabs */}
-        <div className="flex border-b border-border">
+        <div className="flex border-b border-border/40">
           {COLUMN_META.map(col => (
             <button
               key={col.id}
               onClick={() => onColumnChange(col.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold transition-colors border-b-2 ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors border-b-2 ${
                 activeColumn === col.id
                   ? "border-current text-foreground"
-                  : "border-transparent text-muted-foreground/50 hover:text-foreground/70"
+                  : "border-transparent text-muted-foreground/40 hover:text-foreground/60"
               }`}
               style={activeColumn === col.id ? { color: `hsl(${col.color})` } : undefined}
             >
@@ -101,15 +100,15 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
         </div>
 
         {/* Filter tabs */}
-        <div className="flex border-b border-border/50 px-2">
+        <div className="flex border-b border-border/30 px-1">
           {FILTER_TABS.map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors border-b-2 ${
+              className={`px-3 py-2 text-[9px] font-bold uppercase tracking-widest transition-colors border-b-2 ${
                 tab === t
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground/50 hover:text-foreground/60"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-muted-foreground/40 hover:text-foreground/50"
               }`}
             >
               {t}
@@ -118,17 +117,17 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
         </div>
 
         {/* Content */}
-        <div className="p-4 min-h-[240px] space-y-3">
+        <div className="p-4 min-h-[200px] space-y-3">
           {tab === "Protocols" && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {PROTOCOL_OPTIONS.map(p => (
                 <button
                   key={p.value}
                   onClick={() => toggleProtocol(p.value)}
-                  className={`px-3 py-2 rounded text-[10px] font-semibold border transition-all ${
+                  className={`px-2.5 py-2 rounded text-[10px] font-bold border transition-all ${
                     f.protocols.includes(p.value)
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-foreground/30"
+                      ? "border-accent/60 bg-accent/10 text-accent"
+                      : "border-border/40 bg-muted/20 text-muted-foreground/60 hover:border-foreground/20 hover:text-foreground/70"
                   }`}
                 >
                   {p.label}
@@ -177,7 +176,7 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
           )}
 
           {tab === "Socials" && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {([
                 ["hasTwitter", "Has Twitter / X"] as const,
                 ["hasWebsite", "Has Website"] as const,
@@ -186,15 +185,15 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
                 <button
                   key={key}
                   onClick={() => toggleSocial(key)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded border text-[11px] font-semibold transition-all ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded border text-[10px] font-bold transition-all ${
                     f[key]
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border bg-muted/20 text-muted-foreground"
+                      ? "border-accent/50 bg-accent/10 text-accent"
+                      : "border-border/30 bg-muted/15 text-muted-foreground/50"
                   }`}
                 >
                   <span>{label}</span>
-                  <div className={`w-8 h-4 rounded-full transition-colors ${f[key] ? "bg-primary" : "bg-muted"}`}>
-                    <div className={`w-3.5 h-3.5 rounded-full bg-background shadow transition-transform mt-[1px] ${f[key] ? "translate-x-[17px]" : "translate-x-[1px]"}`} />
+                  <div className={`w-7 h-3.5 rounded-full transition-colors ${f[key] ? "bg-accent" : "bg-muted/50"}`}>
+                    <div className={`w-3 h-3 rounded-full bg-background shadow transition-transform mt-[1px] ${f[key] ? "translate-x-[15px]" : "translate-x-[1px]"}`} />
                   </div>
                 </button>
               ))}
@@ -203,18 +202,18 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
         </div>
 
         {/* Bottom bar */}
-        <div className="flex items-center justify-between p-3 border-t border-border">
+        <div className="flex items-center justify-between p-3 border-t border-border/30">
           <button
             onClick={() => onReset(activeColumn)}
-            className="text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[10px] font-bold text-muted-foreground/50 hover:text-foreground transition-colors uppercase tracking-wider"
           >
             Reset
           </button>
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-1.5 rounded bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-colors"
+            className="px-5 py-1.5 rounded bg-accent text-accent-foreground text-[10px] font-black uppercase tracking-wider hover:bg-accent/90 transition-colors"
           >
-            Apply All
+            Apply
           </button>
         </div>
       </DialogContent>

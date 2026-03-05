@@ -968,22 +968,27 @@
 .pulse-filter-input {
   flex: 1;
   min-width: 0;
-  padding: 5px 8px;
-  border-radius: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
   font-size: 11px;
   font-family: 'IBM Plex Mono', monospace;
-  font-weight: 500;
-  background: hsl(var(--muted) / 0.3);
-  border: 1px solid hsl(var(--border) / 0.3);
+  font-weight: 600;
+  background: hsl(var(--muted) / 0.4);
+  border: 1px solid hsl(var(--border) / 0.25);
   color: hsl(var(--foreground));
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, background 150ms ease;
 }
 .pulse-filter-input:focus {
-  border-color: hsl(var(--primary) / 0.5);
+  border-color: hsl(var(--accent) / 0.5);
+  background: hsl(var(--muted) / 0.6);
 }
 .pulse-filter-input::placeholder {
-  color: hsl(var(--muted-foreground) / 0.4);
+  color: hsl(var(--muted-foreground) / 0.3);
+}
+.pulse-filters-dialog {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border) / 0.4);
 }
 
 /* ── Legacy Premium Column Header (kept for compat) ── */
