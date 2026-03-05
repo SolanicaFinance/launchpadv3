@@ -880,43 +880,250 @@
   color: hsl(var(--foreground));
 }
 
-/* ── P1/P2/P3 tabs ── */
-.pulse-p-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 9px;
-  font-weight: 600;
-  font-family: 'IBM Plex Mono', monospace;
-  color: hsl(var(--muted-foreground) / 0.5);
-  background: hsl(var(--muted) / 0.3);
-  transition: all 150ms ease;
-}
-.pulse-p-tab:hover {
-  color: hsl(var(--foreground));
-  background: hsl(var(--muted) / 0.6);
+/* ── Column Theme Colors ── */
+:root {
+  --col-new: 142 71% 45%;
+  --col-final: 25 95% 53%;
+  --col-migrated: 217 91% 60%;
 }
 
-/* ── Column ── */
-.pulse-column {
+/* ── Column V2 ── */
+.pulse-column-v2 {
   display: flex;
   flex-direction: column;
   background: hsl(var(--background));
   overflow: hidden;
+  min-height: 0;
 }
 
-.pulse-col-header {
+/* ── Premium Column Header ── */
+.pulse-col-header-v2 {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid hsl(var(--border));
+  padding: 10px 14px;
   background: hsl(var(--background-secondary));
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.pulse-col-icon-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.pulse-live-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 9999px;
+  background: hsl(var(--muted) / 0.5);
+}
+
+.pulse-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.pulse-col-accent-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+/* ── Column Scroll V2 ── */
+.pulse-column-scroll-v2 {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 110px);
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border) / 0.5) transparent;
+  position: relative;
+}
+
+.pulse-column-scroll-v2::-webkit-scrollbar {
+  width: 5px;
+}
+.pulse-column-scroll-v2::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pulse-column-scroll-v2::-webkit-scrollbar-thumb {
+  background: hsl(var(--border) / 0.4);
+  border-radius: 9999px;
+}
+.pulse-column-scroll-v2::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--border) / 0.7);
+}
+
+/* ── Card List ── */
+.pulse-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+@media (min-width: 640px) {
+  .pulse-card-list {
+    gap: 10px;
+    padding: 10px;
+  }
+}
+
+/* ── Mobile Premium Tabs ── */
+.pulse-mobile-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  background: hsl(var(--background-secondary));
+  border-bottom: 1px solid hsl(var(--border) / 0.4);
+  position: relative;
+}
+
+.pulse-mobile-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground) / 0.5);
+  transition: color 200ms ease;
+  position: relative;
+  z-index: 1;
+}
+.pulse-mobile-tab.active {
   color: hsl(var(--foreground));
 }
 
+.pulse-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.pulse-mobile-tab.active .pulse-tab-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.pulse-tab-count {
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: hsl(var(--muted) / 0.4);
+  color: hsl(var(--foreground) / 0.5);
+}
+.pulse-mobile-tab.active .pulse-tab-count {
+  background: hsl(var(--foreground) / 0.1);
+  color: hsl(var(--foreground) / 0.8);
+}
+
+.pulse-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: hsl(var(--primary));
+  border-radius: 2px 2px 0 0;
+  transition: left 250ms cubic-bezier(0.4, 0, 0.2, 1), width 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+/* ── Tablet Segmented Control ── */
+.pulse-tablet-toggle-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: hsl(var(--background-secondary));
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.pulse-segmented-control {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.3);
+  width: 100%;
+}
+
+.pulse-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground) / 0.6);
+  transition: all 200ms ease;
+}
+.pulse-segment.active {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2), 0 0 0 1px hsl(var(--border) / 0.3);
+}
+.pulse-segment:not(.active):hover {
+  color: hsl(var(--foreground) / 0.7);
+}
+
+.pulse-seg-count {
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+/* ── Empty State ── */
+.pulse-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  gap: 8px;
+}
+
+.pulse-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid;
+  margin-bottom: 4px;
+}
+
+.pulse-empty-pulse {
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+
+/* ── Legacy compat ── */
 .pulse-count-badge {
   display: inline-flex;
   align-items: center;

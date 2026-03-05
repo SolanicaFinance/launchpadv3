@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { FunToken } from "@/hooks/useFunTokensPaginated";
 import { CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { useKingOfTheHill } from "@/hooks/useKingOfTheHill";
 import { AxiomTokenRow } from "./AxiomTokenRow";
 import { CodexPairRow } from "./CodexPairRow";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Rocket, Flame, CheckCircle2, Zap, Star, SlidersHorizontal } from "lucide-react";
+import { Rocket, Flame, CheckCircle2, Zap, Radio } from "lucide-react";
 
 interface AxiomTerminalGridProps {
   tokens: FunToken[];
@@ -18,38 +18,35 @@ interface AxiomTerminalGridProps {
 }
 
 const COLUMN_TABS = [
-  { id: "new", label: "New Pairs", icon: Rocket },
-  { id: "final", label: "Final Stretch", icon: Flame },
-  { id: "migrated", label: "Migrated", icon: CheckCircle2 },
+  { id: "new", label: "New Pairs", icon: Rocket, color: "var(--col-new)" },
+  { id: "final", label: "Final Stretch", icon: Flame, color: "var(--col-final)" },
+  { id: "migrated", label: "Migrated", icon: CheckCircle2, color: "var(--col-migrated)" },
 ] as const;
 
 type ColumnTab = typeof COLUMN_TABS[number]["id"];
 
-function PulseColumnHeader({ label, count, icon: Icon }: { label: string; count: number; icon: React.ElementType }) {
+/* ── Premium Column Header ── */
+function PulseColumnHeader({ label, count, icon: Icon, color }: { label: string; count: number; icon: React.ElementType; color: string }) {
   return (
-    <div className="pulse-col-header">
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-foreground/70" />
-        <span className="text-[13px] font-bold text-foreground">{label}</span>
-        <div className="flex items-center gap-0.5 ml-1">
-          <Zap className="h-3 w-3 text-warning" />
-          <span className="text-[10px] font-mono font-bold text-warning">{count}</span>
+    <div className="pulse-col-header-v2" style={{ "--col-accent": color } as React.CSSProperties}>
+      <div className="flex items-center gap-2.5">
+        <div className="pulse-col-icon-pill" style={{ background: `hsl(${color} / 0.12)` }}>
+          <Icon className="h-3.5 w-3.5" style={{ color: `hsl(${color})` }} />
+        </div>
+        <span className="text-[12px] font-semibold tracking-wide uppercase text-foreground/90">{label}</span>
+        <div className="pulse-live-count">
+          <span className="pulse-live-dot" style={{ background: `hsl(${color})` }} />
+          <span className="text-[10px] font-mono font-bold text-foreground/70">{count}</span>
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        {["P1", "P2", "P3"].map(p => (
-          <button key={p} className="pulse-p-tab">{p}</button>
-        ))}
-        <button className="pulse-toolbar-icon ml-0.5"><Star className="h-3 w-3" /></button>
-        <button className="pulse-toolbar-icon"><SlidersHorizontal className="h-3 w-3" /></button>
-      </div>
+      <div className="pulse-col-accent-line" style={{ background: `linear-gradient(90deg, hsl(${color} / 0.6), transparent)` }} />
     </div>
   );
 }
 
 function PulseColumnSkeleton() {
   return (
-    <div className="flex flex-col gap-3 p-2">
+    <div className="flex flex-col gap-2 sm:gap-3 p-2">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="pulse-card-skeleton">
           <Skeleton className="w-12 h-12 rounded-xl skeleton-shimmer" />
@@ -57,12 +54,10 @@ function PulseColumnSkeleton() {
             <Skeleton className="h-3.5 w-3/4 skeleton-shimmer" />
             <Skeleton className="h-2.5 w-full skeleton-shimmer" />
             <Skeleton className="h-2.5 w-1/2 skeleton-shimmer" />
-            <Skeleton className="h-2 w-full skeleton-shimmer" />
           </div>
           <div className="space-y-1.5">
             <Skeleton className="h-3.5 w-16 skeleton-shimmer ml-auto" />
             <Skeleton className="h-2.5 w-12 skeleton-shimmer ml-auto" />
-            <Skeleton className="h-2.5 w-10 skeleton-shimmer ml-auto" />
           </div>
         </div>
       ))}
@@ -70,18 +65,24 @@ function PulseColumnSkeleton() {
   );
 }
 
-function PulseEmptyColumn({ label }: { label: string }) {
+function PulseEmptyColumn({ label, color }: { label: string; color: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 empty-state-fade">
-      <span className="text-2xl mb-2 opacity-40">🦞</span>
-      <span className="text-[11px] text-muted-foreground/60">No {label.toLowerCase()} yet</span>
+    <div className="pulse-empty-state">
+      <div className="pulse-empty-icon" style={{ background: `hsl(${color} / 0.08)`, borderColor: `hsl(${color} / 0.15)` }}>
+        <Radio className="h-5 w-5 pulse-empty-pulse" style={{ color: `hsl(${color} / 0.4)` }} />
+      </div>
+      <span className="text-[11px] text-muted-foreground/50 font-medium">No {label.toLowerCase()} yet</span>
+      <span className="text-[9px] text-muted-foreground/30 font-mono">Scanning...</span>
     </div>
   );
 }
 
 export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount }: AxiomTerminalGridProps) {
   const [mobileTab, setMobileTab] = useState<ColumnTab>("new");
+  const [tabletRightTab, setTabletRightTab] = useState<"final" | "migrated">("final");
   const { tokens: kingTokens } = useKingOfTheHill();
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
 
   const { newPairs, finalStretch, migrated } = useMemo(() => {
     const newPairs = tokens
@@ -123,18 +124,32 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   }, [tokens, kingTokens]);
 
   const columns = [
-    { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: newPairs, codex: codexNewPairs },
-    { id: "final" as const, label: "Final Stretch", icon: Flame, tokens: finalStretch, codex: codexCompleting },
-    { id: "migrated" as const, label: "Migrated", icon: CheckCircle2, tokens: migrated, codex: codexGraduated },
+    { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: newPairs, codex: codexNewPairs, color: COLUMN_TABS[0].color },
+    { id: "final" as const, label: "Final Stretch", icon: Flame, tokens: finalStretch, codex: codexCompleting, color: COLUMN_TABS[1].color },
+    { id: "migrated" as const, label: "Migrated", icon: CheckCircle2, tokens: migrated, codex: codexGraduated, color: COLUMN_TABS[2].color },
   ];
 
   const activeColumn = columns.find(c => c.id === mobileTab)!;
 
+  // Animated tab indicator
+  useEffect(() => {
+    if (!tabBarRef.current) return;
+    const idx = COLUMN_TABS.findIndex(t => t.id === mobileTab);
+    const tabs = tabBarRef.current.querySelectorAll<HTMLButtonElement>('[data-tab]');
+    const tab = tabs[idx];
+    if (tab) {
+      setIndicatorStyle({
+        left: tab.offsetLeft,
+        width: tab.offsetWidth,
+      });
+    }
+  }, [mobileTab]);
+
   const renderColumnContent = (col: typeof columns[number]) => {
     if (isLoading) return <PulseColumnSkeleton />;
-    if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} />;
+    if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} color={col.color} />;
     return (
-      <div className="flex flex-col gap-3 p-2">
+      <div className="pulse-card-list">
         {col.codex.map(t => (
           <CodexPairRow key={`codex-${t.address}`} token={t} quickBuyAmount={quickBuyAmount} />
         ))}
@@ -145,41 +160,80 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
     );
   };
 
+  const tabletRightColumn = tabletRightTab === "final" ? columns[1] : columns[2];
+
   return (
     <div className="w-full">
-      {/* Mobile: Tab Switcher */}
-      <div className="xl:hidden">
-        <div className="flex border-b border-border">
+      {/* ═══ Mobile: Premium Tab Switcher (<640px) ═══ */}
+      <div className="sm:hidden">
+        <div className="pulse-mobile-tabs" ref={tabBarRef}>
           {COLUMN_TABS.map(tab => {
             const col = columns.find(c => c.id === tab.id)!;
+            const isActive = mobileTab === tab.id;
             return (
               <button
                 key={tab.id}
+                data-tab={tab.id}
                 onClick={() => setMobileTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold transition-all border-b-2 -mb-px ${
-                  mobileTab === tab.id
-                    ? "text-foreground border-success"
-                    : "text-muted-foreground border-transparent"
-                }`}
+                className={`pulse-mobile-tab ${isActive ? "active" : ""}`}
               >
-                <tab.icon className="h-3 w-3" />
-                {tab.label}
-                <span className="pulse-count-badge">{isLoading ? '…' : col.tokens.length + col.codex.length}</span>
+                <span className="pulse-tab-dot" style={{ background: `hsl(${tab.color})` }} />
+                <span>{tab.label}</span>
+                <span className="pulse-tab-count">{isLoading ? '…' : col.tokens.length + col.codex.length}</span>
               </button>
             );
           })}
+          <div className="pulse-tab-indicator" style={indicatorStyle} />
         </div>
-        <div className="pulse-column-scroll">
+        <div className="pulse-column-scroll-v2">
           {renderColumnContent(activeColumn)}
         </div>
       </div>
 
-      {/* Desktop: Three Columns */}
+      {/* ═══ Tablet: Two-Column Split (640px-1279px) ═══ */}
+      <div className="hidden sm:grid sm:grid-cols-2 xl:hidden border-t border-border">
+        {/* Left: Always New Pairs */}
+        <div className="pulse-column-v2 border-r border-border">
+          <PulseColumnHeader label="New Pairs" count={newPairs.length + codexNewPairs.length} icon={Rocket} color={COLUMN_TABS[0].color} />
+          <div className="pulse-column-scroll-v2">
+            {renderColumnContent(columns[0])}
+          </div>
+        </div>
+        {/* Right: Toggle between Final Stretch / Migrated */}
+        <div className="pulse-column-v2">
+          <div className="pulse-tablet-toggle-header">
+            <div className="pulse-segmented-control">
+              {(["final", "migrated"] as const).map(id => {
+                const tab = COLUMN_TABS.find(t => t.id === id)!;
+                const col = columns.find(c => c.id === id)!;
+                const isActive = tabletRightTab === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setTabletRightTab(id)}
+                    className={`pulse-segment ${isActive ? "active" : ""}`}
+                    style={isActive ? { "--seg-color": tab.color } as React.CSSProperties : undefined}
+                  >
+                    <tab.icon className="h-3 w-3" />
+                    <span>{tab.label}</span>
+                    <span className="pulse-seg-count">{isLoading ? '…' : col.tokens.length + col.codex.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="pulse-column-scroll-v2">
+            {renderColumnContent(tabletRightColumn)}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ Desktop: Three Columns (1280px+) ═══ */}
       <div className="hidden xl:grid grid-cols-3 gap-0 border-t border-border">
         {columns.map((col, i) => (
-          <div key={col.id} className={`pulse-column ${i < 2 ? "border-r border-border" : ""}`}>
-            <PulseColumnHeader label={col.label} count={col.tokens.length + col.codex.length} icon={col.icon} />
-            <div className="pulse-column-scroll">
+          <div key={col.id} className={`pulse-column-v2 ${i < 2 ? "border-r border-border" : ""}`}>
+            <PulseColumnHeader label={col.label} count={col.tokens.length + col.codex.length} icon={col.icon} color={col.color} />
+            <div className="pulse-column-scroll-v2">
               {renderColumnContent(col)}
             </div>
           </div>
