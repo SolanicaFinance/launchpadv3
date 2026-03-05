@@ -389,3 +389,55 @@ export async function submitAndConfirmJitoBundle(
     slot: confirmResult.slot,
   };
 }
+
+/**
+ * Lightweight Jito sendTransaction endpoint for single transactions.
+ * This is NOT bundle submission — it uses Jito's sendTransaction proxy
+ * which routes directly to Jito validators for faster block inclusion.
+ * 
+ * This is what Axiom and other fast trading bots use for sub-1-block execution.
+ * Fire-and-forget: we don't wait for response since the standard RPC path
+ * handles confirmation. This is purely for faster landing.
+ */
+const JITO_SEND_TX_ENDPOINTS = [
+  'https://mainnet.block-engine.jito.wtf/api/v1/transactions',
+  'https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions',
+  'https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/transactions',
+  'https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/transactions',
+  'https://tokyo.mainnet.block-engine.jito.wtf/api/v1/transactions',
+];
+
+/**
+ * Submit a single signed+serialized transaction to Jito's sendTransaction endpoint.
+ * Sends to multiple Jito regions in parallel for maximum speed.
+ * Fire-and-forget — does not throw on failure.
+ * 
+ * @param serializedTx - The fully signed transaction as Uint8Array (from tx.serialize())
+ */
+export async function sendTransactionViaJito(serializedTx: Uint8Array): Promise<void> {
+  const base64Tx = Buffer.from(serializedTx).toString('base64');
+
+  // Fan out to all Jito regions simultaneously for fastest inclusion
+  const promises = JITO_SEND_TX_ENDPOINTS.map(async (endpoint) => {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'sendTransaction',
+          params: [base64Tx, { encoding: 'base64' }],
+        }),
+      });
+      if (res.ok) {
+        console.log(`[Jito] Tx submitted to ${endpoint.split('//')[1]?.split('/')[0]}`);
+      }
+    } catch {
+      // Fire-and-forget: silently ignore errors
+    }
+  });
+
+  // Don't await all — just let them fly
+  Promise.allSettled(promises);
+}

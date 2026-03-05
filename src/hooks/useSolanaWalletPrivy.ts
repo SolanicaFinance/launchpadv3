@@ -92,6 +92,14 @@ export function useSolanaWalletWithPrivy() {
 
         console.log("[useSolanaWalletPrivy] Tx sent, signature:", signature);
 
+        // Dual-submit to Jito for faster block inclusion (fire-and-forget)
+        try {
+          const { sendTransactionViaJito } = await import("@/lib/jitoBundle");
+          sendTransactionViaJito(serializedTx);
+        } catch {
+          // Non-fatal: Jito submission is best-effort
+        }
+
         // Wait for confirmation
         const confirmation = await connection.confirmTransaction(
           { signature, blockhash, lastValidBlockHeight },

@@ -38,7 +38,9 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     return await signAndSendTransaction(tx);
   }, [signAndSendTransaction]);
 
-  const useJupiterRoute = token.graduated !== false;
+   const preferJupiterRoute = token.graduated !== false;
+   const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
+   const useJupiterRoute = preferJupiterRoute && !jupiterQuoteFailed;
 
   const { toast } = useToast();
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
@@ -91,9 +93,9 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
   // Fetch Jupiter quotes for graduated tokens
   useEffect(() => {
-    if (!useJupiterRoute) { setQuote(null); setQuoteLoading(false); return; }
+    if (!preferJupiterRoute) { setQuote(null); setQuoteLoading(false); setJupiterQuoteFailed(false); return; }
     const fetchQuote = async () => {
-      if (numericAmount <= 0 || !token.mint_address) { setQuote(null); return; }
+      if (numericAmount <= 0 || !token.mint_address) { setQuote(null); setJupiterQuoteFailed(false); return; }
       setQuoteLoading(true);
       try {
         const result = isBuy
@@ -101,12 +103,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           : await getSellQuote(token.mint_address, numericAmount, tokenDecimals, slippage * 100);
         if (result) {
           setQuote({ outAmount: result.outAmount, priceImpactPct: result.priceImpactPct });
-        } else { setQuote(null); }
-      } catch { setQuote(null); } finally { setQuoteLoading(false); }
+          setJupiterQuoteFailed(false);
+        } else {
+          setQuote(null);
+          setJupiterQuoteFailed(true); // Fallback to PumpPortal
+          console.log('[UniversalTradePanel] Jupiter quote failed, falling back to PumpPortal');
+        }
+      } catch {
+        setQuote(null);
+        setJupiterQuoteFailed(true);
+      } finally { setQuoteLoading(false); }
     };
     const t = setTimeout(fetchQuote, 500);
     return () => clearTimeout(t);
-  }, [numericAmount, isBuy, token.mint_address, tokenDecimals, slippage, getBuyQuote, getSellQuote, useJupiterRoute]);
+  }, [numericAmount, isBuy, token.mint_address, tokenDecimals, slippage, getBuyQuote, getSellQuote, preferJupiterRoute]);
 
   const outputAmount = (() => {
     if (useJupiterRoute && quote) return parseInt(quote.outAmount) / (10 ** (isBuy ? tokenDecimals : 9));
@@ -341,7 +351,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           <div className="space-y-1.5">
             <button
               onClick={handleTrade}
-              disabled={buttonLoading || !numericAmount || (useJupiterRoute && (quoteLoading || !quote)) || !isWalletReady}
+              disabled={buttonLoading || !numericAmount || (useJupiterRoute && !jupiterQuoteFailed && quoteLoading) || !isWalletReady}
               className={`w-full h-12 rounded-lg font-mono text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                 isBuy
                   ? 'bg-green-500 hover:bg-green-600 text-black'
@@ -350,10 +360,8 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
             >
               {buttonLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : useJupiterRoute && quoteLoading ? (
+              ) : useJupiterRoute && !jupiterQuoteFailed && quoteLoading ? (
                 'Getting quote...'
-              ) : useJupiterRoute && !quote && numericAmount > 0 ? (
-                'No route found'
               ) : isBuy ? (
                 `QUICK BUY ◎ ${numericAmount || ''}`
               ) : (
@@ -467,7 +475,9 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Route</span>
-                  <span className="text-accent-foreground">{useJupiterRoute ? 'Jupiter' : 'PumpPortal'}</span>
+                  <span className="text-accent-foreground">
+                    {useJupiterRoute ? 'Jupiter' : jupiterQuoteFailed ? 'PumpPortal (fallback)' : 'PumpPortal'}
+                  </span>
                 </div>
               </div>
             )}
