@@ -499,7 +499,7 @@ export default function FunTokenDetailPage() {
   );
 
   const TokenDetailsSection = () => (
-    <div className="terminal-panel-flush rounded-lg p-4 md:p-3 lg:p-2.5 space-y-2 md:space-y-1.5">
+    <div className="border border-border/40 rounded-lg bg-[hsl(var(--card))] p-4 md:p-3 lg:p-2.5 space-y-2 md:space-y-1.5">
       <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/70 flex items-center gap-1">
         <Activity className="h-3 w-3" /> Token Details
       </h3>
@@ -523,7 +523,7 @@ export default function FunTokenDetailPage() {
   const ContractSection = () => {
     if (!token.mint_address) return null;
     return (
-      <div className="terminal-panel-flush rounded-lg p-4 md:p-3 lg:p-2.5 space-y-1.5">
+      <div className="border border-border/40 rounded-lg bg-[hsl(var(--card))] p-4 md:p-3 lg:p-2.5 space-y-1.5">
         <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/70">Contract</h3>
         <div className="flex items-center gap-2">
           <code className="text-xs md:text-[10px] lg:text-[9px] font-mono text-foreground/70 truncate flex-1">
@@ -548,7 +548,7 @@ export default function FunTokenDetailPage() {
   const DescriptionSection = () => {
     if (!token.description) return null;
     return (
-      <div className="terminal-panel-flush rounded-lg p-4 md:p-3 lg:p-2.5">
+      <div className="border border-border/40 rounded-lg bg-[hsl(var(--card))] p-4 md:p-3 lg:p-2.5">
         <p className={`text-xs md:text-[11px] lg:text-[10px] text-muted-foreground/80 font-mono leading-relaxed ${!showFullDesc ? 'line-clamp-2' : ''}`}>
           {token.description}
         </p>
@@ -565,7 +565,7 @@ export default function FunTokenDetailPage() {
   };
 
   const CommentsSection = () => (
-    <div className="terminal-panel-flush rounded-lg p-4 md:p-3 lg:p-2.5 flex-1 min-h-0 overflow-hidden flex flex-col">
+    <div className="border border-border/40 rounded-lg bg-[hsl(var(--card))] p-4 md:p-3 lg:p-2.5 flex-1 min-h-0 overflow-hidden flex flex-col">
       <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/70 flex items-center gap-1 mb-2">
         <MessageCircle className="h-3 w-3" /> Discussion
       </h3>
