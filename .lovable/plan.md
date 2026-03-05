@@ -1,22 +1,23 @@
 
 
-## Add Token Icon to Sell Input Field and Sell Button
+## Replace `≡` symbol with colorful Solana logo in Holders table
 
-Currently, the buy side shows the Solana logo next to "SOL" in the input field and on the "QUICK BUY" button, but the sell side only shows the token ticker text with no icon. The fix is to show the token's image next to the ticker in both places when selling.
+The SOL Balance column in `HoldersTable.tsx` currently uses the text character `≡` before the balance value. Replace it with the same Solana logo image used in the buy section.
 
-### Changes Required
+### Change
 
-#### 1. `TradePanelWithSwap.tsx`
-- The `Token` type already has `image_url`. Two spots need the token icon on sell:
-  - **Input field** (line ~283-284): When `!isBuy`, show `token.image_url` as a small round image before `token.ticker`
-  - **Sell button** (line ~330): Change `SELL ${token.ticker}` to include the token image, matching the buy button pattern
+**File: `src/components/launchpad/HoldersTable.tsx`** (line 221)
 
-#### 2. `UniversalTradePanel.tsx`
-- The `TokenInfo` interface needs a new optional `imageUrl?: string` field
-- Same two spots:
-  - **Input field** (line ~325-328): Show token image on sell side
-  - **Sell button** (line ~372): Add token image to sell button text
-- Update all call sites in `FunTokenDetailPage.tsx` to pass `imageUrl` when constructing the `TokenInfo` object (lines ~206, ~239, ~256, ~500):
-  - External tokens: pass `token.imageUrl`
-  - Fun tokens: pass `token.image_url`
+Replace:
+```
+≡ {formatSol(holder.solBalance)}
+```
+
+With:
+```
+<img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" className="w-3.5 h-3.5 rounded-full inline-block mr-1" />
+{formatSol(holder.solBalance)}
+```
+
+This uses the same Solana logo URL already used in `TradePanelWithSwap.tsx` and `UniversalTradePanel.tsx` for the buy buttons.
 
