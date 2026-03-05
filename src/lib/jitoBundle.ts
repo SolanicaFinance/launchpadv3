@@ -8,6 +8,7 @@
 import { Transaction, VersionedTransaction, PublicKey, SystemProgram } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import bs58 from 'bs58';
+import { getRpcUrl } from '@/hooks/useSolanaWallet';
 
 // Jito Block Engine region roots (geographically distributed)
 // Note: JSON-RPC paths differ per method (e.g. /bundles vs /getBundleStatuses)
@@ -440,4 +441,51 @@ export async function sendTransactionViaJito(serializedTx: Uint8Array): Promise<
 
   // Don't await all — just let them fly
   Promise.allSettled(promises);
+}
+
+/**
+ * Send raw transaction bytes to ALL Jito endpoints + Helius RPC in parallel.
+ * This is the primary submission path for maximum speed.
+ * Returns immediately after dispatching — does not wait for responses.
+ * 
+ * @param serializedTx - Fully signed transaction as Uint8Array
+ */
+export function sendRawToAllEndpoints(serializedTx: Uint8Array): void {
+  const base64Tx = Buffer.from(serializedTx).toString('base64');
+
+  // Jito endpoints (all regions)
+  for (const endpoint of JITO_SEND_TX_ENDPOINTS) {
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'sendTransaction',
+        params: [base64Tx, { encoding: 'base64' }],
+      }),
+    }).catch(() => {});
+  }
+
+  // Helius RPC (secondary path, skipPreflight for speed)
+  try {
+    const { url: heliusUrl } = getRpcUrl();
+    fetch(heliusUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'sendTransaction',
+        params: [base64Tx, {
+          encoding: 'base64',
+          skipPreflight: true,
+          preflightCommitment: 'processed',
+          maxRetries: 0,
+        }],
+      }),
+    }).catch(() => {});
+  } catch {
+    // If Helius import fails, Jito is still flying
+  }
 }

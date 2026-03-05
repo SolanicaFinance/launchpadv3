@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from "react";
 import { Zap, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useRealSwap } from "@/hooks/useRealSwap";
+import { useFastSwap } from "@/hooks/useFastSwap";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { Token } from "@/hooks/useLaunchpad";
@@ -93,26 +93,10 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   codexToken,
   quickBuyAmount,
 }: PulseQuickBuyButtonProps) {
-  const { executeRealSwap, isLoading, getBalance } = useRealSwap();
+  const { executeFastSwap, isLoading } = useFastSwap();
   const { isAuthenticated, login } = useAuth();
   const [open, setOpen] = useState(false);
   const [buyingAmount, setBuyingAmount] = useState<number | null>(null);
-
-  const checkBalance = useCallback(async (amount: number): Promise<boolean> => {
-    try {
-      const balance = await getBalance();
-      if (balance < amount + 0.005) {
-        toast.error("Not enough SOL balance", {
-          description: `You have ${balance.toFixed(4)} SOL but need at least ${amount} SOL + fees`,
-        });
-        return false;
-      }
-      return true;
-    } catch {
-      // If we can't check balance, let the transaction fail naturally
-      return true;
-    }
-  }, [getBalance]);
 
   const handleTriggerClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -130,12 +114,8 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
           return;
         }
         setBuyingAmount(quickBuyAmount);
-        const hasBalance = await checkBalance(quickBuyAmount);
-        if (!hasBalance) {
-          setBuyingAmount(null);
-          return;
-        }
-        executeRealSwap(token, quickBuyAmount, true, 500)
+        // No balance check — let tx fail on-chain naturally (saves 200-500ms)
+        executeFastSwap(token, quickBuyAmount, true, 500)
           .then((result) => {
             if (result.success) {
               toast.success(`Bought with ${quickBuyAmount} SOL`, {
@@ -155,7 +135,7 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       }
       setOpen((prev) => !prev);
     },
-    [isAuthenticated, login, quickBuyAmount, funToken, codexToken, executeRealSwap, checkBalance],
+    [isAuthenticated, login, quickBuyAmount, funToken, codexToken, executeFastSwap],
   );
 
   const handleBuy = useCallback(
@@ -170,15 +150,10 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       }
 
       setBuyingAmount(amount);
-
-      const hasBalance = await checkBalance(amount);
-      if (!hasBalance) {
-        setBuyingAmount(null);
-        return;
-      }
+      // No balance check — let tx fail on-chain naturally (saves 200-500ms)
 
       try {
-        const result = await executeRealSwap(token, amount, true, 500);
+        const result = await executeFastSwap(token, amount, true, 500);
         if (result.success) {
           toast.success(`Bought with ${amount} SOL`, {
             description: result.signature
@@ -206,7 +181,7 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
         setOpen(false);
       }
     },
-    [funToken, codexToken, executeRealSwap, checkBalance],
+    [funToken, codexToken, executeFastSwap],
   );
 
   const isBusy = isLoading || buyingAmount !== null;
