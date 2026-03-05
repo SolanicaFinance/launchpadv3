@@ -240,7 +240,7 @@ export default function SubClawPage() {
           
           {effectiveTokenData.mintAddress && (
             <Link
-              to={`/launchpad/${effectiveTokenData.mintAddress}`}
+              to={`/trade/${effectiveTokenData.mintAddress}`}
               className="flex items-center justify-center gap-2 mt-4 text-sm text-[hsl(var(--clawbook-primary))] hover:underline"
             >
               <span>Trade ${ticker}</span>

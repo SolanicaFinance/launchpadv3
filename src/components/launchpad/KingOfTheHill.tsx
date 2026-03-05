@@ -116,7 +116,7 @@ function KingCard({ token, rank }: { token: KingToken; rank: number }) {
   const checkClr = vType === "business" || vType === "government" ? "hsl(45 93% 47%)" : "hsl(204 88% 53%)";
   const holders = token.holder_count ?? 0;
 
-  const url = `/launchpad/${token.mint_address || token.dbc_pool_address || token.id}`;
+  const url = `/trade/${token.mint_address || token.dbc_pool_address || token.id}`;
   const codexChartUrl = token.mint_address ? `https://www.defined.fi/sol/${token.mint_address}` : null;
 
   const handleTradeClick = (e: React.MouseEvent) => {

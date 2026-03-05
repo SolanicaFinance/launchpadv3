@@ -183,7 +183,7 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
       if (onSuccess) {
         onSuccess(data.mintAddress);
       } else {
-        navigate(`/launchpad/${data.mintAddress}`);
+        navigate(`/trade/${data.mintAddress}`);
       }
     } catch (error) {
       console.error('Token launch error:', error);

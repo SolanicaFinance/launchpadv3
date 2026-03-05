@@ -74,7 +74,7 @@ export function TokenTable({ solPrice, promotedTokenIds, onPromote }: TokenTable
 
     const tradeUrl = (isPumpFun || isBags || isAgent)
       ? `/t/${token.ticker}`
-      : `/launchpad/${token.mint_address}`;
+      : `/trade/${token.mint_address}`;
 
     const priceChange = token.price_change_24h;
     const progress = token.bonding_progress ?? 0;

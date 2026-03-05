@@ -88,7 +88,7 @@ export default function PanelPortfolioTab() {
                 if (!holding.tokens) return null;
                 const value = holding.balance * holding.tokens.price_sol;
                 return (
-                  <Link key={holding.id} to={`/launchpad/${holding.tokens.mint_address}`}>
+                  <Link key={holding.id} to={`/trade/${holding.tokens.mint_address}`}>
                     <Card className="p-3 flex items-center gap-3 hover:bg-white/5 transition-colors bg-white/[0.02] border-white/10">
                       <Avatar className="h-10 w-10 rounded-lg">
                         <AvatarImage src={holding.tokens.image_url || undefined} />
@@ -125,7 +125,7 @@ export default function PanelPortfolioTab() {
           ) : (
             <div className="space-y-2">
               {createdTokens.map((token: Token) => (
-                <Link key={token.id} to={`/launchpad/${token.mint_address}`}>
+                <Link key={token.id} to={`/trade/${token.mint_address}`}>
                   <Card className="p-3 flex items-center gap-3 hover:bg-white/5 transition-colors bg-white/[0.02] border-white/10">
                     <Avatar className="h-10 w-10 rounded-lg">
                       <AvatarImage src={token.image_url || undefined} />

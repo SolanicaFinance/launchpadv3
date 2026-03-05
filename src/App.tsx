@@ -3,7 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+
+function LaunchpadRedirect() {
+  const { mintAddress } = useParams();
+  return <Navigate to={`/trade/${mintAddress}`} replace />;
+}
 import { PrivyProviderWrapper } from "@/providers/PrivyProviderWrapper";
 import { ChainProvider } from "@/contexts/ChainContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -130,7 +135,8 @@ const App = () => (
                     <Route path="/launch/base" element={<FunLauncherPage />} />
                     <Route path="/launch/ethereum" element={<FunLauncherPage />} />
                     <Route path="/launch/bnb" element={<FunLauncherPage />} />
-                    <Route path="/launchpad/:mintAddress" element={<FunTokenDetailPage />} />
+                    <Route path="/trade/:mintAddress" element={<FunTokenDetailPage />} />
+                    <Route path="/launchpad/:mintAddress" element={<LaunchpadRedirect />} />
                     <Route path="/trending" element={<TrendingPage />} />
                     <Route path="/vanity-admin" element={<VanityAdminPage />} />
                     <Route path="/site" element={<LaunchpadTemplatePage />} />

@@ -70,8 +70,8 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
   const priceChange = token.price_change_24h ?? 0;
 
   const tradeUrl = token.mint_address
-    ? `/launchpad/${token.mint_address}`
-    : `/launchpad/${token.id}`;
+    ? `/trade/${token.mint_address}`
+    : `/trade/${token.id}`;
 
   const handleCopyCA = (e: React.MouseEvent) => {
     e.preventDefault();

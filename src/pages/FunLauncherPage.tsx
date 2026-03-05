@@ -203,7 +203,7 @@ export default function FunLauncherPage() {
                   : justLaunchedTokens.slice(0, 12).map(token => (
                     <Link
                       key={token.id}
-                      to={`/launchpad/${token.mint_address || token.id}`}
+                      to={`/trade/${token.mint_address || token.id}`}
                       className="flex-shrink-0 w-[150px] rounded-xl overflow-hidden group hover-lift bg-surface border border-border hover:border-success"
                     >
                       {/* Image */}

@@ -165,7 +165,7 @@ export default function EarningsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 justify-end">
-                    <Link to={`/launchpad/${earning.tokens?.mint_address}`}>
+                    <Link to={`/trade/${earning.tokens?.mint_address}`}>
                       <Button variant="outline" size="sm" className="h-8 text-xs">
                         View
                       </Button>

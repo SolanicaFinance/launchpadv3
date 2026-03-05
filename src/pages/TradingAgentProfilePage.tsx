@@ -123,7 +123,7 @@ export default function TradingAgentProfilePage() {
                 <span className="font-mono text-xs">{agent.wallet_address?.slice(0, 8)}...</span>
               </div>
                {agent.mint_address && (
-                 <Link to={`/launchpad/${agent.mint_address}`} className="flex items-center gap-1 text-green-400 hover:underline">
+                 <Link to={`/trade/${agent.mint_address}`} className="flex items-center gap-1 text-green-400 hover:underline">
                    <Coins className="h-4 w-4" />
                    <span>Trade Token</span>
                  </Link>

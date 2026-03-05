@@ -127,7 +127,7 @@ export function TokenStatsHeader({
             </Link>
           )}
           {mintAddress && (
-            <Link to={`/launchpad/${mintAddress}`}>
+            <Link to={`/trade/${mintAddress}`}>
               <Button size="sm" className="bg-[hsl(var(--clawbook-primary))] hover:bg-[hsl(var(--clawbook-primary-hover))] text-[hsl(var(--clawbook-text-primary))] text-xs">Trade<ArrowSquareOut size={14} className="ml-1" /></Button>
             </Link>
           )}

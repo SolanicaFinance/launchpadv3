@@ -31,7 +31,7 @@ export function NoCommunityFound({ ticker }: NoCommunityFoundProps) {
       </p>
       <div className="flex items-center justify-center gap-3">
         {token?.mint_address ? (
-          <Link to={`/launchpad/${token.mint_address}`}>
+          <Link to={`/trade/${token.mint_address}`}>
             <Button className="bg-[hsl(var(--clawbook-primary))] hover:bg-[hsl(var(--clawbook-primary-hover))]"><ArrowSquareOut size={16} className="mr-2" />Trade ${ticker?.toUpperCase()}</Button>
           </Link>
         ) : (

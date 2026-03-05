@@ -68,7 +68,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount }
   };
 
   const tradeUrl = token.address
-    ? `/launchpad/${token.address}`
+    ? `/trade/${token.address}`
     : "#";
 
   return (

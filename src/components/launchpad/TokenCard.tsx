@@ -116,7 +116,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
 
   const tradeUrl = (isPumpFun || isBags || isAgent)
     ? `/t/${token.ticker}`
-    : `/launchpad/${token.mint_address}`;
+    : `/trade/${token.mint_address}`;
 
   const mcapFormatted = formatUsd(token.market_cap_sol, solPrice);
 

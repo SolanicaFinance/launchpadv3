@@ -26,7 +26,7 @@ function JustLaunchedCard({ token }: { token: JustLaunchedToken }) {
   const isPhantom = token.launchpad_type === 'phantom';
   const linkPath = (token.agent_id || isTradingAgent || isPumpFun || isBags)
     ? `/t/${token.ticker}`
-    : `/launchpad/${token.mint_address || token.id}`;
+    : `/trade/${token.mint_address || token.id}`;
 
   return (
     <Link

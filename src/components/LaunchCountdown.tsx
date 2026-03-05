@@ -64,7 +64,7 @@ export function LaunchCountdown({ compact = false }: { compact?: boolean }) {
           {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
         </button>
         <Link
-          to={`/launchpad/${CLAW_CA}`}
+          to={`/trade/${CLAW_CA}`}
           className="flex items-center gap-1 text-xs font-semibold text-green-500 hover:text-green-400 transition-colors"
         >
           Trade Now <ExternalLink className="w-3 h-3" />

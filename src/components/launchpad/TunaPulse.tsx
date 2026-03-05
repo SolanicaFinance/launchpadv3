@@ -214,7 +214,7 @@ export const ClawPulse = forwardRef<HTMLDivElement, Record<string, never>>(funct
           tokens.map((token, index) => (
             <Link
               key={token.id}
-              to={`/launchpad/${token.mint_address}`}
+              to={`/trade/${token.mint_address}`}
               className="flex items-center gap-3 p-3 hover:bg-secondary/50 transition-colors"
             >
               {/* Rank */}

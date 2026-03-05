@@ -458,7 +458,7 @@ export default function AgentDashboardPage() {
                               {formatDate(token.launchedAt)}
                             </td>
                             <td className="py-3 text-right">
-                              <Link to={`/launchpad/${token.mintAddress}`}>
+                              <Link to={`/trade/${token.mintAddress}`}>
                                 <Button variant="ghost" size="sm">
                                   <ExternalLink className="h-4 w-4" />
                                 </Button>
