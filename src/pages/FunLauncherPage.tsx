@@ -171,10 +171,7 @@ export default function FunLauncherPage() {
 
         {isSolana && (
           <main className="flex-1">
-            {/* Launch Countdown */}
-            <div className="px-4 pt-3">
-              <LaunchCountdown compact />
-            </div>
+
 
             {/* Trending / Just Launched horizontal scroll */}
             <div className="px-4 pt-4">
