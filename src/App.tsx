@@ -72,7 +72,7 @@ const BannerMakerPage = lazy(() => import("./pages/BannerMakerPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PanelPage = lazy(() => import("./pages/PanelPage"));
-const ConsolePage = lazy(() => import("./pages/ConsolePage"));
+
 const PunchPage = lazy(() => import("./pages/PunchPage"));
 const PunchTestPage = lazy(() => import("./pages/PunchTestPage"));
 const PunchGamesPage = lazy(() => import("./pages/PunchGamesPage"));
@@ -128,7 +128,7 @@ const App = () => (
                    <div className="relative z-[1]">
                    <Routes>
                     <Route path="/" element={<PunchDomainRoot />} />
-                    <Route path="/console" element={<ConsolePage />} />
+                    
                     {/* Chain-specific launch routes */}
                     <Route path="/launch" element={<Navigate to="/launch/solana" replace />} />
                     <Route path="/launch/solana" element={<FunLauncherPage />} />
