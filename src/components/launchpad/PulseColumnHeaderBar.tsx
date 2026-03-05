@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useEffect } from "react";
 import { Zap, Menu, SlidersHorizontal } from "lucide-react";
 
 interface PulseColumnHeaderBarProps {
@@ -19,6 +19,10 @@ export const PulseColumnHeaderBar = memo(function PulseColumnHeaderBar({
   const [activePreset, setActivePreset] = useState<string>("P1");
   const [editingQb, setEditingQb] = useState(false);
   const [qbInput, setQbInput] = useState(String(quickBuyAmount));
+
+  useEffect(() => {
+    if (!editingQb) setQbInput(String(quickBuyAmount));
+  }, [quickBuyAmount, editingQb]);
 
   const handleQbSave = useCallback(() => {
     setEditingQb(false);

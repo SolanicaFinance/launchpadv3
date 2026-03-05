@@ -18,6 +18,7 @@ interface AxiomTerminalGridProps {
   codexCompleting?: CodexPairToken[];
   codexGraduated?: CodexPairToken[];
   quickBuyAmount: number;
+  onQuickBuyChange?: (amount: number) => void;
   proTradersMap?: Record<string, number>;
 }
 
@@ -62,7 +63,7 @@ function PulseEmptyColumn({ label, color }: { label: string; color: string }) {
   );
 }
 
-export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount, proTradersMap = {} }: AxiomTerminalGridProps) {
+export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount, onQuickBuyChange, proTradersMap = {} }: AxiomTerminalGridProps) {
   const [mobileTab, setMobileTab] = useState<ColumnTab>("new");
   const [tabletRightTab, setTabletRightTab] = useState<"final" | "migrated">("final");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -130,11 +131,6 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
     { id: "migrated" as const, label: "Migrated", icon: CheckCircle2, tokens: filteredMigrated, codex: filteredCodexGraduated, color: COLUMN_TABS[2].color },
   ];
 
-  const counts: Record<ColumnId, number> = {
-    new: filteredNewPairs.length + filteredCodexNew.length,
-    final: filteredFinalStretch.length + filteredCodexCompleting.length,
-    migrated: filteredMigrated.length + filteredCodexGraduated.length,
-  };
 
   const activeColumn = columns.find(c => c.id === mobileTab)!;
 
@@ -182,7 +178,6 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
         onColumnChange={setActiveFilterColumn}
         onUpdate={updateFilter}
         onReset={resetFilter}
-        counts={counts}
       />
 
       {/* ═══ Mobile: Premium Tab Switcher (<640px) ═══ */}
@@ -216,6 +211,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
           <PulseColumnHeaderBar
             label="New Pairs" color={COLUMN_TABS[0].color} icon={Rocket}
             quickBuyAmount={quickBuyAmount}
+            onQuickBuyChange={onQuickBuyChange}
             onOpenFilters={() => openFiltersForColumn("new")}
             hasActiveFilters={hasActiveFilters("new")}
           />
@@ -256,6 +252,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             <PulseColumnHeaderBar
               label={col.label} color={col.color} icon={col.icon}
               quickBuyAmount={quickBuyAmount}
+              onQuickBuyChange={onQuickBuyChange}
               onOpenFilters={() => openFiltersForColumn(col.id)}
               hasActiveFilters={hasActiveFilters(col.id)}
             />

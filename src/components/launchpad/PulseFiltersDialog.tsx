@@ -29,7 +29,7 @@ interface PulseFiltersDialogProps {
   onColumnChange: (col: ColumnId) => void;
   onUpdate: (column: ColumnId, partial: Partial<PulseFilterConfig>) => void;
   onReset: (column: ColumnId) => void;
-  counts: Record<ColumnId, number>;
+  
 }
 
 function RangeRow({ label, min, max, onMinChange, onMaxChange, placeholder }: {
@@ -60,7 +60,7 @@ function RangeRow({ label, min, max, onMinChange, onMaxChange, placeholder }: {
   );
 }
 
-export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, onColumnChange, onUpdate, onReset, counts }: PulseFiltersDialogProps) {
+export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, onColumnChange, onUpdate, onReset }: PulseFiltersDialogProps) {
   const [tab, setTab] = useState<FilterTab>("Protocols");
   const f = filters[activeColumn];
 
@@ -96,7 +96,6 @@ export function PulseFiltersDialog({ open, onOpenChange, filters, activeColumn, 
             >
               <col.icon className="h-3 w-3" />
               {col.label}
-              <span className="text-[9px] font-mono opacity-60">{counts[col.id]}</span>
             </button>
           ))}
         </div>

@@ -34,7 +34,6 @@ export default function TradePage() {
 
   const handleQuickBuyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    // Allow empty, partial decimals like "0.", "0.0", "0.05"
     if (val === "" || /^\d*\.?\d*$/.test(val)) {
       setQuickBuyInput(val);
       const num = parseFloat(val);
@@ -43,6 +42,12 @@ export default function TradePage() {
         localStorage.setItem(QUICK_BUY_KEY, String(num));
       }
     }
+  }, []);
+
+  const handleQuickBuySet = useCallback((amount: number) => {
+    setQuickBuyAmount(amount);
+    setQuickBuyInput(String(amount));
+    localStorage.setItem(QUICK_BUY_KEY, String(amount));
   }, []);
 
   const allTokens = useMemo(() => {
@@ -129,6 +134,7 @@ export default function TradePage() {
           codexCompleting={codexCompleting}
           codexGraduated={codexGraduated}
           quickBuyAmount={quickBuyAmount}
+          onQuickBuyChange={handleQuickBuySet}
           proTradersMap={proTradersMap ?? {}}
         />
       </div>
