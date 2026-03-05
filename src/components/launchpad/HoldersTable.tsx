@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { HolderInfo } from "@/hooks/useTokenHolders";
+import { TokenTradeEvent } from "@/hooks/useCodexTokenEvents";
 import { useHolderFunding } from "@/hooks/useHolderFunding";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ExternalLink, Filter } from "lucide-react";
@@ -8,6 +9,60 @@ interface Props {
   holders: HolderInfo[];
   totalCount: number;
   isLoading: boolean;
+  trades?: TokenTradeEvent[];
+  currentPriceUsd?: number;
+}
+
+interface HolderStats {
+  totalBoughtUsd: number;
+  totalBoughtTokens: number;
+  avgBuyPrice: number;
+  totalSoldUsd: number;
+  totalSoldTokens: number;
+  avgSellPrice: number;
+}
+
+function buildHolderStatsMap(trades: TokenTradeEvent[]): Map<string, HolderStats> {
+  const map = new Map<string, { buyUsd: number; buyTokens: number; sellUsd: number; sellTokens: number }>();
+  for (const t of trades) {
+    const key = t.maker.toLowerCase();
+    const entry = map.get(key) || { buyUsd: 0, buyTokens: 0, sellUsd: 0, sellTokens: 0 };
+    if (t.type === "Buy") {
+      entry.buyUsd += t.totalUsd;
+      entry.buyTokens += t.tokenAmount;
+    } else {
+      entry.sellUsd += t.totalUsd;
+      entry.sellTokens += t.tokenAmount;
+    }
+    map.set(key, entry);
+  }
+  const result = new Map<string, HolderStats>();
+  for (const [addr, e] of map) {
+    result.set(addr, {
+      totalBoughtUsd: e.buyUsd,
+      totalBoughtTokens: e.buyTokens,
+      avgBuyPrice: e.buyTokens > 0 ? e.buyUsd / e.buyTokens : 0,
+      totalSoldUsd: e.sellUsd,
+      totalSoldTokens: e.sellTokens,
+      avgSellPrice: e.sellTokens > 0 ? e.sellUsd / e.sellTokens : 0,
+    });
+  }
+  return result;
+}
+
+function formatUsdCompact(val: number): string {
+  if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
+  if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
+  if (val >= 1) return `$${val.toFixed(1)}`;
+  if (val >= 0.01) return `$${val.toFixed(2)}`;
+  return `$${val.toFixed(4)}`;
+}
+
+function formatPriceSmall(val: number): string {
+  if (val >= 1) return `$${val.toFixed(2)}`;
+  if (val >= 0.01) return `$${val.toFixed(4)}`;
+  if (val >= 0.0001) return `$${val.toFixed(6)}`;
+  return `$${val.toFixed(8)}`;
 }
 
 /** Deterministic gradient for an address */
@@ -79,7 +134,9 @@ function HolderFundingCell({ address }: { address: string }) {
   );
 }
 
-export function HoldersTable({ holders, totalCount, isLoading }: Props) {
+export function HoldersTable({ holders, totalCount, isLoading, trades = [], currentPriceUsd = 0 }: Props) {
+  const statsMap = useMemo(() => buildHolderStatsMap(trades), [trades]);
+
   if (isLoading && holders.length === 0) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -165,19 +222,56 @@ export function HoldersTable({ holders, totalCount, isLoading }: Props) {
                     </span>
                   </td>
 
-                  {/* Bought (Avg Buy) - needs trade analysis */}
+                  {/* Bought (Avg Buy) */}
                   <td className="py-2 px-2 text-right">
-                    <span className="text-muted-foreground/30 text-[11px]">—</span>
+                    {(() => {
+                      const s = statsMap.get(holder.address.toLowerCase());
+                      if (!s || s.totalBoughtTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      return (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(s.totalBoughtUsd)}</span>
+                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(s.avgBuyPrice)}</span>
+                        </div>
+                      );
+                    })()}
                   </td>
 
-                  {/* Sold (Avg Sell) - needs trade analysis */}
+                  {/* Sold (Avg Sell) */}
                   <td className="py-2 px-2 text-right">
-                    <span className="text-muted-foreground/30 text-[11px]">—</span>
+                    {(() => {
+                      const s = statsMap.get(holder.address.toLowerCase());
+                      if (!s || s.totalSoldTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      return (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(s.totalSoldUsd)}</span>
+                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(s.avgSellPrice)}</span>
+                        </div>
+                      );
+                    })()}
                   </td>
 
-                  {/* Unrealized PnL - needs trade analysis */}
+                  {/* Unrealized PnL */}
                   <td className="py-2 px-2 text-right">
-                    <span className="text-muted-foreground/30 text-[11px]">—</span>
+                    {(() => {
+                      const s = statsMap.get(holder.address.toLowerCase());
+                      if (!s || s.totalBoughtTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      const unrealizedValue = holder.tokenAmount * currentPriceUsd;
+                      const costBasis = holder.tokenAmount * s.avgBuyPrice;
+                      const realizedPnl = s.totalSoldUsd - (s.totalSoldTokens * s.avgBuyPrice);
+                      const totalPnl = (unrealizedValue - costBasis) + realizedPnl;
+                      const pnlPct = s.totalBoughtUsd > 0 ? (totalPnl / s.totalBoughtUsd) * 100 : 0;
+                      const isPositive = totalPnl >= 0;
+                      return (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className={`text-[11px] font-medium ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                            {isPositive ? '+' : ''}{formatUsdCompact(Math.abs(totalPnl))}
+                          </span>
+                          <span className={`text-[9px] ${isPositive ? 'text-green-400/60' : 'text-red-400/60'}`}>
+                            {isPositive ? '+' : ''}{pnlPct.toFixed(1)}%
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   {/* Remaining */}

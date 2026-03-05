@@ -8,11 +8,12 @@ interface Props {
   tokenAddress: string;
   holderCount?: number;
   userWallet?: string;
+  currentPriceUsd?: number;
 }
 
 type TabKey = "all_trades" | "your_trades" | "holders";
 
-export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet }: Props) {
+export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, currentPriceUsd = 0 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("all_trades");
   const { data, isLoading } = useCodexTokenEvents(tokenAddress);
   const { data: holdersData, isLoading: holdersLoading } = useTokenHolders(
@@ -74,6 +75,8 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet }: Pro
             holders={holdersData?.holders || []}
             totalCount={liveHolderCount}
             isLoading={holdersLoading}
+            trades={data?.events || []}
+            currentPriceUsd={currentPriceUsd}
           />
         )}
       </div>
