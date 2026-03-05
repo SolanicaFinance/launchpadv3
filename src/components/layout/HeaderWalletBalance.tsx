@@ -7,6 +7,7 @@ import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useToast } from "@/hooks/use-toast";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 
 function HeaderWalletBalanceInner() {
   const { isAuthenticated, logout } = useAuth();
@@ -17,6 +18,7 @@ function HeaderWalletBalanceInner() {
   const [balance, setBalance] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,66 +85,37 @@ function HeaderWalletBalanceInner() {
 
         {menuOpen && (
           <div
-            className="absolute right-0 top-full mt-1 w-52 rounded-xl overflow-hidden z-50 border border-border"
-            style={{ background: "rgba(15,23,42,0.95)", backdropFilter: "blur(12px)" }}
+            className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50 border border-border/60 shadow-xl"
+            style={{ background: "hsl(var(--background) / 0.97)", backdropFilter: "blur(16px)" }}
           >
-            {/* Profile header */}
-            <div className="px-3 py-3 border-b border-border/30 flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden">
-                <User className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] font-bold text-foreground truncate">
-                  {embeddedAddress.slice(0, 6)}..{embeddedAddress.slice(-4)}
-                </div>
-                {balance !== null && (
-                  <div className="text-[10px] text-muted-foreground font-mono">
-                    {balance.toFixed(4)} SOL
-                  </div>
-                )}
-              </div>
+            {/* Menu items — Axiom style: clean rows, no profile header, just actions */}
+            <div className="py-2">
+              <MenuItem
+                icon={<User className="h-4 w-4" />}
+                label="Account and Security"
+                onClick={() => { setMenuOpen(false); setAccountOpen(true); }}
+              />
+              <MenuItem
+                icon={<Settings className="h-4 w-4" />}
+                label="Settings"
+                onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
+              />
+              <MenuItem
+                icon={<Crosshair className="h-4 w-4" />}
+                label="Alpha Tracker"
+                onClick={() => { setMenuOpen(false); navigate("/alpha-tracker"); }}
+              />
             </div>
 
-            <button
-              onClick={handleCopy}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-              Copy Address
-            </button>
-
-            <button
-              onClick={() => { setMenuOpen(false); navigate("/panel?tab=portfolio"); }}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-              Account & Security
-            </button>
-
-            <button
-              onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-              Settings
-            </button>
-
-            <button
-              onClick={() => { setMenuOpen(false); navigate("/alpha-tracker"); }}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              <Crosshair className="h-3.5 w-3.5 text-muted-foreground" />
-              Alpha Tracker
-            </button>
-
-            <div className="border-t border-border/30">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-destructive hover:bg-surface-hover transition-colors cursor-pointer"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                Logout
-              </button>
+            <div className="border-t border-border/40">
+              <div className="py-2">
+                <MenuItem
+                  icon={<LogOut className="h-4 w-4" />}
+                  label="Log Out"
+                  onClick={handleLogout}
+                  destructive
+                />
+              </div>
             </div>
           </div>
         )}
@@ -154,7 +127,33 @@ function HeaderWalletBalanceInner() {
         profile={null}
         onProfileUpdate={() => {}}
       />
+
+      <AccountSecurityModal
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+      />
     </>
+  );
+}
+
+function MenuItem({ icon, label, onClick, destructive }: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 text-[13px] font-medium transition-colors cursor-pointer ${
+        destructive
+          ? "text-destructive hover:bg-destructive/10"
+          : "text-foreground hover:bg-muted/50"
+      }`}
+    >
+      <span className={destructive ? "" : "text-muted-foreground"}>{icon}</span>
+      {label}
+    </button>
   );
 }
 
