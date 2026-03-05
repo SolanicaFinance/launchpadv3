@@ -1,30 +1,56 @@
 
 
-## Problem
-The Holders tab in `TokenDataTabs` currently displays a static count passed as a prop. It doesn't fetch real on-chain holder data, doesn't auto-refresh, and doesn't refetch when switching tabs.
+## Analysis
 
-## Plan
+The current trade panels (`UniversalTradePanel` and `TradePanelWithSwap`) already follow the terminal aesthetic fairly well but are missing several features from the screenshot. Both panels need to be updated to match the pump.fun style more closely.
 
-### 1. Create `useTokenHolders` hook (new file: `src/hooks/useTokenHolders.ts`)
-- Calls the existing `fetch-token-holders` edge function (uses Helius API) with the mint address
-- Returns `{ holders: string[], count: number, isLoading, refetch }`
-- Accepts an `enabled` boolean so we only fetch when the holders tab is active
-- Uses `refetchInterval: 5000` to auto-poll every 5 seconds while the tab is active
+## Missing Features & Style Fixes (from screenshot)
 
-### 2. Update `TokenDataTabs` component
-- Add state tracking for active tab (already exists)
-- Call the new `useTokenHolders` hook with `enabled: activeTab === "holders"`
-- When user clicks the Holders tab, React Query will automatically trigger a fresh fetch (since `enabled` flips to true)
-- The 5-second polling keeps data fresh while viewing
-- Show a loading spinner while fetching
-- Display the accurate holder count from the edge function response (not the stale prop)
-- Update the tab badge count to use live data when available
+### 1. Add "INSTA BUY" toggle
+- A toggle switch at the top of the buy panel with "INSTA BUY" label in green
+- When enabled, skips confirmation and executes immediately (this is already the behavior, but the visual toggle is missing)
 
-### 3. Holders tab content
-- Replace the static number display with: live count + loading indicator + last-updated timestamp
-- Show a small "LIVE" pulse indicator to signal auto-refresh is active
+### 2. Price display line
+- Show `1 {TOKEN_NAME} = {PRICE} SOL` between the input and the action button
+- Currently missing — screenshot shows this prominently
 
-### Files to modify
-- **New**: `src/hooks/useTokenHolders.ts`
-- **Edit**: `src/components/launchpad/TokenDataTabs.tsx`
+### 3. Rename action button to "QUICK BUY" with SOL icon
+- Instead of "Buy {TICKER}", use "QUICK BUY ≡ {amount}" format matching the screenshot
+- Below it: "Once you click on Quick Buy, your transaction is sent immediately" warning text
+
+### 4. Add MAX button to input field
+- The input field should have a "MAX" button (green/gold) on the right side
+- Currently only shows the currency label (SOL/ticker)
+
+### 5. Add "ADVANCED SETTINGS" collapsible section
+- Move slippage controls into a collapsible "ADVANCED SETTINGS" section
+- Add rug-check safety indicators:
+  - "ff Launched" (graduated status) — green check / red cross
+  - "Authority revoked" — green check / red cross  
+  - "Liquidity locked" — green check / red cross
+  - "No creator allocation" — green check / red cross
+- These can be derived from existing token metadata where available
+
+### 6. Style refinements
+- Quick amount preset buttons: use chartreuse/green border with SOL icon (≡), active one highlighted with filled background
+- Input field label: "Amount to buy in SOL" instead of "You Pay"
+- Remove the arrow-down divider between input/output — screenshot doesn't have it
+- Make the main CTA button a solid green block (not transparent/bordered)
+
+## Files to modify
+
+- **`src/components/launchpad/UniversalTradePanel.tsx`** — Major restyle: add INSTA BUY toggle, price line, MAX button, QUICK BUY button text, ADVANCED SETTINGS collapsible with rug checks, style all elements to match screenshot
+- **`src/components/launchpad/TradePanelWithSwap.tsx`** — Same changes for bonding curve tokens (mirror the UniversalTradePanel changes)
+
+## Implementation approach
+
+Both panels share ~90% identical UI structure. I will update both files with:
+1. INSTA BUY switch toggle at top using the existing Switch component
+2. Preset buttons with ≡ SOL icon and chartreuse active state
+3. Input with MAX button
+4. Price display line: `1 {name} = {price} SOL`
+5. Solid green "QUICK BUY ≡ {amount}" button
+6. Warning text below button
+7. Collapsible "ADVANCED SETTINGS" with slippage + safety indicators
+8. Remove arrow divider, remove "You Receive" output section (screenshot doesn't show it prominently — keep it minimal)
 
