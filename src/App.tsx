@@ -71,6 +71,7 @@ const NfaMarketplacePage = lazy(() => import("./pages/NfaMarketplacePage"));
 const BannerMakerPage = lazy(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazy(() => import("./pages/AlphaTrackerPage"));
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
+const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const PanelPage = lazy(() => import("./pages/PanelPage"));
@@ -147,6 +148,7 @@ const App = () => (
                     <Route path="/trade" element={<TradePage />} />
                      <Route path="/alpha-tracker" element={<AlphaTrackerPage />} />
                      <Route path="/discover" element={<DiscoverPage />} />
+                     <Route path="/profile/:identifier" element={<UserProfilePage />} />
                     <Route path="/investigate-token" element={<InvestigateTokenPage />} />
                     <Route path="/api" element={<ApiDashboardPage />} />
                     <Route path="/api/docs" element={<ApiDocsPage />} />
