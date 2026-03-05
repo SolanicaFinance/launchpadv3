@@ -1,56 +1,66 @@
 
 
-## Analysis
+## Differences Found (Current vs Reference)
 
-The current trade panels (`UniversalTradePanel` and `TradePanelWithSwap`) already follow the terminal aesthetic fairly well but are missing several features from the screenshot. Both panels need to be updated to match the pump.fun style more closely.
+### 1. BUY/SELL Tabs
+- **Current**: Green background tint with green bottom border
+- **Reference**: No background tint, just text + yellow/green underline. More subdued.
 
-## Missing Features & Style Fixes (from screenshot)
+### 2. INSTA BUY Toggle Position
+- **Current**: Label on left, Switch on right
+- **Reference**: Toggle circle on LEFT, "INSTA BUY" text on RIGHT
 
-### 1. Add "INSTA BUY" toggle
-- A toggle switch at the top of the buy panel with "INSTA BUY" label in green
-- When enabled, skips confirmation and executes immediately (this is already the behavior, but the visual toggle is missing)
+### 3. Preset Buttons Color
+- **Current**: `green-500` borders (bright neon green)
+- **Reference**: Olive/army green borders (`~#4a5a2a`), much darker and more muted. Active button has filled olive-green background.
 
-### 2. Price display line
-- Show `1 {TOKEN_NAME} = {PRICE} SOL` between the input and the action button
-- Currently missing — screenshot shows this prominently
+### 4. Input Field
+- **Current**: "Amount to buy in SOL" label + green MAX button
+- **Reference**: Has ≡ icon prefix in the placeholder. MAX button is more gold/yellow toned (`#c8b400`-ish).
 
-### 3. Rename action button to "QUICK BUY" with SOL icon
-- Instead of "Buy {TICKER}", use "QUICK BUY ≡ {amount}" format matching the screenshot
-- Below it: "Once you click on Quick Buy, your transaction is sent immediately" warning text
+### 5. Price Line
+- **Current**: Centered
+- **Reference**: Left-aligned
 
-### 4. Add MAX button to input field
-- The input field should have a "MAX" button (green/gold) on the right side
-- Currently only shows the currency label (SOL/ticker)
+### 6. ADVANCED SETTINGS Text
+- **Current**: Left-aligned, gray/muted, tiny text
+- **Reference**: Centered, green/yellow color, bold, prominent
 
-### 5. Add "ADVANCED SETTINGS" collapsible section
-- Move slippage controls into a collapsible "ADVANCED SETTINGS" section
-- Add rug-check safety indicators:
-  - "ff Launched" (graduated status) — green check / red cross
-  - "Authority revoked" — green check / red cross  
-  - "Liquidity locked" — green check / red cross
-  - "No creator allocation" — green check / red cross
-- These can be derived from existing token metadata where available
+### 7. Safety Checks Layout (biggest difference)
+- **Current**: Vertical list with tiny check/X icons on the right of each row
+- **Reference**: 4 columns in a horizontal row, each with a LARGE green circle ✓ or red circle ✗ icon ABOVE the label text (centered below icon)
 
-### 6. Style refinements
-- Quick amount preset buttons: use chartreuse/green border with SOL icon (≡), active one highlighted with filled background
-- Input field label: "Amount to buy in SOL" instead of "You Pay"
-- Remove the arrow-down divider between input/output — screenshot doesn't have it
-- Make the main CTA button a solid green block (not transparent/bordered)
+### 8. Missing: "Share your P&L" Section
+- **Reference** has: "Share your P&L" text + "TWEET ↗" button + "+200" badge
 
-## Files to modify
+### 9. Missing: Chat/Twitter Tabs
+- **Reference** has: CHAT | TWITTER toggle tabs at the bottom with view count, emoji reactions (🔥51, 😀12, 💰9, etc.)
 
-- **`src/components/launchpad/UniversalTradePanel.tsx`** — Major restyle: add INSTA BUY toggle, price line, MAX button, QUICK BUY button text, ADVANCED SETTINGS collapsible with rug checks, style all elements to match screenshot
-- **`src/components/launchpad/TradePanelWithSwap.tsx`** — Same changes for bonding curve tokens (mirror the UniversalTradePanel changes)
+## Plan
 
-## Implementation approach
+### File: `src/components/launchpad/UniversalTradePanel.tsx`
+### File: `src/components/launchpad/TradePanelWithSwap.tsx`
 
-Both panels share ~90% identical UI structure. I will update both files with:
-1. INSTA BUY switch toggle at top using the existing Switch component
-2. Preset buttons with ≡ SOL icon and chartreuse active state
-3. Input with MAX button
-4. Price display line: `1 {name} = {price} SOL`
-5. Solid green "QUICK BUY ≡ {amount}" button
-6. Warning text below button
-7. Collapsible "ADVANCED SETTINGS" with slippage + safety indicators
-8. Remove arrow divider, remove "You Receive" output section (screenshot doesn't show it prominently — keep it minimal)
+Both files get the same changes:
+
+1. **BUY/SELL tabs**: Remove `bg-green-500/15`, just use transparent bg with a bottom border underline in chartreuse/yellow-green (`border-[#c8ff00]`). SELL uses same transparent bg with red underline when active.
+
+2. **INSTA BUY**: Flip layout — Switch on LEFT, label text on RIGHT.
+
+3. **Preset buttons**: Change border color from `green-500` to olive `border-[#3a4a1a]`. Active state uses `bg-[#3a4a1a]` fill with `text-[#c8ff00]` text. Keep ◎ icon.
+
+4. **MAX button**: Change from green to gold/yellow: `bg-[#2a2a1a] text-[#c8b400] border-[#4a4a2a]`.
+
+5. **Price line**: Left-align instead of center.
+
+6. **ADVANCED SETTINGS trigger**: Center text, color it `text-[#c8ff00]`, make it bolder and slightly larger.
+
+7. **Safety checks**: Change from vertical list to horizontal 4-column grid. Each column: large circle icon (green `CheckCircle2` or red `XCircle`) on top, label text centered below in small mono text.
+
+8. **Add "Share your P&L" section**: Below advanced settings — left text "Share your P&L", right side has "TWEET ↗" button and "+200" badge.
+
+9. **Do NOT add Chat/Twitter tabs** — those exist elsewhere on the page already (comments section). Keeping scope to the trade panel only.
+
+### Approach
+Apply identical style changes to both files. After editing, take a screenshot and compare again to verify 1:1 match.
 
