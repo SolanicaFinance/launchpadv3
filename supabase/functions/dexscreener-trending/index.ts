@@ -130,7 +130,12 @@ serve(async (req) => {
       };
     });
 
-    return new Response(JSON.stringify(results), {
+    // 5. Filter out rugged tokens (priceChange6h <= -50%) and re-rank
+    const filtered = results
+      .filter(t => t.priceChange6h === null || t.priceChange6h > -50)
+      .map((t, idx) => ({ ...t, rank: idx + 1 }));
+
+    return new Response(JSON.stringify(filtered), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' },
     });
   } catch (error) {
