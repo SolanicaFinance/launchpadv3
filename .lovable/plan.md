@@ -1,28 +1,22 @@
 
 
-## Add "% Holdings" Column to Holders Table and All Trades Table
+## Add Token Icon to Sell Input Field and Sell Button
 
-The reference image shows the "Remaining" column displaying a **USD value** (e.g. `$2.55K`) alongside a **percentage badge** (e.g. `99.43%`) with a progress bar underneath. Currently the Holders table shows token amount instead of USD value, and the All Trades table has no holdings column at all.
+Currently, the buy side shows the Solana logo next to "SOL" in the input field and on the "QUICK BUY" button, but the sell side only shows the token ticker text with no icon. The fix is to show the token's image next to the ticker in both places when selling.
 
-### Changes
+### Changes Required
 
-#### 1. Update `HoldersTable.tsx` — Remaining column
-- Replace the token amount display with the **USD value** of remaining holdings: `holder.tokenAmount * currentPriceUsd`, formatted with `formatUsdCompact`
-- Show the percentage in a pill/badge style (dark background, rounded) matching the reference image
-- Keep the progress bar underneath
+#### 1. `TradePanelWithSwap.tsx`
+- The `Token` type already has `image_url`. Two spots need the token icon on sell:
+  - **Input field** (line ~283-284): When `!isBuy`, show `token.image_url` as a small round image before `token.ticker`
+  - **Sell button** (line ~330): Change `SELL ${token.ticker}` to include the token image, matching the buy button pattern
 
-#### 2. Update `CodexTokenTrades.tsx` — Add "% Holdings" column
-- The trades table currently has no holdings data. We need to accept `totalSupply` and `currentPriceUsd` as new props, plus a way to know each maker's current token balance
-- Pass `holdersData` from `TokenDataTabs` into `CodexTokenTrades` so we can look up each trader's current holding percentage
-- Add a new column after "Size" showing the trader's current `$value` and `%` of supply (looked up from holders data)
-- If the trader isn't in the top holders list, show `—`
-
-#### 3. Update `TokenDataTabs.tsx`
-- Always fetch holders data (not just on holders tab) so it's available for trades view
-- Pass holders array and `currentPriceUsd` to `CodexTokenTrades`
-
-### Visual Style (matching reference)
-- USD value in white/foreground, e.g. `$2.55K`
-- Percentage in a subtle dark pill badge: `99.43%`
-- Thin progress bar underneath (blue/green for normal, red for >10%)
+#### 2. `UniversalTradePanel.tsx`
+- The `TokenInfo` interface needs a new optional `imageUrl?: string` field
+- Same two spots:
+  - **Input field** (line ~325-328): Show token image on sell side
+  - **Sell button** (line ~372): Add token image to sell button text
+- Update all call sites in `FunTokenDetailPage.tsx` to pass `imageUrl` when constructing the `TokenInfo` object (lines ~206, ~239, ~256, ~500):
+  - External tokens: pass `token.imageUrl`
+  - Fun tokens: pass `token.image_url`
 
