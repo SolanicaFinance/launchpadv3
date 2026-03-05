@@ -1,38 +1,30 @@
 
 
-## Current Layout vs Desired
-
-Currently on **desktop (lg+)**, the layout is:
-- **Left col (9/12)**: Chart → TokenDataTabs → **TradeSection** (buy/sell is BELOW trades table)
-- **Right col (3/12)**: Token Details → Contract → Description → Comments → Wallet
-
-The screenshot shows buy/sell panel should be on the **right side, top**, like pump.fun — not below the chart/trades.
+## Problem
+The Holders tab in `TokenDataTabs` currently displays a static count passed as a prop. It doesn't fetch real on-chain holder data, doesn't auto-refresh, and doesn't refetch when switching tabs.
 
 ## Plan
 
-### Move TradeSection to right column (top) on Desktop
+### 1. Create `useTokenHolders` hook (new file: `src/hooks/useTokenHolders.ts`)
+- Calls the existing `fetch-token-holders` edge function (uses Helius API) with the mint address
+- Returns `{ holders: string[], count: number, isLoading, refetch }`
+- Accepts an `enabled` boolean so we only fetch when the holders tab is active
+- Uses `refetchInterval: 5000` to auto-poll every 5 seconds while the tab is active
 
-In the desktop layout (lines 834-869), restructure from:
-```
-Left (9): Chart → DataTabs → Trade
-Right (3): Details → Contract → Desc → Comments → Wallet
-```
-To:
-```
-Left (9): Chart → DataTabs
-Right (3): Trade → Wallet → Details → Contract → Desc → Comments
-```
+### 2. Update `TokenDataTabs` component
+- Add state tracking for active tab (already exists)
+- Call the new `useTokenHolders` hook with `enabled: activeTab === "holders"`
+- When user clicks the Holders tab, React Query will automatically trigger a fresh fetch (since `enabled` flips to true)
+- The 5-second polling keeps data fresh while viewing
+- Show a loading spinner while fetching
+- Display the accurate holder count from the edge function response (not the stale prop)
+- Update the tab badge count to use live data when available
 
-Make right column wider (col-span-4) and left narrower (col-span-8) so the trade panel has enough room for the buy/sell UI (matching the screenshot proportions).
+### 3. Holders tab content
+- Replace the static number display with: live count + loading indicator + last-updated timestamp
+- Show a small "LIVE" pulse indicator to signal auto-refresh is active
 
-### Same fix for Tablet layout
-
-Already correct on tablet — trade is in right column (col-span-5). No change needed.
-
-### Same fix for ExternalTokenView desktop layout
-
-Lines 247-282: Move `UniversalTradePanel` from left col-span-9 into right col-span-3 (top), same pattern.
-
-### Files to modify:
-- `src/pages/FunTokenDetailPage.tsx` — restructure desktop grid in both `ExternalTokenView` and the main token view
+### Files to modify
+- **New**: `src/hooks/useTokenHolders.ts`
+- **Edit**: `src/components/launchpad/TokenDataTabs.tsx`
 
