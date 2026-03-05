@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart2, Bot, Code2, TrendingUp, Plus, FileText, Fingerprint, Monitor, Crosshair } from "lucide-react";
+import { Home, Zap, Bot, Code2, TrendingUp, Plus, FileText, Fingerprint, Monitor, Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -13,7 +13,7 @@ const LOGO_SRC = clawLogo;
 const NAV_LINKS = [
   { to: "/", label: "Home", icon: Home, exact: true },
   
-  { to: "/trade", label: "Terminal", icon: BarChart2 },
+  { to: "/trade", label: "Pulse", icon: Zap },
   { to: "/alpha-tracker", label: "Alpha", icon: Crosshair },
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/panel?tab=nfas", label: "NFA", icon: Fingerprint, useClaw: true },
