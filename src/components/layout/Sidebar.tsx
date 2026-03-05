@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { to: "/", label: "Home", icon: Home, exact: true },
   
   { to: "/trade", label: "Pulse", icon: Zap },
+  { to: "/discover", label: "Discover", icon: TrendingUp },
   { to: "/alpha-tracker", label: "Alpha", icon: Crosshair },
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/panel?tab=nfas", label: "NFA", icon: Fingerprint, useClaw: true },
