@@ -7,8 +7,9 @@ import { useSolPrice } from "@/hooks/useSolPrice";
 import { useCodexNewPairs } from "@/hooks/useCodexNewPairs";
 import { useProTradersCount } from "@/hooks/useProTradersCount";
 import { AxiomTerminalGrid } from "@/components/launchpad/AxiomTerminalGrid";
+import { useTradeSounds } from "@/hooks/useTradeSounds";
 import {
-  List, Settings, Bookmark, Monitor, Volume2, LayoutGrid, ChevronDown, Zap
+  List, Settings, Bookmark, Monitor, Volume2, VolumeX, LayoutGrid, ChevronDown, Zap
 } from "lucide-react";
 
 const QUICK_BUY_KEY = "pulse-quick-buy-amount";
@@ -31,6 +32,8 @@ export default function TradePage() {
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated } = useCodexNewPairs();
   const [quickBuyAmount, setQuickBuyAmount] = useState(getStoredQuickBuy);
   const [quickBuyInput, setQuickBuyInput] = useState(String(getStoredQuickBuy()));
+  const { toggle: toggleSounds, isEnabled: isSoundsEnabled } = useTradeSounds();
+  const [soundsOn, setSoundsOn] = useState(() => localStorage.getItem("pulse-sounds-enabled") === "true");
 
   const handleQuickBuyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -84,7 +87,13 @@ export default function TradePage() {
             </button>
             <button className="pulse-toolbar-icon"><Bookmark className="h-3.5 w-3.5" /></button>
             <button className="pulse-toolbar-icon"><Monitor className="h-3.5 w-3.5" /></button>
-            <button className="pulse-toolbar-icon"><Volume2 className="h-3.5 w-3.5" /></button>
+            <button
+              className={`pulse-toolbar-icon ${soundsOn ? "!text-primary !bg-primary/10" : ""}`}
+              onClick={() => { toggleSounds(); setSoundsOn(!soundsOn); }}
+              title={soundsOn ? "Mute trade sounds" : "Enable trade sounds"}
+            >
+              {soundsOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
             <button className="pulse-toolbar-icon"><Settings className="h-3.5 w-3.5" /></button>
             <button className="pulse-toolbar-icon"><LayoutGrid className="h-3.5 w-3.5" /></button>
             <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-muted/50 text-[10px] font-mono text-muted-foreground">

@@ -472,6 +472,54 @@ export type Database = {
           },
         ]
       }
+      alpha_trades: {
+        Row: {
+          amount_sol: number
+          amount_tokens: number
+          created_at: string
+          id: string
+          price_usd: number | null
+          token_mint: string
+          token_name: string | null
+          token_ticker: string | null
+          trade_type: string
+          trader_avatar_url: string | null
+          trader_display_name: string | null
+          tx_hash: string
+          wallet_address: string
+        }
+        Insert: {
+          amount_sol?: number
+          amount_tokens?: number
+          created_at?: string
+          id?: string
+          price_usd?: number | null
+          token_mint: string
+          token_name?: string | null
+          token_ticker?: string | null
+          trade_type?: string
+          trader_avatar_url?: string | null
+          trader_display_name?: string | null
+          tx_hash: string
+          wallet_address: string
+        }
+        Update: {
+          amount_sol?: number
+          amount_tokens?: number
+          created_at?: string
+          id?: string
+          price_usd?: number | null
+          token_mint?: string
+          token_name?: string | null
+          token_ticker?: string | null
+          trade_type?: string
+          trader_avatar_url?: string | null
+          trader_display_name?: string | null
+          tx_hash?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       api_accounts: {
         Row: {
           api_key_hash: string
