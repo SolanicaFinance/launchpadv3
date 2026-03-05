@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
@@ -20,6 +21,16 @@ function HeaderWalletBalanceInner() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!embeddedAddress) return;
+    const fetchProfile = async () => {
+      const { data } = await (supabase as any).from("profiles").select("display_name, avatar_url").eq("wallet_address", embeddedAddress).maybeSingle();
+      if (data) setProfile(data);
+    };
+    fetchProfile();
+  }, [embeddedAddress, settingsOpen]);
 
   useEffect(() => {
     if (!embeddedAddress) return;
@@ -88,7 +99,26 @@ function HeaderWalletBalanceInner() {
             className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50 border border-border/60 shadow-xl"
             style={{ background: "hsl(var(--background) / 0.97)", backdropFilter: "blur(16px)" }}
           >
-            {/* Menu items — Axiom style: clean rows, no profile header, just actions */}
+            {/* Profile header — tap to change avatar */}
+            <button
+              onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/40"
+            >
+              <div className="h-9 w-9 rounded-full bg-muted border border-border overflow-hidden flex items-center justify-center flex-shrink-0">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+              <div className="text-left min-w-0">
+                <div className="text-[13px] font-bold text-foreground truncate">
+                  {profile?.display_name || embeddedAddress.slice(0, 6) + '...' + embeddedAddress.slice(-4)}
+                </div>
+                <div className="text-[11px] text-muted-foreground">Edit profile</div>
+              </div>
+            </button>
+
             <div className="py-2">
               <MenuItem
                 icon={<User className="h-4 w-4" />}
