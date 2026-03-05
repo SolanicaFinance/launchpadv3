@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { Rocket, Briefcase, Zap } from "lucide-react";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
+import tunaLogo from "@/assets/tuna-logo.png";
 
 interface LaunchpadBadgeProps {
   launchpadName?: string | null;
@@ -9,13 +9,18 @@ interface LaunchpadBadgeProps {
   className?: string;
 }
 
-const LAUNCHPAD_CONFIG: Record<string, { label: string; colors: string; fallbackIcon?: "rocket" | "briefcase" | "zap" }> = {
+const LAUNCHPAD_CONFIG: Record<string, { label: string; colors: string; officialIcon?: string }> = {
   "Pump.fun": { label: "pump", colors: "bg-primary/20 text-primary" },
-  "Bonk": { label: "bonk", colors: "bg-orange-500/20 text-orange-400" },
-  "Moonshot": { label: "moon", colors: "bg-purple-500/20 text-purple-400", fallbackIcon: "rocket" },
-  "Believe": { label: "believe", colors: "bg-cyan-500/20 text-cyan-400", fallbackIcon: "zap" },
-  "boop": { label: "boop", colors: "bg-pink-500/20 text-pink-400", fallbackIcon: "zap" },
-  "Jupiter Studio": { label: "jup", colors: "bg-emerald-500/20 text-emerald-400", fallbackIcon: "zap" },
+  "Bonk": { label: "bonk", colors: "bg-orange-500/20 text-orange-400", officialIcon: "https://www.bonk.fun/favicon.ico" },
+  "Moonshot": { label: "moon", colors: "bg-purple-500/20 text-purple-400", officialIcon: "https://moonshot.money/favicon.ico" },
+  "Believe": { label: "believe", colors: "bg-cyan-500/20 text-cyan-400", officialIcon: "https://believe.app/images/icons/icon.png" },
+  "boop": { label: "boop", colors: "bg-pink-500/20 text-pink-400", officialIcon: "https://boop.fun/images/brand.png" },
+  "Jupiter Studio": { label: "jup", colors: "bg-emerald-500/20 text-emerald-400", officialIcon: "https://jup.ag/favicon.ico" },
+};
+
+const SPECIAL_CASES: Record<string, { label: string; colors: string; icon: string }> = {
+  "bags.fm": { label: "bags", colors: "bg-blue-500/20 text-blue-400", icon: "https://bags.fm/favicon.ico" },
+  "Meteora": { label: "meteora", colors: "bg-blue-500/20 text-blue-400", icon: tunaLogo },
 };
 
 function resolveFromType(type?: string | null): string | null {
@@ -31,65 +36,48 @@ function resolveFromType(type?: string | null): string | null {
   return null;
 }
 
-const FallbackIcon = ({ type, className }: { type?: string; className?: string }) => {
-  if (type === "rocket") return <Rocket className={className} />;
-  if (type === "briefcase") return <Briefcase className={className} />;
-  return <Zap className={className} />;
-};
-
 export function LaunchpadBadge({ launchpadName, launchpadType, iconUrl, className }: LaunchpadBadgeProps) {
   const resolved = launchpadName || resolveFromType(launchpadType);
   if (!resolved) return null;
 
-  // bags.fm special case
-  if (resolved === "bags.fm") {
+  // Special cases (bags.fm, Meteora)
+  const special = SPECIAL_CASES[resolved];
+  if (special) {
     return (
-      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", "bg-blue-500/20 text-blue-400", className)}>
-        <Briefcase className="h-2.5 w-2.5" />
-        bags
+      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", special.colors, className)}>
+        <img src={iconUrl || special.icon} alt="" className="h-2.5 w-2.5 rounded-full object-cover" />
+        {special.label}
       </span>
     );
   }
 
-  // Meteora special case
-  if (resolved === "Meteora") {
+  // Pump.fun uses local pill image
+  if (resolved === "Pump.fun") {
+    const config = LAUNCHPAD_CONFIG[resolved];
     return (
-      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", "bg-blue-500/20 text-blue-400", className)}>
-        🐟
-        <span>meteora</span>
+      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", config.colors, className)}>
+        <img src={iconUrl || pumpfunPill} alt="" className="h-2.5 w-2.5 object-contain" />
+        {config.label}
       </span>
     );
   }
 
   const config = LAUNCHPAD_CONFIG[resolved];
   if (!config) {
-    // Generic fallback with iconUrl or text
+    // Generic fallback
     return (
       <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium bg-muted text-muted-foreground", className)}>
-        {iconUrl ? <img src={iconUrl} alt="" className="h-2.5 w-2.5 rounded-full object-cover" /> : <Zap className="h-2.5 w-2.5" />}
+        {iconUrl ? <img src={iconUrl} alt="" className="h-2.5 w-2.5 rounded-full object-cover" /> : null}
         {resolved.slice(0, 6).toLowerCase()}
       </span>
     );
   }
 
-  // Pump.fun uses the existing pill image
-  if (resolved === "Pump.fun") {
-    return (
-      <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", config.colors, className)}>
-        <img src={pumpfunPill} alt="" className="h-2.5 w-2.5 object-contain" />
-        {config.label}
-      </span>
-    );
-  }
-
-  // Others: use iconUrl from Codex or fallback icon
+  // All others: use iconUrl → officialIcon → text-only
+  const imgSrc = iconUrl || config.officialIcon;
   return (
     <span className={cn("inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full text-[9px] font-medium", config.colors, className)}>
-      {iconUrl ? (
-        <img src={iconUrl} alt="" className="h-2.5 w-2.5 rounded-full object-cover" />
-      ) : (
-        <FallbackIcon type={config.fallbackIcon} className="h-2.5 w-2.5" />
-      )}
+      {imgSrc && <img src={imgSrc} alt="" className="h-2.5 w-2.5 rounded-full object-cover" />}
       {config.label}
     </span>
   );
