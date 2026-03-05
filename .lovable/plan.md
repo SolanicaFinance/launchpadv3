@@ -1,41 +1,31 @@
 
 
-## Populate Bought, Sold, and PnL columns in the Holders Table
+## Fix: PnL Data Missing for Most Holders
 
-### Current State
-The HoldersTable shows "—" placeholders for Bought (Avg Buy), Sold (Avg Sell), and U. PnL columns. The trade data already exists — `useCodexTokenEvents` fetches all trades with maker address, amounts, and USD prices. We just need to cross-reference holders with their trades.
+### Root Cause
 
-### Approach
-Use the **existing Codex trade events** data (already fetched in `TokenDataTabs`) to compute per-holder trade stats. No new API calls or edge functions needed.
+Two bugs causing PnL to show for only a few "random" holders:
 
-### Changes
+1. **Only 50 trades fetched** — `useCodexTokenEvents` fetches a single page of 50 trades. A token with 548 holders has thousands of trades. Most holders simply don't appear in the latest 50. This is the primary cause.
 
-#### 1. `src/components/launchpad/TokenDataTabs.tsx`
-- Pass the full trade events list and current token price USD to `HoldersTable` as new props
-- Add `currentPriceUsd` prop from parent (already available in FunTokenDetailPage via Codex enrichment)
+2. **Case-sensitive address corruption** — `buildHolderStatsMap` uses `.toLowerCase()` on Solana base58 addresses. Base58 is case-sensitive (`A` ≠ `a`), so lowercasing corrupts the addresses and causes random match/miss depending on whether the address happens to be all-lowercase already.
 
-#### 2. `src/components/launchpad/HoldersTable.tsx`
-- Accept new props: `trades: TokenTradeEvent[]` and `currentPriceUsd: number`
-- Build a per-holder stats map from trades:
-  - **totalBoughtUsd**: sum of all Buy `totalUsd` for this maker
-  - **totalBoughtTokens**: sum of all Buy `tokenAmount`
-  - **avgBuyPrice**: `totalBoughtUsd / totalBoughtTokens`
-  - **totalSoldUsd**: sum of all Sell `totalUsd`
-  - **totalSoldTokens**: sum of all Sell `tokenAmount`
-  - **avgSellPrice**: `totalSoldUsd / totalSoldTokens`
-  - **remainingTokens**: from holder data (already have)
-  - **unrealizedValueUsd**: `remainingTokens * currentPriceUsd`
-  - **costBasisOfRemaining**: `remainingTokens * avgBuyPrice`
-  - **unrealizedPnlUsd**: `unrealizedValueUsd - costBasisOfRemaining + totalSoldUsd - totalBoughtUsd` (realized + unrealized)
-  - **pnlPercent**: `(pnlUsd / totalBoughtUsd) * 100`
-- Display in the table:
-  - **Bought (Avg Buy)**: `$1.2K ($0.0023)` — total bought USD + avg buy price
-  - **Sold (Avg Sell)**: `$800 ($0.0031)` — total sold USD + avg sell price, or "—" if no sells
-  - **U. PnL**: `+$420 (+35%)` in green, or `-$120 (-8%)` in red. Show `—` if no trade data
+### Plan
 
-#### 3. `src/pages/FunTokenDetailPage.tsx`
-- Pass `currentPriceUsd` (from Codex enrichment) down to `TokenDataTabs`
+#### 1. New hook: `src/hooks/useAllTokenTrades.ts`
+- Create a dedicated hook that **paginates through ALL Codex trade events** (not just 50)
+- Loop: fetch page → collect events → use cursor → repeat until cursor is null or max 2000 events
+- Only enabled when holders tab is active (to avoid unnecessary API calls)
+- `staleTime: 30_000`, no auto-refetch polling (heavy query)
 
-#### 4. `src/components/launchpad/TokenDataTabs.tsx`
-- Accept `currentPriceUsd` prop and forward it along with `data?.events` to `HoldersTable`
+#### 2. Update edge function `codex-token-events` 
+- No changes needed — it already supports `cursor` param and up to `limit: 100`
+
+#### 3. Fix `src/components/launchpad/HoldersTable.tsx`
+- **Remove all `.toLowerCase()` calls** from `buildHolderStatsMap` and the lookup comparisons — Solana addresses must be compared as-is (base58 is case-sensitive)
+
+#### 4. Update `src/components/launchpad/TokenDataTabs.tsx`
+- When holders tab is active, use the new `useAllTokenTrades` hook instead of the regular 50-event `data?.events`
+- Pass the full paginated trade list to `HoldersTable`
+- Show a loading indicator while paginating through all trades
 
