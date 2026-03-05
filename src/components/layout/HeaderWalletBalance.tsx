@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User } from "lucide-react";
+import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,6 +129,11 @@ function HeaderWalletBalanceInner() {
                 icon={<Settings className="h-4 w-4" />}
                 label="Settings"
                 onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
+              />
+              <MenuItem
+                icon={<Zap className="h-4 w-4" />}
+                label="Pulse"
+                onClick={() => { setMenuOpen(false); navigate("/trade"); }}
               />
               <MenuItem
                 icon={<Crosshair className="h-4 w-4" />}
