@@ -277,7 +277,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                       : 'border-[#3a4a1a] text-[#8a9a5a] hover:border-[#4a5a2a] hover:bg-[#2a3a0a]/50 bg-transparent'
                   }`}
                 >
-                  ◎ {v}
+                  <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-3.5 h-3.5 rounded-full inline-block mr-0.5 -mt-px" /> {v}
                 </button>
               ))
             : quickSellPct.map((v, i) => (
