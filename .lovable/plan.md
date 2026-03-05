@@ -1,55 +1,34 @@
 
 
-## Discover Page - Top DexScreener Trending Coins
+## Use Official Launchpad Logos in LaunchpadBadge
 
-### Overview
-Create a new `/discover` page showing the top 50 trending Solana tokens from DexScreener's token boosts/trending API, auto-refreshing every 2 minutes with rank repositioning.
+### Problem
+Currently using generic Lucide icons (Rocket, Briefcase, Zap) as fallbacks instead of real launchpad logos.
 
-### 1. Edge Function: `dexscreener-trending`
+### Solution
+Replace all Lucide icon fallbacks with official logo URLs. Use local assets where available (`pumpfun-pill.webp`, `tuna-logo.png`), and hardcoded official icon URLs for the rest as fallbacks when Codex `iconUrl` isn't provided.
 
-**File**: `supabase/functions/dexscreener-trending/index.ts` (new)
+### Official Icon Sources
+| Launchpad | Source |
+|-----------|--------|
+| Pump.fun | Local `pumpfun-pill.webp` (already works) |
+| Meteora | Local `tuna-logo.png` (already exists, not used) |
+| Bonk | `https://www.bonk.fun/favicon.ico` |
+| Believe | `https://believe.app/images/icons/icon.png` |
+| Boop | `https://boop.fun/images/brand.png` |
+| Jupiter | `https://jup.ag/favicon.ico` |
+| bags.fm | `https://bags.fm/favicon.ico` |
+| Moonshot | Codex `iconUrl` or `https://moonshot.money/favicon.ico` |
 
-Fetches from DexScreener's trending endpoints:
-- `https://api.dexscreener.com/token-boosts/top/v1` for top boosted tokens
-- Filter to Solana chain only (`chainId === "solana"`)
-- For each token, batch-fetch pair data via `https://api.dexscreener.com/tokens/v1/solana/{addresses}` (30 per chunk) to get market cap, volume, liquidity, price change, image, name, symbol, social links
-- Return top 50 ranked by boost amount / volume
-- Include: address, name, symbol, imageUrl, marketCap, volume24h, priceChange6h, priceUsd, liquidity, holders, socialLinks, rank
+### Changes
 
-### 2. Hook: `useDiscoverTokens`
+**File**: `src/components/launchpad/LaunchpadBadge.tsx`
 
-**File**: `src/hooks/useDiscoverTokens.ts` (new)
+1. Import `tuna-logo.png` for Meteora (local asset)
+2. Add `officialIcon` URL to each entry in `LAUNCHPAD_CONFIG`
+3. Remove `FallbackIcon` component and Lucide icon imports (Rocket, Briefcase, Zap)
+4. Always render `<img>` tags — use `iconUrl` (from Codex) → `officialIcon` (hardcoded) → generic text-only fallback
+5. Update bags.fm and Meteora special cases to use their real logos instead of Briefcase icon / 🐟 emoji
 
-- Calls the `dexscreener-trending` edge function
-- `refetchInterval: 120_000` (2 minutes)
-- `staleTime: 60_000` (1 minute)
-- Returns typed array of trending tokens with rank
-
-### 3. Discover Page
-
-**File**: `src/pages/DiscoverPage.tsx` (new)
-
-Layout inspired by the Axiom screenshot (reference image):
-- Header: "Top Last 6 Hour Trending Coins" title with auto-refresh indicator
-- Table/list view with columns: Rank #, Token image + name + symbol, Market Cap, Liquidity, Volume, Price Change (6h), and a link to trade
-- Each row is clickable → navigates to `/trade/{address}`
-- Reuses existing design patterns (`gate-card`, dark theme, mono fonts)
-- Shows skeleton loading state
-- Rank numbers update on each refresh with smooth repositioning
-
-### 4. Route & Navigation
-
-**File**: `src/App.tsx` — Add lazy import + `<Route path="/discover" element={<DiscoverPage />} />`
-
-**File**: `src/components/layout/Sidebar.tsx` — Add `{ to: "/discover", label: "Discover", icon: TrendingUp }` to NAV_LINKS (TrendingUp is already imported)
-
-### Files Summary
-
-| File | Action |
-|------|--------|
-| `supabase/functions/dexscreener-trending/index.ts` | New — fetch top 50 trending Solana tokens from DexScreener |
-| `src/hooks/useDiscoverTokens.ts` | New — React Query hook with 2-min refresh |
-| `src/pages/DiscoverPage.tsx` | New — trending coins table page |
-| `src/App.tsx` | Add route `/discover` |
-| `src/components/layout/Sidebar.tsx` | Add Discover nav link with TrendingUp icon |
+No other files need changes — `CodexPairRow` and `AxiomTokenRow` already pass `iconUrl` through.
 
