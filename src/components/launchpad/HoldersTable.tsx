@@ -166,7 +166,7 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
               <th className="text-right py-2.5 px-2 font-medium">Bought (Avg Buy)</th>
               <th className="text-right py-2.5 px-2 font-medium">Sold (Avg Sell)</th>
               <th className="text-right py-2.5 px-2 font-medium">U. PnL ↕</th>
-              <th className="text-right py-2.5 px-2 font-medium">Remaining</th>
+              <th className="text-right py-2.5 px-2 font-medium">% Holdings</th>
               <th className="text-left py-2.5 px-2 font-medium">Funding</th>
             </tr>
           </thead>
@@ -279,14 +279,14 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                     })()}
                   </td>
 
-                  {/* Remaining */}
+                  {/* % Holdings */}
                   <td className="py-2 px-2 text-right">
                     <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-foreground/60 text-[11px]">
-                        {formatTokenAmt(holder.tokenAmount)}
+                      <span className="text-foreground/80 text-[11px]">
+                        {formatUsdCompact(holder.tokenAmount * currentPriceUsd)}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] text-muted-foreground/50">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.06] text-muted-foreground/70">
                           {holder.percentage.toFixed(holder.percentage >= 1 ? 2 : 3)}%
                         </span>
                         <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">

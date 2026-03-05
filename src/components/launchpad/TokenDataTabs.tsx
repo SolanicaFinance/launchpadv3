@@ -21,7 +21,7 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, curre
   const { data: allTradesData, isLoading: allTradesLoading } = useAllTokenTrades(tokenAddress, isHoldersTab);
   const { data: holdersData, isLoading: holdersLoading } = useTokenHolders(
     tokenAddress,
-    isHoldersTab
+    true // always fetch so trades tab can use holdings data
   );
 
   const liveHolderCount = holdersData?.count ?? holderCount;
@@ -68,10 +68,10 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, curre
       {/* Tab content */}
       <div>
         {activeTab === "all_trades" && (
-          <CodexTokenTrades events={data?.events || []} isLoading={isLoading} />
+          <CodexTokenTrades events={data?.events || []} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} />
         )}
         {activeTab === "your_trades" && (
-          <CodexTokenTrades events={userTrades} isLoading={isLoading} />
+          <CodexTokenTrades events={userTrades} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} />
         )}
         {activeTab === "holders" && (
           <HoldersTable

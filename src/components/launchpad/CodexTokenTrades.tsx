@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { TokenTradeEvent } from "@/hooks/useCodexTokenEvents";
+import { HolderInfo } from "@/hooks/useTokenHolders";
 import { ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -47,9 +49,16 @@ function addrGradient(addr: string): string {
 interface Props {
   events: TokenTradeEvent[];
   isLoading: boolean;
+  holders?: HolderInfo[];
+  currentPriceUsd?: number;
 }
 
-export function CodexTokenTrades({ events, isLoading }: Props) {
+export function CodexTokenTrades({ events, isLoading, holders = [], currentPriceUsd = 0 }: Props) {
+  const holdersMap = useMemo(() => {
+    const m = new Map<string, HolderInfo>();
+    for (const h of holders) m.set(h.address, h);
+    return m;
+  }, [holders]);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -75,6 +84,7 @@ export function CodexTokenTrades({ events, isLoading }: Props) {
             <th className="text-left py-2.5 px-2 font-medium">Type</th>
             <th className="text-right py-2.5 px-2 font-medium">Size</th>
             <th className="text-right py-2.5 px-2 font-medium hidden sm:table-cell">Price</th>
+            <th className="text-right py-2.5 px-2 font-medium">% Holdings</th>
             <th className="text-right py-2.5 px-2 font-medium">Time</th>
             <th className="text-right py-2.5 px-3 font-medium">Transaction</th>
           </tr>
@@ -121,6 +131,35 @@ export function CodexTokenTrades({ events, isLoading }: Props) {
                 {/* Price */}
                 <td className="py-2 px-2 text-right text-foreground/60 hidden sm:table-cell">
                   <span className="text-[11px]">{formatUsd(e.priceUsd)}</span>
+                </td>
+
+                {/* % Holdings */}
+                <td className="py-2 px-2 text-right">
+                  {(() => {
+                    const holder = holdersMap.get(e.maker);
+                    if (!holder) return <span className="text-[11px] text-muted-foreground/30">—</span>;
+                    const usdVal = holder.tokenAmount * currentPriceUsd;
+                    const pct = holder.percentage;
+                    return (
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-foreground/80 text-[11px]">{formatUsd(usdVal)}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.06] text-muted-foreground/70">
+                            {pct.toFixed(pct >= 1 ? 2 : 3)}%
+                          </span>
+                          <div className="w-12 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${Math.min(pct, 100)}%`,
+                                backgroundColor: pct > 10 ? "#ff4444" : "#22c55e",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </td>
 
                 {/* Time */}
