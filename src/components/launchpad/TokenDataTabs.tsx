@@ -78,7 +78,7 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, curre
             holders={holdersData?.holders || []}
             totalCount={liveHolderCount}
             isLoading={holdersLoading || allTradesLoading}
-            trades={allTradesData || data?.events || []}
+            trades={allTradesData ?? []}
             currentPriceUsd={currentPriceUsd}
           />
         )}

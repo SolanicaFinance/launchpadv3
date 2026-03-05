@@ -36,8 +36,9 @@ function normalizeEvents(events: RawEvent[]): TokenTradeEvent[] {
 async function fetchAllTokenTrades(tokenAddress: string): Promise<TokenTradeEvent[]> {
   const url = `${SUPABASE_URL}/functions/v1/codex-token-events`;
   const allEvents: TokenTradeEvent[] = [];
+  const seen = new Set<string>();
   let cursor: string | null = null;
-  const MAX_PAGES = 20; // 20 pages * 100 = up to 2000 trades
+  const MAX_PAGES = 100; // up to 10,000 trades
 
   for (let page = 0; page < MAX_PAGES; page++) {
     const res = await fetch(url, {
@@ -49,11 +50,20 @@ async function fetchAllTokenTrades(tokenAddress: string): Promise<TokenTradeEven
       body: JSON.stringify({ tokenAddress, cursor, limit: 100 }),
     });
 
-    if (!res.ok) break;
+    if (!res.ok) {
+      throw new Error(`Failed to fetch token trades page ${page + 1}`);
+    }
 
     const data = await res.json();
     const events = normalizeEvents(data?.events || []);
-    allEvents.push(...events);
+
+    for (const event of events) {
+      const key = `${event.txHash}-${event.maker}-${event.timestamp}-${event.type}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        allEvents.push(event);
+      }
+    }
 
     cursor = data?.cursor || null;
     if (!cursor || events.length === 0) break;

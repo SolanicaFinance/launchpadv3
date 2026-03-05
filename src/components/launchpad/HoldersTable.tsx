@@ -25,7 +25,7 @@ interface HolderStats {
 function buildHolderStatsMap(trades: TokenTradeEvent[]): Map<string, HolderStats> {
   const map = new Map<string, { buyUsd: number; buyTokens: number; sellUsd: number; sellTokens: number }>();
   for (const t of trades) {
-    const key = t.maker;
+    const key = t.maker.trim();
     const entry = map.get(key) || { buyUsd: 0, buyTokens: 0, sellUsd: 0, sellTokens: 0 };
     if (t.type === "Buy") {
       entry.buyUsd += t.totalUsd;
@@ -225,12 +225,13 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                   {/* Bought (Avg Buy) */}
                   <td className="py-2 px-2 text-right">
                     {(() => {
-                      const s = statsMap.get(holder.address);
-                      if (!s || s.totalBoughtTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      const s = statsMap.get(holder.address.trim());
+                      const totalBoughtUsd = s?.totalBoughtUsd ?? 0;
+                      const avgBuyPrice = s?.avgBuyPrice ?? 0;
                       return (
                         <div className="flex flex-col items-end gap-0.5">
-                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(s.totalBoughtUsd)}</span>
-                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(s.avgBuyPrice)}</span>
+                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(totalBoughtUsd)}</span>
+                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(avgBuyPrice)}</span>
                         </div>
                       );
                     })()}
@@ -239,12 +240,13 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                   {/* Sold (Avg Sell) */}
                   <td className="py-2 px-2 text-right">
                     {(() => {
-                      const s = statsMap.get(holder.address);
-                      if (!s || s.totalSoldTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      const s = statsMap.get(holder.address.trim());
+                      const totalSoldUsd = s?.totalSoldUsd ?? 0;
+                      const avgSellPrice = s?.avgSellPrice ?? 0;
                       return (
                         <div className="flex flex-col items-end gap-0.5">
-                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(s.totalSoldUsd)}</span>
-                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(s.avgSellPrice)}</span>
+                          <span className="text-foreground/70 text-[11px]">{formatUsdCompact(totalSoldUsd)}</span>
+                          <span className="text-[9px] text-muted-foreground/50">avg {formatPriceSmall(avgSellPrice)}</span>
                         </div>
                       );
                     })()}
@@ -253,13 +255,16 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                   {/* Unrealized PnL */}
                   <td className="py-2 px-2 text-right">
                     {(() => {
-                      const s = statsMap.get(holder.address);
-                      if (!s || s.totalBoughtTokens === 0) return <span className="text-muted-foreground/30 text-[11px]">—</span>;
+                      const s = statsMap.get(holder.address.trim());
+                      const totalBoughtUsd = s?.totalBoughtUsd ?? 0;
                       const unrealizedValue = holder.tokenAmount * currentPriceUsd;
-                      const costBasis = holder.tokenAmount * s.avgBuyPrice;
-                      const realizedPnl = s.totalSoldUsd - (s.totalSoldTokens * s.avgBuyPrice);
-                      const totalPnl = (unrealizedValue - costBasis) + realizedPnl;
-                      const pnlPct = s.totalBoughtUsd > 0 ? (totalPnl / s.totalBoughtUsd) * 100 : 0;
+                      const avgBuyPrice = s?.avgBuyPrice ?? 0;
+                      const totalSoldUsd = s?.totalSoldUsd ?? 0;
+                      const totalSoldTokens = s?.totalSoldTokens ?? 0;
+                      const costBasis = holder.tokenAmount * avgBuyPrice;
+                      const realizedPnl = totalSoldUsd - (totalSoldTokens * avgBuyPrice);
+                      const totalPnl = totalBoughtUsd > 0 ? (unrealizedValue - costBasis) + realizedPnl : 0;
+                      const pnlPct = totalBoughtUsd > 0 ? (totalPnl / totalBoughtUsd) * 100 : 0;
                       const isPositive = totalPnl >= 0;
                       return (
                         <div className="flex flex-col items-end gap-0.5">
