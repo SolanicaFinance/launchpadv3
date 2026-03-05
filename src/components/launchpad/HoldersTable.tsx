@@ -217,8 +217,9 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
 
                   {/* SOL Balance */}
                   <td className="py-2 px-2 text-right">
-                    <span className="text-foreground/60 text-[11px]">
-                      ≡ {formatSol(holder.solBalance)}
+                    <span className="text-foreground/60 text-[11px] flex items-center gap-1">
+                      <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" className="w-3.5 h-3.5 rounded-full" alt="SOL" />
+                      {formatSol(holder.solBalance)}
                     </span>
                   </td>
 
