@@ -1,46 +1,38 @@
 
 
-## Problems Identified
+## Current Layout vs Desired
 
-From the screenshot, the main page still looks nothing like the template because:
+Currently on **desktop (lg+)**, the layout is:
+- **Left col (9/12)**: Chart → TokenDataTabs → **TradeSection** (buy/sell is BELOW trades table)
+- **Right col (3/12)**: Token Details → Contract → Description → Comments → Wallet
 
-1. **Matrix background is still rendering** — green Japanese characters visible behind everything. The `ConditionalMatrixBackground` in App.tsx only suppresses it on `/launchpad/`, `/punch`, and `/trade` — NOT on `/` (home page).
-
-2. **FunLauncherPage uses `md:ml-[160px]`** (line 140) instead of `md:ml-[48px]` — sidebar offset was never updated in this page. Same problem exists in **8 other pages** (WhitepaperPage, TrendingPage, TokenomicsPage, ClawSDKPage, ApiDashboardPage, AgentsPage, PanelPage, LaunchTokenPage).
-
-3. **Matrix mode CSS** (lines 522-554 in index.css) forces backgrounds transparent with `!important`, overriding the dark theme colors — this is why cards look semi-transparent with the matrix showing through.
-
-4. **Token cards still use old blue/teal colors** — `lt-card` uses `hsl(215 28% 13%)` backgrounds and `hsl(187 80% 53%)` (teal) hover borders instead of the chartreuse accent.
-
-5. **Token card ticker color** is hardcoded teal `hsl(187 80% 55%)` instead of using `--primary` (chartreuse).
-
-6. **MatrixModeContext defaults to `true`** — new visitors see matrix by default.
+The screenshot shows buy/sell panel should be on the **right side, top**, like pump.fun — not below the chart/trades.
 
 ## Plan
 
-### 1. Kill the Matrix background globally
-- Change `MatrixModeContext` default from `true` to `false` 
-- Update `ConditionalMatrixBackground` to always return `null` (or simply remove the matrix import and rendering from App.tsx entirely)
-- Remove the `.matrix-active` CSS rules that force transparent backgrounds
+### Move TradeSection to right column (top) on Desktop
 
-### 2. Fix sidebar offset on ALL pages
-- Replace all `md:ml-[160px]` with `md:ml-[48px]` across 9 files:
-  - FunLauncherPage.tsx
-  - WhitepaperPage.tsx, TrendingPage.tsx, TokenomicsPage.tsx
-  - ClawSDKPage.tsx, ApiDashboardPage.tsx, AgentsPage.tsx
-  - PanelPage.tsx, LaunchTokenPage.tsx
+In the desktop layout (lines 834-869), restructure from:
+```
+Left (9): Chart → DataTabs → Trade
+Right (3): Details → Contract → Desc → Comments → Wallet
+```
+To:
+```
+Left (9): Chart → DataTabs
+Right (3): Trade → Wallet → Details → Contract → Desc → Comments
+```
 
-### 3. Rebrand token cards to chartreuse
-- Update `lt-card` CSS in index.css: change background gradient to use dark `#0d0d0f`-based colors, border to use `hsl(var(--border))`, hover border to chartreuse
-- Update `TokenCard.tsx`: change ticker color from teal to `hsl(var(--primary))`, update all hardcoded teal/blue references to use CSS variables
+Make right column wider (col-span-4) and left narrower (col-span-8) so the trade panel has enough room for the buy/sell UI (matching the screenshot proportions).
 
-### 4. Update LaunchpadLayout offset
-- Already fixed to 48px — confirm it's correct
+### Same fix for Tablet layout
 
-### Files to modify (~12 files):
-- `src/contexts/MatrixModeContext.tsx` — default to false
-- `src/App.tsx` — remove ConditionalMatrixBackground entirely
-- `src/index.css` — remove `.matrix-active` rules, update `lt-card` to chartreuse theme
-- `src/components/launchpad/TokenCard.tsx` — swap teal hardcodes to chartreuse/primary
-- 9 page files — fix `md:ml-[160px]` → `md:ml-[48px]`
+Already correct on tablet — trade is in right column (col-span-5). No change needed.
+
+### Same fix for ExternalTokenView desktop layout
+
+Lines 247-282: Move `UniversalTradePanel` from left col-span-9 into right col-span-3 (top), same pattern.
+
+### Files to modify:
+- `src/pages/FunTokenDetailPage.tsx` — restructure desktop grid in both `ExternalTokenView` and the main token view
 
