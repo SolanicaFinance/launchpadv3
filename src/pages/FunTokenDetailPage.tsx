@@ -245,16 +245,17 @@ function ExternalTokenView({ token, mintAddress, solPrice }: { token: import("@/
 
           {/* Desktop layout */}
           <div className="hidden lg:grid grid-cols-12 gap-1.5 flex-1">
-            <div className="col-span-9 flex flex-col gap-1.5">
+            <div className="col-span-8 flex flex-col gap-1.5">
               <div className="terminal-panel-flush rounded-lg overflow-hidden" style={{ backgroundColor: '#0a0a0a' }}>
                 <CodexChart tokenAddress={mintAddress} height={380} />
               </div>
               <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} />
+            </div>
+            <div className="col-span-4 flex flex-col gap-1.5">
               {privyAvailable && (
                 <UniversalTradePanel token={{ mint_address: mintAddress, ticker: token.symbol, name: token.name, decimals: token.decimals, graduated: token.completed || token.migrated, price_sol: solPrice > 0 ? token.priceUsd / solPrice : 0 }} userTokenBalance={0} />
               )}
-            </div>
-            <div className="col-span-3 flex flex-col gap-1.5">
+              <EmbeddedWalletCard />
               <div className="terminal-panel-flush rounded-lg p-2.5 space-y-1.5">
                 <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/70 flex items-center gap-1"><Activity className="h-3 w-3" /> Token Details</h3>
                 {[
@@ -277,7 +278,6 @@ function ExternalTokenView({ token, mintAddress, solPrice }: { token: import("@/
                   <button onClick={copyAddress} className="text-muted-foreground hover:text-foreground transition-colors p-1"><Copy className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
-              <EmbeddedWalletCard />
             </div>
           </div>
         </div>
@@ -832,10 +832,13 @@ export default function FunTokenDetailPage() {
 
           {/* ── DESKTOP layout (lg+) ── */}
           <div className="hidden lg:grid grid-cols-12 gap-1.5 flex-1">
-            {/* Left: Chart + Trade */}
-            <div className="col-span-9 flex flex-col gap-1.5">
+            {/* Left: Chart + DataTabs */}
+            <div className="col-span-8 flex flex-col gap-1.5">
               <ChartSection chartHeight={380} />
               <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={token.holder_count || 0} />
+            </div>
+            {/* Right: Trade + Info + Comments + Wallet */}
+            <div className="col-span-4 flex flex-col gap-1.5">
               {isPunchToken ? (
                 <div className="terminal-panel-flush rounded-lg px-4 py-3 flex items-center gap-2">
                   <Lock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -844,9 +847,7 @@ export default function FunTokenDetailPage() {
               ) : (
                 <TradeSection />
               )}
-            </div>
-            {/* Right: Info + Comments + Wallet */}
-            <div className="col-span-3 flex flex-col gap-1.5">
+              {!isPunchToken && <EmbeddedWalletCard />}
               <TokenDetailsSection />
               <ContractSection />
               <DescriptionSection />
@@ -864,7 +865,6 @@ export default function FunTokenDetailPage() {
                 </div>
               )}
               <CommentsSection />
-              {!isPunchToken && <EmbeddedWalletCard />}
             </div>
           </div>
 
