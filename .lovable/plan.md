@@ -1,49 +1,48 @@
 
 
-## Investigation Results
+## Plan: Disable Agent Posting + Bulk SOL Recovery from Trading Agents
 
-That notification popup on the right side comes from **Sonner** (the toast library). It's triggered in `src/pages/ClawBookPage.tsx` (line 49) — a one-time "Claw Console is LIVE!" toast that fires 1.5 seconds after visiting the page, stored in `sessionStorage` so it only shows once per session.
+### What We're Doing
 
-The styling comes from `src/components/ui/sonner.tsx` which applies the dark glassmorphic theme to all Sonner toasts.
+1. **Disable all agent posting systems** — The three edge functions that auto-post (`agent-hourly-post`, `agent-auto-engage`, `claw-agent-engage`) will return early with a "disabled" response, preventing any further forum posts from agents.
 
-## Plan: Announcement System + Live Trade Notifications
+2. **Create a bulk SOL recovery edge function** — A new `trading-agent-reclaim-all` edge function that:
+   - Fetches ALL trading agents (both `trading_agents` and `claw_trading_agents` tables)
+   - For each agent with an encrypted wallet key and SOL balance > dust threshold
+   - Force-sells all token positions via Jupiter (reusing the `force-sell` pattern)
+   - Transfers remaining SOL to the treasury wallet (`HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx`)
+   - Marks agents as `disabled` in the database
+   - Returns a summary of recovered SOL
 
-### 1. Create a Global Announcement Toast System
+3. **Add a one-click admin button** — In `TreasuryAdminPage.tsx`, add a "Reclaim All Agent SOL" button that invokes this edge function and shows progress/results.
 
-**New file: `src/hooks/useAnnouncements.ts`**
-- Query a new `announcements` table for active announcements
-- Show each unseen announcement as a styled Sonner toast (with action button)
-- Track seen announcements in `localStorage` by ID
-- Run globally from `App.tsx` or `MainLayout` so it works on every page
-
-**Database migration** — Create `announcements` table:
-- `id`, `title`, `description`, `action_label`, `action_url`, `emoji`, `is_active`, `created_at`, `expires_at`
-- No RLS needed (public read)
-- You can insert new rows to create announcements — they'll show to all users automatically
-
-### 2. Live Trade Notification Toasts
-
-**New file: `src/hooks/useLiveTradeToasts.ts`**
-- Subscribe to realtime `INSERT` events on `launchpad_transactions`
-- On each new trade, fetch the token name (from cache or quick lookup) and the trader's wallet/username
-- Show a compact Sonner toast: `"🟢 user123 bought 1.2 SOL of $TOKEN"` / `"🔴 user456 sold 0.5 SOL of $TOKEN"`
-- Rate-limit to max 1 toast per 3 seconds to avoid spam during high volume
-- Truncate wallet to `abc...xyz` format, use username if `user_profile_id` is available
-
-**Integration**: Mount the hook in `MainLayout.tsx` so trade toasts appear globally across all pages.
-
-### 3. Remove Hardcoded ClawBook Announcement
-
-**File: `src/pages/ClawBookPage.tsx`**
-- Remove the hardcoded "Claw Console is LIVE!" toast (lines 43-58) since announcements will now come from the database
-
-### Files Summary
+### Files
 
 | File | Action |
 |------|--------|
-| `src/hooks/useAnnouncements.ts` | Create — DB-driven announcement toasts |
-| `src/hooks/useLiveTradeToasts.ts` | Create — realtime trade notification toasts |
-| `src/components/layout/MainLayout.tsx` | Edit — mount both hooks globally |
-| `src/pages/ClawBookPage.tsx` | Edit — remove hardcoded announcement |
-| Database migration | Create `announcements` table |
+| `supabase/functions/agent-hourly-post/index.ts` | Edit — return disabled immediately |
+| `supabase/functions/agent-auto-engage/index.ts` | Edit — return disabled immediately |
+| `supabase/functions/claw-agent-engage/index.ts` | Edit — return disabled immediately |
+| `supabase/functions/trading-agent-reclaim-all/index.ts` | Create — bulk sell + SOL transfer to treasury |
+| `src/pages/TreasuryAdminPage.tsx` | Edit — add "Reclaim All Agent SOL" button + results panel |
+
+### Edge Function: `trading-agent-reclaim-all`
+
+- Protected by `TWITTER_BOT_ADMIN_SECRET` (same pattern as `trading-agent-force-sell`)
+- Queries both `trading_agents` and `claw_trading_agents` for all agents with `wallet_private_key_encrypted`
+- For each agent:
+  1. Decrypt wallet using dual-key approach (API_ENCRYPTION_KEY / WALLET_ENCRYPTION_KEY)
+  2. Check SOL balance on-chain
+  3. Scan for token holdings, sell via Jupiter with escalating slippage (15% → 25% → 50%)
+  4. Close empty token accounts to reclaim rent
+  5. Transfer all remaining SOL (minus tx fee) to treasury
+  6. Update agent status to `disabled`, set `trading_capital_sol` to 0
+- Returns per-agent results: wallet, SOL recovered, tokens sold, errors
+
+### Admin UI Button
+
+Added to the Treasury Admin page as a new card/section:
+- "Reclaim All Agent SOL" button (red, destructive styling)
+- Confirmation dialog before execution
+- Shows live progress and final summary (total SOL recovered, agents processed, failures)
 
