@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Skull, Rocket, Database, Megaphone, Bot, ScrollText,
-  Globe, Users, Shield, Loader2
+  Users, Shield, Loader2
 } from "lucide-react";
 
 const ADMIN_PASSWORD = "claw2024treasury";
@@ -16,7 +16,7 @@ const ADMIN_PASSWORD = "claw2024treasury";
 const TreasuryAdminContent = lazy(() => import("./TreasuryAdminPage").then(m => ({ default: m.default })));
 const XBotAdminPage = lazy(() => import("./XBotAdminPage"));
 const AgentLogsAdminPage = lazy(() => import("./AgentLogsAdminPage"));
-const ColosseumAdminPage = lazy(() => import("./ColosseumAdminPage"));
+
 const FollowerScanPage = lazy(() => import("./FollowerScanPage"));
 const InfluencerRepliesAdminPage = lazy(() => import("./InfluencerRepliesAdminPage"));
 const PromoMentionsAdminPage = lazy(() => import("./PromoMentionsAdminPage"));
@@ -41,7 +41,7 @@ const TAB_CONFIG = [
   { value: "deployer", label: "Deployer Dust", icon: Database },
   { value: "xbots", label: "X Bots", icon: Bot },
   { value: "agent-logs", label: "Agent Logs", icon: ScrollText },
-  { value: "colosseum", label: "Colosseum", icon: Globe },
+  
   { value: "follower-scan", label: "Followers", icon: Users },
   { value: "promo", label: "Promo/Influencer", icon: Shield },
   { value: "clawbook", label: "ClawBook", icon: Shield },
@@ -162,11 +162,6 @@ export default function AdminPanelPage() {
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="colosseum" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <ColosseumAdminPage />
-            </Suspense>
-          </TabsContent>
 
           <TabsContent value="follower-scan" className="mt-6">
             <Suspense fallback={<TabLoader />}>

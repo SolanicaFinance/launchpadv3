@@ -225,14 +225,6 @@ verify_jwt = false
 [functions.agent-scan-mentions]
 verify_jwt = false
 
-[functions.colosseum-bridge]
-verify_jwt = false
-
-[functions.colosseum-forum]
-verify_jwt = false
-
-[functions.colosseum-submit]
-verify_jwt = false
 
 [functions.x-manual-reply]
 verify_jwt = false

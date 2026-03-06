@@ -159,7 +159,7 @@ const App = () => (
                     <Route path="/admin/influencer-replies" element={<Navigate to="/admin?tab=promo" replace />} />
                     <Route path="/admin/promo-mentions" element={<Navigate to="/admin?tab=promo" replace />} />
                     <Route path="/admin/deployer-dust" element={<Navigate to="/admin?tab=deployer" replace />} />
-                    <Route path="/admin/colosseum" element={<Navigate to="/admin?tab=colosseum" replace />} />
+                    
                     <Route path="/partnerfees" element={<Navigate to="/admin?tab=partner-fees" replace />} />
                     <Route path="/whitepaper" element={<WhitepaperPage />} />
                     
