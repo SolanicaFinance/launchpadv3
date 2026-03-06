@@ -45,6 +45,10 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  define: {
+    // Ensure global is defined for libraries that expect Node.js globals
+    global: 'globalThis',
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
