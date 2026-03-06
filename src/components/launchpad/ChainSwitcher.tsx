@@ -9,31 +9,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import solanaLogo from '@/assets/solana-logo.png';
 
 // Chain logo components
 function SolanaLogo({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="16" cy="16" r="16" fill="url(#solana-gradient)" />
-      <path
-        d="M10.5 19.5L13 17H24L21.5 19.5H10.5Z"
-        fill="white"
-      />
-      <path
-        d="M10.5 12.5L13 15H24L21.5 12.5H10.5Z"
-        fill="white"
-      />
-      <path
-        d="M10.5 22.5L13 20H24L21.5 22.5H10.5Z"
-        fill="white"
-      />
-      <defs>
-        <linearGradient id="solana-gradient" x1="0" y1="0" x2="32" y2="32">
-          <stop stopColor="#9945FF" />
-          <stop offset="1" stopColor="#14F195" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <img src={solanaLogo} alt="Solana" className={cn("rounded-full", className)} />
   );
 }
 
