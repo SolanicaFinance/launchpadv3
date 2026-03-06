@@ -26,6 +26,32 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
+    const isFallback = data.every((v) => v === data[0]);
+
+    if (isFallback) {
+      // Draw a subtle half-width green line on the right side, centered vertically
+      const startX = width * 0.5;
+      const midY = height * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(startX, midY);
+      ctx.lineTo(width, midY);
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.25)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Soft glow fill below line
+      const grad = ctx.createLinearGradient(startX, midY, startX, height);
+      grad.addColorStop(0, "rgba(34, 197, 94, 0.08)");
+      grad.addColorStop(1, "rgba(34, 197, 94, 0.01)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(startX, midY, width - startX, height - midY);
+      return;
+    }
+
+    // Real data — draw on the right 60% of the card
+    const offsetX = width * 0.4;
+    const chartWidth = width - offsetX;
+
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
@@ -34,7 +60,7 @@ export const SparklineCanvas = memo(function SparklineCanvas({
 
     const lineColor = isUp ? "34, 197, 94" : "239, 68, 68";
 
-    const stepX = width / (points.length - 1);
+    const stepX = chartWidth / (points.length - 1);
     const padY = 6;
     const chartH = height - padY * 2;
 
@@ -42,21 +68,21 @@ export const SparklineCanvas = memo(function SparklineCanvas({
 
     // Draw line
     ctx.beginPath();
-    ctx.moveTo(0, getY(points[0]));
+    ctx.moveTo(offsetX, getY(points[0]));
     for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(i * stepX, getY(points[i]));
+      ctx.lineTo(offsetX + i * stepX, getY(points[i]));
     }
-    ctx.strokeStyle = `rgba(${lineColor}, 0.3)`;
+    ctx.strokeStyle = `rgba(${lineColor}, 0.5)`;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Draw gradient fill
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
+    ctx.lineTo(offsetX + chartWidth, height);
+    ctx.lineTo(offsetX, height);
     ctx.closePath();
 
     const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, `rgba(${lineColor}, 0.15)`);
+    gradient.addColorStop(0, `rgba(${lineColor}, 0.2)`);
     gradient.addColorStop(1, `rgba(${lineColor}, 0.01)`);
     ctx.fillStyle = gradient;
     ctx.fill();
