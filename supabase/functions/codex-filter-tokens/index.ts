@@ -76,6 +76,7 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
           symbol
           imageSmallUrl
           imageLargeUrl
+          imageThumbUrl
         }
         socialLinks {
           twitter
@@ -150,30 +151,41 @@ Deno.serve(async (req) => {
 
     const results = data?.data?.filterTokens?.results ?? [];
 
-    const tokens = results.map((r: any) => ({
-      address: r.token?.info?.address ?? null,
-      name: r.token?.info?.name ?? "Unknown",
-      symbol: r.token?.info?.symbol ?? "???",
-      imageUrl: r.token?.info?.imageSmallUrl || r.token?.info?.imageLargeUrl || null,
-      marketCap: r.marketCap ? parseFloat(r.marketCap) : 0,
-      volume24h: r.volume24 ? parseFloat(r.volume24) : 0,
-      change24h: r.change24 ? parseFloat(r.change24) : 0,
-      holders: r.holders ?? 0,
-      liquidity: r.liquidity ? parseFloat(r.liquidity) : 0,
-      graduationPercent: r.token?.launchpad?.graduationPercent ?? 0,
-      poolAddress: r.token?.launchpad?.poolAddress ?? null,
-      launchpadName: r.token?.launchpad?.launchpadName ?? (safeNetworkId === BSC_NETWORK_ID ? "PancakeSwap" : "Pump.fun"),
-      launchpadIconUrl: r.token?.launchpad?.launchpadIconUrl ?? null,
-      completed: r.token?.launchpad?.completed ?? false,
-      migrated: r.token?.launchpad?.migrated ?? false,
-      completedAt: r.token?.launchpad?.completedAt ?? null,
-      migratedAt: r.token?.launchpad?.migratedAt ?? null,
-      createdAt: r.createdAt ?? null,
-      twitterUrl: r.token?.socialLinks?.twitter ?? null,
-      websiteUrl: r.token?.socialLinks?.website ?? null,
-      telegramUrl: r.token?.socialLinks?.telegram ?? null,
-      discordUrl: r.token?.socialLinks?.discord ?? null,
-    }));
+    const tokens = results.map((r: any) => {
+      const address = r.token?.info?.address ?? null;
+      let imageUrl = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
+      
+      // BSC fallback: use Trust Wallet asset repo for token logos
+      if (!imageUrl && address && safeNetworkId === BSC_NETWORK_ID) {
+        const checksumAddr = address; // Codex typically returns checksummed addresses
+        imageUrl = `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${checksumAddr}/logo.png`;
+      }
+
+      return {
+        address,
+        name: r.token?.info?.name ?? "Unknown",
+        symbol: r.token?.info?.symbol ?? "???",
+        imageUrl,
+        marketCap: r.marketCap ? parseFloat(r.marketCap) : 0,
+        volume24h: r.volume24 ? parseFloat(r.volume24) : 0,
+        change24h: r.change24 ? parseFloat(r.change24) : 0,
+        holders: r.holders ?? 0,
+        liquidity: r.liquidity ? parseFloat(r.liquidity) : 0,
+        graduationPercent: r.token?.launchpad?.graduationPercent ?? 0,
+        poolAddress: r.token?.launchpad?.poolAddress ?? null,
+        launchpadName: r.token?.launchpad?.launchpadName ?? (safeNetworkId === BSC_NETWORK_ID ? "PancakeSwap" : "Pump.fun"),
+        launchpadIconUrl: r.token?.launchpad?.launchpadIconUrl ?? null,
+        completed: r.token?.launchpad?.completed ?? false,
+        migrated: r.token?.launchpad?.migrated ?? false,
+        completedAt: r.token?.launchpad?.completedAt ?? null,
+        migratedAt: r.token?.launchpad?.migratedAt ?? null,
+        createdAt: r.createdAt ?? null,
+        twitterUrl: r.token?.socialLinks?.twitter ?? null,
+        websiteUrl: r.token?.socialLinks?.website ?? null,
+        telegramUrl: r.token?.socialLinks?.telegram ?? null,
+        discordUrl: r.token?.socialLinks?.discord ?? null,
+      };
+    });
 
     return new Response(JSON.stringify({ tokens, column: validColumn, networkId: safeNetworkId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
