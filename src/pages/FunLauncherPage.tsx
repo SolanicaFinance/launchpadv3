@@ -207,6 +207,48 @@ export default function FunLauncherPage() {
         {isSolana && (
           <main className="flex-1">
 
+            {/* Online indicator */}
+            <div className="px-4 pt-3 flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-success pulse-dot" />
+              <span className="text-[11px] font-mono text-muted-foreground">
+                <span className="text-foreground font-semibold">{onlineCount ?? '—'}</span> online
+              </span>
+            </div>
+
+            {/* P1 P2 P3 Quick Buy Header Bar — global config for all token cards */}
+            <div className="px-4 pt-2">
+              <div className="pulse-axiom-header mb-0" style={{ "--col-accent": "160 84% 39%" } as React.CSSProperties}>
+                <button className="pulse-axiom-qb" onClick={() => setEditingQb(!editingQb)}>
+                  <Zap className="h-3 w-3 text-warning" />
+                  {editingQb ? (
+                    <input
+                      autoFocus type="text" inputMode="decimal" value={qbInput}
+                      onChange={e => { if (e.target.value === "" || /^\d*\.?\d*$/.test(e.target.value)) setQbInput(e.target.value); }}
+                      onBlur={handleQbSave} onKeyDown={e => e.key === "Enter" && handleQbSave()}
+                      className="w-10 bg-transparent text-[11px] font-mono font-bold text-foreground outline-none"
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="text-[11px] font-mono font-bold text-foreground">{quickBuyAmount}</span>
+                  )}
+                </button>
+                <button className="pulse-axiom-icon-btn"><Menu className="h-3 w-3" /></button>
+                <div className="pulse-axiom-presets">
+                  {WALLET_PRESETS.map(p => (
+                    <button key={p} onClick={() => handlePresetSwitch(p)}
+                      className={`pulse-axiom-preset ${activePreset === p ? "active" : ""}`}
+                      style={activePreset === p ? { borderColor: "hsl(160 84% 39%)", color: "hsl(160 84% 39%)" } : undefined}
+                    >{p}</button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <Flame className="h-3 w-3 flex-shrink-0 text-success" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80 truncate">All Tokens</span>
+                </div>
+                <div className="pulse-col-accent-line" style={{ background: "linear-gradient(90deg, hsl(160 84% 39% / 0.6), transparent)" }} />
+              </div>
+            </div>
+
             {/* King of the Hill — premium glassmorphic cards */}
             <div className="px-4 pt-4">
               <KingOfTheHill />
@@ -277,48 +319,8 @@ export default function FunLauncherPage() {
               </div>
             </div>
 
-            {/* Online indicator */}
-            <div className="px-4 pt-3 flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-success pulse-dot" />
-              <span className="text-[11px] font-mono text-muted-foreground">
-                <span className="text-foreground font-semibold">{onlineCount ?? '—'}</span> online
-              </span>
-            </div>
-
-            {/* Quick Buy Header + Token Grid */}
+            {/* Token Grid */}
             <div className="px-4 pt-4 pb-16">
-              {/* P1 P2 P3 Header Bar */}
-              <div className="pulse-axiom-header mb-3" style={{ "--col-accent": "160 84% 39%" } as React.CSSProperties}>
-                <button className="pulse-axiom-qb" onClick={() => setEditingQb(!editingQb)}>
-                  <Zap className="h-3 w-3 text-warning" />
-                  {editingQb ? (
-                    <input
-                      autoFocus type="text" inputMode="decimal" value={qbInput}
-                      onChange={e => { if (e.target.value === "" || /^\d*\.?\d*$/.test(e.target.value)) setQbInput(e.target.value); }}
-                      onBlur={handleQbSave} onKeyDown={e => e.key === "Enter" && handleQbSave()}
-                      className="w-10 bg-transparent text-[11px] font-mono font-bold text-foreground outline-none"
-                      onClick={e => e.stopPropagation()}
-                    />
-                  ) : (
-                    <span className="text-[11px] font-mono font-bold text-foreground">{quickBuyAmount}</span>
-                  )}
-                </button>
-                <button className="pulse-axiom-icon-btn"><Menu className="h-3 w-3" /></button>
-                <div className="pulse-axiom-presets">
-                  {WALLET_PRESETS.map(p => (
-                    <button key={p} onClick={() => handlePresetSwitch(p)}
-                      className={`pulse-axiom-preset ${activePreset === p ? "active" : ""}`}
-                      style={activePreset === p ? { borderColor: "hsl(160 84% 39%)", color: "hsl(160 84% 39%)" } : undefined}
-                    >{p}</button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <Flame className="h-3 w-3 flex-shrink-0 text-success" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80 truncate">All Tokens</span>
-                </div>
-                <div className="pulse-col-accent-line" style={{ background: "linear-gradient(90deg, hsl(160 84% 39% / 0.6), transparent)" }} />
-              </div>
-
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {tokensLoading
                   ? Array.from({ length: 12 }).map((_, i) => (
