@@ -8,27 +8,52 @@ const corsHeaders = {
 
 type Column = "new" | "completing" | "completed";
 
-function buildQuery(column: Column, limit: number): string {
+const SOLANA_NETWORK_ID = 1399811149;
+const BSC_NETWORK_ID = 56;
+
+function buildQuery(column: Column, limit: number, networkId: number): string {
   let filters: string;
   let rankings: string;
 
-  const allLaunchpads = `["Pump.fun", "Bonk", "Moonshot", "Believe", "boop", "Jupiter Studio"]`;
   const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
   const twoDaysAgo = Math.floor(Date.now() / 1000) - 172800;
 
-  switch (column) {
-    case "new":
-      filters = `{ network: [1399811149], launchpadName: ${allLaunchpads}, launchpadCompleted: false, launchpadMigrated: false, createdAt: { gte: ${oneDayAgo} } }`;
-      rankings = `{ attribute: createdAt, direction: DESC }`;
-      break;
-    case "completing":
-      filters = `{ network: [1399811149], launchpadName: ${allLaunchpads}, launchpadCompleted: false, launchpadMigrated: false, launchpadGraduationPercent: { gte: 50, lte: 99 }, createdAt: { gte: ${twoDaysAgo} } }`;
-      rankings = `{ attribute: marketCap, direction: DESC }`;
-      break;
-    case "completed":
-      filters = `{ network: [1399811149], launchpadMigrated: true }`;
-      rankings = `{ attribute: createdAt, direction: DESC }`;
-      break;
+  if (networkId === BSC_NETWORK_ID) {
+    // BSC: no launchpad graduation concept — use liquidity/volume filters
+    switch (column) {
+      case "new":
+        filters = `{ network: [${networkId}], createdAt: { gte: ${oneDayAgo} }, liquidity: { gte: 1000 } }`;
+        rankings = `{ attribute: createdAt, direction: DESC }`;
+        break;
+      case "completing":
+        // "Final Stretch" on BSC = high volume new tokens
+        filters = `{ network: [${networkId}], createdAt: { gte: ${twoDaysAgo} }, volume24: { gte: 5000 }, liquidity: { gte: 5000 } }`;
+        rankings = `{ attribute: volume24, direction: DESC }`;
+        break;
+      case "completed":
+        // "Migrated" on BSC = established tokens with high liquidity
+        filters = `{ network: [${networkId}], liquidity: { gte: 50000 } }`;
+        rankings = `{ attribute: marketCap, direction: DESC }`;
+        break;
+    }
+  } else {
+    // Solana: original launchpad-based logic
+    const allLaunchpads = `["Pump.fun", "Bonk", "Moonshot", "Believe", "boop", "Jupiter Studio"]`;
+
+    switch (column) {
+      case "new":
+        filters = `{ network: [${networkId}], launchpadName: ${allLaunchpads}, launchpadCompleted: false, launchpadMigrated: false, createdAt: { gte: ${oneDayAgo} } }`;
+        rankings = `{ attribute: createdAt, direction: DESC }`;
+        break;
+      case "completing":
+        filters = `{ network: [${networkId}], launchpadName: ${allLaunchpads}, launchpadCompleted: false, launchpadMigrated: false, launchpadGraduationPercent: { gte: 50, lte: 99 }, createdAt: { gte: ${twoDaysAgo} } }`;
+        rankings = `{ attribute: marketCap, direction: DESC }`;
+        break;
+      case "completed":
+        filters = `{ network: [${networkId}], launchpadMigrated: true }`;
+        rankings = `{ attribute: createdAt, direction: DESC }`;
+        break;
+    }
   }
 
   return `{
@@ -88,11 +113,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { column = "new", limit = 50 } = await req.json().catch(() => ({}));
+    const { column = "new", limit = 50, networkId = SOLANA_NETWORK_ID } = await req.json().catch(() => ({}));
     const validColumn = (["new", "completing", "completed"] as Column[]).includes(column) ? column : "new";
     const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
+    const safeNetworkId = [SOLANA_NETWORK_ID, BSC_NETWORK_ID].includes(networkId) ? networkId : SOLANA_NETWORK_ID;
 
-    const query = buildQuery(validColumn as Column, safeLimit);
+    const query = buildQuery(validColumn as Column, safeLimit, safeNetworkId);
 
     const res = await fetch("https://graph.codex.io/graphql", {
       method: "POST",
@@ -136,7 +162,7 @@ Deno.serve(async (req) => {
       liquidity: r.liquidity ? parseFloat(r.liquidity) : 0,
       graduationPercent: r.token?.launchpad?.graduationPercent ?? 0,
       poolAddress: r.token?.launchpad?.poolAddress ?? null,
-      launchpadName: r.token?.launchpad?.launchpadName ?? "Pump.fun",
+      launchpadName: r.token?.launchpad?.launchpadName ?? (safeNetworkId === BSC_NETWORK_ID ? "PancakeSwap" : "Pump.fun"),
       launchpadIconUrl: r.token?.launchpad?.launchpadIconUrl ?? null,
       completed: r.token?.launchpad?.completed ?? false,
       migrated: r.token?.launchpad?.migrated ?? false,
@@ -149,7 +175,7 @@ Deno.serve(async (req) => {
       discordUrl: r.token?.socialLinks?.discord ?? null,
     }));
 
-    return new Response(JSON.stringify({ tokens, column: validColumn }), {
+    return new Response(JSON.stringify({ tokens, column: validColumn, networkId: safeNetworkId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

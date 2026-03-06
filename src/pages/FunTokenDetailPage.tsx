@@ -5,6 +5,8 @@ import { useExternalToken } from "@/hooks/useExternalToken";
 import { usePoolState } from "@/hooks/usePoolState";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolPrice } from "@/hooks/useSolPrice";
+import { useBnbPrice } from "@/hooks/useBnbPrice";
+import { SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
 import { TradePanelWithSwap } from "@/components/launchpad/TradePanelWithSwap";
 import { UniversalTradePanel } from "@/components/launchpad/UniversalTradePanel";
 import { EmbeddedWalletCard } from "@/components/launchpad/EmbeddedWalletCard";
@@ -29,6 +31,21 @@ import { PumpBadge } from "@/components/clawbook/PumpBadge";
 import { PhantomBadge } from "@/components/clawbook/PhantomBadge";
 import { TokenDataTabs } from "@/components/launchpad/TokenDataTabs";
 
+/** Detect if an address is an EVM hex address (0x...) */
+function isEvmAddress(addr: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/i.test(addr);
+}
+
+function getExplorerUrl(addr: string, isBsc: boolean): string {
+  return isBsc ? `https://bscscan.com/token/${addr}` : `https://solscan.io/token/${addr}`;
+}
+
+function getTradeUrl(addr: string, isBsc: boolean): string {
+  return isBsc
+    ? `https://pancakeswap.finance/swap?outputCurrency=${addr}&chain=bsc`
+    : `https://axiom.trade/meme/${addr}?chain=sol`;
+}
+
 const TOTAL_SUPPLY = 1_000_000_000;
 const GRADUATION_THRESHOLD = 85;
 
@@ -46,7 +63,7 @@ function formatSolAmount(amount: number): string {
 }
 
 /** Lightweight view for tokens not in our database — fetched from Codex on-chain data */
-function ExternalTokenView({ token, mintAddress, solPrice }: { token: import("@/hooks/useExternalToken").ExternalToken; mintAddress: string; solPrice: number }) {
+function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { token: import("@/hooks/useExternalToken").ExternalToken; mintAddress: string; solPrice: number; isBsc?: boolean }) {
   const privyAvailable = usePrivyAvailable();
   const { toast } = useToast();
   const [mobileTab, setMobileTab] = useState<'trade' | 'chart'>('trade');
@@ -137,12 +154,12 @@ function ExternalTokenView({ token, mintAddress, solPrice }: { token: import("@/
                 <div className="hidden md:flex items-center gap-0.5">
                   {token.websiteUrl && <a href={token.websiteUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground"><Globe className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
                   {token.twitterUrl && <a href={token.twitterUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground"><Twitter className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
-                  <a href={`https://solscan.io/token/${mintAddress}`} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground"><ExternalLink className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>
+                  <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground"><ExternalLink className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>
                 </div>
-                <a href={`https://axiom.trade/meme/${mintAddress}?chain=sol`} target="_blank" rel="noopener noreferrer">
+                <a href={getTradeUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer">
                   <Button size="sm" className="h-8 lg:h-7 px-2 text-[9px] font-mono gap-0.5 bg-accent/15 hover:bg-accent/25 text-accent-foreground rounded">
                     <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                    <span className="hidden sm:inline">Axiom</span>
+                    <span className="hidden sm:inline">{isBsc ? 'PancakeSwap' : 'Axiom'}</span>
                   </Button>
                 </a>
               </div>
@@ -307,22 +324,30 @@ export default function FunTokenDetailPage() {
   const { solanaAddress } = useAuth();
   const privyAvailable = usePrivyAvailable();
   const { solPrice } = useSolPrice();
+  const { bnbPrice } = useBnbPrice();
   const { toast } = useToast();
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [mobileTab, setMobileTab] = useState<'trade' | 'chart' | 'comments'>('chart');
+
+  // Detect if this is a BSC token (0x prefix)
+  const isBsc = isEvmAddress(mintAddress || '');
+  const networkId = isBsc ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
+  const activePrice = isBsc ? bnbPrice : solPrice;
 
   const { data: token, isLoading, refetch } = useFunToken(mintAddress || '');
   
   // Fallback: fetch from Codex if not in our database
   const { data: externalToken, isLoading: externalLoading } = useExternalToken(
     mintAddress || '',
-    !isLoading && !token
+    !isLoading && !token,
+    networkId
   );
 
   // Also fetch Codex data for internal tokens — gives accurate price, holders, mcap
   const { data: codexEnrichment } = useExternalToken(
     mintAddress || '',
-    !!token && !!mintAddress
+    !!token && !!mintAddress,
+    networkId
   );
 
   const { data: livePoolState, refetch: refetchPoolState } = usePoolState({
@@ -414,7 +439,7 @@ export default function FunTokenDetailPage() {
 
   // External token (not in our DB but found on-chain via Codex)
   if (!token && externalToken) {
-    return <ExternalTokenView token={externalToken} mintAddress={mintAddress || ''} solPrice={solPrice} />;
+    return <ExternalTokenView token={externalToken} mintAddress={mintAddress || ''} solPrice={activePrice} isBsc={isBsc} />;
   }
 
   // Not found anywhere

@@ -4,10 +4,12 @@ import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useFunTokensPaginated } from "@/hooks/useFunTokensPaginated";
 import { useGraduatedTokens } from "@/hooks/useGraduatedTokens";
 import { useSolPrice } from "@/hooks/useSolPrice";
-import { useCodexNewPairs } from "@/hooks/useCodexNewPairs";
+import { useBnbPrice } from "@/hooks/useBnbPrice";
+import { useCodexNewPairs, SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
 import { useProTradersCount } from "@/hooks/useProTradersCount";
 import { AxiomTerminalGrid } from "@/components/launchpad/AxiomTerminalGrid";
 import { useTradeSounds } from "@/hooks/useTradeSounds";
+import { useChain } from "@/contexts/ChainContext";
 import {
   List, Settings, Bookmark, Monitor, Volume2, VolumeX, LayoutGrid, ChevronDown, Zap
 } from "lucide-react";
@@ -26,10 +28,24 @@ function getStoredQuickBuy(): number {
 export default function TradePage() {
   const [searchParams] = useSearchParams();
   const search = searchParams.get("q") || "";
+  const { chain, chainConfig } = useChain();
+
+  const isBnb = chain === 'bnb';
+  const networkId = isBnb ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
+  const nativeCurrency = chainConfig.nativeCurrency.symbol;
+
+  // Solana DB tokens (only when on Solana)
   const { tokens, totalCount, isLoading } = useFunTokensPaginated(1, 100);
   const { tokens: graduatedTokens } = useGraduatedTokens();
+
+  // Prices
   const { solPrice } = useSolPrice();
-  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated } = useCodexNewPairs();
+  const { bnbPrice } = useBnbPrice();
+  const activePrice = isBnb ? bnbPrice : solPrice;
+
+  // Codex data — chain-aware
+  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated } = useCodexNewPairs(networkId);
+
   const [quickBuyAmount, setQuickBuyAmount] = useState(getStoredQuickBuy);
   const [quickBuyInput, setQuickBuyInput] = useState(String(getStoredQuickBuy()));
   const { toggle: toggleSounds, isEnabled: isSoundsEnabled } = useTradeSounds();
@@ -53,11 +69,13 @@ export default function TradePage() {
     localStorage.setItem(QUICK_BUY_KEY, String(amount));
   }, []);
 
+  // On Solana, merge DB tokens; on BNB, only Codex tokens
   const allTokens = useMemo(() => {
+    if (isBnb) return [];
     const tokenIds = new Set(tokens.map(t => t.id));
     const missingGraduated = graduatedTokens.filter(t => !tokenIds.has(t.id));
     return [...tokens, ...missingGraduated];
-  }, [tokens, graduatedTokens]);
+  }, [tokens, graduatedTokens, isBnb]);
 
   const mintAddresses = useMemo(() => allTokens.map(t => t.mint_address).filter(Boolean) as string[], [allTokens]);
   const { data: proTradersMap } = useProTradersCount(mintAddresses);
@@ -70,13 +88,19 @@ export default function TradePage() {
     );
   }, [allTokens, search]);
 
+  const displayCount = isBnb
+    ? (codexNewPairs.length + codexCompleting.length + codexGraduated.length)
+    : totalCount;
+
   return (
     <LaunchpadLayout hideFooter noPadding>
       <div className="space-y-0 relative z-10">
         {/* Pulse Header Toolbar */}
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/40">
           <div className="flex items-center gap-2">
-            <h1 className="text-[15px] font-bold text-foreground tracking-tight">Pulse</h1>
+            <h1 className="text-[15px] font-bold text-foreground tracking-tight">
+              Pulse {isBnb ? '— BNB' : ''}
+            </h1>
             <button className="pulse-toolbar-icon"><List className="h-3.5 w-3.5" /></button>
             <button className="pulse-toolbar-icon"><Settings className="h-3.5 w-3.5" /></button>
           </div>
@@ -99,7 +123,7 @@ export default function TradePage() {
             <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-muted/50 text-[10px] font-mono text-muted-foreground">
               <span className="text-foreground font-bold">1</span>
               <span>=</span>
-              <span>{totalCount.toLocaleString()}</span>
+              <span>{displayCount.toLocaleString()}</span>
               <ChevronDown className="h-2.5 w-2.5 opacity-40" />
             </div>
           </div>
@@ -116,14 +140,17 @@ export default function TradePage() {
         {/* Axiom Terminal Grid */}
         <AxiomTerminalGrid
           tokens={filtered}
-          solPrice={solPrice}
-          isLoading={isLoading}
+          solPrice={activePrice}
+          isLoading={isBnb ? false : isLoading}
           codexNewPairs={codexNewPairs}
           codexCompleting={codexCompleting}
           codexGraduated={codexGraduated}
           quickBuyAmount={quickBuyAmount}
           onQuickBuyChange={handleQuickBuySet}
           proTradersMap={proTradersMap ?? {}}
+          chain={chain}
+          networkId={networkId}
+          nativeCurrency={nativeCurrency}
         />
       </div>
     </LaunchpadLayout>

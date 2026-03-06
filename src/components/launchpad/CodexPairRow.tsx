@@ -8,6 +8,7 @@ import { LaunchpadBadge } from "./LaunchpadBadge";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 import { SparklineCanvas } from "./SparklineCanvas";
 import { toast } from "sonner";
+import type { SupportedChain } from "@/contexts/ChainContext";
 
 function formatUsdCompact(usd: number): string {
   if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(2)}M`;
@@ -48,7 +49,12 @@ function formatTxCount(holders: number): string {
   return String(holders);
 }
 
-export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, proTraders = 0, sparklineData }: { token: CodexPairToken; quickBuyAmount?: number; proTraders?: number; sparklineData?: number[] }) {
+function getExplorerUrl(address: string, chain: SupportedChain): string {
+  if (chain === 'bnb') return `https://bscscan.com/token/${address}`;
+  return `https://solscan.io/token/${address}`;
+}
+
+export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, proTraders = 0, sparklineData, chain = 'solana' }: { token: CodexPairToken; quickBuyAmount?: number; proTraders?: number; sparklineData?: number[]; chain?: SupportedChain }) {
   const [copiedCA, setCopiedCA] = useState(false);
   const gradPct = token.graduationPercent ?? 0;
   const mcap = formatUsdCompact(token.marketCap);
@@ -56,7 +62,12 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
   const liq = formatUsdCompact(token.liquidity);
   const age = formatAge(token.createdAt);
   const xUsername = extractXUsername(token.twitterUrl);
-  const shortAddr = token.address ? `${token.address.slice(0, 4)}...${token.address.slice(-4)}` : "";
+  const isBnb = chain === 'bnb';
+  const shortAddr = token.address
+    ? isBnb
+      ? `${token.address.slice(0, 6)}...${token.address.slice(-4)}`
+      : `${token.address.slice(0, 4)}...${token.address.slice(-4)}`
+    : "";
 
   const handleCopyCA = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -183,17 +194,19 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
       {/* Row 2: Bottom bar */}
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
-          {/* Progress % */}
-          <div className="flex items-center gap-1">
-            {gradPct > 0 && (
-              <ArrowUpRight className="h-2.5 w-2.5 text-success" />
-            )}
-            <span className="text-[9px] font-mono font-bold" style={{
-              color: gradPct >= 80 ? "hsl(38 92% 50%)" : gradPct >= 50 ? "hsl(45 93% 47%)" : "hsl(160 84% 39%)"
-            }}>
-              {gradPct.toFixed(gradPct >= 1 ? 0 : 1)}%
-            </span>
-          </div>
+          {/* Progress % — only show for Solana launchpad tokens */}
+          {!isBnb && (
+            <div className="flex items-center gap-1">
+              {gradPct > 0 && (
+                <ArrowUpRight className="h-2.5 w-2.5 text-success" />
+              )}
+              <span className="text-[9px] font-mono font-bold" style={{
+                color: gradPct >= 80 ? "hsl(38 92% 50%)" : gradPct >= 50 ? "hsl(45 93% 47%)" : "hsl(160 84% 39%)"
+              }}>
+                {gradPct.toFixed(gradPct >= 1 ? 0 : 1)}%
+              </span>
+            </div>
+          )}
 
           <LaunchpadBadge launchpadName={token.launchpadName} iconUrl={token.launchpadIconUrl} />
 
@@ -205,7 +218,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
             <span className="pulse-metric-dot pulse-metric-dot--success">Paid</span>
           )}
 
-          {/* Short address */}
+          {/* Short address + explorer link */}
           {shortAddr && (
             <button
               onClick={handleCopyCA}
@@ -214,6 +227,20 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
               {copiedCA ? <CheckCircle className="h-2 w-2 text-success" /> : <Copy className="h-2 w-2" />}
               <span>{shortAddr}</span>
             </button>
+          )}
+
+          {/* Explorer link for BNB */}
+          {isBnb && token.address && (
+            <a
+              href={getExplorerUrl(token.address, chain)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[9px] font-mono text-foreground/40 hover:text-foreground/70 transition-colors"
+              title="View on BscScan"
+            >
+              <ExternalLink className="h-2.5 w-2.5" />
+            </a>
           )}
         </div>
 

@@ -1,87 +1,45 @@
 
 
-# BNB Pulse Trading Terminal — Full Chain-Aware Implementation
+## Two Issues to Fix
 
-## Problem
-The `/trade` (Pulse terminal) page and all its data feeds are hardcoded to Solana (Codex network `1399811149`). When a user selects BNB in the chain switcher, the Pulse terminal should switch entirely to show BNB tokens — new pairs, completing, migrated — sourced from Codex's BSC network (network ID `56`).
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-## Approach
-Make the entire Pulse pipeline chain-aware: the edge function accepts a `networkId` parameter, the hooks pass it based on chain context, and the TradePage/AxiomTerminalGrid respond to chain switches. The same UI components (CodexPairRow, AxiomTokenRow, sparklines) work for both chains.
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-## Changes
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-### 1. Edge Function: `codex-filter-tokens` — Add BSC support
-- Accept optional `networkId` parameter (default `1399811149` for Solana)
-- When `networkId = 56` (BSC): use BSC-specific launchpad names (e.g. `["Flap.sh", "PancakeSwap"]` or remove launchpad filter entirely to show all BSC pairs)
-- Swap `network: [1399811149]` → `network: [networkId]` in all three column queries
-- BSC tokens won't have launchpad graduation data, so for BSC "completing"/"completed" columns, use liquidity/volume-based filters instead
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-### 2. Edge Function: `codex-sparklines` — Add BSC support
-- Accept optional `networkId` parameter (default `1399811149`)
-- Use it when building token IDs: `${addr}:${networkId}`
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### 3. Edge Function: `codex-token-info` — Add BSC support
-- Accept optional `networkId` parameter
-- Used by the token detail page for external tokens
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-### 4. Edge Function: `codex-chart-data` — Add BSC support
-- Already accepts `networkId` param, just need to pass it from frontend
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-### 5. Hook: `useCodexNewPairs` — Chain-aware
-- Accept `networkId` parameter
-- Pass it to `codex-filter-tokens` edge function call
-- Include `networkId` in query key so Solana and BNB caches are separate
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-### 6. Hook: `useSparklineBatch` — Chain-aware
-- Accept optional `networkId` parameter
-- Pass to `codex-sparklines` edge function
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-### 7. `TradePage.tsx` — Add chain context
-- Import `useChain` to get current chain
-- Map chain to Codex network ID (`solana` → `1399811149`, `bnb` → `56`)
-- Pass `networkId` to `useCodexNewPairs` and `useSparklineBatch`
-- When BNB selected: skip `useFunTokensPaginated` (Solana-only DB tokens) or filter by `chain = 'bnb'`
-- Update header to show "Pulse — BNB" when on BNB chain
-- Show BNB price instead of SOL price
+### Technical Details
 
-### 8. `AxiomTerminalGrid` — Accept chain context
-- Accept optional `chain` prop to adjust labels (e.g. "New BNB Pairs")
-- Quick buy amounts show in BNB instead of SOL when on BNB chain
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-### 9. `CodexPairRow` — Chain-aware links
-- When chain is BNB, link to `/trade/${address}` (same route, token detail page handles it)
-- Show BscScan link instead of Solscan for copy/external links
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-### 10. `FunTokenDetailPage` — BSC token support
-- Detect if token address is an EVM address (0x prefix)
-- Pass `networkId: 56` to `codex-token-info` and `codex-chart-data`
-- Show PancakeSwap swap link instead of Jupiter
-- Show BscScan explorer links
-
-### 11. `useBnbPrice` hook (new)
-- Fetch BNB/USD price (from CoinGecko or Codex)
-- Used when chain is BNB to display USD values
-
-## Files Modified/Created
-
-| File | Action |
-|------|--------|
-| `supabase/functions/codex-filter-tokens/index.ts` | Add `networkId` param, BSC filter logic |
-| `supabase/functions/codex-sparklines/index.ts` | Add `networkId` param |
-| `supabase/functions/codex-token-info/index.ts` | Add `networkId` param |
-| `src/hooks/useCodexNewPairs.ts` | Accept & pass `networkId` |
-| `src/hooks/useSparklineBatch.ts` | Accept & pass `networkId` |
-| `src/hooks/useBnbPrice.ts` | New — fetch BNB/USD price |
-| `src/pages/TradePage.tsx` | Add chain context, conditional data sources |
-| `src/components/launchpad/AxiomTerminalGrid.tsx` | Chain-aware labels & currency |
-| `src/components/launchpad/CodexPairRow.tsx` | Chain-aware links & explorer |
-| `src/pages/FunTokenDetailPage.tsx` | BSC token detection & routing |
-
-## Build Order
-1. Edge functions (add `networkId` param to all Codex functions)
-2. Hooks (`useCodexNewPairs`, `useSparklineBatch` — pass networkId)
-3. `useBnbPrice` hook
-4. `TradePage` — chain-aware data fetching
-5. `AxiomTerminalGrid` + `CodexPairRow` — chain-aware UI
-6. `FunTokenDetailPage` — BSC token detail support
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

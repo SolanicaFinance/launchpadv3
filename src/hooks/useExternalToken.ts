@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SOLANA_NETWORK_ID } from "./useCodexNewPairs";
 
 export interface ExternalToken {
   address: string;
@@ -23,15 +24,15 @@ export interface ExternalToken {
 }
 
 /**
- * Fetch token info from Codex for any Solana mint address.
+ * Fetch token info from Codex for any Solana or BSC token address.
  * Used as fallback when a token is not in the platform's database.
  */
-export function useExternalToken(mintAddress: string, enabled: boolean) {
+export function useExternalToken(mintAddress: string, enabled: boolean, networkId: number = SOLANA_NETWORK_ID) {
   return useQuery({
-    queryKey: ["external-token", mintAddress],
+    queryKey: ["external-token", mintAddress, networkId],
     queryFn: async (): Promise<ExternalToken | null> => {
       const { data, error } = await supabase.functions.invoke("codex-token-info", {
-        body: { address: mintAddress },
+        body: { address: mintAddress, networkId },
       });
       if (error) throw error;
       return data?.token ?? null;

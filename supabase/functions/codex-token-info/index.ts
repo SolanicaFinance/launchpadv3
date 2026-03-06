@@ -22,17 +22,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { address } = await req.json().catch(() => ({}));
-    if (!address || typeof address !== "string" || !/^[A-HJ-NP-Za-km-z1-9]{32,44}$/.test(address)) {
+    const { address, networkId = SOLANA_NETWORK_ID } = await req.json().catch(() => ({}));
+    
+    // Validate address: Solana base58 or EVM hex
+    const isSolanaAddr = /^[A-HJ-NP-Za-km-z1-9]{32,44}$/.test(address || '');
+    const isEvmAddr = /^0x[a-fA-F0-9]{40}$/.test(address || '');
+    
+    if (!address || typeof address !== "string" || (!isSolanaAddr && !isEvmAddr)) {
       return new Response(
         JSON.stringify({ error: "Invalid address" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const safeNetworkId = Number(networkId) || SOLANA_NETWORK_ID;
+
     // Query both token metadata and market data
     const query = `{
-  tokens(ids: [{ address: "${address}", networkId: ${SOLANA_NETWORK_ID} }]) {
+  tokens(ids: [{ address: "${address}", networkId: ${safeNetworkId} }]) {
     address
     decimals
     name
@@ -54,7 +61,7 @@ Deno.serve(async (req) => {
     }
   }
   filterTokens(
-    filters: { network: [${SOLANA_NETWORK_ID}] }
+    filters: { network: [${safeNetworkId}] }
     rankings: { attribute: marketCap, direction: DESC }
     tokens: ["${address}"]
     limit: 1
@@ -108,7 +115,7 @@ Deno.serve(async (req) => {
       address: tokenMeta.address,
       name: tokenMeta.name || "Unknown",
       symbol: tokenMeta.symbol || "???",
-      decimals: tokenMeta.decimals ?? 9,
+      decimals: tokenMeta.decimals ?? (safeNetworkId === SOLANA_NETWORK_ID ? 9 : 18),
       imageUrl: tokenMeta.info?.imageLargeUrl || tokenMeta.info?.imageSmallUrl || null,
       twitterUrl: tokenMeta.socialLinks?.twitter || null,
       websiteUrl: tokenMeta.socialLinks?.website || null,

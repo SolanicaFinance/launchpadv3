@@ -10,6 +10,8 @@ import { PulseFiltersDialog } from "./PulseFiltersDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Rocket, Flame, CheckCircle2, Radio } from "lucide-react";
 import { usePulseFilters, ColumnId } from "@/hooks/usePulseFilters";
+import { SOLANA_NETWORK_ID } from "@/hooks/useCodexNewPairs";
+import type { SupportedChain } from "@/contexts/ChainContext";
 
 interface AxiomTerminalGridProps {
   tokens: FunToken[];
@@ -21,6 +23,9 @@ interface AxiomTerminalGridProps {
   quickBuyAmount: number;
   onQuickBuyChange?: (amount: number) => void;
   proTradersMap?: Record<string, number>;
+  chain?: SupportedChain;
+  networkId?: number;
+  nativeCurrency?: string;
 }
 
 const COLUMN_TABS = [
@@ -64,13 +69,15 @@ function PulseEmptyColumn({ label, color }: { label: string; color: string }) {
   );
 }
 
-export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount, onQuickBuyChange, proTradersMap = {} }: AxiomTerminalGridProps) {
+export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount, onQuickBuyChange, proTradersMap = {}, chain = 'solana', networkId = SOLANA_NETWORK_ID, nativeCurrency = 'SOL' }: AxiomTerminalGridProps) {
   const [mobileTab, setMobileTab] = useState<ColumnTab>("new");
   const [tabletRightTab, setTabletRightTab] = useState<"final" | "migrated">("final");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { tokens: kingTokens } = useKingOfTheHill();
   const tabBarRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
+
+  const isBnb = chain === 'bnb';
 
   const {
     filters, activeFilterColumn, setActiveFilterColumn,
@@ -79,6 +86,9 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   } = usePulseFilters();
 
   const { newPairs, finalStretch, migrated } = useMemo(() => {
+    // On BNB chain, DB tokens are empty — only Codex tokens used
+    if (isBnb) return { newPairs: [] as FunToken[], finalStretch: [] as FunToken[], migrated: [] as FunToken[] };
+
     const newPairs = tokens
       .filter(t => (t.bonding_progress ?? 0) < 80 && t.status !== 'graduated')
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -115,7 +125,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
       .sort((a, b) => (b.market_cap_sol ?? 0) - (a.market_cap_sol ?? 0));
 
     return { newPairs, finalStretch, migrated };
-  }, [tokens, kingTokens]);
+  }, [tokens, kingTokens, isBnb]);
 
   // Apply filters
   const filteredNewPairs = useMemo(() => applyFilterToFunTokens(newPairs, "new", solPrice), [newPairs, filters, solPrice]);
@@ -135,12 +145,17 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
     return [...funAddrs, ...codexAddrs];
   }, [filteredNewPairs, filteredFinalStretch, filteredMigrated, filteredCodexNew, filteredCodexCompleting, filteredCodexGraduated]);
 
-  const { data: sparklineMap } = useSparklineBatch(allAddresses);
+  const { data: sparklineMap } = useSparklineBatch(allAddresses, networkId);
+
+  // Column labels adapt to chain
+  const columnLabels = isBnb
+    ? { new: "New BNB Pairs", final: "Trending", migrated: "Top Liquidity" }
+    : { new: "New Pairs", final: "Final Stretch", migrated: "Migrated" };
 
   const columns = [
-    { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: filteredNewPairs, codex: filteredCodexNew, color: COLUMN_TABS[0].color },
-    { id: "final" as const, label: "Final Stretch", icon: Flame, tokens: filteredFinalStretch, codex: filteredCodexCompleting, color: COLUMN_TABS[1].color },
-    { id: "migrated" as const, label: "Migrated", icon: CheckCircle2, tokens: filteredMigrated, codex: filteredCodexGraduated, color: COLUMN_TABS[2].color },
+    { id: "new" as const, label: columnLabels.new, icon: Rocket, tokens: filteredNewPairs, codex: filteredCodexNew, color: COLUMN_TABS[0].color },
+    { id: "final" as const, label: columnLabels.final, icon: Flame, tokens: filteredFinalStretch, codex: filteredCodexCompleting, color: COLUMN_TABS[1].color },
+    { id: "migrated" as const, label: columnLabels.migrated, icon: CheckCircle2, tokens: filteredMigrated, codex: filteredCodexGraduated, color: COLUMN_TABS[2].color },
   ];
 
 
@@ -174,6 +189,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             quickBuyAmount={quickBuyAmount}
             proTraders={0}
             sparklineData={t.address ? sparklineMap?.[t.address] : undefined}
+            chain={chain}
           />
         ))}
         {col.tokens.map(token => (
@@ -208,18 +224,18 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
       {/* ═══ Mobile: Premium Tab Switcher (<640px) ═══ */}
       <div className="sm:hidden">
         <div className="pulse-mobile-tabs" ref={tabBarRef}>
-          {COLUMN_TABS.map(tab => {
-            const col = columns.find(c => c.id === tab.id)!;
-            const isActive = mobileTab === tab.id;
+          {columns.map((col) => {
+            const tab = COLUMN_TABS.find(t => t.id === col.id)!;
+            const isActive = mobileTab === col.id;
             return (
               <button
-                key={tab.id}
-                data-tab={tab.id}
-                onClick={() => setMobileTab(tab.id)}
+                key={col.id}
+                data-tab={col.id}
+                onClick={() => setMobileTab(col.id)}
                 className={`pulse-mobile-tab ${isActive ? "active" : ""}`}
               >
                 <span className="pulse-tab-dot" style={{ background: `hsl(${tab.color})` }} />
-                <span>{tab.label}</span>
+                <span>{col.label}</span>
               </button>
             );
           })}
@@ -234,7 +250,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
       <div className="hidden sm:grid sm:grid-cols-2 xl:hidden border-t border-border">
         <div className="pulse-column-v2 border-r border-border">
           <PulseColumnHeaderBar
-            label="New Pairs" color={COLUMN_TABS[0].color} icon={Rocket}
+            label={columnLabels.new} color={COLUMN_TABS[0].color} icon={Rocket}
             quickBuyAmount={quickBuyAmount}
             onQuickBuyChange={onQuickBuyChange}
             onOpenFilters={() => openFiltersForColumn("new")}
@@ -249,6 +265,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             <div className="pulse-segmented-control">
               {(["final", "migrated"] as const).map(id => {
                 const tab = COLUMN_TABS.find(t => t.id === id)!;
+                const col = columns.find(c => c.id === id)!;
                 const isActive = tabletRightTab === id;
                 return (
                   <button
@@ -258,7 +275,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
                     style={isActive ? { "--seg-color": tab.color } as React.CSSProperties : undefined}
                   >
                     <tab.icon className="h-3 w-3" />
-                    <span>{tab.label}</span>
+                    <span>{col.label}</span>
                   </button>
                 );
               })}

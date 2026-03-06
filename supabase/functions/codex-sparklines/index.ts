@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const NETWORK_ID = 1399811149; // Solana
+const SOLANA_NETWORK_ID = 1399811149;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { addresses } = await req.json();
+    const { addresses, networkId = SOLANA_NETWORK_ID } = await req.json();
     if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
       return new Response(
         JSON.stringify({ error: "addresses array required" }),
@@ -30,8 +30,10 @@ Deno.serve(async (req) => {
       );
     }
 
+    const safeNetworkId = Number(networkId) || SOLANA_NETWORK_ID;
+
     // Build token IDs in Codex format: "address:networkId"
-    const ids = addresses.slice(0, 25).map((addr: string) => `${addr}:${NETWORK_ID}`);
+    const ids = addresses.slice(0, 25).map((addr: string) => `${addr}:${safeNetworkId}`);
     const idsStr = ids.map((id: string) => `"${id}"`).join(", ");
 
     const query = `{
