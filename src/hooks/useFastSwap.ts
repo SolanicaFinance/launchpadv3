@@ -76,6 +76,7 @@ export function useFastSwap() {
     // Fetch on-chain pool state for accurate reserve data
     let virtualSolReserves: number | undefined;
     let virtualTokenReserves: number | undefined;
+    let poolInvalid = false;
     try {
       const poolState = await client.state.getPool(poolAddress);
       if (poolState) {
@@ -84,7 +85,18 @@ export function useFastSwap() {
         virtualTokenReserves = Number(poolState.baseReserve) / 10 ** TOKEN_DECIMALS;
       }
     } catch (e) {
-      console.warn('[FastSwap] Failed to fetch pool state, will use DB reserves:', e);
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('Invalid account discriminator') || msg.includes('Account does not exist')) {
+        console.warn('[FastSwap] Pool invalid/closed, falling back to Jupiter:', msg);
+        poolInvalid = true;
+      } else {
+        console.warn('[FastSwap] Failed to fetch pool state, will use DB reserves:', e);
+      }
+    }
+
+    // If pool is invalid (graduated/migrated), fall back to Jupiter
+    if (poolInvalid) {
+      return swapGraduated(token, amount, isBuy, slippageBps);
     }
 
     const swapTx = await client.pool.swap({
