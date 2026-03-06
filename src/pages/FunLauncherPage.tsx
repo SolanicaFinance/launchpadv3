@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +28,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import {
   PartyPopper, XCircle, ExternalLink, Copy, CheckCircle,
-  AlertCircle, Flame,
+  AlertCircle, Flame, Zap, Menu,
 } from "lucide-react";
 
 interface LaunchResult {
@@ -46,6 +46,15 @@ interface LaunchResult {
 }
 
 // Filter tabs removed — Axiom layout uses column-based organization
+
+const WALLET_PRESETS = ["P1", "P2", "P3"] as const;
+const PRESET_DEFAULTS: Record<string, number> = { P1: 0.5, P2: 1.0, P3: 2.0 };
+function getPresetAmount(preset: string): number {
+  try { const v = localStorage.getItem(`pulse-qb-${preset}`); if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; } } catch {} return PRESET_DEFAULTS[preset] ?? 0.5;
+}
+function savePresetAmount(preset: string, amount: number) { try { localStorage.setItem(`pulse-qb-${preset}`, String(amount)); } catch {} }
+function getActivePreset(): string { try { return localStorage.getItem("pulse-active-preset") || "P1"; } catch { return "P1"; } }
+function saveActivePreset(preset: string) { try { localStorage.setItem("pulse-active-preset", preset); } catch {} }
 
 export default function FunLauncherPage() {
   const { toast } = useToast();
@@ -82,6 +91,32 @@ export default function FunLauncherPage() {
   // activeFilter removed — Axiom layout uses column-based organization
   const [adminWallet] = useState("");
   const { isAdmin } = useIsAdmin(adminWallet || null);
+
+  // Quick Buy presets
+  const [activePreset, setActivePreset] = useState(getActivePreset);
+  const [quickBuyAmount, setQuickBuyAmount] = useState(() => getPresetAmount(getActivePreset()));
+  const [editingQb, setEditingQb] = useState(false);
+  const [qbInput, setQbInput] = useState(String(getPresetAmount(getActivePreset())));
+  const qbMountedRef = useRef(false);
+
+  useEffect(() => { if (!qbMountedRef.current) qbMountedRef.current = true; }, []);
+  useEffect(() => { if (!editingQb) setQbInput(String(quickBuyAmount)); }, [quickBuyAmount, editingQb]);
+
+  const handlePresetSwitch = useCallback((preset: string) => {
+    savePresetAmount(activePreset, quickBuyAmount);
+    const newAmount = getPresetAmount(preset);
+    setActivePreset(preset);
+    saveActivePreset(preset);
+    setQbInput(String(newAmount));
+    setQuickBuyAmount(newAmount);
+  }, [activePreset, quickBuyAmount]);
+
+  const handleQbSave = useCallback(() => {
+    setEditingQb(false);
+    const num = parseFloat(qbInput);
+    if (num > 0 && isFinite(num)) { setQuickBuyAmount(num); savePresetAmount(activePreset, num); }
+    else { setQbInput(String(quickBuyAmount)); }
+  }, [qbInput, quickBuyAmount, activePreset]);
 
   // Create token dialog — triggered by ?create=1 URL param
   const showCreateDialog = searchParams.get("create") === "1";
@@ -251,8 +286,40 @@ export default function FunLauncherPage() {
               </span>
             </div>
 
-            {/* Token Grid */}
+            {/* Quick Buy Header + Token Grid */}
             <div className="px-4 pt-4 pb-16">
+              {/* P1 P2 P3 Header Bar */}
+              <div className="pulse-axiom-header mb-3" style={{ "--col-accent": "160 84% 39%" } as React.CSSProperties}>
+                <button className="pulse-axiom-qb" onClick={() => setEditingQb(!editingQb)}>
+                  <Zap className="h-3 w-3 text-warning" />
+                  {editingQb ? (
+                    <input
+                      autoFocus type="text" inputMode="decimal" value={qbInput}
+                      onChange={e => { if (e.target.value === "" || /^\d*\.?\d*$/.test(e.target.value)) setQbInput(e.target.value); }}
+                      onBlur={handleQbSave} onKeyDown={e => e.key === "Enter" && handleQbSave()}
+                      className="w-10 bg-transparent text-[11px] font-mono font-bold text-foreground outline-none"
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="text-[11px] font-mono font-bold text-foreground">{quickBuyAmount}</span>
+                  )}
+                </button>
+                <button className="pulse-axiom-icon-btn"><Menu className="h-3 w-3" /></button>
+                <div className="pulse-axiom-presets">
+                  {WALLET_PRESETS.map(p => (
+                    <button key={p} onClick={() => handlePresetSwitch(p)}
+                      className={`pulse-axiom-preset ${activePreset === p ? "active" : ""}`}
+                      style={activePreset === p ? { borderColor: "hsl(160 84% 39%)", color: "hsl(160 84% 39%)" } : undefined}
+                    >{p}</button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <Flame className="h-3 w-3 flex-shrink-0 text-success" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80 truncate">All Tokens</span>
+                </div>
+                <div className="pulse-col-accent-line" style={{ background: "linear-gradient(90deg, hsl(160 84% 39% / 0.6), transparent)" }} />
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {tokensLoading
                   ? Array.from({ length: 12 }).map((_, i) => (
@@ -266,7 +333,7 @@ export default function FunLauncherPage() {
                     </div>
                   ))
                   : tokens.map(token => (
-                    <TokenCard key={token.id} token={token} solPrice={solPrice} />
+                    <TokenCard key={token.id} token={token} solPrice={solPrice} quickBuyAmount={quickBuyAmount} />
                   ))
                 }
               </div>
