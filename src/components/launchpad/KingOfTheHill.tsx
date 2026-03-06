@@ -65,9 +65,9 @@ function ProgressBar({ value }: { value: number }) {
     <div className="w-full">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-semibold font-mono">Bonding Progress</span>
-        <span className="text-[12px] font-bold font-mono tabular-nums text-foreground">{value.toFixed(0)}%</span>
+        <span className="text-[13px] font-bold font-mono tabular-nums text-foreground">{value.toFixed(0)}%</span>
       </div>
-      <div className="h-[8px] w-full rounded-full overflow-hidden bg-muted/30">
+      <div className="h-[10px] w-full rounded-full overflow-hidden bg-muted/30">
         <div
           className={cn(
             "h-full rounded-full bg-gradient-to-r transition-all duration-[1.2s] ease-out relative",
@@ -265,12 +265,12 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
         </div>
       </div>
 
-      {/* Middle: MCAP + 24h Change + Holders */}
-      <div className="flex items-center gap-4 mb-4">
+      {/* Middle: MCAP + Holders grid */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-0.5">MCap</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-black font-mono tabular-nums text-emerald-400 leading-none">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">MCap</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-lg font-black font-mono tabular-nums text-emerald-400 leading-none">
               ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
             </span>
             {change24h !== 0 && (
@@ -283,26 +283,22 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
             )}
           </div>
         </div>
-        <div className="h-6 w-px bg-border/20" />
         <div>
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-0.5">Holders</span>
-          <div className="flex items-center gap-1">
-            <Users className="w-3 h-3 text-muted-foreground/40" />
-            <span className="text-[13px] font-mono font-semibold text-foreground/80">{holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}</span>
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Holders</span>
+          <div className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-muted-foreground/50" />
+            <span className="text-sm font-mono font-bold text-foreground/80">{holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}</span>
           </div>
         </div>
-        {token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 && (
-          <>
-            <div className="h-6 w-px bg-border/20" />
-            <div>
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-0.5">Vol 24h</span>
-              <span className="text-[13px] font-mono font-semibold text-foreground/80">
-                ${token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)}
-              </span>
-            </div>
-          </>
-        )}
       </div>
+      {token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 && (
+        <div className="mb-3">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Vol 24h</span>
+          <span className="text-sm font-mono font-bold text-foreground/80">
+            ${token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)}
+          </span>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="mb-3">
@@ -311,11 +307,11 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
 
       {/* Bottom Tools Row */}
       <div className="flex items-center justify-between pt-3 border-t border-border/10">
-        <div className="king-footer-actions flex items-center gap-2">
+        <div className="king-footer-actions flex items-center gap-2 flex-1 min-w-0">
           <button
             onClick={(e) => { e.stopPropagation(); navigate(url); }}
             className={cn(
-              "flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold transition-all duration-200 font-mono",
+              "flex-1 flex items-center justify-center gap-1.5 px-4 py-2 min-h-[36px] rounded-xl text-[12px] font-bold transition-all duration-200 font-mono",
               "bg-primary/10 text-primary hover:bg-primary/20",
               "border border-primary/20 hover:border-primary/40",
               "hover:scale-[1.03] active:scale-[0.97]",
@@ -324,7 +320,7 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
             <TrendingUp className="w-3.5 h-3.5" />
             Trade
           </button>
-          <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper">
+          <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper flex-1">
             <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
           </div>
         </div>
