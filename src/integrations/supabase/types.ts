@@ -4230,6 +4230,48 @@ export type Database = {
           },
         ]
       }
+      merch_orders: {
+        Row: {
+          buyer_email: string
+          buyer_wallet: string | null
+          created_at: string | null
+          id: string
+          items: Json
+          order_number: string
+          shipping_address: Json
+          shipping_name: string
+          status: string | null
+          total_sol: number
+          tx_signature: string | null
+        }
+        Insert: {
+          buyer_email: string
+          buyer_wallet?: string | null
+          created_at?: string | null
+          id?: string
+          items: Json
+          order_number: string
+          shipping_address: Json
+          shipping_name: string
+          status?: string | null
+          total_sol: number
+          tx_signature?: string | null
+        }
+        Update: {
+          buyer_email?: string
+          buyer_wallet?: string | null
+          created_at?: string | null
+          id?: string
+          items?: Json
+          order_number?: string
+          shipping_address?: Json
+          shipping_name?: string
+          status?: string | null
+          total_sol?: number
+          tx_signature?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string | null
