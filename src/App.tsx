@@ -1,9 +1,6 @@
 import { Suspense } from "react";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
-import { startBlockhashPoller } from "@/lib/blockhashCache";
-
-// Start blockhash poller immediately on module load for instant trade execution
-startBlockhashPoller();
+// Blockhash poller is started lazily in useFastSwap when trading is needed
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";

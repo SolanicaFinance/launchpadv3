@@ -29,7 +29,10 @@ let consecutiveErrors = 0;
 function getConnection(): Connection {
   if (!connection) {
     const { url } = getRpcUrl();
-    connection = new Connection(url, 'confirmed');
+    connection = new Connection(url, {
+      commitment: 'confirmed',
+      disableRetryOnRateLimit: true,
+    });
   }
   return connection;
 }
