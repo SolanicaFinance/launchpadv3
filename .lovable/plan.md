@@ -1,84 +1,31 @@
 
 
-## Ultra-Fast Trade Execution System (Axiom-Level Speed)
+## Bug: Chart Not Rendering After Loading
 
-### Current Bottlenecks
+### Root Cause
 
-Your current flow has ~1.5-3 seconds of latency *before the transaction even hits the network*:
+The `CodexChart` component has a race condition between its loading state and chart initialization:
 
-| Step | Current Latency | Where |
-|------|----------------|-------|
-| Balance check (RPC) | 200-500ms | `PulseQuickBuyButton.checkBalance()` |
-| Get blockhash (RPC) | 200-500ms | `useSolanaWalletPrivy.signAndSendTransaction()` |
-| Jupiter quote API | 300-600ms | `useJupiterSwap.getQuote()` |
-| Jupiter swap API | 300-600ms | `useJupiterSwap` POST `/swap` |
-| Dynamic import (Meteora SDK) | 100-300ms | `useRealSwap.swapBondingCurve()` |
-| Dynamic import (bs58, web3.js) | 50-150ms | Multiple places |
-| Privy sign | 50-200ms | Privy SDK |
-| Privy sendTransaction (standard RPC) | 200-500ms | Primary path |
-| Jito dual-submit | fire-and-forget | Secondary path |
-| **Wait for confirmation** | **2-10 seconds** | Blocks UI |
+1. On mount, `bars=[]` and `isLoading=true` → component renders the **loading skeleton** (a different DOM tree, no `containerRef` div)
+2. The chart creation `useEffect` fires but `containerRef.current` is null (the container div isn't in the DOM during loading state)
+3. Data arrives: `bars=[53 items]`, `isLoading=false` → component switches to the **main chart div** with `ref={containerRef}`
+4. The data update `useEffect` fires, but `chartRef.current` is still null because the chart was never created
+5. The chart creation `useEffect` does NOT re-run because its dependencies `[height, isFullscreen, showVolume, resolution]` haven't changed
 
-**Total click-to-network: ~1.5-3s. Total click-to-UI-response: ~4-13s.**
+The chart container only exists in the final return path (line 326-330), but during loading the component returns early with a skeleton (line 280-298). When data arrives and the real container mounts, no effect recreates the chart.
 
-Axiom achieves ~200-400ms click-to-network by eliminating every unnecessary step.
+### Fix
 
-### Plan: 7 Optimizations
+**File: `src/components/launchpad/CodexChart.tsx`**
 
-#### 1. Pre-cached Blockhash Service (`src/lib/blockhashCache.ts`)
-Create a singleton that polls for fresh blockhashes every 2 seconds in the background. Every swap uses the cached value instantly (0ms) instead of making an RPC call (200-500ms).
+Change the component to always render the chart container div (even during loading/error/empty states), and overlay the loading/error/empty UI on top. This ensures `containerRef` is always mounted and the chart creation effect can find it.
 
-```text
-[Background poller] ──2s interval──> RPC getLatestBlockhash
-                                         │
-                                    cache.blockhash (always fresh)
-                                         │
-[Trade click] ──instant read──> use cached blockhash (0ms)
-```
+Alternatively (simpler): Add `bars.length` to the chart creation effect's dependency array so it re-runs when bars first arrive. Specifically, use a derived boolean like `hasBars = bars.length > 0` to avoid recreating the chart on every poll refresh.
 
-#### 2. Remove Pre-flight Balance Check
-The `checkBalance()` call in `PulseQuickBuyButton` adds 200-500ms per trade. Remove it entirely — let the transaction fail on-chain naturally. The user already sees their balance in the UI. Saves 200-500ms.
+The simpler approach:
+1. Add a `const hasBars = bars.length > 0` variable
+2. Add `hasBars` to the chart creation `useEffect` dependency array (line 189)
+3. This triggers chart creation exactly once when bars transition from empty to populated
 
-#### 3. Jito as Primary Submission Path
-Currently: Privy sends via standard Helius RPC (primary), then Jito fire-and-forget (secondary).
-
-New: Build and sign the transaction ourselves, then submit directly to ALL Jito endpoints in parallel as the primary path, plus Helius as secondary. Jito validators give priority inclusion. This requires a new `sendRawTransaction` path that bypasses Privy's `signAndSendTransaction` for the send step — we still use Privy for signing only.
-
-New hook: `useFastSwap.ts` — signs via Privy (`signTransaction`), then submits raw bytes to Jito + Helius simultaneously.
-
-#### 4. Optimistic UI (Don't Wait for Confirmation)
-Currently the UI blocks until `confirmTransaction()` resolves (2-10s). Change to optimistic: show success toast with signature immediately after submission. Confirmation polling moves to background. Saves 2-10 seconds of perceived latency.
-
-#### 5. Eager Module Loading
-Remove all `await import(...)` from the hot path. Pre-import Meteora SDK, bs58, web3.js at module level or via a warm-up function on page load. Saves 100-400ms.
-
-#### 6. Skip Preflight Simulation
-Pass `skipPreflight: true` and `preflightCommitment: 'processed'` to `sendRawTransaction`. Standard RPC preflight simulation adds ~200ms. Axiom skips this.
-
-#### 7. Jupiter Fast Mode
-Use Jupiter's `swapMode: 'ExactIn'` with `dynamicSlippage` and `prioritizationFeeLamports: 'auto'` already set (good), but also add `asLegacyTransaction: false` to ensure VersionedTransaction (smaller, faster). Pre-warm quote cache for the user's quick-buy amount when they hover a token card.
-
-### Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/lib/blockhashCache.ts` | Create | Background blockhash polling singleton |
-| `src/hooks/useFastSwap.ts` | Create | Ultra-fast swap hook: sign-only + parallel Jito submit |
-| `src/lib/jitoBundle.ts` | Modify | Add `sendRawToJitoAndHelius()` — parallel multi-endpoint raw tx submission |
-| `src/hooks/useSolanaWalletPrivy.ts` | Modify | Add `signTransaction()` (sign-only, no send) method |
-| `src/hooks/useRealSwap.ts` | Modify | Use fast path, remove blocking confirmation |
-| `src/components/launchpad/PulseQuickBuyButton.tsx` | Modify | Remove balance check, use optimistic UI |
-| `src/hooks/useJupiterSwap.ts` | Modify | Remove dynamic imports, use cached blockhash |
-
-### Expected Result
-
-```text
-BEFORE:  Click → 200ms balance → 400ms blockhash → 500ms quote → 500ms swap-tx → 150ms sign → 300ms send → 5s confirm = ~7s total
-AFTER:   Click → 0ms (no balance) → 0ms (cached blockhash) → 500ms quote+swap → 100ms sign → 50ms parallel-submit → optimistic done = ~650ms to UI response
-```
-
-The ~500ms Jupiter API round-trip is the irreducible minimum for graduated tokens (need fresh quote). For bonding curve tokens (Meteora), it can be even faster (~300ms) since we build the tx locally.
-
-### Limitation Note
-Privy's embedded wallet SDK may not expose a pure `signTransaction` without sending. If that's the case, we'll intercept the serialized+signed bytes from `signAndSendTransaction` before Privy sends them, and race our own Jito submission against Privy's RPC send. The dual-submit already does this partially — we just need to make Jito the priority path and make the UI not wait for confirmation.
+This is the minimal fix — one line change to the dependency array plus one variable.
 
