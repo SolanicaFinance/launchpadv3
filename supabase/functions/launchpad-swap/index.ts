@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { mintAddress, userWallet, amount, isBuy, privyUserId, profileId, signature: clientSignature, mode } = await req.json();
+    const { mintAddress, userWallet, amount, isBuy, privyUserId, profileId, signature: clientSignature, mode, onChainVirtualSol, onChainVirtualToken } = await req.json();
     
     const launchpadId = req.headers.get("x-launchpad-id");
     const apiKey = req.headers.get("x-api-key");
@@ -83,11 +83,12 @@ serve(async (req) => {
     if (mode === 'record' && clientSignature) {
       console.log("[launchpad-swap] Record mode - recording real swap:", { signature: clientSignature, isBuy, amount });
 
-      // Calculate estimated values for DB record using bonding curve math
-      const virtualSol = token.virtual_sol_reserves || 30;
-      const virtualToken = token.virtual_token_reserves || 1_000_000_000;
+      // Use on-chain reserves if provided by client (more accurate than stale DB values)
+      const virtualSol = onChainVirtualSol || token.virtual_sol_reserves || 30;
+      const virtualToken = onChainVirtualToken || token.virtual_token_reserves || 1_000_000_000;
       const realSol = token.real_sol_reserves || 0;
       const k = virtualSol * virtualToken;
+      console.log("[launchpad-swap] Record mode reserves:", { virtualSol, virtualToken, usedOnChain: !!(onChainVirtualSol && onChainVirtualToken) });
 
       let tokensOut = 0;
       let solOut = 0;
