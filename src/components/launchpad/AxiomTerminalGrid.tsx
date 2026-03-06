@@ -126,14 +126,16 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const filteredCodexCompleting = useMemo(() => applyFilterToCodexTokens(codexCompleting, "final"), [codexCompleting, filters]);
   const filteredCodexGraduated = useMemo(() => applyFilterToCodexTokens(codexGraduated, "migrated"), [codexGraduated, filters]);
 
-  // Collect addresses for sparkline batch fetch (migrated column only)
-  const migratedAddresses = useMemo(() => {
-    const funAddrs = filteredMigrated.map(t => t.mint_address).filter(Boolean) as string[];
-    const codexAddrs = filteredCodexGraduated.map(t => t.address).filter(Boolean) as string[];
+  // Collect addresses for sparkline batch fetch (all columns)
+  const allAddresses = useMemo(() => {
+    const funAddrs = [...filteredNewPairs, ...filteredFinalStretch, ...filteredMigrated]
+      .map(t => t.mint_address).filter(Boolean) as string[];
+    const codexAddrs = [...(filteredCodexNew ?? []), ...(filteredCodexCompleting ?? []), ...(filteredCodexGraduated ?? [])]
+      .map(t => t.address).filter(Boolean) as string[];
     return [...funAddrs, ...codexAddrs];
-  }, [filteredMigrated, filteredCodexGraduated]);
+  }, [filteredNewPairs, filteredFinalStretch, filteredMigrated, filteredCodexNew, filteredCodexCompleting, filteredCodexGraduated]);
 
-  const { data: sparklineMap } = useSparklineBatch(migratedAddresses);
+  const { data: sparklineMap } = useSparklineBatch(allAddresses);
 
   const columns = [
     { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: filteredNewPairs, codex: filteredCodexNew, color: COLUMN_TABS[0].color },
