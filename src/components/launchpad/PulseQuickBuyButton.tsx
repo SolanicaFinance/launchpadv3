@@ -1,8 +1,11 @@
 import { memo, useState, useCallback } from "react";
-import { Zap, Loader2 } from "lucide-react";
+import { Zap, Loader2, ArrowDownToLine } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFastSwap } from "@/hooks/useFastSwap";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { toast } from "sonner";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import type { Token } from "@/hooks/useLaunchpad";
