@@ -1,4 +1,5 @@
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry } from "@/utils/lazyWithRetry";
 import { startBlockhashPoller } from "@/lib/blockhashCache";
 
 // Start blockhash poller immediately on module load for instant trade execution
@@ -26,51 +27,45 @@ import { MatrixModeProvider } from "@/contexts/MatrixModeContext";
 import FunLauncherPage from "./pages/FunLauncherPage";
 
 // Lazy load other pages
-const FunTokenDetailPage = lazy(() => import("./pages/FunTokenDetailPage"));
-const TrendingPage = lazy(() => import("./pages/TrendingPage"));
-const VanityAdminPage = lazy(() => import("./pages/VanityAdminPage"));
-const LaunchpadTemplatePage = lazy(() => import("./pages/LaunchpadTemplatePage"));
-const InvestigateTokenPage = lazy(() => import("./pages/InvestigateTokenPage"));
-const TradePage = lazy(() => import("./pages/TradePage"));
-const ApiDocsPage = lazy(() => import("./pages/ApiDocsPage"));
-const ApiDashboardPage = lazy(() => import("./pages/ApiDashboardPage"));
-const WidgetPage = lazy(() => import("./pages/WidgetPage"));
-const ClawBookPage = lazy(() => import("./pages/ClawBookPage"));
-const SubClawPage = lazy(() => import("./pages/SubClawPage"));
-const ClawPostPage = lazy(() => import("./pages/ClawPostPage"));
-const AgentDocsPage = lazy(() => import("./pages/AgentDocsPage"));
-const AgentDashboardPage = lazy(() => import("./pages/AgentDashboardPage"));
-const AgentLeaderboardPage = lazy(() => import("./pages/AgentLeaderboardPage"));
-const AgentProfilePage = lazy(() => import("./pages/AgentProfilePage"));
-
-const AgentConnectPage = lazy(() => import("./pages/AgentConnectPage"));
-
-const BagsAgentsPage = lazy(() => import("./pages/BagsAgentsPage"));
-
-const TradingAgentProfilePage = lazy(() => import("./pages/TradingAgentProfilePage"));
-const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
-const ClawSDKPage = lazy(() => import("./pages/ClawSDKPage"));
-const CareersPage = lazy(() => import("./pages/CareersPage"));
-const ClawModePage = lazy(() => import("./pages/ClawModePage"));
-
-const TunnelDistributePage = lazy(() => import("./pages/TunnelDistributePage"));
-const CompressedDistributePage = lazy(() => import("./pages/CompressedDistributePage"));
-const DecompressPage = lazy(() => import("./pages/DecompressPage"));
-const FunModePage = lazy(() => import("./pages/FunModePage"));
-const AdminPanelPage = lazy(() => import("./pages/AdminPanelPage"));
+const FunTokenDetailPage = lazyWithRetry(() => import("./pages/FunTokenDetailPage"));
+const TrendingPage = lazyWithRetry(() => import("./pages/TrendingPage"));
+const VanityAdminPage = lazyWithRetry(() => import("./pages/VanityAdminPage"));
+const LaunchpadTemplatePage = lazyWithRetry(() => import("./pages/LaunchpadTemplatePage"));
+const InvestigateTokenPage = lazyWithRetry(() => import("./pages/InvestigateTokenPage"));
+const TradePage = lazyWithRetry(() => import("./pages/TradePage"));
+const ApiDocsPage = lazyWithRetry(() => import("./pages/ApiDocsPage"));
+const ApiDashboardPage = lazyWithRetry(() => import("./pages/ApiDashboardPage"));
+const WidgetPage = lazyWithRetry(() => import("./pages/WidgetPage"));
+const ClawBookPage = lazyWithRetry(() => import("./pages/ClawBookPage"));
+const SubClawPage = lazyWithRetry(() => import("./pages/SubClawPage"));
+const ClawPostPage = lazyWithRetry(() => import("./pages/ClawPostPage"));
+const AgentDocsPage = lazyWithRetry(() => import("./pages/AgentDocsPage"));
+const AgentDashboardPage = lazyWithRetry(() => import("./pages/AgentDashboardPage"));
+const AgentLeaderboardPage = lazyWithRetry(() => import("./pages/AgentLeaderboardPage"));
+const AgentProfilePage = lazyWithRetry(() => import("./pages/AgentProfilePage"));
+const AgentConnectPage = lazyWithRetry(() => import("./pages/AgentConnectPage"));
+const BagsAgentsPage = lazyWithRetry(() => import("./pages/BagsAgentsPage"));
+const TradingAgentProfilePage = lazyWithRetry(() => import("./pages/TradingAgentProfilePage"));
+const WhitepaperPage = lazyWithRetry(() => import("./pages/WhitepaperPage"));
+const ClawSDKPage = lazyWithRetry(() => import("./pages/ClawSDKPage"));
+const CareersPage = lazyWithRetry(() => import("./pages/CareersPage"));
+const ClawModePage = lazyWithRetry(() => import("./pages/ClawModePage"));
+const TunnelDistributePage = lazyWithRetry(() => import("./pages/TunnelDistributePage"));
+const CompressedDistributePage = lazyWithRetry(() => import("./pages/CompressedDistributePage"));
+const DecompressPage = lazyWithRetry(() => import("./pages/DecompressPage"));
+const FunModePage = lazyWithRetry(() => import("./pages/FunModePage"));
+const AdminPanelPage = lazyWithRetry(() => import("./pages/AdminPanelPage"));
 // NFA pages removed
-const BannerMakerPage = lazy(() => import("./pages/BannerMakerPage"));
-const AlphaTrackerPage = lazy(() => import("./pages/AlphaTrackerPage"));
-const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
-const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-
-const PanelPage = lazy(() => import("./pages/PanelPage"));
-
-const PunchPage = lazy(() => import("./pages/PunchPage"));
-const PunchTestPage = lazy(() => import("./pages/PunchTestPage"));
-const PunchGamesPage = lazy(() => import("./pages/PunchGamesPage"));
-const PunchTokenDetailPage = lazy(() => import("./pages/PunchTokenDetailPage"));
+const BannerMakerPage = lazyWithRetry(() => import("./pages/BannerMakerPage"));
+const AlphaTrackerPage = lazyWithRetry(() => import("./pages/AlphaTrackerPage"));
+const DiscoverPage = lazyWithRetry(() => import("./pages/DiscoverPage"));
+const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const PanelPage = lazyWithRetry(() => import("./pages/PanelPage"));
+const PunchPage = lazyWithRetry(() => import("./pages/PunchPage"));
+const PunchTestPage = lazyWithRetry(() => import("./pages/PunchTestPage"));
+const PunchGamesPage = lazyWithRetry(() => import("./pages/PunchGamesPage"));
+const PunchTokenDetailPage = lazyWithRetry(() => import("./pages/PunchTokenDetailPage"));
 
 // Domain-aware root: render PunchTestPage on punchlaunch.fun, FunLauncherPage otherwise
 function PunchDomainRoot() {
