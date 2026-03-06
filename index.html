@@ -80,12 +80,7 @@
 
   <body>
     <div id="root"></div>
-    <script>
-      // Buffer polyfill - must run before any ES modules that use Buffer
-      if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
-        import('/node_modules/buffer/index.js').then(function(m) { window.Buffer = m.Buffer; });
-      }
-    </script>
+    <script type="module" src="/src/polyfills.ts"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
