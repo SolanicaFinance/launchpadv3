@@ -327,17 +327,21 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
 
         {/* ── Actions Row ── */}
         {quickBuyAmount != null && (
-          <div className="mt-1.5 flex items-center justify-end gap-1.5" onClick={e => e.preventDefault()}>
+          <div className="mt-3 flex items-center justify-end gap-2" onClick={e => e.preventDefault()}>
             <button
               type="button"
-              className="pulse-sol-btn"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:shadow-lg"
+              style={{
+                background: "hsl(80 100% 50%)",
+                color: "hsl(0 0% 10%)",
+              }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 window.location.href = `/t/${token.ticker}`;
               }}
             >
-              <LineChart className="h-2.5 w-2.5" />
+              <LineChart className="h-3 w-3" />
               <span>Chart</span>
             </button>
             <PulseQuickBuyButton funToken={token} quickBuyAmount={quickBuyAmount} />
