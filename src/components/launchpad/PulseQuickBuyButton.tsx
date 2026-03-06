@@ -271,8 +271,8 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
           onClick={handleSell100}
           disabled={isBusy}
           className={isCompact
-            ? "discover-quick-buy-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20 hover:border-red-500/40"
-            : "pulse-sol-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20 hover:border-red-500/40"
+            ? "discover-quick-buy-btn pulse-sell-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20 hover:border-red-500/40"
+            : "pulse-sol-btn pulse-sell-btn"
           }
         >
           {isSelling ? (
