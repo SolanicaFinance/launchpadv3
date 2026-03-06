@@ -11,7 +11,7 @@ export const SparklineCanvas = memo(function SparklineCanvas({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || data.length < 2) return;
+    if (!canvas || data.length < 1) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -29,11 +29,12 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
-    const isUp = data[data.length - 1] >= data[0];
+    const points = data.length === 1 ? [data[0], data[0]] : data;
+    const isUp = points[points.length - 1] >= points[0];
 
     const lineColor = isUp ? "34, 197, 94" : "239, 68, 68";
 
-    const stepX = width / (data.length - 1);
+    const stepX = width / (points.length - 1);
     const padY = 6;
     const chartH = height - padY * 2;
 
@@ -41,9 +42,9 @@ export const SparklineCanvas = memo(function SparklineCanvas({
 
     // Draw line
     ctx.beginPath();
-    ctx.moveTo(0, getY(data[0]));
-    for (let i = 1; i < data.length; i++) {
-      ctx.lineTo(i * stepX, getY(data[i]));
+    ctx.moveTo(0, getY(points[0]));
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(i * stepX, getY(points[i]));
     }
     ctx.strokeStyle = `rgba(${lineColor}, 0.3)`;
     ctx.lineWidth = 1.5;
@@ -61,7 +62,7 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     ctx.fill();
   }, [data]);
 
-  if (data.length < 2) return null;
+  if (data.length < 1) return null;
 
   return (
     <canvas
