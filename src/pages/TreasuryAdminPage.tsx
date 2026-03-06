@@ -225,7 +225,7 @@ export default function TreasuryAdminPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ adminSecret: "claw-admin-2024" }),
+        body: JSON.stringify({ adminSecret: TREASURY_SECRET }),
       });
 
       const data = await response.json();
