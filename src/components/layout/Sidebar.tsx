@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Zap, Bot, Code2, TrendingUp, Plus, FileText, Fingerprint, Monitor, Crosshair } from "lucide-react";
+import { Home, Zap, Bot, Code2, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -17,10 +17,9 @@ const NAV_LINKS = [
   { to: "/discover", label: "Discover", icon: TrendingUp },
   { to: "/alpha-tracker", label: "Alpha", icon: Crosshair },
   { to: "/agents", label: "Agents", icon: Bot },
-  { to: "/panel?tab=nfas", label: "NFA", icon: Fingerprint, useClaw: true },
   { to: "/sdk", label: "SDK", icon: Code2 },
   { to: "/whitepaper", label: "Docs", icon: FileText },
-  { to: "/panel", label: "Panel", icon: null, useClaw: true },
+  { to: "/panel", label: "Panel", icon: LayoutDashboard },
 ];
 
 interface SidebarProps {
@@ -59,12 +58,10 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 
       <nav className={cn("flex-1 flex flex-col items-center gap-0.5 py-2", isMobile && "items-stretch px-2")}>
         {NAV_LINKS.map((navItem) => {
-          const { to, label, icon: Icon, exact, useClaw } = navItem;
+          const { to, label, icon: Icon, exact } = navItem;
           const active = isActive(to, exact);
           
-          const iconEl = useClaw ? (
-            <img src={LOGO_SRC} alt="" className="h-4 w-4 rounded-sm object-contain flex-shrink-0" />
-          ) : Icon ? (
+          const iconEl = Icon ? (
             <Icon className={cn("h-4 w-4 flex-shrink-0 transition-colors", active && "text-primary")} />
           ) : null;
 
@@ -76,15 +73,6 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
                 ? "text-foreground bg-surface-hover border-primary"
                 : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/50 border-transparent"
             );
-
-            if (useClaw) {
-              return (
-                <button key={to} onClick={() => { onLinkClick?.(); goToPanel(to); }} className={classes}>
-                  {iconEl}
-                  <span>{label}</span>
-                </button>
-              );
-            }
 
             return (
               <Link key={to} to={to} onClick={onLinkClick} className={classes}>
@@ -115,14 +103,6 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
               )}
             </>
           );
-
-          if (useClaw) {
-            return (
-              <button key={to} onClick={() => goToPanel(to)} className={desktopClasses}>
-                {content}
-              </button>
-            );
-          }
 
           return (
             <Link key={to} to={to} className={desktopClasses}>

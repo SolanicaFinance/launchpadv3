@@ -69,9 +69,7 @@ const TunnelDistributePage = lazy(() => import("./pages/TunnelDistributePage"));
 const CompressedDistributePage = lazy(() => import("./pages/CompressedDistributePage"));
 const DecompressPage = lazy(() => import("./pages/DecompressPage"));
 const FunModePage = lazy(() => import("./pages/FunModePage"));
-const NfaPage = lazy(() => import("./pages/NfaPage"));
-const NfaDetailPage = lazy(() => import("./pages/NfaDetailPage"));
-const NfaMarketplacePage = lazy(() => import("./pages/NfaMarketplacePage"));
+// NFA pages removed
 const BannerMakerPage = lazy(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazy(() => import("./pages/AlphaTrackerPage"));
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
@@ -194,11 +192,7 @@ const App = () => (
                      <Route path="/fun" element={<FunModePage />} />
                      
                      <Route path="/panel" element={<PanelPage />} />
-                    <Route path="/nfa" element={<NfaPage />} />
-                     {/* Banner Maker */}
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
-                     <Route path="/nfa/:id" element={<NfaDetailPage />} />
-                     <Route path="/nfa/marketplace" element={<NfaMarketplacePage />} />
                      <Route path="/portfolio" element={<Navigate to="/panel?tab=portfolio" replace />} />
                      <Route path="/earnings" element={<Navigate to="/panel?tab=earnings" replace />} />
                      <Route path="/punch" element={<PunchPage />} />

@@ -41,8 +41,8 @@ export function StickyStatsFooter() {
         right: 0,
         height: "40px",
         zIndex: 99999,
-        background: "hsl(225 40% 5%)",
-        borderTop: "1px solid hsl(222 20% 14%)",
+        background: "hsl(var(--background))",
+        borderTop: "1px solid hsl(var(--border))",
         display: "flex",
         alignItems: "center",
         width: "100%",
@@ -92,7 +92,7 @@ export function StickyStatsFooter() {
               width: "8px",
               height: "8px",
               borderRadius: "50%",
-              backgroundColor: isOnline ? "hsl(160 84% 39%)" : "hsl(0 84% 60%)",
+              backgroundColor: isOnline ? "hsl(var(--primary))" : "hsl(var(--destructive))",
             }}
           />
           <span
@@ -100,7 +100,7 @@ export function StickyStatsFooter() {
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "11px",
               fontWeight: 500,
-              color: isOnline ? "hsl(160 84% 39%)" : "hsl(0 84% 60%)",
+              color: isOnline ? "hsl(var(--primary))" : "hsl(var(--destructive))",
               whiteSpace: "nowrap",
             }}
           >
@@ -117,10 +117,10 @@ export function StickyStatsFooter() {
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 6px", flexShrink: 0, whiteSpace: "nowrap" }}>
-      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", fontWeight: 400, textTransform: "uppercase", letterSpacing: "0.05em", color: "hsl(215 20% 55%)" }}>
+      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", fontWeight: 400, textTransform: "uppercase", letterSpacing: "0.05em", color: "hsl(var(--muted-foreground))" }}>
         {label}
       </span>
-      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", fontWeight: 600, color: "hsl(210 40% 90%)" }}>
+      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", fontWeight: 600, color: "hsl(var(--foreground))" }}>
         {value}
       </span>
     </div>
@@ -129,6 +129,6 @@ function StatItem({ label, value }: { label: string; value: string | number }) {
 
 function Divider() {
   return (
-    <span style={{ color: "hsl(215 15% 30%)", fontSize: "11px", flexShrink: 0, padding: "0 2px" }}>|</span>
+    <span style={{ color: "hsl(var(--border))", fontSize: "11px", flexShrink: 0, padding: "0 2px" }}>|</span>
   );
 }
