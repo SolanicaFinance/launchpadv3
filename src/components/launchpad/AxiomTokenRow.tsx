@@ -90,9 +90,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
 
   return (
     <Link to={tradeUrl} className="pulse-card group relative overflow-hidden">
-      {sparklineData && sparklineData.length >= 2 && (
-        <SparklineCanvas data={sparklineData} />
-      )}
+      <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} />
       {/* Row 1: Avatar + Info + Metrics */}
       <div className="flex items-start gap-2.5">
         {/* Avatar */}

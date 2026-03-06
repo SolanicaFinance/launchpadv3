@@ -36,8 +36,8 @@ export function useSparklineBatch(addresses: string[]) {
     queryKey: ["sparklines-batch", key],
     queryFn: () => fetchSparklines(uniqueAddresses),
     enabled: uniqueAddresses.length > 0,
-    refetchInterval: 1500,
-    staleTime: 1000,
+    refetchInterval: 500,
+    staleTime: 400,
     refetchIntervalInBackground: false,
     placeholderData: (prev) => prev,
   });
