@@ -74,9 +74,17 @@ export function useFastSwap() {
     const minimumAmountOut = new BN(0);
 
     // Fetch on-chain pool state for accurate reserve data
-    const poolState = await client.pool.getPoolState(poolAddress);
-    const virtualSolReserves = poolState ? Number(poolState.virtualSolReserves) / 10 ** SOL_DECIMALS : undefined;
-    const virtualTokenReserves = poolState ? Number(poolState.virtualTokenReserves) / 10 ** TOKEN_DECIMALS : undefined;
+    let virtualSolReserves: number | undefined;
+    let virtualTokenReserves: number | undefined;
+    try {
+      const poolState = await client.state.getPool(poolAddress);
+      if (poolState) {
+        virtualSolReserves = Number(poolState.virtualSolReserves) / 10 ** SOL_DECIMALS;
+        virtualTokenReserves = Number(poolState.virtualTokenReserves) / 10 ** TOKEN_DECIMALS;
+      }
+    } catch (e) {
+      console.warn('[FastSwap] Failed to fetch pool state, will use DB reserves:', e);
+    }
 
     const swapTx = await client.pool.swap({
       owner: ownerPubkey,
