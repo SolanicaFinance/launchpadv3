@@ -1391,6 +1391,18 @@
 .king-quick-buy-wrapper .pulse-sol-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+/* Sell button override — red theme */
+.king-quick-buy-wrapper .pulse-sol-btn.pulse-sell-btn {
+  background: rgba(220, 38, 38, 0.15);
+  color: hsl(0 72% 51%);
+  text-shadow: none;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+.king-quick-buy-wrapper .pulse-sol-btn.pulse-sell-btn:hover {
+  background: rgba(220, 38, 38, 0.25);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.3);
+}
   transform: none;
   box-shadow: none;
 }
