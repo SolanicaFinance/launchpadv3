@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import pancakeswapBunny from "@/assets/pancakeswap-bunny.png";
 import { useParams, Link } from "react-router-dom";
 import { useFunToken } from "@/hooks/useFunToken";
 import { useExternalToken } from "@/hooks/useExternalToken";
@@ -157,9 +158,18 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                   <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground"><ExternalLink className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>
                 </div>
                 <a href={getTradeUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" className="h-8 lg:h-7 px-2 text-[9px] font-mono gap-0.5 bg-accent/15 hover:bg-accent/25 text-accent-foreground rounded">
-                    <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                    <span className="hidden sm:inline">{isBsc ? 'PancakeSwap' : 'Axiom'}</span>
+                  <Button size="sm" className="h-8 lg:h-7 px-2 text-[9px] font-mono gap-0.5 bg-accent/15 hover:bg-accent/25 text-accent-foreground rounded flex items-center">
+                    {isBsc ? (
+                      <>
+                        <img src={pancakeswapBunny} alt="PancakeSwap" className="h-4 w-4 rounded-full object-cover flex-shrink-0" />
+                        <span className="hidden sm:inline">PancakeSwap</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+                        <span className="hidden sm:inline">Axiom</span>
+                      </>
+                    )}
                   </Button>
                 </a>
               </div>
