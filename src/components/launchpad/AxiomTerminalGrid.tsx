@@ -126,14 +126,16 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const filteredCodexCompleting = useMemo(() => applyFilterToCodexTokens(codexCompleting, "final"), [codexCompleting, filters]);
   const filteredCodexGraduated = useMemo(() => applyFilterToCodexTokens(codexGraduated, "migrated"), [codexGraduated, filters]);
 
-  // Collect addresses for sparkline batch fetch (migrated column only)
-  const migratedAddresses = useMemo(() => {
-    const funAddrs = filteredMigrated.map(t => t.mint_address).filter(Boolean) as string[];
-    const codexAddrs = filteredCodexGraduated.map(t => t.address).filter(Boolean) as string[];
+  // Collect addresses for sparkline batch fetch (all columns)
+  const allAddresses = useMemo(() => {
+    const funAddrs = [...filteredNewPairs, ...filteredFinalStretch, ...filteredMigrated]
+      .map(t => t.mint_address).filter(Boolean) as string[];
+    const codexAddrs = [...(filteredCodexNew ?? []), ...(filteredCodexCompleting ?? []), ...(filteredCodexGraduated ?? [])]
+      .map(t => t.address).filter(Boolean) as string[];
     return [...funAddrs, ...codexAddrs];
-  }, [filteredMigrated, filteredCodexGraduated]);
+  }, [filteredNewPairs, filteredFinalStretch, filteredMigrated, filteredCodexNew, filteredCodexCompleting, filteredCodexGraduated]);
 
-  const { data: sparklineMap } = useSparklineBatch(migratedAddresses);
+  const { data: sparklineMap } = useSparklineBatch(allAddresses);
 
   const columns = [
     { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: filteredNewPairs, codex: filteredCodexNew, color: COLUMN_TABS[0].color },
@@ -163,7 +165,6 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const renderColumnContent = (col: typeof columns[number]) => {
     if (isLoading) return <PulseColumnSkeleton />;
     if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} color={col.color} />;
-    const isMigrated = col.id === "migrated";
     return (
       <div className="pulse-card-list">
         {col.codex.map(t => (
@@ -172,7 +173,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             token={t}
             quickBuyAmount={quickBuyAmount}
             proTraders={0}
-            sparklineData={isMigrated && t.address ? sparklineMap?.[t.address] : undefined}
+            sparklineData={t.address ? sparklineMap?.[t.address] : undefined}
           />
         ))}
         {col.tokens.map(token => (
@@ -182,7 +183,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             solPrice={solPrice}
             quickBuyAmount={quickBuyAmount}
             proTraders={proTradersMap[token.id] ?? 0}
-            sparklineData={isMigrated && token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
+            sparklineData={token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
           />
         ))}
       </div>
