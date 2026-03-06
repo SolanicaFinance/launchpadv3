@@ -237,10 +237,12 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       try {
         const result = await executeFastSwap(token, tokenBalance, false, 500);
         if (result.success) {
-          toast.success(`Sold 100% of tokens`, {
-            description: result.signature
-              ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms`
-              : undefined,
+          const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
+          const name = funToken?.name ?? codexToken?.name ?? '';
+          const imageUrl = funToken?.image_url ?? codexToken?.imageUrl ?? '';
+          toast.success(`Sold 100% of $${ticker}`, {
+            description: `${name}${result.signature ? ` · TX: ${result.signature.slice(0, 8)}...` : ''}${lastLatencyMs ? ` · ${lastLatencyMs}ms` : ''}`,
+            icon: imageUrl ? undefined : undefined,
             action: result.signature
               ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
               : undefined,

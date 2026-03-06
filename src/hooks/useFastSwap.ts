@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
+import { DynamicBondingCurveClient } from '@meteora-ag/dynamic-bonding-curve-sdk';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { useSolanaWalletWithPrivy } from '@/hooks/useSolanaWalletPrivy';
@@ -61,7 +62,6 @@ export function useFastSwap() {
     if (!token.dbc_pool_address) throw new Error('Token has no DBC pool address');
 
     const connection = getConnection();
-    const { DynamicBondingCurveClient } = await import('@meteora-ag/dynamic-bonding-curve-sdk');
     const client = DynamicBondingCurveClient.create(connection, 'confirmed');
 
     const poolAddress = new PublicKey(token.dbc_pool_address);

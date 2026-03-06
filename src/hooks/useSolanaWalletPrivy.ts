@@ -68,7 +68,7 @@ export function useSolanaWalletWithPrivy() {
         setIsConnecting(true);
 
         // Use cached blockhash for speed (0ms vs 200-500ms)
-        const { blockhash, lastValidBlockHeight } = getCachedBlockhash();
+        const { blockhash, lastValidBlockHeight } = await getCachedBlockhash();
 
         // Update legacy transaction blockhash + fee payer
         if (!(transaction as any)?.version) {
