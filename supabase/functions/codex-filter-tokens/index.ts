@@ -185,6 +185,10 @@ Deno.serve(async (req) => {
         telegramUrl: r.token?.socialLinks?.telegram ?? null,
         discordUrl: r.token?.socialLinks?.discord ?? null,
       };
+    }).filter((t: any) => {
+      // Filter out tokens with overflow/invalid market caps (2^63 sentinel values)
+      if (t.marketCap > 1e15) return false;
+      return true;
     });
 
     return new Response(JSON.stringify({ tokens, column: validColumn, networkId: safeNetworkId }), {

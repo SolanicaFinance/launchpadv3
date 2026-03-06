@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import type { SupportedChain } from "@/contexts/ChainContext";
 
 function formatUsdCompact(usd: number): string {
+  if (!isFinite(usd) || usd > 1e15) return "$?";
+  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`;
   if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(2)}M`;
   if (usd >= 1_000) return `$${(usd / 1_000).toFixed(1)}K`;
   if (usd >= 1) return `$${usd.toFixed(0)}`;
