@@ -79,8 +79,9 @@ export function useFastSwap() {
     try {
       const poolState = await client.state.getPool(poolAddress);
       if (poolState) {
-        virtualSolReserves = Number(poolState.virtualSolReserves) / 10 ** SOL_DECIMALS;
-        virtualTokenReserves = Number(poolState.virtualTokenReserves) / 10 ** TOKEN_DECIMALS;
+        // DBC SDK uses quoteReserve (SOL) and baseReserve (token)
+        virtualSolReserves = Number(poolState.quoteReserve) / 10 ** SOL_DECIMALS;
+        virtualTokenReserves = Number(poolState.baseReserve) / 10 ** TOKEN_DECIMALS;
       }
     } catch (e) {
       console.warn('[FastSwap] Failed to fetch pool state, will use DB reserves:', e);
