@@ -9,7 +9,7 @@ import { ChainSwitcher } from "@/components/launchpad/ChainSwitcher";
 import { usePanelNav } from "@/hooks/usePanelNav";
 import { HeaderWalletBalance } from "./HeaderWalletBalance";
 import { useAuth } from "@/hooks/useAuth";
-import clawLogo from "@/assets/claw-logo.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
@@ -91,7 +91,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
         {chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
 
         <a
-          href="https://x.com/clawmode"
+          href="https://x.com/saturntrade"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center h-7 w-7 rounded-sm transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-surface-hover"
@@ -106,7 +106,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             onClick={goToPanel}
             className="hidden sm:flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[11px] font-bold transition-all duration-200 hover:bg-surface-hover flex-shrink-0 border border-primary/40 text-primary cursor-pointer"
           >
-            <img src={clawLogo} alt="" className="h-3.5 w-3.5 rounded-sm" />
+            <img src={saturnLogo} alt="" className="h-3.5 w-3.5 rounded-sm" />
             Panel
           </button>
         )}

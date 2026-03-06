@@ -6,9 +6,9 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { usePanelNav } from "@/hooks/usePanelNav";
 import { useMatrixMode } from "@/contexts/MatrixModeContext";
-import clawLogo from "@/assets/claw-logo.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 
-const LOGO_SRC = clawLogo;
+const LOGO_SRC = saturnLogo;
 
 const NAV_LINKS = [
   { to: "/", label: "Home", icon: Home, exact: true },
@@ -47,7 +47,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         <Link to="/" onClick={onLinkClick} className="group transition-all duration-300">
           <img
             src={LOGO_SRC}
-            alt="Claw Mode"
+            alt="Saturn Trade"
             className={cn(
               "object-contain rounded-sm flex-shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(72_100%_50%/0.5)]",
               isMobile ? "h-8 w-8" : "h-7 w-7"

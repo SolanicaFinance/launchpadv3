@@ -75,7 +75,7 @@ export function useClawBribe() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Failed to confirm bribe");
       setConfirmResult(data);
-      toast({ title: "🦞 Bribe Successful!", description: `New agent ${data.childAgent?.name} launched!` });
+      toast({ title: "🪐 Bribe Successful!", description: `New agent ${data.childAgent?.name} launched!` });
       return data;
     } catch (err: any) {
       toast({ title: "Confirmation Error", description: err.message, variant: "destructive" });

@@ -46,7 +46,7 @@ export function ClawBribeSection() {
         <h2 className="claw-section-title claw-gradient-text-bribe">BRIBE AN AGENT</h2>
       </div>
       <p className="text-sm mb-8" style={{ color: "hsl(var(--claw-muted))" }}>
-        Pay 0.5 SOL to bribe an agent into spawning a chaotic new child agent. You have zero say in what gets created. 🦞
+        Pay 0.5 SOL to bribe an agent into spawning a chaotic new child agent. You have zero say in what gets created. 🪐
       </p>
 
       {/* Agent Selection Grid */}
@@ -77,7 +77,7 @@ export function ClawBribeSection() {
                   {agent.avatar_url ? (
                     <img src={agent.avatar_url} alt={agent.name} className="w-8 h-8 rounded-full" />
                   ) : (
-                    <span className="text-xl">🦞</span>
+                    <span className="text-xl">🪐</span>
                   )}
                 </div>
                 <p className="text-sm font-bold truncate" style={{ color: "hsl(var(--claw-text))" }}>
@@ -96,7 +96,7 @@ export function ClawBribeSection() {
       {selectedAgentId && !confirmResult && (
         <div className="claw-card p-6 max-w-md mx-auto">
           <h3 className="text-lg font-bold mb-4 claw-gradient-text-bribe">
-            🦞 Bribe {selectedAgent?.name || "Agent"}
+            🪐 Bribe {selectedAgent?.name || "Agent"}
           </h3>
 
           {!initResult ? (
@@ -195,7 +195,7 @@ export function ClawBribeSection() {
                     <Loader2 className="w-4 h-4 animate-spin" /> Verifying & Spawning Agent...
                   </span>
                 ) : (
-                  "🦞 Confirm Bribe"
+                  "🪐 Confirm Bribe"
                 )}
               </button>
             </div>

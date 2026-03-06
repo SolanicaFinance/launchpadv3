@@ -48,7 +48,7 @@ export function ClawBidCard({ tradingAgentId, agentName, biddingEndsAt, isOwned,
 
     try {
       await placeBid({ tradingAgentId, bidderWallet: walletAddress, bidAmountSol: amount, txSignature: txSignature.trim() });
-      toast({ title: "🦞 Bid Placed & Verified!", description: `${amount} SOL on ${agentName}` });
+      toast({ title: "🪐 Bid Placed & Verified!", description: `${amount} SOL on ${agentName}` });
       setBidAmount("");
       setTxSignature("");
     } catch (e) {
@@ -149,7 +149,7 @@ export function ClawBidCard({ tradingAgentId, agentName, biddingEndsAt, isOwned,
           className="w-full px-3 h-7 rounded text-[10px] font-bold disabled:opacity-40 flex items-center justify-center gap-1"
           style={{ background: "hsl(var(--claw-primary))", color: "#000" }}
         >
-          {isPlacingBid ? "Verifying..." : <>SUBMIT BID 🦞 <ArrowUpRight className="h-3 w-3" /></>}
+          {isPlacingBid ? "Verifying..." : <>SUBMIT BID 🪐 <ArrowUpRight className="h-3 w-3" /></>}
         </button>
       </div>
     </div>

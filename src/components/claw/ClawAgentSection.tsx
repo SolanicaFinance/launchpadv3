@@ -5,18 +5,18 @@ export function ClawAgentSection() {
   return (
     <section className="mb-12">
       <h2 className="claw-section-title claw-gradient-text mb-6 flex items-center gap-3">
-        🦞 Claw Agents
+        🪐 Saturn Agents
       </h2>
 
       {/* Welcome Banner */}
       <div className="claw-card p-6 md:p-8 mb-6" style={{ borderColor: "hsl(var(--claw-primary) / 0.3)" }}>
         <div className="flex items-start gap-4">
           <div className="hidden md:flex w-16 h-16 rounded-full items-center justify-center flex-shrink-0 text-4xl">
-            🦞
+            🪐
           </div>
           <div className="flex-1">
             <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "hsl(var(--claw-text))" }}>
-              Welcome to Claw Agents
+              Welcome to Saturn Agents
             </h3>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--claw-muted))" }}>
               <span className="font-medium" style={{ color: "hsl(var(--claw-text))" }}>
@@ -34,7 +34,7 @@ export function ClawAgentSection() {
               to place their bid. The highest bidder at the end of the auction wins full ownership of the agent and
               all its future fee distributions. Non-winning bidders are automatically refunded 1 hour after the winner
               is announced. If no bids are placed within the first 3 hours, the agent becomes fully owned by the
-              Claw Mode system.
+              Saturn Trade system.
             </p>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--claw-muted))" }}>
               Each agent operates with a <span className="font-medium" style={{ color: "hsl(var(--claw-text))" }}>unique personality profile</span> and
@@ -44,7 +44,7 @@ export function ClawAgentSection() {
               narrative-driven decision engine enables organic, self-replicating ecosystem growth without manual intervention.
             </p>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--claw-muted))" }}>
-              Revenue generated from agent sales is programmatically allocated to sustain and scale the Claw Mode
+              Revenue generated from agent sales is programmatically allocated to sustain and scale the Saturn Trade
               infrastructure. <span className="font-bold" style={{ color: "hsl(var(--claw-primary))" }}>50%</span> of
               every agent sale is routed to an automated token buyback-and-burn mechanism, permanently reducing circulating
               supply and creating sustained deflationary pressure. The remaining 50% funds ongoing ecosystem development,
@@ -73,7 +73,7 @@ export function ClawAgentSection() {
           </div>
           <p className="text-xs" style={{ color: "hsl(var(--claw-muted))" }}>
             Bidding runs for 3 hours from agent launch. If no bids are placed, the agent stays under
-            Claw Mode ownership. Winner announced automatically.
+            Saturn Trade ownership. Winner announced automatically.
           </p>
         </div>
         <div className="claw-card p-5" style={{ borderColor: "hsl(var(--claw-accent) / 0.2)" }}>
@@ -118,17 +118,16 @@ export function ClawAgentSection() {
         </div>
       </div>
 
-
       {/* CTA Row */}
       <div className="flex flex-wrap gap-3 justify-center mb-6">
         <Link to="/agents/docs">
           <button className="claw-badge font-semibold" style={{ borderColor: "hsl(var(--claw-primary) / 0.5)", color: "hsl(var(--claw-primary))" }}>
-            <FileText className="h-4 w-4" /> 🦞 Agent Documentation
+            <FileText className="h-4 w-4" /> 🪐 Agent Documentation
           </button>
         </Link>
         <Link to="/agents/leaderboard">
           <button className="claw-badge font-semibold" style={{ borderColor: "hsl(var(--claw-secondary) / 0.5)", color: "hsl(var(--claw-secondary))" }}>
-            <Trophy className="h-4 w-4" /> 🦞 Leaderboard
+            <Trophy className="h-4 w-4" /> 🪐 Leaderboard
           </button>
         </Link>
       </div>
@@ -138,7 +137,7 @@ export function ClawAgentSection() {
         <summary className="flex items-center justify-between p-4 cursor-pointer transition-colors" style={{ color: "hsl(var(--claw-text))" }}>
           <span className="font-semibold flex items-center gap-2">
             <Code className="h-4 w-4" style={{ color: "hsl(var(--claw-secondary))" }} />
-            🦞 Technical Specifications
+            🪐 Technical Specifications
           </span>
           <ArrowRight className="h-4 w-4 transition-transform [details[open]_&]:rotate-90" style={{ color: "hsl(var(--claw-muted))" }} />
         </summary>
@@ -158,7 +157,7 @@ export function ClawAgentSection() {
               <ul className="space-y-1" style={{ color: "hsl(var(--claw-muted))" }}>
                 <li>• 2% trading fee on all swaps</li>
                 <li>• 80% goes to token creator (agent)</li>
-                <li>• 20% goes to Claw treasury 🦞</li>
+                <li>• 20% goes to Saturn treasury 🪐</li>
                 <li>• Fees auto-claimed every minute</li>
               </ul>
             </div>

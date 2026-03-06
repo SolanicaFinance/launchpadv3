@@ -56,12 +56,12 @@ export function ClawTradingSection() {
       stopLoss: "30%",
       takeProfit: "100%",
       positions: "5 max",
-      description: "High risk, high reward. For those seeking maximum gains. 🦞",
+      description: "High risk, high reward. For those seeking maximum gains. 🪐",
     },
   ];
 
   const tabs = [
-    { id: "active" as const, label: "🦞 Active" },
+    { id: "active" as const, label: "🪐 Active" },
     { id: "funding" as const, label: "💰 Funding", count: pendingAgents?.length },
     { id: "top" as const, label: "🏆 Top Performers" },
   ];
@@ -71,7 +71,7 @@ export function ClawTradingSection() {
       if (isLoading) return Array.from({ length: 6 }).map((_, i) => <TradingAgentCardSkeleton key={i} />);
       if (!agents?.length) return (
         <div className="col-span-2 text-center py-12" style={{ color: "hsl(var(--claw-muted))" }}>
-          <div className="text-3xl mb-2">🦞</div>
+          <div className="text-3xl mb-2">🪐</div>
           No active trading agents found
         </div>
       );
@@ -81,7 +81,7 @@ export function ClawTradingSection() {
       if (pendingLoading) return Array.from({ length: 4 }).map((_, i) => <TradingAgentCardSkeleton key={i} />);
       if (!pendingAgents?.length) return (
         <div className="col-span-2 text-center py-12" style={{ color: "hsl(var(--claw-muted))" }}>
-          <div className="text-3xl mb-2">🦞</div>
+          <div className="text-3xl mb-2">🪐</div>
           No agents currently in funding phase
         </div>
       );
@@ -96,7 +96,7 @@ export function ClawTradingSection() {
   return (
     <section className="mb-12">
       <h2 className="claw-section-title mb-6 flex items-center gap-3">
-        <span className="claw-gradient-text">🦞 Trading Agents</span>
+        <span className="claw-gradient-text">🪐 Trading Agents</span>
       </h2>
 
       {/* Hero text */}
@@ -104,7 +104,7 @@ export function ClawTradingSection() {
         <p className="text-base max-w-2xl mx-auto mb-4" style={{ color: "hsl(var(--claw-muted))" }}>
           Autonomous AI agents that execute trades using machine learning models.
           Each agent analyzes market data, manages risk with internal SL/TP systems,
-          and continuously learns from trade outcomes. 🦞
+          and continuously learns from trade outcomes. 🪐
         </p>
         <div className="flex flex-wrap justify-center gap-2 text-xs">
           <div className="claw-badge">
@@ -129,7 +129,7 @@ export function ClawTradingSection() {
         ].map((s, i) => (
           <div key={i} className="claw-card p-4 text-center">
             <div className={`claw-stat-value ${s.variant}`}>{s.value}</div>
-            <div className="claw-stat-label">🦞 {s.label}</div>
+            <div className="claw-stat-label">🪐 {s.label}</div>
           </div>
         ))}
       </div>
@@ -138,7 +138,7 @@ export function ClawTradingSection() {
       <div className="claw-card p-5 mb-6">
         <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: "hsl(var(--claw-text))" }}>
           <Target className="h-4 w-4" style={{ color: "hsl(var(--claw-primary))" }} />
-          🦞 Trading Strategies
+          🪐 Trading Strategies
         </h3>
         <div className="grid md:grid-cols-3 gap-3">
           {strategies.map((strategy) => {
@@ -201,7 +201,7 @@ export function ClawTradingSection() {
             <div className="mb-4 p-3 rounded-lg" style={{ background: "hsl(38, 92%, 50%, 0.1)", border: "1px solid hsl(38, 92%, 50%, 0.2)" }}>
               <p className="text-sm" style={{ color: "hsl(38, 92%, 50%)" }}>
                 <Wallet className="h-4 w-4 inline mr-2" />
-                🦞 These agents are accumulating trading capital from swap fees. Trading activates at 0.5 SOL.
+                🪐 These agents are accumulating trading capital from swap fees. Trading activates at 0.5 SOL.
               </p>
             </div>
           )}
@@ -219,10 +219,10 @@ export function ClawTradingSection() {
           <div className="claw-card p-5" style={{ borderColor: "hsl(var(--claw-primary) / 0.3)" }}>
             <h3 className="font-bold text-sm mb-2 flex items-center gap-2" style={{ color: "hsl(var(--claw-text))" }}>
               <Wallet className="h-4 w-4" style={{ color: "hsl(var(--claw-primary))" }} />
-              🦞 Claw Trading Agents
+              🪐 Saturn Trading Agents
             </h3>
             <p className="text-xs" style={{ color: "hsl(var(--claw-muted))" }}>
-              Agents are launched by admins and available for bidding. Place bids to take ownership and earn fees! 🦞
+              Agents are launched by admins and available for bidding. Place bids to take ownership and earn fees! 🪐
             </p>
           </div>
 
@@ -230,7 +230,7 @@ export function ClawTradingSection() {
           <div className="claw-card p-4">
             <h3 className="font-bold text-xs mb-3 flex items-center gap-2" style={{ color: "hsl(var(--claw-text))" }}>
               <Zap className="h-4 w-4" style={{ color: "hsl(var(--claw-secondary))" }} />
-              🦞 Technical Architecture
+              🪐 Technical Architecture
             </h3>
             <div className="space-y-2">
               {[

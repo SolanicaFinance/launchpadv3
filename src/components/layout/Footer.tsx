@@ -13,11 +13,11 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-3">
-              <img src="/claw-logo.png" alt="Claw Mode" className="h-6 w-6 rounded-lg" />
-              <span className="font-bold text-foreground tracking-tight-heading">Claw Mode</span>
+              <img src="/saturn-logo.png" alt="Saturn Trade" className="h-6 w-6 rounded-lg" />
+              <span className="font-bold text-foreground tracking-tight-heading">Saturn Trade</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              The autonomous AI agent launchpad on Solana.
+              The fastest AI-powered trading platform on Solana.
             </p>
           </div>
 
@@ -29,10 +29,10 @@ export function Footer() {
                 <Link to="/" className="hover:text-success transition-colors duration-200">Launch Token</Link>
               </li>
               <li>
-                <Link to="/agents" className="hover:text-success transition-colors duration-200">Claw Agents</Link>
+                <Link to="/agents" className="hover:text-success transition-colors duration-200">Agents</Link>
               </li>
               <li>
-                <Link to="/sdk" className="hover:text-success transition-colors duration-200">Claw SDK</Link>
+                <Link to="/sdk" className="hover:text-success transition-colors duration-200">SDK</Link>
               </li>
               <li>
                 <Link to="/trade" className="hover:text-success transition-colors duration-200">Trade</Link>
@@ -70,7 +70,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="https://x.com/clawmode" target="_blank" rel="noopener noreferrer" className="hover:text-success transition-colors duration-200 flex items-center gap-1.5">
+                <a href="https://x.com/saturntrade" target="_blank" rel="noopener noreferrer" className="hover:text-success transition-colors duration-200 flex items-center gap-1.5">
                   <XLogo className="h-3.5 w-3.5" weight="fill" />
                   Twitter/X
                 </a>
@@ -81,7 +81,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© 2025 Claw Mode. All rights reserved.</p>
+          <p>© 2025 Saturn Trade. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span>Built on Solana</span>
             <span className="text-border-light">•</span>

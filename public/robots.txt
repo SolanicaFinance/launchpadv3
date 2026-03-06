@@ -14,7 +14,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://clawsai.fun/sitemap.xml
+Sitemap: https://saturn.trade/sitemap.xml
 
 # Crawl-delay
 Crawl-delay: 1
