@@ -306,33 +306,15 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
       </div>
 
       {/* Bottom Tools Row */}
-      <div className="flex items-center justify-between pt-3 border-t border-border/10">
-        <div className="king-footer-actions flex items-center gap-2 flex-1 min-w-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(url); }}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 px-4 py-2 min-h-[36px] rounded-xl text-[12px] font-bold transition-all duration-200 font-mono",
-              "bg-primary/10 text-primary hover:bg-primary/20",
-              "border border-primary/20 hover:border-primary/40",
-              "hover:scale-[1.03] active:scale-[0.97]",
-            )}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            Trade
-          </button>
-          <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper flex-1">
-            <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {/* Social Links */}
+      <div className="pt-3 border-t border-border/10 space-y-2">
+        {/* Social icons row */}
+        <div className="flex items-center gap-1">
           <TooltipProvider delayDuration={200}>
             {token.twitter_url && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.twitter_url!)} className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  <button onClick={(e) => handleSocialClick(e, token.twitter_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">Twitter</TooltipContent>
@@ -341,8 +323,8 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
             {token.telegram_url && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.telegram_url!)} className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <MessageCircle className="w-3 h-3" />
+                  <button onClick={(e) => handleSocialClick(e, token.telegram_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
+                    <MessageCircle className="w-2.5 h-2.5" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">Telegram</TooltipContent>
@@ -351,41 +333,56 @@ function KingCard({ token, rank, quickBuyAmount }: { token: KingToken; rank: num
             {token.website_url && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.website_url!)} className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <Globe className="w-3 h-3" />
+                  <button onClick={(e) => handleSocialClick(e, token.website_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
+                    <Globe className="w-2.5 h-2.5" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">Website</TooltipContent>
               </Tooltip>
             )}
-
-            {/* Copy CA */}
             {token.mint_address && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button onClick={handleCopyCA} className={cn(
-                    "p-1.5 rounded-md transition-colors",
+                    "p-1 rounded transition-colors",
                     copied ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30"
                   )}>
-                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copied ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">{copied ? "Copied!" : "Copy CA"}</TooltipContent>
               </Tooltip>
             )}
-
-            {/* Chart */}
             {codexChartUrl && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={handleChartClick} className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <BarChart3 className="w-3 h-3" />
+                  <button onClick={handleChartClick} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
+                    <BarChart3 className="w-2.5 h-2.5" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-[10px]">Chart</TooltipContent>
               </Tooltip>
             )}
           </TooltipProvider>
+        </div>
+
+        {/* Buttons row */}
+        <div className="king-footer-actions flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(url); }}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1 px-3 py-1.5 min-h-[30px] rounded-xl text-[11px] font-bold transition-all duration-200 font-mono",
+              "bg-primary/10 text-primary hover:bg-primary/20",
+              "border border-primary/20 hover:border-primary/40",
+              "hover:scale-[1.03] active:scale-[0.97]",
+            )}
+          >
+            <TrendingUp className="w-3 h-3" />
+            Trade
+          </button>
+          <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper flex-1">
+            <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
+          </div>
         </div>
       </div>
     </div>
