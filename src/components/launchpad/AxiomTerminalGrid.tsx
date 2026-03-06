@@ -165,7 +165,6 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const renderColumnContent = (col: typeof columns[number]) => {
     if (isLoading) return <PulseColumnSkeleton />;
     if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} color={col.color} />;
-    const isMigrated = col.id === "migrated";
     return (
       <div className="pulse-card-list">
         {col.codex.map(t => (
@@ -174,7 +173,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             token={t}
             quickBuyAmount={quickBuyAmount}
             proTraders={0}
-            sparklineData={isMigrated && t.address ? sparklineMap?.[t.address] : undefined}
+            sparklineData={t.address ? sparklineMap?.[t.address] : undefined}
           />
         ))}
         {col.tokens.map(token => (
@@ -184,7 +183,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             solPrice={solPrice}
             quickBuyAmount={quickBuyAmount}
             proTraders={proTradersMap[token.id] ?? 0}
-            sparklineData={isMigrated && token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
+            sparklineData={token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
           />
         ))}
       </div>
