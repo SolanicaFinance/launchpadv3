@@ -6107,6 +6107,8 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          paid: boolean
+          payout_signature: string | null
           referred_id: string
           referrer_id: string
           reward_pct: number
@@ -6117,6 +6119,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          paid?: boolean
+          payout_signature?: string | null
           referred_id: string
           referrer_id: string
           reward_pct?: number
@@ -6127,6 +6131,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          paid?: boolean
+          payout_signature?: string | null
           referred_id?: string
           referrer_id?: string
           reward_pct?: number
@@ -8185,6 +8191,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          profile_id: string
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          profile_id: string
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          profile_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_wallets_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vanity_keypairs: {
         Row: {

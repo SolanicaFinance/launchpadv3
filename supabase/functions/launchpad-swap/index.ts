@@ -206,6 +206,31 @@ serve(async (req) => {
         volume_sol: solAmount, interval_type: '1m', timestamp: new Date().toISOString(),
       });
 
+      // Record referral reward if trader has a referrer (5% of system fee)
+      if (profileId && systemFee > 0) {
+        try {
+          const { data: referrerId } = await supabase.rpc("get_referrer_for_user", { p_user_id: profileId });
+          if (referrerId) {
+            const REFERRAL_REWARD_PCT = 5;
+            const referralReward = systemFee * (REFERRAL_REWARD_PCT / 100);
+            if (referralReward > 0) {
+              await supabase.from("referral_rewards").insert({
+                referrer_id: referrerId,
+                referred_id: profileId,
+                trade_sol_amount: solAmount,
+                reward_sol: referralReward,
+                reward_pct: REFERRAL_REWARD_PCT,
+                trade_signature: clientSignature,
+                paid: false,
+              });
+              console.log(`[launchpad-swap] Referral reward: ${referralReward.toFixed(6)} SOL for referrer ${referrerId}`);
+            }
+          }
+        } catch (refErr) {
+          console.warn("[launchpad-swap] Referral reward recording failed (non-fatal):", refErr);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -438,6 +463,30 @@ serve(async (req) => {
       .select("*", { count: "exact", head: true })
       .eq("token_id", token.id).gt("balance", 0);
     await supabase.from("tokens").update({ holder_count: holderCount || 0 }).eq("id", token.id);
+
+    // Record referral reward for legacy mode too
+    if (profileId && systemFee > 0) {
+      try {
+        const { data: referrerId } = await supabase.rpc("get_referrer_for_user", { p_user_id: profileId });
+        if (referrerId) {
+          const REFERRAL_REWARD_PCT = 5;
+          const referralReward = systemFee * (REFERRAL_REWARD_PCT / 100);
+          if (referralReward > 0) {
+            await supabase.from("referral_rewards").insert({
+              referrer_id: referrerId,
+              referred_id: profileId,
+              trade_sol_amount: solAmount,
+              reward_sol: referralReward,
+              reward_pct: REFERRAL_REWARD_PCT,
+              trade_signature: signature,
+              paid: false,
+            });
+          }
+        }
+      } catch (refErr) {
+        console.warn("[launchpad-swap] Referral reward failed (non-fatal):", refErr);
+      }
+    }
 
     return new Response(
       JSON.stringify({

@@ -942,7 +942,80 @@ serve(async (req) => {
       }
     }
 
-    // STEP 6: Process pump.fun fee claims (pumpfun_fee_claims table)
+    // STEP 6: Distribute referral rewards
+    console.log("[fun-distribute] Processing referral reward payouts...");
+    let referralPayouts = 0;
+    let referralTotalSol = 0;
+
+    const { data: unpaidRewards, error: rewardsError } = await supabase
+      .from("referral_rewards")
+      .select("referrer_id, reward_sol")
+      .eq("paid", false);
+
+    if (!rewardsError && unpaidRewards && unpaidRewards.length > 0) {
+      // Batch by referrer
+      const referrerTotals = new Map<string, number>();
+      for (const rw of unpaidRewards) {
+        const current = referrerTotals.get(rw.referrer_id) || 0;
+        referrerTotals.set(rw.referrer_id, current + Number(rw.reward_sol));
+      }
+
+      for (const [referrerId, totalReward] of referrerTotals) {
+        if (totalReward < MIN_DISTRIBUTION_SOL) {
+          console.log(`[fun-distribute] Deferring referral payout for ${referrerId}: ${totalReward.toFixed(6)} < ${MIN_DISTRIBUTION_SOL}`);
+          continue;
+        }
+
+        // Get referrer's wallet from profiles
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("wallet_address")
+          .eq("id", referrerId)
+          .maybeSingle();
+
+        if (!profile?.wallet_address) {
+          console.warn(`[fun-distribute] No wallet for referrer ${referrerId}`);
+          continue;
+        }
+
+        try {
+          const lamports = Math.floor(totalReward * 1e9);
+          const recipientPubkey = new PublicKey(profile.wallet_address);
+          const transaction = new Transaction().add(
+            SystemProgram.transfer({
+              fromPubkey: treasuryKeypair.publicKey,
+              toPubkey: recipientPubkey,
+              lamports,
+            })
+          );
+          const { blockhash } = await connection.getLatestBlockhash();
+          transaction.recentBlockhash = blockhash;
+          transaction.feePayer = treasuryKeypair.publicKey;
+
+          const signature = await sendAndConfirmTransaction(connection, transaction, [treasuryKeypair], {
+            commitment: "confirmed",
+            maxRetries: 3,
+          });
+
+          // Mark as paid
+          await supabase
+            .from("referral_rewards")
+            .update({ paid: true, payout_signature: signature })
+            .eq("referrer_id", referrerId)
+            .eq("paid", false);
+
+          referralPayouts++;
+          referralTotalSol += totalReward;
+          totalDistributed += totalReward;
+          console.log(`[fun-distribute] ✅ Referral payout: ${totalReward.toFixed(6)} SOL to ${profile.wallet_address}, sig: ${signature}`);
+        } catch (e) {
+          console.error(`[fun-distribute] ❌ Referral payout failed for ${referrerId}:`, e);
+        }
+      }
+    }
+    console.log(`[fun-distribute] Referral payouts: ${referralPayouts}, total: ${referralTotalSol.toFixed(6)} SOL`);
+
+    // STEP 7: Process pump.fun fee claims (pumpfun_fee_claims table)
     console.log("[fun-distribute] Processing pump.fun fee claims...");
     
     const { data: pumpfunClaims, error: pumpfunError } = await supabase

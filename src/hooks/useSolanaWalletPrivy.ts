@@ -48,9 +48,15 @@ export function useSolanaWalletWithPrivy() {
   const signAndSendTransaction = useCallback(
     async (
       transaction: Transaction | VersionedTransaction,
-      options?: { skipPreflight?: boolean }
+      options?: { skipPreflight?: boolean; walletAddress?: string }
     ): Promise<{ signature: string; confirmed: boolean }> => {
-      const wallet = getSolanaWallet();
+      // Support multi-wallet: use specified wallet or default embedded
+      let wallet: any;
+      if (options?.walletAddress) {
+        wallet = wallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
+      } else {
+        wallet = getSolanaWallet();
+      }
       if (!wallet) throw new Error("No embedded wallet connected");
 
       const connection = getConnection();
@@ -121,7 +127,7 @@ export function useSolanaWalletWithPrivy() {
         setIsConnecting(false);
       }
     },
-    [getSolanaWallet, getConnection, privySolana]
+    [getSolanaWallet, getConnection, privySolana, wallets]
   );
 
   const getBalance = useCallback(async (): Promise<number> => {
