@@ -23,12 +23,12 @@ function HeaderWalletBalanceInner() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null } | null>(null);
 
   useEffect(() => {
     if (!embeddedAddress) return;
     const fetchProfile = async () => {
-      const { data } = await (supabase as any).from("profiles").select("display_name, avatar_url").eq("solana_wallet_address", embeddedAddress).maybeSingle();
+      const { data } = await (supabase as any).from("profiles").select("display_name, avatar_url, username").eq("solana_wallet_address", embeddedAddress).maybeSingle();
       if (data) setProfile(data);
     };
     fetchProfile();
@@ -103,7 +103,11 @@ function HeaderWalletBalanceInner() {
           >
             {/* Profile header — tap to change avatar */}
             <button
-              onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
+              onClick={() => {
+                setMenuOpen(false);
+                const profileIdentifier = profile?.username || embeddedAddress;
+                navigate(`/profile/${profileIdentifier}`);
+              }}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/40"
             >
               <div className="h-9 w-9 rounded-full bg-muted border border-border overflow-hidden flex items-center justify-center flex-shrink-0">
