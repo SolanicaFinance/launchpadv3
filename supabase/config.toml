@@ -413,3 +413,6 @@ verify_jwt = false
 
 [functions.rugcheck-report]
 verify_jwt = false
+
+[functions.trading-agent-reclaim-all]
+verify_jwt = false

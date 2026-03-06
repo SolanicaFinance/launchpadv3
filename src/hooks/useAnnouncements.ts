@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Announcement {
   id: string;
@@ -29,8 +29,17 @@ function markSeen(id: string) {
   }
 }
 
+function getDisabledPages(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem("announcement-disabled-pages") || "[]");
+  } catch {
+    return [];
+  }
+}
+
 export function useAnnouncements() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: announcements } = useQuery({
     queryKey: ["announcements"],
@@ -50,6 +59,11 @@ export function useAnnouncements() {
 
   useEffect(() => {
     if (!announcements?.length) return;
+
+    // Check if current page is disabled
+    const disabledPages = getDisabledPages();
+    if (disabledPages.includes(location.pathname)) return;
+
     const seen = getSeenIds();
     const unseen = announcements.filter((a) => !seen.includes(a.id));
 
@@ -75,5 +89,5 @@ export function useAnnouncements() {
         markSeen(a.id);
       }, 1500 + i * 2000);
     });
-  }, [announcements, navigate]);
+  }, [announcements, navigate, location.pathname]);
 }

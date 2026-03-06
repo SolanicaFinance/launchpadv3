@@ -243,8 +243,18 @@ serve(async (req) => {
         const walletAddress = keypair.publicKey.toBase58();
         console.log(`[reclaim-all] [${processed}/${allAgents.length}] ${agent.name} (${walletAddress})`);
 
-        // Check SOL balance
-        const balance = await connection.getBalance(keypair.publicKey);
+        // Check SOL balance with retry
+        let balance = 0;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            balance = await connection.getBalance(keypair.publicKey);
+            break;
+          } catch (e) {
+            if (attempt === 2) throw e;
+            console.warn(`[reclaim-all]   getBalance retry ${attempt + 1}`);
+            await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+          }
+        }
         console.log(`[reclaim-all]   SOL balance: ${(balance / 1e9).toFixed(6)}`);
 
         // Scan for token holdings and sell them
@@ -329,6 +339,11 @@ serve(async (req) => {
       }
 
       results.push(agentResult);
+
+      // Delay between agents to avoid RPC 429
+      if (processed < allAgents.length) {
+        await new Promise(r => setTimeout(r, 3000));
+      }
     }
 
     console.log(`[reclaim-all] ✅ Done. Recovered ${totalRecovered.toFixed(6)} SOL from ${processed} agents, ${failures} failures`);

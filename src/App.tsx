@@ -30,9 +30,7 @@ const FunTokenDetailPage = lazy(() => import("./pages/FunTokenDetailPage"));
 const TrendingPage = lazy(() => import("./pages/TrendingPage"));
 const VanityAdminPage = lazy(() => import("./pages/VanityAdminPage"));
 const LaunchpadTemplatePage = lazy(() => import("./pages/LaunchpadTemplatePage"));
-const TwitterBotAdminPage = lazy(() => import("./pages/TwitterBotAdminPage"));
 const InvestigateTokenPage = lazy(() => import("./pages/InvestigateTokenPage"));
-const TreasuryAdminPage = lazy(() => import("./pages/TreasuryAdminPage"));
 const TradePage = lazy(() => import("./pages/TradePage"));
 const ApiDocsPage = lazy(() => import("./pages/ApiDocsPage"));
 const ApiDashboardPage = lazy(() => import("./pages/ApiDashboardPage"));
@@ -44,31 +42,22 @@ const AgentDocsPage = lazy(() => import("./pages/AgentDocsPage"));
 const AgentDashboardPage = lazy(() => import("./pages/AgentDashboardPage"));
 const AgentLeaderboardPage = lazy(() => import("./pages/AgentLeaderboardPage"));
 const AgentProfilePage = lazy(() => import("./pages/AgentProfilePage"));
-const ClawBookAdminPage = lazy(() => import("./pages/ClawBookAdminPage"));
 
 const AgentConnectPage = lazy(() => import("./pages/AgentConnectPage"));
-const AgentLogsAdminPage = lazy(() => import("./pages/AgentLogsAdminPage"));
 
 const BagsAgentsPage = lazy(() => import("./pages/BagsAgentsPage"));
 
 const TradingAgentProfilePage = lazy(() => import("./pages/TradingAgentProfilePage"));
-const InfluencerRepliesAdminPage = lazy(() => import("./pages/InfluencerRepliesAdminPage"));
-const PromoMentionsAdminPage = lazy(() => import("./pages/PromoMentionsAdminPage"));
-const DeployerDustAdminPage = lazy(() => import("./pages/DeployerDustAdminPage"));
-const ColosseumAdminPage = lazy(() => import("./pages/ColosseumAdminPage"));
-const PartnerFeesPage = lazy(() => import("./pages/PartnerFeesPage"));
 const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
 const ClawSDKPage = lazy(() => import("./pages/ClawSDKPage"));
 const CareersPage = lazy(() => import("./pages/CareersPage"));
-const XBotAdminPage = lazy(() => import("./pages/XBotAdminPage"));
-const FollowerScanPage = lazy(() => import("./pages/FollowerScanPage"));
 const ClawModePage = lazy(() => import("./pages/ClawModePage"));
-const ClawAdminLaunchPage = lazy(() => import("./pages/ClawAdminLaunchPage"));
 
 const TunnelDistributePage = lazy(() => import("./pages/TunnelDistributePage"));
 const CompressedDistributePage = lazy(() => import("./pages/CompressedDistributePage"));
 const DecompressPage = lazy(() => import("./pages/DecompressPage"));
 const FunModePage = lazy(() => import("./pages/FunModePage"));
+const AdminPanelPage = lazy(() => import("./pages/AdminPanelPage"));
 // NFA pages removed
 const BannerMakerPage = lazy(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazy(() => import("./pages/AlphaTrackerPage"));
@@ -145,8 +134,9 @@ const App = () => (
                     <Route path="/trending" element={<TrendingPage />} />
                     <Route path="/vanity-admin" element={<VanityAdminPage />} />
                     <Route path="/site" element={<LaunchpadTemplatePage />} />
-                    <Route path="/admin/twitter" element={<TwitterBotAdminPage />} />
-                    <Route path="/admin/treasury" element={<TreasuryAdminPage />} />
+                    <Route path="/admin" element={<AdminPanelPage />} />
+                    <Route path="/admin/twitter" element={<Navigate to="/admin?tab=xbots" replace />} />
+                    <Route path="/admin/treasury" element={<Navigate to="/admin?tab=treasury" replace />} />
                     <Route path="/trade" element={<TradePage />} />
                      <Route path="/alpha-tracker" element={<AlphaTrackerPage />} />
                      <Route path="/discover" element={<DiscoverPage />} />
@@ -169,22 +159,22 @@ const App = () => (
                     <Route path="/agents/trading" element={<Navigate to="/agents?tab=trading" replace />} />
                     <Route path="/trading-agents" element={<Navigate to="/agents?tab=trading" replace />} />
                     <Route path="/agents/trading/:id" element={<TradingAgentProfilePage />} />
-                    <Route path="/admin/clawbook" element={<ClawBookAdminPage />} />
-                    <Route path="/admin/agent-logs" element={<AgentLogsAdminPage />} />
-                    <Route path="/admin/influencer-replies" element={<InfluencerRepliesAdminPage />} />
-                    <Route path="/admin/promo-mentions" element={<PromoMentionsAdminPage />} />
-                    <Route path="/admin/deployer-dust" element={<DeployerDustAdminPage />} />
-                    <Route path="/admin/colosseum" element={<ColosseumAdminPage />} />
-                    <Route path="/partnerfees" element={<PartnerFeesPage />} />
+                    <Route path="/admin/clawbook" element={<Navigate to="/admin?tab=clawbook" replace />} />
+                    <Route path="/admin/agent-logs" element={<Navigate to="/admin?tab=agent-logs" replace />} />
+                    <Route path="/admin/influencer-replies" element={<Navigate to="/admin?tab=promo" replace />} />
+                    <Route path="/admin/promo-mentions" element={<Navigate to="/admin?tab=promo" replace />} />
+                    <Route path="/admin/deployer-dust" element={<Navigate to="/admin?tab=deployer" replace />} />
+                    <Route path="/admin/colosseum" element={<Navigate to="/admin?tab=colosseum" replace />} />
+                    <Route path="/partnerfees" element={<Navigate to="/admin?tab=partner-fees" replace />} />
                     <Route path="/whitepaper" element={<WhitepaperPage />} />
                     
                      <Route path="/sdk" element={<ClawSDKPage />} />
                      <Route path="/opentuna" element={<Navigate to="/sdk" replace />} />
                     <Route path="/careers" element={<CareersPage />} />
-                    <Route path="/admin/x-bots" element={<XBotAdminPage />} />
-                    <Route path="/admin/follower-scan" element={<FollowerScanPage />} />
+                    <Route path="/admin/x-bots" element={<Navigate to="/admin?tab=xbots" replace />} />
+                    <Route path="/admin/follower-scan" element={<Navigate to="/admin?tab=follower-scan" replace />} />
                     <Route path="/claw" element={<ClawModePage />} />
-                    <Route path="/claw/adminlaunch" element={<ClawAdminLaunchPage />} />
+                    <Route path="/claw/adminlaunch" element={<Navigate to="/admin?tab=claw-launch" replace />} />
                     
                     <Route path="/admin/tunnel-distribute" element={<TunnelDistributePage />} />
                     <Route path="/admin/compressed-distribute" element={<CompressedDistributePage />} />
