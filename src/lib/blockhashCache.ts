@@ -17,6 +17,7 @@ interface CachedBlockhash {
 let cache: CachedBlockhash | null = null;
 let pollTimeout: ReturnType<typeof setTimeout> | null = null;
 let connection: Connection | null = null;
+let connectionRpcUrl: string | null = null;
 let running = false;
 
 const BASE_POLL_MS = 4000;       // Normal poll: every 4 seconds
@@ -27,13 +28,18 @@ let currentInterval = BASE_POLL_MS;
 let consecutiveErrors = 0;
 
 function getConnection(): Connection {
-  if (!connection) {
-    const { url } = getRpcUrl();
+  const { url } = getRpcUrl();
+
+  // Recreate connection if RPC URL changed (prevents stale API keys being pinned in memory)
+  if (!connection || connectionRpcUrl !== url) {
     connection = new Connection(url, {
       commitment: 'confirmed',
       disableRetryOnRateLimit: true,
     });
+    connectionRpcUrl = url;
+    cache = null;
   }
+
   return connection;
 }
 

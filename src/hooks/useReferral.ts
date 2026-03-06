@@ -13,25 +13,47 @@ export function useReferralCode() {
   useEffect(() => {
     if (!profileId) return;
     setLoading(true);
+    let cancelled = false;
 
     (async () => {
       try {
+        // Guard: only call referral RPC when the profile row exists.
+        const { data: profileRow, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", profileId)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+        if (!profileRow) {
+          if (!cancelled) {
+            setReferralCode(null);
+            setReferralCount(0);
+          }
+          return;
+        }
+
         const { data, error } = await supabase.rpc("get_or_create_referral_code", {
           p_profile_id: profileId,
         });
-        if (!error && data) setReferralCode(data as string);
+        if (!error && data && !cancelled) setReferralCode(data as string);
 
         const { count } = await supabase
           .from("referrals")
           .select("*", { count: "exact", head: true })
           .eq("referrer_id", profileId);
-        setReferralCount(count ?? 0);
+
+        if (!cancelled) setReferralCount(count ?? 0);
       } catch {
         // silent
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [profileId]);
 
   const referralLink = referralCode
