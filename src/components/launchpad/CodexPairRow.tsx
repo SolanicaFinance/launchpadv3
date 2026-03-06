@@ -6,6 +6,7 @@ import { PulseQuickBuyButton } from "./PulseQuickBuyButton";
 import { CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { LaunchpadBadge } from "./LaunchpadBadge";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
+import { SparklineCanvas } from "./SparklineCanvas";
 import { toast } from "sonner";
 
 function formatUsdCompact(usd: number): string {
@@ -47,7 +48,7 @@ function formatTxCount(holders: number): string {
   return String(holders);
 }
 
-export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, proTraders = 0 }: { token: CodexPairToken; quickBuyAmount?: number; proTraders?: number }) {
+export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, proTraders = 0, sparklineData }: { token: CodexPairToken; quickBuyAmount?: number; proTraders?: number; sparklineData?: number[] }) {
   const [copiedCA, setCopiedCA] = useState(false);
   const gradPct = token.graduationPercent ?? 0;
   const mcap = formatUsdCompact(token.marketCap);
@@ -75,8 +76,11 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
   return (
     <Link
       to={tradeUrl}
-      className="pulse-card group"
+      className="pulse-card group relative overflow-hidden"
     >
+      {sparklineData && sparklineData.length >= 2 && (
+        <SparklineCanvas data={sparklineData} />
+      )}
       {/* Row 1: Avatar + Info + Metrics */}
       <div className="flex items-start gap-2.5">
         {/* Avatar */}

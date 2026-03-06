@@ -416,3 +416,9 @@ verify_jwt = false
 
 [functions.trading-agent-reclaim-all]
 verify_jwt = false
+
+[functions.codex-sparklines]
+verify_jwt = false
+
+[functions.codex-chart-data]
+verify_jwt = false

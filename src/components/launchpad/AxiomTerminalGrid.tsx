@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { FunToken } from "@/hooks/useFunTokensPaginated";
 import { CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { useKingOfTheHill } from "@/hooks/useKingOfTheHill";
+import { useSparklineBatch } from "@/hooks/useSparklineBatch";
 import { AxiomTokenRow } from "./AxiomTokenRow";
 import { CodexPairRow } from "./CodexPairRow";
 import { PulseColumnHeaderBar } from "./PulseColumnHeaderBar";
@@ -125,6 +126,15 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const filteredCodexCompleting = useMemo(() => applyFilterToCodexTokens(codexCompleting, "final"), [codexCompleting, filters]);
   const filteredCodexGraduated = useMemo(() => applyFilterToCodexTokens(codexGraduated, "migrated"), [codexGraduated, filters]);
 
+  // Collect addresses for sparkline batch fetch (migrated column only)
+  const migratedAddresses = useMemo(() => {
+    const funAddrs = filteredMigrated.map(t => t.mint_address).filter(Boolean) as string[];
+    const codexAddrs = filteredCodexGraduated.map(t => t.address).filter(Boolean) as string[];
+    return [...funAddrs, ...codexAddrs];
+  }, [filteredMigrated, filteredCodexGraduated]);
+
+  const { data: sparklineMap } = useSparklineBatch(migratedAddresses);
+
   const columns = [
     { id: "new" as const, label: "New Pairs", icon: Rocket, tokens: filteredNewPairs, codex: filteredCodexNew, color: COLUMN_TABS[0].color },
     { id: "final" as const, label: "Final Stretch", icon: Flame, tokens: filteredFinalStretch, codex: filteredCodexCompleting, color: COLUMN_TABS[1].color },
@@ -153,13 +163,27 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const renderColumnContent = (col: typeof columns[number]) => {
     if (isLoading) return <PulseColumnSkeleton />;
     if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} color={col.color} />;
+    const isMigrated = col.id === "migrated";
     return (
       <div className="pulse-card-list">
         {col.codex.map(t => (
-          <CodexPairRow key={`codex-${t.address}`} token={t} quickBuyAmount={quickBuyAmount} proTraders={0} />
+          <CodexPairRow
+            key={`codex-${t.address}`}
+            token={t}
+            quickBuyAmount={quickBuyAmount}
+            proTraders={0}
+            sparklineData={isMigrated && t.address ? sparklineMap?.[t.address] : undefined}
+          />
         ))}
         {col.tokens.map(token => (
-          <AxiomTokenRow key={token.id} token={token} solPrice={solPrice} quickBuyAmount={quickBuyAmount} proTraders={proTradersMap[token.id] ?? 0} />
+          <AxiomTokenRow
+            key={token.id}
+            token={token}
+            solPrice={solPrice}
+            quickBuyAmount={quickBuyAmount}
+            proTraders={proTradersMap[token.id] ?? 0}
+            sparklineData={isMigrated && token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
+          />
         ))}
       </div>
     );

@@ -6,6 +6,7 @@ import { PulseQuickBuyButton } from "./PulseQuickBuyButton";
 import { FunToken } from "@/hooks/useFunTokensPaginated";
 import { LaunchpadBadge } from "./LaunchpadBadge";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
+import { SparklineCanvas } from "./SparklineCanvas";
 import { toast } from "sonner";
 
 interface AxiomTokenRowProps {
@@ -13,6 +14,7 @@ interface AxiomTokenRowProps {
   solPrice: number | null;
   quickBuyAmount?: number;
   proTraders?: number;
+  sparklineData?: number[];
 }
 
 function formatUsd(mcapSol: number | null | undefined, solPrice: number | null): string {
@@ -58,7 +60,7 @@ function formatHolders(n: number): string {
   return String(n);
 }
 
-export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quickBuyAmount, proTraders = 0 }: AxiomTokenRowProps) {
+export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quickBuyAmount, proTraders = 0, sparklineData }: AxiomTokenRowProps) {
   const [copiedCA, setCopiedCA] = useState(false);
   const bondingProgress = token.bonding_progress ?? 0;
   const isAgent = !!token.agent_id;
@@ -87,7 +89,10 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
   };
 
   return (
-    <Link to={tradeUrl} className="pulse-card group">
+    <Link to={tradeUrl} className="pulse-card group relative overflow-hidden">
+      {sparklineData && sparklineData.length >= 2 && (
+        <SparklineCanvas data={sparklineData} />
+      )}
       {/* Row 1: Avatar + Info + Metrics */}
       <div className="flex items-start gap-2.5">
         {/* Avatar */}
