@@ -247,7 +247,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
         </div>
 
         {/* Quick Buy button */}
-        <PulseQuickBuyButton codexToken={token} quickBuyAmount={quickBuyAmount} />
+        <PulseQuickBuyButton codexToken={token} quickBuyAmount={quickBuyAmount} chain={chain} />
       </div>
     </Link>
   );

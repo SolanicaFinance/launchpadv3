@@ -11,17 +11,16 @@ import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import type { Token } from "@/hooks/useLaunchpad";
 import type { FunToken } from "@/hooks/useFunTokensPaginated";
 import type { CodexPairToken } from "@/hooks/useCodexNewPairs";
+import type { SupportedChain } from "@/contexts/ChainContext";
 
 const PRESET_AMOUNTS = [0.1, 0.5, 1, 2];
 
 interface PulseQuickBuyButtonProps {
-  /** Pass either a FunToken or CodexPairToken - will be bridged to Token internally */
   funToken?: FunToken;
   codexToken?: CodexPairToken;
-  /** When provided, clicking Buy executes immediately with this amount */
   quickBuyAmount?: number;
-  /** Compact style for table/list views */
   isCompact?: boolean;
+  chain?: SupportedChain;
 }
 
 function bridgeFunToken(t: FunToken): Token {
@@ -99,7 +98,46 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   codexToken,
   quickBuyAmount,
   isCompact,
+  chain = 'solana',
 }: PulseQuickBuyButtonProps) {
+  const isBnb = chain === 'bnb';
+  const mintAddress = funToken?.mint_address ?? codexToken?.address ?? null;
+
+  // For BNB tokens, render a simple PancakeSwap link button
+  if (isBnb && mintAddress) {
+    const pancakeUrl = `https://pancakeswap.finance/swap?outputCurrency=${mintAddress}&chain=bsc`;
+    return (
+      <a
+        href={pancakeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
+      >
+        <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
+        <span>PancakeSwap</span>
+      </a>
+    );
+  }
+
+  // Solana swap path
+  return <SolanaQuickBuy funToken={funToken} codexToken={codexToken} quickBuyAmount={quickBuyAmount} isCompact={isCompact} mintAddress={mintAddress} />;
+});
+
+/** Solana-only quick buy/sell — uses hooks that must not be conditionally called */
+const SolanaQuickBuy = memo(function SolanaQuickBuy({
+  funToken,
+  codexToken,
+  quickBuyAmount,
+  isCompact,
+  mintAddress,
+}: {
+  funToken?: FunToken;
+  codexToken?: CodexPairToken;
+  quickBuyAmount?: number;
+  isCompact?: boolean;
+  mintAddress: string | null;
+}) {
   const { executeFastSwap, isLoading, lastLatencyMs, walletAddress } = useFastSwap();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -108,9 +146,6 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   const [isSelling, setIsSelling] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const mintAddress = funToken?.mint_address ?? codexToken?.address ?? null;
-
-  // Fetch on-chain token balance for sell button
   const { data: tokenBalance } = useQuery({
     queryKey: ["quick-sell-balance", walletAddress, mintAddress],
     queryFn: async () => {
@@ -239,10 +274,8 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
         if (result.success) {
           const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
           const name = funToken?.name ?? codexToken?.name ?? '';
-          const imageUrl = funToken?.image_url ?? codexToken?.imageUrl ?? '';
           toast.success(`Sold 100% of $${ticker}`, {
             description: `${name}${result.signature ? ` · TX: ${result.signature.slice(0, 8)}...` : ''}${lastLatencyMs ? ` · ${lastLatencyMs}ms` : ''}`,
-            icon: imageUrl ? undefined : undefined,
             action: result.signature
               ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
               : undefined,
@@ -267,15 +300,13 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
 
       {hasBalance ? (
-        /* Sell 100% — replaces Buy when user holds tokens */
         <button
           type="button"
           onClick={handleSell100}
           disabled={isBusy}
           className={isCompact
             ? "discover-quick-buy-btn pulse-sell-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20 hover:border-red-500/40"
-            : "pulse-sol-btn pulse-sell-btn"
-          }
+            : "pulse-sol-btn pulse-sell-btn"}
         >
           {isSelling ? (
             <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
