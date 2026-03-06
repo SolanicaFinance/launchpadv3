@@ -1,12 +1,12 @@
 import { Sparkles, Zap, Rocket, Star } from "lucide-react";
 
-const CLAW_LOGO_SRC = "/claw-logo.png";
+const CLAW_LOGO_SRC = "/saturn-logo.png";
 
 const funMessages = [
   "🔮 Consulting the meme lords...",
   "🚀 Searching for the next 1000x...",
   "🎰 Rolling the degen dice...",
-  "⚡ Channeling Claw Mode energy...",
+  "⚡ Channeling Saturn Trade energy...",
   "💎 Mining diamond hands...",
   "🌙 Moon trajectory calculating...",
   "🦍 Apes assembling...",
@@ -43,7 +43,7 @@ export function MemeLoadingAnimation() {
       <div className="relative z-10">
         <img 
           src={CLAW_LOGO_SRC} 
-          alt="Claw Mode" 
+          alt="Saturn Trade" 
           className="w-10 h-10 rounded-xl object-cover animate-bounce"
           style={{ animationDuration: '0.6s' }}
         />

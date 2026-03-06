@@ -107,7 +107,7 @@ export function useSubTuna(ticker?: string) {
             id: "claw-platform-token",
             ticker: "CLAW",
             name: "CLAW",
-            imageUrl: "/claw-logo.png",
+            imageUrl: "/saturn-logo.png",
             mintAddress: "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",
             // Price/market cap fetched separately via useClawTokenData
             marketCapSol: undefined,

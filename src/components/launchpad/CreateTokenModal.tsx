@@ -8,7 +8,7 @@ interface CreateTokenModalProps {
   onClose: () => void;
 }
 
-const EXAMPLE_TEXT = "@clawmode !clawmode a meme coin about a dancing lobster";
+const EXAMPLE_TEXT = "@saturntrade !saturntrade a meme coin about a dancing lobster";
 
 export function CreateTokenModal({ open, onClose }: CreateTokenModalProps) {
   const [copied, setCopied] = useState(false);
@@ -105,8 +105,8 @@ export function CreateTokenModal({ open, onClose }: CreateTokenModalProps) {
                   }}
                 >
                   <div className="pr-10">
-                    <span className="text-[#F97316] font-semibold">@clawmode</span>{" "}
-                    <span className="text-[#64748B]">!clawmode</span>
+                    <span className="text-[#F97316] font-semibold">@saturntrade</span>{" "}
+                    <span className="text-[#64748B]">!saturntrade</span>
                     <br className="sm:hidden" />
                     <span className="text-[#94A3B8] italic"> describe what you want to launch</span>
                   </div>
@@ -158,7 +158,7 @@ export function CreateTokenModal({ open, onClose }: CreateTokenModalProps) {
           >
             <p className="text-[12px] md:text-[12px] font-mono text-[#94A3B8] leading-relaxed">
               <span className="text-[#64748B]">Example:</span>{" "}
-              <span className="text-[#F97316]">@clawmode !clawmode</span>{" "}
+              <span className="text-[#F97316]">@saturntrade !saturntrade</span>{" "}
               <span className="text-[#CBD5E1]">a meme coin about a dancing lobster</span>
             </p>
           </div>
@@ -174,7 +174,7 @@ export function CreateTokenModal({ open, onClose }: CreateTokenModalProps) {
         {/* CTA — sticky bottom */}
         <div className="px-5 md:px-10 pb-7 md:pb-8 pt-3">
           <a
-            href="https://x.com/clawmode"
+            href="https://x.com/saturntrade"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2.5 w-full py-4 md:py-4 rounded-2xl text-[16px] md:text-[15px] font-bold text-white transition-all active:scale-[0.97] hover:shadow-lg"
@@ -184,7 +184,7 @@ export function CreateTokenModal({ open, onClose }: CreateTokenModalProps) {
               minHeight: "54px",
             }}
           >
-            Go to @clawmode on X
+            Go to @saturntrade on X
             <span className="text-white/80">→</span>
           </a>
 

@@ -390,10 +390,10 @@ export function KingOfTheHill() {
       {/* Premium Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <img src="/claw-logo.png" alt="" className="w-5 h-5 object-contain" />
+          <img src="/saturn-logo.png" alt="" className="w-5 h-5 object-contain" />
           <div>
             <h2 className="text-base font-black uppercase tracking-[0.08em] text-foreground" style={{ textShadow: "0 0 20px rgba(245,158,11,0.15)" }}>
-              King of the Claws
+              King of the Hill
             </h2>
             <span className="text-[11px] text-muted-foreground/40 tracking-wide">Soon to Graduate</span>
           </div>

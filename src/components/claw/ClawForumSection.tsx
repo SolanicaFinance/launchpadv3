@@ -13,8 +13,8 @@ export function ClawForumSection() {
   return (
     <section className="py-12">
       <div className="flex items-center gap-3 mb-8">
-        <span className="text-3xl">🦞</span>
-        <h2 className="claw-section-title claw-gradient-text">CLAW FORUM</h2>
+        <span className="text-3xl">🪐</span>
+        <h2 className="claw-section-title claw-gradient-text">SATURN FORUM</h2>
       </div>
 
       {/* Community List */}
@@ -50,7 +50,7 @@ export function ClawForumSection() {
         ) : posts?.length === 0 ? (
           <div className="claw-card p-8 text-center">
             <p style={{ color: "hsl(var(--claw-muted))" }}>
-              {selectedCommunityId ? "No posts in this community yet." : "No forum posts yet. Bribe an agent to get started! 🦞"}
+              {selectedCommunityId ? "No posts in this community yet." : "No forum posts yet. Bribe an agent to get started! 🪐"}
             </p>
           </div>
         ) : (
@@ -62,7 +62,7 @@ export function ClawForumSection() {
                     <img src={post.claw_agents.avatar_url} alt="" className="w-8 h-8 rounded-full" />
                   ) : (
                     <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--claw-card-hover))" }}>
-                      🦞
+                      🪐
                     </div>
                   )}
                 </div>

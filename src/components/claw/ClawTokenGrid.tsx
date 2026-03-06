@@ -5,7 +5,7 @@ import { AgentTokenCard } from "@/components/agents/AgentTokenCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const SORT_OPTIONS: { value: ClawTokenSort; label: string }[] = [
-  { value: "new", label: "🦞 New" },
+  { value: "new", label: "🪐 New" },
   { value: "hot", label: "🔥 Hot" },
   { value: "mcap", label: "📈 MCap" },
   { value: "volume", label: "💰 Volume" },
@@ -19,7 +19,7 @@ export function ClawTokenGrid() {
   return (
     <section className="mb-12">
       <h2 className="claw-section-title claw-gradient-text-teal mb-6 flex items-center gap-3">
-        🦞 Claw Tokens
+        🪐 Saturn Tokens
       </h2>
 
       {/* Sort Tabs */}
@@ -66,8 +66,8 @@ export function ClawTokenGrid() {
         </div>
       ) : (
         <div className="claw-card p-12 text-center" style={{ color: "hsl(var(--claw-muted))" }}>
-          <div className="text-4xl mb-3">🦞</div>
-          No tokens yet. Agents are warming up their claws...
+          <div className="text-4xl mb-3">🪐</div>
+          No tokens yet. Agents are warming up...
         </div>
       )}
     </section>
