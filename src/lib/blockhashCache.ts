@@ -1,8 +1,8 @@
 /**
  * Pre-cached Blockhash Service
  * 
- * Polls for fresh blockhashes every 2 seconds in the background.
- * Trade clicks read the cached value instantly (0ms) instead of RPC (200-500ms).
+ * Polls for fresh blockhashes in the background with adaptive intervals.
+ * Backs off on 429 rate limit errors to avoid burning through RPC quota.
  */
 
 import { Connection } from '@solana/web3.js';
@@ -15,11 +15,16 @@ interface CachedBlockhash {
 }
 
 let cache: CachedBlockhash | null = null;
-let pollInterval: ReturnType<typeof setInterval> | null = null;
+let pollTimeout: ReturnType<typeof setTimeout> | null = null;
 let connection: Connection | null = null;
+let running = false;
 
-const POLL_MS = 2000; // Refresh every 2 seconds
-const STALE_MS = 10_000; // Consider stale after 10 seconds
+const BASE_POLL_MS = 4000;       // Normal poll: every 4 seconds
+const MAX_BACKOFF_MS = 60_000;   // Max backoff: 60 seconds
+const STALE_MS = 15_000;         // Consider stale after 15 seconds
+
+let currentInterval = BASE_POLL_MS;
+let consecutiveErrors = 0;
 
 function getConnection(): Connection {
   if (!connection) {
@@ -34,29 +39,48 @@ async function refreshBlockhash(): Promise<void> {
     const conn = getConnection();
     const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash('confirmed');
     cache = { blockhash, lastValidBlockHeight, fetchedAt: Date.now() };
-  } catch (err) {
-    console.warn('[BlockhashCache] Refresh failed:', err);
+    // Reset backoff on success
+    consecutiveErrors = 0;
+    currentInterval = BASE_POLL_MS;
+  } catch (err: any) {
+    consecutiveErrors++;
+    const is429 = err?.message?.includes('429') || err?.message?.includes('max usage reached');
+    if (is429) {
+      // Exponential backoff: 8s, 16s, 32s, 60s max
+      currentInterval = Math.min(MAX_BACKOFF_MS, BASE_POLL_MS * Math.pow(2, consecutiveErrors));
+      console.warn(`[BlockhashCache] Rate limited (429). Backing off to ${(currentInterval / 1000).toFixed(0)}s`);
+    } else {
+      console.warn('[BlockhashCache] Refresh failed:', err);
+    }
     // Keep stale cache rather than null
   }
+}
+
+function scheduleNext(): void {
+  if (!running) return;
+  pollTimeout = setTimeout(async () => {
+    await refreshBlockhash();
+    scheduleNext();
+  }, currentInterval);
 }
 
 /**
  * Start background polling. Safe to call multiple times (idempotent).
  */
 export function startBlockhashPoller(): void {
-  if (pollInterval) return;
-  // Immediately fetch one
-  refreshBlockhash();
-  pollInterval = setInterval(refreshBlockhash, POLL_MS);
+  if (running) return;
+  running = true;
+  refreshBlockhash().then(() => scheduleNext());
 }
 
 /**
  * Stop background polling.
  */
 export function stopBlockhashPoller(): void {
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
+  running = false;
+  if (pollTimeout) {
+    clearTimeout(pollTimeout);
+    pollTimeout = null;
   }
 }
 
@@ -65,25 +89,21 @@ export function stopBlockhashPoller(): void {
  * Falls back to a live fetch if cache is empty or stale.
  */
 export async function getCachedBlockhash(): Promise<{ blockhash: string; lastValidBlockHeight: number }> {
-  // If cache is fresh, return instantly
   if (cache && (Date.now() - cache.fetchedAt) < STALE_MS) {
     return { blockhash: cache.blockhash, lastValidBlockHeight: cache.lastValidBlockHeight };
   }
 
-  // Cache miss or stale — do a live fetch (first-time only, should be rare)
   await refreshBlockhash();
   if (cache) {
     return { blockhash: cache.blockhash, lastValidBlockHeight: cache.lastValidBlockHeight };
   }
 
-  // Absolute fallback
   const conn = getConnection();
   return conn.getLatestBlockhash('confirmed');
 }
 
 /**
  * Get cached blockhash synchronously. Returns null if no cache available.
- * Use this for maximum speed — no async overhead.
  */
 export function getCachedBlockhashSync(): { blockhash: string; lastValidBlockHeight: number } | null {
   if (cache && (Date.now() - cache.fetchedAt) < STALE_MS) {

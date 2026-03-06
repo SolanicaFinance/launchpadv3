@@ -44,7 +44,7 @@ function HeaderWalletBalanceInner() {
       }
     };
     fetchBal();
-    const interval = setInterval(fetchBal, 15000);
+    const interval = setInterval(fetchBal, 30000);
     return () => { cancelled = true; clearInterval(interval); };
   }, [embeddedAddress, getBalance]);
 
