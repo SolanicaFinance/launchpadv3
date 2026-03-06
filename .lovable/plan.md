@@ -1,93 +1,62 @@
 
 
-## Redesign: KingCard Token Card (King of the Hill)
+## Fix KingCard Layout, Alignment & Polish
 
-Based on the reference screenshot and the listed issues, the KingCard in `KingOfTheHill.tsx` needs a visual overhaul. The `CodexPairRow` (Pulse terminal list card) is a separate component — the screenshot clearly shows the KingCard layout (vertical card with image, mcap, progress bar, quick buy button).
+After reviewing the component code and CSS, the KingCard in `KingOfTheHill.tsx` is structurally sound but has several visual inconsistencies visible in the screenshot. Here is the targeted fix plan:
 
-### Problems Identified
+### Problems & Fixes
 
-1. **X/Twitter handle**: When missing, no placeholder shown → layout shifts between cards
-2. **Quick Buy button**: Uses generic `pulse-sol-btn` class (chartreuse pill) — doesn't match the prominent yellow-gold button in the reference screenshot
-3. **Progress bar**: Label and percentage too small, bar too thin (6px)
-4. **Visual hierarchy**: MCap price doesn't pop enough, change % is small
-5. **Mobile cramping**: Card padding and text sizing not optimized
-6. **Card hover**: Decent but can be improved with glow
+**1. MCAP / HOLDERS misalignment across cards**
+- The current layout uses `flex items-center gap-4` which causes values to float loosely when content widths differ between cards
+- Fix: Use a CSS grid with fixed columns (`grid grid-cols-2`) for MCAP and HOLDERS, so labels and values always align vertically. Volume 24h spans full width below if present.
 
-### Changes — `src/components/launchpad/KingOfTheHill.tsx`
+**2. Progress bar: "BONDING PROGRESS" not duplicated in code (only one instance), but the bar is still thin at 8px**
+- Increase to 10px height for more visual weight
+- Keep the single label + percentage layout (already correct in code)
+- Make percentage text slightly larger (13px bold)
 
-**1. X handle fallback (line ~251-259)**
-- Always show X icon row. If no `xUser`, display `— None` in muted text
-- Prevents layout shift when some cards have handles and others don't
+**3. Footer buttons inconsistent sizing**
+- Trade button and Quick Buy button have different padding/height
+- Fix: Give both buttons the same `py-2 px-4` and `rounded-xl`, ensure flex-1 so they share width equally
+- Social icons: add a subtle separator (thin border-left) and ensure consistent 28px icon button sizing
 
-**2. Quick Buy button styling**
-- Replace the generic `PulseQuickBuyButton` wrapper div with a styled container
-- Add new CSS class `king-quick-buy-btn` in `src/index.css` with:
-  - Gold gradient background (`#F4C430 → #FFB300`)
-  - White bold text, 13px font
-  - `border-radius: 12px`, padding `8px 20px`
-  - Hover: `scale(1.03)`, `box-shadow: 0 0 16px rgba(244,196,48,0.4)`
-  - Same height as "Trade" button
-- Place "Trade" and "Quick Buy" side-by-side with equal flex, gap-2
+**4. Card hover effect**
+- Already has `hover:scale-[1.02]` and glow -- this is fine, keep it
+- Add a subtle `hover:border-opacity` transition for smoother feel
 
-**3. Progress bar improvements**
-- Increase height from 6px to 8px
-- "BONDING PROGRESS" label left-aligned, percentage right-aligned, both `text-[10px]` uppercase mono
-- Match the reference screenshot layout exactly
-
-**4. MCap visual hierarchy**
-- MCap price: bump to `text-xl` bold
-- Change % displayed as colored pill/badge next to price (red/green bg)
-
-**5. Card layout & spacing**
-- Token image: larger, aspect-ratio preserved, rounded-xl
-- Description line: 2-line clamp if description exists
-- CA address with copy button inline
-- Consistent 20px padding, gap-4 between sections
-
-**6. Mobile responsive**
-- On screens < 380px, Trade + QuickBuy stack vertically
-- Use `clamp()` for key font sizes
-
-### Changes — `src/index.css`
-
-Add new CSS class:
-```css
-.king-quick-buy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #F4C430, #FFB300);
-  color: #fff;
-  transition: all 200ms ease;
-  flex-shrink: 0;
-}
-.king-quick-buy-btn:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 16px rgba(244,196,48,0.4);
-}
-.king-quick-buy-btn:active {
-  transform: scale(0.97);
-}
-.king-quick-buy-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-```
+**5. X handle row**
+- Already implemented with "— None" fallback -- this is correct
+- No changes needed
 
 ### Files to Modify
-- `src/components/launchpad/KingOfTheHill.tsx` — KingCard component rewrite
-- `src/index.css` — Add `king-quick-buy-btn` styles
-- `src/components/launchpad/PulseQuickBuyButton.tsx` — No changes (reused as-is, just wrapper styling changes)
 
-### What Will NOT Change
-- Overall KingOfTheHill container/layout (3-column row)
-- Rank badge system / glow logic
-- PulseQuickBuyButton internal logic (swap, popover, auth)
-- CodexPairRow component (separate card, not in scope)
-- No new features added
+**`src/components/launchpad/KingOfTheHill.tsx`** (lines 268-305, 312-330):
+- Replace the MCAP/HOLDERS flex layout with a 2-column grid for consistent alignment
+- Make MCAP value `text-lg` (was `text-xl` -- slightly smaller for better fit)
+- Holders value bumped to `text-sm font-bold`
+- Progress bar height increased to 10px
+- Footer: both buttons get `flex-1` for equal width, matched padding
+
+**`src/index.css`** (lines 1370-1393):
+- Ensure `.king-quick-buy-wrapper` button gets `flex: 1` and `width: 100%`
+- Add `min-height: 36px` to both footer buttons for consistent height
+
+### Technical Details
+
+MCAP/HOLDERS grid structure:
+```text
+┌─────────────┬─────────────┐
+│ MCAP        │ HOLDERS     │
+│ $2.6K +5.2% │ 👥 2        │
+└─────────────┴─────────────┘
+│ VOL 24H (optional, full width) │
+```
+
+Footer buttons:
+```text
+┌──────────┬──────────┐
+│  Trade ↗ │ ⚡0.8 SOL │
+└──────────┴──────────┘
+  [𝕏] [💬] [🌐] [📋] [📊]
+```
 
