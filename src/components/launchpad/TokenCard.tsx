@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Bot, Crown, Copy, CheckCircle, TrendingUp, TrendingDown, BadgeCheck, Sparkles } from "lucide-react";
+import { Crown, Copy, CheckCircle, TrendingUp, TrendingDown, BadgeCheck, Sparkles, LineChart } from "lucide-react";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 import { FunToken } from "@/hooks/useFunTokensPaginated";
 import { PumpBadge } from "@/components/clawbook/PumpBadge";
@@ -208,7 +208,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
       </div>
 
       {/* ── Card Body ── */}
-      <div className="px-3 pt-3 pb-2.5">
+      <div className="px-3 pt-3 pb-2.5 flex flex-col">
         {/* Name + Ticker row */}
         <div className="flex items-center justify-between gap-2 mb-1">
           <h3 className="text-sm font-bold truncate leading-tight" style={{ color: "hsl(0 0% 95%)" }}>
@@ -220,7 +220,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
         </div>
 
         {/* Source badges + age */}
-        <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 mb-1.5 min-h-[1rem]">
           {isPumpFun && <PumpBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
           {isBags && <BagsBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
           {isPhantom && <PhantomBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" />}
@@ -230,7 +230,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
         </div>
 
         {/* Description (fixed height for aligned card rows) */}
-        <p className="text-[11px] leading-relaxed line-clamp-2 min-h-[2.25rem] mb-2" style={{ color: "hsl(215 15% 65%)" }}>
+        <p className="text-[11px] leading-relaxed line-clamp-2 min-h-[2.35rem] mb-2" style={{ color: "hsl(215 15% 65%)" }}>
           {token.description?.trim() ? token.description : <span className="opacity-0">placeholder line</span>}
         </p>
 
@@ -241,7 +241,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg transition-colors hover:bg-white/[0.04]"
+            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem] transition-colors hover:bg-white/[0.04]"
             style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
           >
             {avatarUrl ? (
@@ -267,7 +267,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
           </a>
         ) : (
           <div
-            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg"
+            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem]"
             style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
           >
             <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style={{ color: "hsl(215 15% 35%)" }}>
@@ -283,7 +283,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
         {token.mint_address && (
           <button
             onClick={handleCopyCA}
-            className="flex items-center gap-1.5 w-full text-left group/ca mb-2 px-2 py-1 rounded-md transition-colors hover:bg-white/[0.03]"
+            className="flex items-center gap-1.5 w-full text-left group/ca mb-2 px-2 py-1 rounded-md min-h-[1.75rem] transition-colors hover:bg-white/[0.03]"
           >
             <code className="text-[9px] font-mono truncate flex-1" style={{ color: "hsl(215 15% 45%)" }}>
               {token.mint_address.slice(0, 6)}...{token.mint_address.slice(-4)}
@@ -325,9 +325,21 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
           </div>
         </div>
 
-        {/* ── Quick Buy Button ── */}
+        {/* ── Actions Row ── */}
         {quickBuyAmount != null && (
-          <div className="mt-1.5 flex justify-end" onClick={e => e.preventDefault()}>
+          <div className="mt-1.5 flex items-center justify-end gap-1.5" onClick={e => e.preventDefault()}>
+            <button
+              type="button"
+              className="pulse-sol-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = `/t/${token.ticker}`;
+              }}
+            >
+              <LineChart className="h-2.5 w-2.5" />
+              <span>Chart</span>
+            </button>
             <PulseQuickBuyButton funToken={token} quickBuyAmount={quickBuyAmount} />
           </div>
         )}
