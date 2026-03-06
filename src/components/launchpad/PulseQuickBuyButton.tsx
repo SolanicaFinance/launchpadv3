@@ -100,11 +100,36 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   quickBuyAmount,
   isCompact,
 }: PulseQuickBuyButtonProps) {
-  const { executeFastSwap, isLoading, lastLatencyMs } = useFastSwap();
+  const { executeFastSwap, isLoading, lastLatencyMs, walletAddress } = useFastSwap();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [buyingAmount, setBuyingAmount] = useState<number | null>(null);
+  const [isSelling, setIsSelling] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const mintAddress = funToken?.mint_address ?? codexToken?.address ?? null;
+
+  // Fetch on-chain token balance for sell button
+  const { data: tokenBalance } = useQuery({
+    queryKey: ["quick-sell-balance", walletAddress, mintAddress],
+    queryFn: async () => {
+      if (!walletAddress || !mintAddress) return 0;
+      try {
+        const connection = new Connection(getRpcUrl(), "confirmed");
+        const owner = new PublicKey(walletAddress);
+        const mint = new PublicKey(mintAddress);
+        const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+        const account = resp.value[0];
+        return account?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !!isAuthenticated && !!walletAddress && !!mintAddress,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
 
   const handleTriggerClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -114,7 +139,6 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
         setShowLoginModal(true);
         return;
       }
-      // If quickBuyAmount is set, execute immediately without popover
       if (quickBuyAmount && quickBuyAmount > 0) {
         const token = funToken ? bridgeFunToken(funToken) : codexToken ? bridgeCodexToken(codexToken) : null;
         if (!token || !token.mint_address) {
@@ -122,7 +146,6 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
           return;
         }
         setBuyingAmount(quickBuyAmount);
-        // No balance check — let tx fail on-chain naturally (saves 200-500ms)
         executeFastSwap(token, quickBuyAmount, true, 500)
           .then((result) => {
             if (result.success) {
@@ -132,6 +155,7 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
                   ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
                   : undefined,
               });
+              queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
             }
           })
           .catch((err: any) => {
@@ -143,7 +167,7 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       }
       setOpen((prev) => !prev);
     },
-    [isAuthenticated, quickBuyAmount, funToken, codexToken, executeFastSwap],
+    [isAuthenticated, quickBuyAmount, funToken, codexToken, executeFastSwap, walletAddress, mintAddress, queryClient],
   );
 
   const handleBuy = useCallback(
@@ -158,7 +182,6 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
       }
 
       setBuyingAmount(amount);
-      // No balance check — let tx fail on-chain naturally (saves 200-500ms)
 
       try {
         const result = await executeFastSwap(token, amount, true, 500);
@@ -170,14 +193,11 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
             action: result.signature
               ? {
                   label: "View",
-                  onClick: () =>
-                    window.open(
-                      `https://solscan.io/tx/${result.signature}`,
-                      "_blank",
-                    ),
+                  onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank"),
                 }
               : undefined,
           });
+          queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
         }
       } catch (err: any) {
         console.error("[PulseQuickBuy] swap failed:", err);
@@ -189,14 +209,81 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
         setOpen(false);
       }
     },
-    [funToken, codexToken, executeFastSwap],
+    [funToken, codexToken, executeFastSwap, walletAddress, mintAddress, queryClient],
   );
 
-  const isBusy = isLoading || buyingAmount !== null;
+  const handleSell100 = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!isAuthenticated) {
+        setShowLoginModal(true);
+        return;
+      }
+
+      const token = funToken ? bridgeFunToken(funToken) : codexToken ? bridgeCodexToken(codexToken) : null;
+      if (!token || !token.mint_address) {
+        toast.error("Token address not available");
+        return;
+      }
+
+      if (!tokenBalance || tokenBalance <= 0) {
+        toast.error("No tokens to sell");
+        return;
+      }
+
+      setIsSelling(true);
+      try {
+        const result = await executeFastSwap(token, tokenBalance, false, 500);
+        if (result.success) {
+          toast.success(`Sold 100% of tokens`, {
+            description: result.signature
+              ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms`
+              : undefined,
+            action: result.signature
+              ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
+              : undefined,
+          });
+          queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+        }
+      } catch (err: any) {
+        console.error("[PulseQuickSell] sell failed:", err);
+        toast.error("Sell failed", { description: err?.message?.slice(0, 80) || "Unknown error" });
+      } finally {
+        setIsSelling(false);
+      }
+    },
+    [isAuthenticated, funToken, codexToken, tokenBalance, executeFastSwap, walletAddress, mintAddress, queryClient],
+  );
+
+  const isBusy = isLoading || buyingAmount !== null || isSelling;
+  const hasBalance = (tokenBalance ?? 0) > 0;
 
   return (
     <>
       <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+
+      {/* Sell 100% button — only visible when user holds tokens */}
+      {hasBalance && (
+        <button
+          type="button"
+          onClick={handleSell100}
+          disabled={isBusy}
+          className={isCompact
+            ? "discover-quick-buy-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20"
+            : "pulse-sol-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20"
+          }
+        >
+          {isSelling ? (
+            <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
+          ) : (
+            <ArrowDownToLine className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
+          )}
+          <span>{isSelling ? "Selling..." : "Sell 100%"}</span>
+        </button>
+      )}
+
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -205,12 +292,12 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
             className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
             disabled={isBusy}
           >
-            {isBusy ? (
+            {(isLoading || buyingAmount !== null) ? (
               <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
             ) : (
               <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
             )}
-            <span>{isBusy ? "Buying..." : quickBuyAmount ? `${quickBuyAmount} SOL` : "Buy"}</span>
+            <span>{(isLoading || buyingAmount !== null) ? "Buying..." : quickBuyAmount ? `${quickBuyAmount} SOL` : "Buy"}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent
