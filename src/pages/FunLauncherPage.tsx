@@ -207,6 +207,10 @@ export default function FunLauncherPage() {
         {isSolana && (
           <main className="flex-1">
 
+            {/* King of the Hill — premium glassmorphic cards */}
+            <div className="px-4 pt-4">
+              <KingOfTheHill />
+            </div>
 
             {/* Trending / Just Launched horizontal scroll */}
             <div className="px-4 pt-4">
@@ -271,11 +275,6 @@ export default function FunLauncherPage() {
                   ))
                 }
               </div>
-            </div>
-
-            {/* King of the Hill — premium glassmorphic cards */}
-            <div className="px-4 pt-4">
-              <KingOfTheHill />
             </div>
 
             {/* Online indicator */}
