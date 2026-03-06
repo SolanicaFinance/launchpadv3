@@ -44,6 +44,8 @@ export function CodexChart({
     statsType, setStatsType, showVolume, setShowVolume,
   } = useCodexChart(tokenAddress, networkId);
 
+  const hasBars = bars.length > 0;
+
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current?.parentElement;
     if (!el) return;
@@ -186,7 +188,7 @@ export function CodexChart({
         priceLineRef.current = null;
       }
     };
-  }, [height, isFullscreen, showVolume, resolution]);
+  }, [height, isFullscreen, showVolume, resolution, hasBars]);
 
   // ========== DATA UPDATE (smooth, no chart recreation) ==========
   useEffect(() => {
