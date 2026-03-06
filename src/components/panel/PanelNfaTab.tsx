@@ -261,7 +261,7 @@ function NfaMintFlow({ batch, solanaAddress }: { batch: NfaBatch; solanaAddress:
         || (window as any)?.__PUBLIC_CONFIG__?.heliusRpcUrl
         || import.meta.env.VITE_HELIUS_RPC_URL
         || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : null)
-        || "https://mainnet.helius-rpc.com/?api-key=7305c408-6932-49f6-8613-2ec8606fb82d";
+        || "https://mainnet.helius-rpc.com";
       console.log("[NFA-MINT] RPC URL:", rpcUrl);
 
       const connection = new Connection(rpcUrl, "confirmed");

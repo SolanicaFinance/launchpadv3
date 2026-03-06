@@ -28,7 +28,7 @@ interface UniversalTradePanelProps {
 }
 
 const SLIPPAGE_PRESETS = [0.5, 1, 2, 5, 10];
-const HELIUS_RPC = "https://mainnet.helius-rpc.com/?api-key=7305c408-6932-49f6-8613-2ec8606fb82d";
+const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : "https://mainnet.helius-rpc.com");
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress } = useAuth();
