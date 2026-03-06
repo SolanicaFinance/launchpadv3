@@ -1,45 +1,52 @@
 
 
-## Two Issues to Fix
+## Fix Sell Toast Content + Reduce Sell Latency
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### 1. Enrich the sell success toast
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+**File: `src/components/launchpad/PulseQuickBuyButton.tsx`**
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+The `handleSell100` callback has access to both `funToken` and `codexToken` which contain `name`, `ticker`, and `image_url`/`imageUrl`. Update the toast to show:
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+```
+toast.success(`Sold 100% of $TICKER`, {
+  description: `${tokenName} · TX: abc123... · 142ms`,
+  ...
+})
+```
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+Extract token name/ticker/image from whichever source token is available before calling `executeFastSwap`. The sonner toast supports a `description` string — include token name and ticker there alongside the TX signature and latency.
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+### 2. Reduce sell latency
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+The 6-second delay comes from multiple sequential bottlenecks:
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+**A. Dynamic imports in the hot path** (`useSolanaWalletPrivy.ts` lines 68, 74, 96, 105)
+- `blockhashCache`, `PublicKey`, `bs58`, `jitoBundle` are all dynamically imported on every transaction
+- Move these to static top-level imports — they're already used every time
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+**B. Jupiter sell flow** (`useJupiterSwap.ts`) does 3 sequential network calls:
+1. `GET /quote` — fetch quote
+2. `POST /swap` — build transaction  
+3. `signAndSendTransaction` — sign + send
 
-### Technical Details
+These are inherent to Jupiter's API and can't be parallelized. However:
+- Use `dynamicSlippage` instead of fixed to avoid quote retries
+- Add `asLegacyTransaction: false` to prefer versioned TXs (faster)
 
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+**C. Remove `await` on `getCachedBlockhash`** in `useSolanaWalletPrivy.ts` — it's already cached synchronously, the `await` is unnecessary overhead
 
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
+**D. Serialize before signing** — the Jito parallel submit at line 106 uses the pre-signed `serializedTx` which won't have signatures. This is likely a no-op. Instead, re-serialize after signing or skip.
 
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files to modify
+
+1. **`src/hooks/useSolanaWalletPrivy.ts`** — Convert 4 dynamic imports to static top-level imports
+2. **`src/components/launchpad/PulseQuickBuyButton.tsx`** — Enrich sell toast with token name, ticker, and latency ms
+3. **`src/hooks/useFastSwap.ts`** — Convert dynamic import of DBC SDK to static import at top
+
+### Expected improvement
+- Dynamic import elimination: saves ~200-400ms per transaction
+- Cached blockhash already working (good)
+- Parallel Jito submission already working (good)
+- Net improvement: sell should drop from ~6s to ~2-3s (remaining time is Jupiter API + Privy signing which are external)
 
