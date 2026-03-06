@@ -237,7 +237,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
         )}
 
         {/* ── Creator Attribution ── */}
-        {xUsername && (
+        {xUsername ? (
           <a
             href={token.twitter_url || `https://x.com/${xUsername}`}
             target="_blank"
@@ -267,6 +267,18 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
               <BadgeCheck className="h-3.5 w-3.5 flex-shrink-0" style={{ color: checkColor }} />
             )}
           </a>
+        ) : (
+          <div
+            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg"
+            style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
+          >
+            <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style={{ color: "hsl(215 15% 35%)" }}>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            <span className="text-[11px] font-medium italic" style={{ color: "hsl(215 15% 40%)" }}>
+              No X account
+            </span>
+          </div>
         )}
 
         {/* ── CA Copy Row ── */}
@@ -317,7 +329,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
 
         {/* ── Quick Buy Button ── */}
         {quickBuyAmount != null && (
-          <div className="mt-2 flex justify-end" onClick={e => e.preventDefault()}>
+          <div className="mt-1.5 flex justify-end" onClick={e => e.preventDefault()}>
             <PulseQuickBuyButton funToken={token} quickBuyAmount={quickBuyAmount} />
           </div>
         )}
