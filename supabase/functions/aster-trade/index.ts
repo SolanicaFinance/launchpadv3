@@ -8,6 +8,37 @@ const corsHeaders = {
 
 const ASTER_BASE = "https://fapi.asterdex.com";
 
+// UUID v5 for Privy ID mapping (must match frontend)
+const UUID_V5_NAMESPACE_DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+async function uuidV5(name: string, namespace: string): Promise<string> {
+  const nsBytes = hexToBytes(namespace.replace(/-/g, ""));
+  const nameBytes = new TextEncoder().encode(name);
+  const data = new Uint8Array(nsBytes.length + nameBytes.length);
+  data.set(nsBytes);
+  data.set(nameBytes, nsBytes.length);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  const hashArray = new Uint8Array(hashBuffer);
+  hashArray[6] = (hashArray[6] & 0x0f) | 0x50;
+  hashArray[8] = (hashArray[8] & 0x3f) | 0x80;
+  const hex2 = Array.from(hashArray.slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${hex2.slice(0, 8)}-${hex2.slice(8, 12)}-${hex2.slice(12, 16)}-${hex2.slice(16, 20)}-${hex2.slice(20, 32)}`;
+}
+
+async function privyUserIdToUuid(privyUserId: string): Promise<string> {
+  return uuidV5(privyUserId, UUID_V5_NAMESPACE_DNS);
+}
+
 async function hmacSign(secret: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -48,27 +79,25 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) throw new Error("Unauthorized");
+    const body = await req.json();
+    const { action, params = {}, privyUserId } = body;
 
+    if (!privyUserId) throw new Error("Authentication required (privyUserId missing)");
+
+    const profileId = await privyUserIdToUuid(privyUserId);
+
+    // Use service role to bypass RLS
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) throw new Error("Unauthorized");
-
-    const body = await req.json();
-    const { action, params = {} } = body;
-
-    // Check API key action - no key needed
+    // Check API key action
     if (action === "check_key") {
       const { data: keys } = await supabase
         .from("user_api_keys")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("profile_id", profileId)
         .eq("exchange", "aster")
         .limit(1);
       return new Response(JSON.stringify({ hasKey: (keys?.length || 0) > 0 }), {
@@ -81,16 +110,15 @@ serve(async (req) => {
       const { apiKey, apiSecret } = params;
       if (!apiKey || !apiSecret) throw new Error("API key and secret required");
 
-      // Simple XOR-based obfuscation (in production, use proper encryption)
       const { error: upsertErr } = await supabase
         .from("user_api_keys")
         .upsert({
-          user_id: user.id,
+          profile_id: profileId,
           exchange: "aster",
           api_key_encrypted: apiKey,
           api_secret_encrypted: apiSecret,
           updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id,exchange" });
+        }, { onConflict: "profile_id,exchange" });
 
       if (upsertErr) throw new Error(upsertErr.message);
       return new Response(JSON.stringify({ success: true }), {
@@ -102,7 +130,7 @@ serve(async (req) => {
     const { data: keyData, error: keyErr } = await supabase
       .from("user_api_keys")
       .select("api_key_encrypted, api_secret_encrypted")
-      .eq("user_id", user.id)
+      .eq("profile_id", profileId)
       .eq("exchange", "aster")
       .single();
 

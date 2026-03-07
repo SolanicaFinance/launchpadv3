@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface AsterPosition {
   symbol: string;
@@ -35,6 +36,9 @@ export interface AsterOpenOrder {
 }
 
 export function useAsterAccount() {
+  const { user, isAuthenticated } = useAuth();
+  const privyUserId = user?.privyId || null;
+
   const [account, setAccount] = useState<AsterAccountInfo | null>(null);
   const [openOrders, setOpenOrders] = useState<AsterOpenOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,22 +46,36 @@ export function useAsterAccount() {
   const [error, setError] = useState<string | null>(null);
 
   const invokeAster = useCallback(async (action: string, params: Record<string, any> = {}) => {
+    if (!privyUserId) throw new Error("Not authenticated");
     const { data, error } = await supabase.functions.invoke("aster-trade", {
-      body: { action, params },
+      body: { action, params, privyUserId },
     });
     if (error) throw new Error(error.message);
     if (data?.error) throw new Error(data.error);
     return data;
-  }, []);
+  }, [privyUserId]);
 
   const checkApiKey = useCallback(async () => {
+    if (!privyUserId) {
+      setHasApiKey(false);
+      return;
+    }
     try {
       const result = await invokeAster("check_key");
       setHasApiKey(result?.hasKey ?? false);
     } catch {
       setHasApiKey(false);
     }
-  }, [invokeAster]);
+  }, [invokeAster, privyUserId]);
+
+  // Auto-check API key on mount and when auth changes
+  useEffect(() => {
+    if (isAuthenticated && privyUserId) {
+      checkApiKey();
+    } else {
+      setHasApiKey(false);
+    }
+  }, [isAuthenticated, privyUserId, checkApiKey]);
 
   const fetchAccount = useCallback(async () => {
     setLoading(true);
