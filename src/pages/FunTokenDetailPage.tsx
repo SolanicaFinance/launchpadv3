@@ -5,6 +5,7 @@ import { useFunToken } from "@/hooks/useFunToken";
 import { useExternalToken } from "@/hooks/useExternalToken";
 import { usePoolState } from "@/hooks/usePoolState";
 import { useAuth } from "@/hooks/useAuth";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { useBnbPrice } from "@/hooks/useBnbPrice";
 import { SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
