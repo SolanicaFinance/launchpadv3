@@ -60,6 +60,7 @@ const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const PanelPage = lazyWithRetry(() => import("./pages/PanelPage"));
 const MerchStorePage = lazyWithRetry(() => import("./pages/MerchStorePage"));
+const LeveragePage = lazyWithRetry(() => import("./pages/LeveragePage"));
 const PunchPage = lazyWithRetry(() => import("./pages/PunchPage"));
 const PunchTestPage = lazyWithRetry(() => import("./pages/PunchTestPage"));
 const PunchGamesPage = lazyWithRetry(() => import("./pages/PunchGamesPage"));
@@ -174,6 +175,7 @@ const App = () => (
                      
                      <Route path="/panel" element={<PanelPage />} />
                      <Route path="/merch" element={<MerchStorePage />} />
+                     <Route path="/leverage" element={<LeveragePage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
                      <Route path="/portfolio" element={<Navigate to="/panel?tab=portfolio" replace />} />
                      <Route path="/earnings" element={<Navigate to="/panel?tab=earnings" replace />} />
