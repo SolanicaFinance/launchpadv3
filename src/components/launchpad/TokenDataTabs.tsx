@@ -15,7 +15,7 @@ interface Props {
 
 type TabKey = "all_trades" | "your_trades" | "holders";
 
-export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, currentPriceUsd = 0 }: Props) {
+export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userWallets, currentPriceUsd = 0 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("all_trades");
   const { data, isLoading } = useCodexTokenEvents(tokenAddress);
   const isHoldersTab = activeTab === "holders";
@@ -27,9 +27,14 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, curre
 
   const liveHolderCount = holdersData?.count ?? holderCount;
 
-  // Filter trades for YOUR TRADES tab
-  const userTrades = userWallet
-    ? (data?.events || []).filter(e => e.maker.toLowerCase() === userWallet.toLowerCase())
+  // Build set of all user wallet addresses for matching
+  const allUserAddresses = new Set<string>();
+  if (userWallet) allUserAddresses.add(userWallet.toLowerCase());
+  if (userWallets) userWallets.forEach(w => allUserAddresses.add(w.toLowerCase()));
+
+  // Filter trades for YOUR TRADES tab — match against ALL user wallets
+  const userTrades = allUserAddresses.size > 0
+    ? (data?.events || []).filter(e => allUserAddresses.has(e.maker.toLowerCase()))
     : [];
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
