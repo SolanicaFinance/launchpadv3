@@ -5,6 +5,7 @@ import { useFunToken } from "@/hooks/useFunToken";
 import { useExternalToken } from "@/hooks/useExternalToken";
 import { usePoolState } from "@/hooks/usePoolState";
 import { useAuth } from "@/hooks/useAuth";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { useBnbPrice } from "@/hooks/useBnbPrice";
 import { SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
@@ -67,6 +68,8 @@ function formatSolAmount(amount: number): string {
 function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { token: import("@/hooks/useExternalToken").ExternalToken; mintAddress: string; solPrice: number; isBsc?: boolean }) {
   const privyAvailable = usePrivyAvailable();
   const { solanaAddress } = useAuth();
+  const { managedWallets } = useMultiWallet();
+  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
   const { toast } = useToast();
   const [mobileTab, setMobileTab] = useState<'trade' | 'chart'>('trade');
 
@@ -241,7 +244,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                 <div className="terminal-panel-flush rounded-lg overflow-hidden" style={{ backgroundColor: '#0a0a0a' }}>
                   <CodexChart tokenAddress={mintAddress} height={340} />
                 </div>
-                <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} currentPriceUsd={token.priceUsd || 0} />
+                <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
               </>
             )}
           </div>
@@ -252,7 +255,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
               <div className="terminal-panel-flush rounded-lg overflow-hidden" style={{ backgroundColor: '#0a0a0a' }}>
                 <CodexChart tokenAddress={mintAddress} height={420} />
               </div>
-              <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} currentPriceUsd={token.priceUsd || 0} />
+              <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
               <div className="terminal-panel-flush rounded-lg p-3 space-y-1.5">
                 <h3 className="text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/70">Contract</h3>
                 <div className="flex items-center gap-2">
@@ -277,7 +280,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
               <div className="terminal-panel-flush rounded-lg overflow-hidden" style={{ backgroundColor: '#0a0a0a' }}>
                 <CodexChart tokenAddress={mintAddress} height={380} />
               </div>
-              <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} currentPriceUsd={token.priceUsd || 0} />
+              <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
             </div>
             <div className="col-span-3 flex flex-col gap-1.5">
               {privyAvailable && (
@@ -334,6 +337,8 @@ export default function FunTokenDetailPage() {
   const { mintAddress } = useParams<{ mintAddress: string }>();
   const { solanaAddress } = useAuth();
   const privyAvailable = usePrivyAvailable();
+  const { managedWallets } = useMultiWallet();
+  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
   const { solPrice } = useSolPrice();
   const { bnbPrice } = useBnbPrice();
   const { toast } = useToast();
@@ -844,7 +849,7 @@ export default function FunTokenDetailPage() {
             {mobileTab === 'chart' && (
               <>
                 <ChartSection chartHeight={340} />
-                <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} currentPriceUsd={codexPrice || 0} />
+                <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
               </>
             )}
             {mobileTab === 'comments' && (
@@ -861,7 +866,7 @@ export default function FunTokenDetailPage() {
           <div className="hidden md:grid lg:hidden grid-cols-12 gap-2">
             <div className={`${isPunchToken ? 'col-span-12' : 'col-span-7'} flex flex-col gap-2`}>
               <ChartSection chartHeight={420} />
-              <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} currentPriceUsd={codexPrice || 0} />
+              <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
               {isPunchToken && (
                 <div className="terminal-panel-flush rounded-lg px-4 py-3 flex items-center gap-2">
                   <Lock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -888,7 +893,7 @@ export default function FunTokenDetailPage() {
             {/* Left: Chart + DataTabs */}
             <div className="col-span-9 flex flex-col gap-1.5">
               <ChartSection chartHeight={380} />
-              <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} currentPriceUsd={codexPrice || 0} />
+              <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
             </div>
             {/* Right: Trade + Info + Comments + Wallet */}
             <div className="col-span-3 flex flex-col gap-1.5">

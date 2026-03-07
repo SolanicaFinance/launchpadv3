@@ -99,7 +99,7 @@ export function LeverageTerminal() {
 
   // Desktop: 3-panel terminal layout
   return (
-    <div className="flex flex-col h-[calc(100vh-48px)]">
+    <div className="flex flex-col h-[calc(100vh-96px)]">
       {/* Top bar */}
       <div className="flex items-center gap-3 px-3 py-2 border-b border-border bg-card/50">
         <LeverageMarketSelector
