@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const ASTER_BASE = "https://fapi.asterdex.com";
 
-// UUID v5 for Privy ID mapping (must match frontend)
 const UUID_V5_NAMESPACE_DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 
 function hexToBytes(hex: string): Uint8Array {
@@ -86,7 +85,6 @@ serve(async (req) => {
 
     const profileId = await privyUserIdToUuid(privyUserId);
 
-    // Use service role to bypass RLS
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -126,6 +124,20 @@ serve(async (req) => {
       });
     }
 
+    // Delete API key
+    if (action === "delete_key") {
+      const { error: delErr } = await supabase
+        .from("user_api_keys")
+        .delete()
+        .eq("profile_id", profileId)
+        .eq("exchange", "aster");
+
+      if (delErr) throw new Error(delErr.message);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // All other actions require API keys
     const { data: keyData, error: keyErr } = await supabase
       .from("user_api_keys")
@@ -146,6 +158,10 @@ serve(async (req) => {
         result = await asterRequest("GET", "/fapi/v4/account", {}, apiKey, apiSecret);
         break;
 
+      case "balance":
+        result = await asterRequest("GET", "/fapi/v3/balance", {}, apiKey, apiSecret);
+        break;
+
       case "positions":
         result = await asterRequest("GET", "/fapi/v2/positionRisk", {}, apiKey, apiSecret);
         break;
@@ -153,6 +169,30 @@ serve(async (req) => {
       case "open_orders":
         result = await asterRequest("GET", "/fapi/v1/openOrders", params.symbol ? { symbol: params.symbol } : {}, apiKey, apiSecret);
         break;
+
+      case "all_orders": {
+        const orderParams: Record<string, string> = {};
+        if (params.symbol) orderParams.symbol = params.symbol;
+        if (params.limit) orderParams.limit = params.limit.toString();
+        result = await asterRequest("GET", "/fapi/v1/allOrders", orderParams, apiKey, apiSecret);
+        break;
+      }
+
+      case "trade_history": {
+        const tradeParams: Record<string, string> = {};
+        if (params.symbol) tradeParams.symbol = params.symbol;
+        if (params.limit) tradeParams.limit = params.limit.toString();
+        result = await asterRequest("GET", "/fapi/v1/userTrades", tradeParams, apiKey, apiSecret);
+        break;
+      }
+
+      case "income_history": {
+        const incomeParams: Record<string, string> = {};
+        if (params.incomeType) incomeParams.incomeType = params.incomeType;
+        if (params.limit) incomeParams.limit = params.limit.toString();
+        result = await asterRequest("GET", "/fapi/v1/income", incomeParams, apiKey, apiSecret);
+        break;
+      }
 
       case "place_order": {
         const orderParams: Record<string, string> = {
@@ -172,6 +212,12 @@ serve(async (req) => {
         result = await asterRequest("DELETE", "/fapi/v1/order", {
           symbol: params.symbol,
           orderId: params.orderId.toString(),
+        }, apiKey, apiSecret);
+        break;
+
+      case "cancel_all_orders":
+        result = await asterRequest("DELETE", "/fapi/v1/allOpenOrders", {
+          symbol: params.symbol,
         }, apiKey, apiSecret);
         break;
 
