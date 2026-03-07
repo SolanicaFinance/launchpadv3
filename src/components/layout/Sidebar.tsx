@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Zap, Bot, Code2, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag } from "lucide-react";
+import { Home, Zap, Bot, Code2, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag, CandlestickChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { to: "/discover", label: "Discover", icon: TrendingUp },
   { to: "/alpha-tracker", label: "Alpha", icon: Crosshair },
   { to: "/agents", label: "Agents", icon: Bot },
+  { to: "/leverage", label: "Leverage", icon: CandlestickChart },
   { to: "/sdk", label: "SDK", icon: Code2 },
   { to: "/whitepaper", label: "Docs", icon: FileText },
   { to: "/merch", label: "Merch", icon: ShoppingBag },
