@@ -67,6 +67,8 @@ function formatSolAmount(amount: number): string {
 function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { token: import("@/hooks/useExternalToken").ExternalToken; mintAddress: string; solPrice: number; isBsc?: boolean }) {
   const privyAvailable = usePrivyAvailable();
   const { solanaAddress } = useAuth();
+  const { managedWallets } = useMultiWallet();
+  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
   const { toast } = useToast();
   const [mobileTab, setMobileTab] = useState<'trade' | 'chart'>('trade');
 
@@ -334,6 +336,8 @@ export default function FunTokenDetailPage() {
   const { mintAddress } = useParams<{ mintAddress: string }>();
   const { solanaAddress } = useAuth();
   const privyAvailable = usePrivyAvailable();
+  const { managedWallets } = useMultiWallet();
+  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
   const { solPrice } = useSolPrice();
   const { bnbPrice } = useBnbPrice();
   const { toast } = useToast();
