@@ -8,14 +8,12 @@ import { LeverageChart } from "./LeverageChart";
 import { LeverageOrderbook } from "./LeverageOrderbook";
 import { LeverageTradePanel } from "./LeverageTradePanel";
 import { LeveragePositions } from "./LeveragePositions";
-import { AsterApiKeyModal } from "./AsterApiKeyModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function LeverageTerminal() {
   const [symbol, setSymbol] = useState("BTCUSDT");
   const [interval, setInterval] = useState<KlineInterval>("5m");
-  const [showApiModal, setShowApiModal] = useState(false);
   const isMobile = useIsMobile();
 
   const { markets, allMarkets, loading: marketsLoading, search, setSearch } = useAsterMarkets();
@@ -23,18 +21,11 @@ export function LeverageTerminal() {
   const orderbook = useAsterOrderbook(symbol);
   const {
     account, openOrders, orderHistory, tradeHistory, hasApiKey,
-    placeOrder, cancelOrder, changeLeverage, saveApiKey,
-    fetchAccount, fetchOpenOrders, fetchOrderHistory, fetchTradeHistory, checkApiKey,
+    placeOrder, cancelOrder, changeLeverage,
+    fetchAccount, fetchOpenOrders, fetchOrderHistory, fetchTradeHistory,
   } = useAsterAccount();
 
   const selectedMarket = allMarkets.find((m) => m.symbol === symbol);
-
-  const handleSaveKey = useCallback(async (key: string, secret: string) => {
-    await saveApiKey(key, secret);
-    await checkApiKey();
-    await fetchAccount();
-    await fetchOpenOrders(symbol);
-  }, [saveApiKey, checkApiKey, fetchAccount, fetchOpenOrders, symbol]);
 
   const handleCancelOrder = useCallback(async (sym: string, orderId: number) => {
     await cancelOrder(sym, orderId);
@@ -71,7 +62,7 @@ export function LeverageTerminal() {
           <LeverageChart bars={bars} loading={klinesLoading} interval={interval} onIntervalChange={setInterval} symbol={symbol} />
         </div>
         <div className="border-b border-border bg-card">
-          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onConnectKey={() => setShowApiModal(true)} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
         </div>
         <div className="h-[300px] border-b border-border bg-card">
           <LeverageOrderbook orderbook={orderbook} />
@@ -79,7 +70,6 @@ export function LeverageTerminal() {
         <div className="min-h-[250px] bg-card">
           <LeveragePositions {...positionsProps} />
         </div>
-        <AsterApiKeyModal open={showApiModal} onClose={() => setShowApiModal(false)} onSave={handleSaveKey} />
       </div>
     );
   }
@@ -102,13 +92,6 @@ export function LeverageTerminal() {
             <span className="text-[10px] text-muted-foreground">Funding: <span className={cn(parseFloat(selectedMarket.fundingRate) >= 0 ? "text-green-400" : "text-red-400")}>{(parseFloat(selectedMarket.fundingRate) * 100).toFixed(4)}%</span></span>
           </>
         )}
-        <div className="ml-auto">
-          {hasApiKey === false && (
-            <button onClick={() => setShowApiModal(true)} className="text-[10px] px-2 py-1 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium">
-              Connect API
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Main content */}
@@ -122,7 +105,7 @@ export function LeverageTerminal() {
           <LeverageOrderbook orderbook={orderbook} />
         </div>
         <div className="w-[240px] flex-shrink-0 bg-card/50 overflow-y-auto">
-          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onConnectKey={() => setShowApiModal(true)} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
         </div>
       </div>
 
@@ -130,8 +113,6 @@ export function LeverageTerminal() {
       <div className="h-[220px] border-t border-border bg-card/30">
         <LeveragePositions {...positionsProps} />
       </div>
-
-      <AsterApiKeyModal open={showApiModal} onClose={() => setShowApiModal(false)} onSave={handleSaveKey} />
     </div>
   );
 }

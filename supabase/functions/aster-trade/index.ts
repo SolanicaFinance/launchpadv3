@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,36 +6,6 @@ const corsHeaders = {
 };
 
 const ASTER_BASE = "https://fapi.asterdex.com";
-
-const UUID_V5_NAMESPACE_DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-  }
-  return bytes;
-}
-
-async function uuidV5(name: string, namespace: string): Promise<string> {
-  const nsBytes = hexToBytes(namespace.replace(/-/g, ""));
-  const nameBytes = new TextEncoder().encode(name);
-  const data = new Uint8Array(nsBytes.length + nameBytes.length);
-  data.set(nsBytes);
-  data.set(nameBytes, nsBytes.length);
-  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
-  const hashArray = new Uint8Array(hashBuffer);
-  hashArray[6] = (hashArray[6] & 0x0f) | 0x50;
-  hashArray[8] = (hashArray[8] & 0x3f) | 0x80;
-  const hex2 = Array.from(hashArray.slice(0, 16))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return `${hex2.slice(0, 8)}-${hex2.slice(8, 12)}-${hex2.slice(12, 16)}-${hex2.slice(16, 20)}-${hex2.slice(20, 32)}`;
-}
-
-async function privyUserIdToUuid(privyUserId: string): Promise<string> {
-  return uuidV5(privyUserId, UUID_V5_NAMESPACE_DNS);
-}
 
 async function hmacSign(secret: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -78,78 +47,22 @@ serve(async (req) => {
   }
 
   try {
+    const apiKey = Deno.env.get("ASTER_API_KEY");
+    const apiSecret = Deno.env.get("ASTER_API_SECRET");
+
+    if (!apiKey || !apiSecret) {
+      throw new Error("Aster API credentials not configured on server");
+    }
+
     const body = await req.json();
-    const { action, params = {}, privyUserId } = body;
+    const { action, params = {} } = body;
 
-    if (!privyUserId) throw new Error("Authentication required (privyUserId missing)");
-
-    const profileId = await privyUserIdToUuid(privyUserId);
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Check API key action
+    // check_key just confirms server has credentials
     if (action === "check_key") {
-      const { data: keys } = await supabase
-        .from("user_api_keys")
-        .select("id")
-        .eq("profile_id", profileId)
-        .eq("exchange", "aster")
-        .limit(1);
-      return new Response(JSON.stringify({ hasKey: (keys?.length || 0) > 0 }), {
+      return new Response(JSON.stringify({ hasKey: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Save API key
-    if (action === "save_key") {
-      const { apiKey, apiSecret } = params;
-      if (!apiKey || !apiSecret) throw new Error("API key and secret required");
-
-      const { error: upsertErr } = await supabase
-        .from("user_api_keys")
-        .upsert({
-          profile_id: profileId,
-          exchange: "aster",
-          api_key_encrypted: apiKey,
-          api_secret_encrypted: apiSecret,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "profile_id,exchange" });
-
-      if (upsertErr) throw new Error(upsertErr.message);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Delete API key
-    if (action === "delete_key") {
-      const { error: delErr } = await supabase
-        .from("user_api_keys")
-        .delete()
-        .eq("profile_id", profileId)
-        .eq("exchange", "aster");
-
-      if (delErr) throw new Error(delErr.message);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // All other actions require API keys
-    const { data: keyData, error: keyErr } = await supabase
-      .from("user_api_keys")
-      .select("api_key_encrypted, api_secret_encrypted")
-      .eq("profile_id", profileId)
-      .eq("exchange", "aster")
-      .single();
-
-    if (keyErr || !keyData) throw new Error("No API key configured. Please add your Aster DEX API key.");
-
-    const apiKey = keyData.api_key_encrypted;
-    const apiSecret = keyData.api_secret_encrypted;
 
     let result;
 

@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 export interface AsterPosition {
   symbol: string;
@@ -78,9 +77,6 @@ export interface AsterTradeHistory {
 }
 
 export function useAsterAccount() {
-  const { user, isAuthenticated } = useAuth();
-  const privyUserId = user?.privyId || null;
-
   const [account, setAccount] = useState<AsterAccountInfo | null>(null);
   const [openOrders, setOpenOrders] = useState<AsterOpenOrder[]>([]);
   const [orderHistory, setOrderHistory] = useState<AsterOrderHistory[]>([]);
@@ -90,35 +86,26 @@ export function useAsterAccount() {
   const [error, setError] = useState<string | null>(null);
 
   const invokeAster = useCallback(async (action: string, params: Record<string, any> = {}) => {
-    if (!privyUserId) throw new Error("Not authenticated");
     const { data, error } = await supabase.functions.invoke("aster-trade", {
-      body: { action, params, privyUserId },
+      body: { action, params },
     });
     if (error) throw new Error(error.message);
     if (data?.error) throw new Error(data.error);
     return data;
-  }, [privyUserId]);
+  }, []);
 
   const checkApiKey = useCallback(async () => {
-    if (!privyUserId) {
-      setHasApiKey(false);
-      return;
-    }
     try {
       const result = await invokeAster("check_key");
       setHasApiKey(result?.hasKey ?? false);
     } catch {
       setHasApiKey(false);
     }
-  }, [invokeAster, privyUserId]);
+  }, [invokeAster]);
 
   useEffect(() => {
-    if (isAuthenticated && privyUserId) {
-      checkApiKey();
-    } else {
-      setHasApiKey(false);
-    }
-  }, [isAuthenticated, privyUserId, checkApiKey]);
+    checkApiKey();
+  }, [checkApiKey]);
 
   const fetchAccount = useCallback(async () => {
     setLoading(true);
@@ -194,22 +181,9 @@ export function useAsterAccount() {
     return invokeAster("change_leverage", { symbol, leverage });
   }, [invokeAster]);
 
-  const saveApiKey = useCallback(async (apiKey: string, apiSecret: string) => {
-    return invokeAster("save_key", { apiKey, apiSecret });
-  }, [invokeAster]);
-
-  const deleteApiKey = useCallback(async () => {
-    await invokeAster("delete_key");
-    setHasApiKey(false);
-    setAccount(null);
-    setOpenOrders([]);
-    setOrderHistory([]);
-    setTradeHistory([]);
-  }, [invokeAster]);
-
   return {
     account, openOrders, orderHistory, tradeHistory, loading, hasApiKey, error,
     checkApiKey, fetchAccount, fetchOpenOrders, fetchOrderHistory, fetchTradeHistory,
-    placeOrder, cancelOrder, cancelAllOrders, changeLeverage, saveApiKey, deleteApiKey,
+    placeOrder, cancelOrder, cancelAllOrders, changeLeverage,
   };
 }
