@@ -265,8 +265,8 @@ export default function FunLauncherPage() {
               </div>
             </div>
 
-            {/* King of the Hill — premium glassmorphic cards */}
-            <div className="px-4 pt-4">
+            {/* King of the Hill */}
+            <div className="px-4 pt-2">
               <KingOfTheHill />
             </div>
 

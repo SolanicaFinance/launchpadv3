@@ -458,24 +458,20 @@ export function KingOfTheHill() {
   return (
     <div className="w-full">
       {/* Premium Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <img src="/saturn-logo.png" alt="Saturn" className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <img src="/saturn-logo.png" alt="Saturn" className="w-6 h-6 md:w-9 md:h-9 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
           <div>
-            <h2 className="text-base font-black uppercase tracking-[0.08em] text-foreground" style={{ textShadow: "0 0 20px rgba(245,158,11,0.15)" }}>
+            <h2 className="text-[13px] md:text-base font-black uppercase tracking-[0.08em] text-foreground" style={{ textShadow: "0 0 20px rgba(245,158,11,0.15)" }}>
               King of the Hill
             </h2>
-            <span className="text-[11px] text-muted-foreground/40 tracking-wide">Soon to Graduate</span>
+            <span className="text-[10px] text-muted-foreground/40 tracking-wide">Soon to Graduate</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/15">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-mono font-medium text-emerald-400/80">{onlineCount ?? '—'} online</span>
-          </div>
-          <Link to="/agents/leaderboard" className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold text-primary/80 border border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all">
+        <div className="flex items-center gap-1.5">
+          <Link to="/agents/leaderboard" className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] md:text-[10px] font-semibold text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all whitespace-nowrap">
             View Full Leaderboard
-            <ArrowUpRight className="w-3 h-3" />
+            <ArrowUpRight className="w-2.5 h-2.5" />
           </Link>
         </div>
       </div>
