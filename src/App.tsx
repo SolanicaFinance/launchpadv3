@@ -55,6 +55,7 @@ const AdminPanelPage = lazyWithRetry(() => import("./pages/AdminPanelPage"));
 // NFA pages removed
 const BannerMakerPage = lazyWithRetry(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazyWithRetry(() => import("./pages/AlphaTrackerPage"));
+const XTrackerPage = lazyWithRetry(() => import("./pages/XTrackerPage"));
 const DiscoverPage = lazyWithRetry(() => import("./pages/DiscoverPage"));
 const UserProfilePage = lazyWithRetry(() => import("./pages/UserProfilePage"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
