@@ -6,12 +6,11 @@ import type { AsterMarket } from "@/hooks/useAsterMarkets";
 interface Props {
   market: AsterMarket | undefined;
   hasApiKey: boolean | null;
-  onConnectKey: () => void;
   onPlaceOrder: (params: any) => Promise<any>;
   onChangeLeverage: (symbol: string, leverage: number) => Promise<any>;
 }
 
-export function LeverageTradePanel({ market, hasApiKey, onConnectKey, onPlaceOrder, onChangeLeverage }: Props) {
+export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLeverage }: Props) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
   const [leverage, setLeverage] = useState(10);
