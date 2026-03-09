@@ -6,12 +6,11 @@ import type { AsterMarket } from "@/hooks/useAsterMarkets";
 interface Props {
   market: AsterMarket | undefined;
   hasApiKey: boolean | null;
-  onConnectKey: () => void;
   onPlaceOrder: (params: any) => Promise<any>;
   onChangeLeverage: (symbol: string, leverage: number) => Promise<any>;
 }
 
-export function LeverageTradePanel({ market, hasApiKey, onConnectKey, onPlaceOrder, onChangeLeverage }: Props) {
+export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLeverage }: Props) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
   const [leverage, setLeverage] = useState(10);
@@ -46,10 +45,7 @@ export function LeverageTradePanel({ market, hasApiKey, onConnectKey, onPlaceOrd
   if (hasApiKey === false) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 p-4">
-        <p className="text-sm text-muted-foreground text-center">Connect your Aster DEX API key to start trading</p>
-        <button onClick={onConnectKey} className="btn-gradient-green px-4 py-2 rounded-sm text-xs font-bold">
-          Connect API Key
-        </button>
+        <p className="text-sm text-muted-foreground text-center">Aster DEX API not configured. Contact admin to set up trading credentials.</p>
       </div>
     );
   }
