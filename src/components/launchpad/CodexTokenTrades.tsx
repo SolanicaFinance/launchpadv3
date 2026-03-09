@@ -18,7 +18,7 @@ function formatUsd(v: number): string {
   if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
   if (v >= 1) return `$${v.toFixed(2)}`;
   if (v > 0) return `$${v.toFixed(4)}`;
-  return '$0';
+  return '$0.00';
 }
 
 function formatTokenAmt(v: number): string {
@@ -137,24 +137,23 @@ export function CodexTokenTrades({ events, isLoading, holders = [], currentPrice
                 <td className="py-2 px-2 text-right">
                   {(() => {
                     const holder = holdersMap.get(e.maker);
-                    if (!holder) return <span className="text-[11px] text-muted-foreground/30">—</span>;
-                    const usdVal = holder.tokenAmount * currentPriceUsd;
-                    const pct = holder.percentage;
+                    const hasHoldings = !!holder && holder.tokenAmount > 0 && holder.percentage > 0;
+                    const usdVal = hasHoldings ? holder.tokenAmount * currentPriceUsd : 0;
+                    const pct = hasHoldings ? holder.percentage : 0;
                     return (
                       <div className="flex flex-col items-end gap-0.5">
                         <span className="text-foreground/80 text-[11px]">{formatUsd(usdVal)}</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.06] text-muted-foreground/70">
-                            {pct.toFixed(pct >= 1 ? 2 : 3)}%
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {pct.toFixed(2)}%
                           </span>
-                          <div className="w-12 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${Math.min(pct, 100)}%`,
-                                backgroundColor: pct > 10 ? "#ff4444" : "#22c55e",
-                              }}
-                            />
+                          <div className="w-12 h-1 rounded-full bg-muted overflow-hidden">
+                            {pct > 0 && (
+                              <div
+                                className={`h-full rounded-full ${pct > 10 ? "bg-destructive" : "bg-primary"}`}
+                                style={{ width: `${Math.min(pct, 100)}%` }}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
