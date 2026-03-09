@@ -202,11 +202,6 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         padding: "20px",
       }}
     >
-      {/* Sparkline background */}
-      <div className="absolute inset-0 z-0 opacity-40">
-        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
-      </div>
-
       {/* King crown glow for #1 */}
       {r.king && (
         <div className="absolute -top-px -left-px -right-px h-[2px] rounded-t-2xl bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
@@ -272,37 +267,45 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         </div>
       </div>
 
-      {/* Middle: MCAP + Holders grid */}
-      <div className="relative z-10 grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">MCap</span>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-lg font-black font-mono tabular-nums text-emerald-400 leading-none">
-              ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
-            </span>
-            {change24h !== 0 && (
-              <span className={cn(
-                "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md",
-                change24h > 0 ? "text-emerald-300 bg-emerald-500/15" : "text-red-400 bg-red-500/15"
-              )}>
-                {change24h > 0 ? "+" : ""}{change24h.toFixed(1)}%
+      {/* Middle section with sparkline background — between header and progress bar */}
+      <div className="relative mb-3">
+        {/* Sparkline background - only in this middle section */}
+        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-lg">
+          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
+        </div>
+
+        {/* Middle: MCAP + Holders grid */}
+        <div className="relative z-10 grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">MCap</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-lg font-black font-mono tabular-nums text-emerald-400 leading-none">
+                ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
               </span>
-            )}
+              {change24h !== 0 && (
+                <span className={cn(
+                  "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md",
+                  change24h > 0 ? "text-emerald-300 bg-emerald-500/15" : "text-red-400 bg-red-500/15"
+                )}>
+                  {change24h > 0 ? "+" : ""}{change24h.toFixed(1)}%
+                </span>
+              )}
+            </div>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Holders</span>
+            <div className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <span className="text-sm font-mono font-bold text-foreground/80">{holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}</span>
+            </div>
           </div>
         </div>
-        <div>
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Holders</span>
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-muted-foreground/50" />
-            <span className="text-sm font-mono font-bold text-foreground/80">{holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}</span>
-          </div>
+        <div className="relative z-10">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Vol 24h</span>
+          <span className="text-sm font-mono font-bold text-foreground/80">
+            ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 ? (token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)) : "0"}
+          </span>
         </div>
-      </div>
-      <div className="relative z-10 mb-3">
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Vol 24h</span>
-        <span className="text-sm font-mono font-bold text-foreground/80">
-          ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 ? (token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)) : "0"}
-        </span>
       </div>
 
       {/* Progress Bar */}
