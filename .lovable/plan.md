@@ -1,45 +1,43 @@
 
 
-## Two Issues to Fix
+## Problem
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+The `codex-filter-tokens` edge function requests `imageSmallUrl`, `imageThumbUrl`, `imageLargeUrl` from the Codex `filterTokens` query. For very new pump.fun tokens, these fields often return `null` even though the image exists. The detail page works because `codex-token-info` uses a different Codex query (`getTokenInfo`) that returns the image URL successfully.
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+## Root Cause
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+Line 156 of `codex-filter-tokens/index.ts`:
+```typescript
+let imageUrl = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
+```
+When all three are null (common for tokens < 5min old), no fallback exists for Solana tokens. BSC already has a Trust Wallet CDN fallback (line 159-162), but Solana has none.
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+## Plan
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+### 1. Add Solana image fallback in `codex-filter-tokens/index.ts`
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+After line 162, add a Solana fallback using DexScreener's token image CDN which reliably serves pump.fun images:
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+```typescript
+if (!imageUrl && address && safeNetworkId === SOLANA_NETWORK_ID) {
+  imageUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`;
+}
+```
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+### 2. Add fallback cascade in `OptimizedTokenImage.tsx`
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+Add a `fallbackSrc` prop so when the primary image errors, it tries the fallback URL before showing the text placeholder:
 
-### Technical Details
+- On first `onError`: try `fallbackSrc` if provided
+- On second `onError`: show text fallback
 
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+### 3. Pass fallback in `AxiomTokenRow.tsx` and `CodexPairRow.tsx`
 
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
+When rendering `OptimizedTokenImage`, pass a DexScreener fallback URL constructed from the token address.
 
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files to modify
+- `supabase/functions/codex-filter-tokens/index.ts` — add Solana image fallback
+- `src/components/ui/OptimizedTokenImage.tsx` — add `fallbackSrc` prop with error cascade
+- `src/components/launchpad/AxiomTokenRow.tsx` — pass `fallbackSrc`
+- `src/components/launchpad/CodexPairRow.tsx` — pass `fallbackSrc`
 
