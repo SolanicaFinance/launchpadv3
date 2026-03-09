@@ -1,45 +1,41 @@
 
 
-## Two Issues to Fix
+## Plan: Fix Launchpad Dropdown to Match Reference Image 1:1
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### Problems Identified
+1. **Wrong Meteora icon** — currently using `tuna-logo.png` (Tuna launchpad), need actual Meteora logo
+2. **Footer button icons** — should show overlapping Pumpfun, Bonk, and Meteora icons specifically
+3. **Dropdown styling doesn't match reference** — icons too small, spacing off, need exact 1:1 match
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+### Reference Image Analysis (image-588)
+- Dark card background, rounded corners
+- **"Launchpads"** title (bold, ~24px) with refresh icon top-right
+- Thin separator line below title
+- Each row: **~40px rounded-square icon** | **name** (white, ~18px) | **green count** (bold, right-aligned, ~20px, comma-formatted)
+- 6 rows: pumpfun (8,500,000), bonk (45,000), meteora (125,000), bags.fm (12,000), moonshot (85,000), raydium (350,000)
+- All counts are green (`hsl(142, 71%, 45%)`)
+- Generous vertical padding per row (~16px)
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+### Changes
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+#### 1. Download correct Meteora icon
+- Fetch from `https://app.meteora.ag/favicon.ico` or `https://app.meteora.ag` and save as `src/assets/meteora-icon.png`
+- Replace the `tunaLogo` import with new meteora icon
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+#### 2. Update footer button icons
+- Show exactly Pumpfun, Bonk, Meteora overlapping icons (not first 3 from API response)
+- Hardcode the 3 icon imports in the button
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+#### 3. Fix dropdown styling to match reference exactly
+- Icon size: **40px** with `borderRadius: 8px` (rounded square, not circle)
+- Icon background: subtle dark bg
+- Name: `18px`, white, font-weight 500
+- Count: `20px`, bold, **always green** (not conditional color)
+- Row padding: `14px 8px`
+- Dropdown width: `320px`
+- Title: `24px` bold
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
-
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
-
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
-
-### Technical Details
-
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files to modify
+- `src/components/layout/StickyStatsFooter.tsx` — fix imports, button icons, dropdown styling
+- Download and create `src/assets/meteora-icon.png` from Meteora website
 
