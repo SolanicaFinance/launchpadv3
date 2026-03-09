@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { formatSol, truncateWallet } from "@/lib/tradeUtils";
 import { useWalletHoldings } from "@/hooks/useWalletHoldings";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();
