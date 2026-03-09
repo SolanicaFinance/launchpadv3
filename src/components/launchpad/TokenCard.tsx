@@ -212,96 +212,100 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
 
       {/* ── Card Body ── */}
       <div className="relative z-10 px-3 pt-3 pb-2.5 flex flex-col">
-        {/* Sparkline background - in card body area */}
-        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-b-lg">
-          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
-        </div>
-        {/* Name + Ticker row */}
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <h3 className="text-sm font-bold truncate leading-tight" style={{ color: "hsl(0 0% 95%)" }}>
-            {token.name}
-          </h3>
-          <span className="text-xs font-mono font-semibold flex-shrink-0 text-primary">
-            ${token.ticker}
-          </span>
-        </div>
+        {/* Area between image and bonding bar — with sparkline bg */}
+        <div className="relative mb-1">
+          {/* Sparkline background - only in this section */}
+          <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-lg">
+            <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
+          </div>
 
-        {/* Source badges + age */}
-        <div className="flex items-center gap-1.5 mb-1.5 min-h-[1rem]">
-          {isPumpFun && <PumpBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
-          {isBags && <BagsBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
-          {isPhantom && <PhantomBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" />}
-          <span className="text-[10px] font-mono" style={{ color: "hsl(215 15% 55%)" }}>
-            {formatAge(token.created_at)} ago
-          </span>
-        </div>
-
-        {/* Description (fixed height for aligned card rows) */}
-        <p className="text-[11px] leading-relaxed line-clamp-2 min-h-[2.35rem] mb-2" style={{ color: "hsl(215 15% 65%)" }}>
-          {token.description?.trim() ? token.description : <span className="opacity-0">placeholder line</span>}
-        </p>
-
-        {/* ── Creator Attribution ── */}
-        {xUsername ? (
-          <a
-            href={token.twitter_url || `https://x.com/${xUsername}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem] transition-colors hover:bg-white/[0.04]"
-            style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={`@${xUsername}`}
-                className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                style={{ border: "1.5px solid hsl(215 20% 35%)" }}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0"
-                style={{ background: "hsl(215 25% 20%)", color: "hsl(215 15% 55%)", border: "1.5px solid hsl(215 20% 30%)" }}>
-                {xUsername[0]?.toUpperCase()}
-              </div>
-            )}
-            <span className="text-[11px] font-medium truncate text-primary">
-              @{xUsername}
-            </span>
-            {isVerified && (
-              <BadgeCheck className="h-3.5 w-3.5 flex-shrink-0" style={{ color: checkColor }} />
-            )}
-          </a>
-        ) : (
-          <div
-            className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem]"
-            style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
-          >
-            <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style={{ color: "hsl(215 15% 35%)" }}>
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
-            <span className="text-[11px] font-medium italic" style={{ color: "hsl(215 15% 40%)" }}>
-              No X account
+          {/* Name + Ticker row */}
+          <div className="relative z-10 flex items-center justify-between gap-2 mb-1">
+            <h3 className="text-sm font-bold truncate leading-tight" style={{ color: "hsl(0 0% 95%)" }}>
+              {token.name}
+            </h3>
+            <span className="text-xs font-mono font-semibold flex-shrink-0 text-primary">
+              ${token.ticker}
             </span>
           </div>
-        )}
 
-        {/* ── CA Copy Row ── */}
-        {token.mint_address && (
-          <button
-            onClick={handleCopyCA}
-            className="flex items-center gap-1.5 w-full text-left group/ca mb-2 px-2 py-1 rounded-md min-h-[1.75rem] transition-colors hover:bg-white/[0.03]"
-          >
-            <code className="text-[9px] font-mono truncate flex-1" style={{ color: "hsl(215 15% 45%)" }}>
-              {token.mint_address.slice(0, 6)}...{token.mint_address.slice(-4)}
-            </code>
-            {copiedCA ? (
-              <CheckCircle className="h-3 w-3 flex-shrink-0" style={{ color: "hsl(160 84% 50%)" }} />
-            ) : (
-              <Copy className="h-3 w-3 flex-shrink-0 opacity-40 group-hover/ca:opacity-80 transition-opacity" style={{ color: "hsl(215 15% 60%)" }} />
-            )}
-          </button>
-        )}
+          {/* Source badges + age */}
+          <div className="relative z-10 flex items-center gap-1.5 mb-1.5 min-h-[1rem]">
+            {isPumpFun && <PumpBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
+            {isBags && <BagsBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
+            {isPhantom && <PhantomBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" />}
+            <span className="text-[10px] font-mono" style={{ color: "hsl(215 15% 55%)" }}>
+              {formatAge(token.created_at)} ago
+            </span>
+          </div>
+
+          {/* Description */}
+          <p className="relative z-10 text-[11px] leading-relaxed line-clamp-2 min-h-[2.35rem] mb-2" style={{ color: "hsl(215 15% 65%)" }}>
+            {token.description?.trim() ? token.description : <span className="opacity-0">placeholder line</span>}
+          </p>
+
+          {/* ── Creator Attribution ── */}
+          {xUsername ? (
+            <a
+              href={token.twitter_url || `https://x.com/${xUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem] transition-colors hover:bg-white/[0.04]"
+              style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={`@${xUsername}`}
+                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  style={{ border: "1.5px solid hsl(215 20% 35%)" }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0"
+                  style={{ background: "hsl(215 25% 20%)", color: "hsl(215 15% 55%)", border: "1.5px solid hsl(215 20% 30%)" }}>
+                  {xUsername[0]?.toUpperCase()}
+                </div>
+              )}
+              <span className="text-[11px] font-medium truncate text-primary">
+                @{xUsername}
+              </span>
+              {isVerified && (
+                <BadgeCheck className="h-3.5 w-3.5 flex-shrink-0" style={{ color: checkColor }} />
+              )}
+            </a>
+          ) : (
+            <div
+              className="relative z-10 flex items-center gap-2 mb-2 py-1.5 px-2 rounded-lg min-h-[2.25rem]"
+              style={{ borderTop: "1px solid hsl(215 20% 25% / 0.4)" }}
+            >
+              <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style={{ color: "hsl(215 15% 35%)" }}>
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span className="text-[11px] font-medium italic" style={{ color: "hsl(215 15% 40%)" }}>
+                No X account
+              </span>
+            </div>
+          )}
+
+          {/* ── CA Copy Row ── */}
+          {token.mint_address && (
+            <button
+              onClick={handleCopyCA}
+              className="relative z-10 flex items-center gap-1.5 w-full text-left group/ca mb-2 px-2 py-1 rounded-md min-h-[1.75rem] transition-colors hover:bg-white/[0.03]"
+            >
+              <code className="text-[9px] font-mono truncate flex-1" style={{ color: "hsl(215 15% 45%)" }}>
+                {token.mint_address.slice(0, 6)}...{token.mint_address.slice(-4)}
+              </code>
+              {copiedCA ? (
+                <CheckCircle className="h-3 w-3 flex-shrink-0" style={{ color: "hsl(160 84% 50%)" }} />
+              ) : (
+                <Copy className="h-3 w-3 flex-shrink-0 opacity-40 group-hover/ca:opacity-80 transition-opacity" style={{ color: "hsl(215 15% 60%)" }} />
+              )}
+            </button>
+          )}
+        </div>
 
         {/* ── Bonding Progress Bar ── */}
         <div className="mt-1">
