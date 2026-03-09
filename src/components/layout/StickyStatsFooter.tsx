@@ -267,12 +267,13 @@ export function StickyStatsFooter() {
 
             {launchpadOpen && (
               <div style={{
-                position: "absolute",
-                bottom: "calc(100% + 8px)",
-                right: 0,
+                position: isMobile ? "fixed" : "absolute",
+                bottom: isMobile ? "48px" : "calc(100% + 8px)",
+                right: isMobile ? "8px" : 0,
+                left: isMobile ? "8px" : undefined,
                 zIndex: 100000,
               }}>
-                <MarketLighthouse onRefresh={handleLpRefresh} refreshing={lpRefreshing} />
+                <MarketLighthouse onRefresh={handleLpRefresh} refreshing={lpRefreshing} compact={isMobile} />
               </div>
             )}
           </div>
@@ -306,10 +307,12 @@ export function StickyStatsFooter() {
 
             {regionOpen && (
               <div style={{
-                position: "absolute",
-                bottom: "calc(100% + 6px)",
-                right: 0,
-                width: "220px",
+                position: isMobile ? "fixed" : "absolute",
+                bottom: isMobile ? "48px" : "calc(100% + 6px)",
+                right: isMobile ? "8px" : 0,
+                left: isMobile ? "8px" : undefined,
+                width: isMobile ? undefined : "220px",
+                maxWidth: isMobile ? "calc(100vw - 16px)" : undefined,
                 background: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "10px",
