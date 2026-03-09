@@ -1,45 +1,64 @@
 
 
-## Two Issues to Fix
+# Add Launchpad Stats Dropdown to Footer
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+## Overview
+Add a second dropdown in the footer (next to the region selector) that shows live launchpad data — same visual style as the regions dropdown with icons, labels, and live-updating metrics.
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+## Data Source
+Create a new edge function `launchpad-stats` that queries the `fun_tokens` table, grouping by `launchpad_type` to get per-launchpad counts. It will return token count, active token count, and latest launch time for each platform. Data cached server-side for 5 minutes, client refreshes every 5 minutes.
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+### Launchpads to show (with icons):
+| Launchpad | Icon | Source |
+|-----------|------|--------|
+| Pump.fun | `pumpfun-pill.webp` (local asset) | `launchpad_type = 'pumpfun'` |
+| Meteora | `tuna-logo.png` (local asset) | `launchpad_type = 'dbc'` |
+| Bags.fm | `https://bags.fm/favicon.ico` | `launchpad_type = 'bags'` |
+| Bonk | `https://www.bonk.fun/favicon.ico` | `launchpad_type = 'bonk'` |
+| Believe | `https://believe.app/images/icons/icon.png` | `launchpad_type = 'believe'` |
+| Boop | `https://boop.fun/images/brand.png` | `launchpad_type = 'boop'` |
+| Moonshot | `https://moonshot.money/favicon.ico` | `launchpad_type = 'moonshot'` |
+| Phantom | favicon | `launchpad_type = 'phantom'` |
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+## Files
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+### 1. New: `supabase/functions/launchpad-stats/index.ts`
+- Query `fun_tokens` grouped by `launchpad_type`
+- For each type: `COUNT(*)` total, `COUNT(*) WHERE status='active'` active, `MAX(created_at)` last launch
+- 5-minute server-side cache
+- Return array: `[{ type, total, active, lastLaunch }]`
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+### 2. New: `src/hooks/useLaunchpadStats.ts`
+- Calls `supabase.functions.invoke("launchpad-stats")`
+- `refetchInterval: 5 * 60 * 1000` (5 min)
+- Returns typed array of launchpad stats
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+### 3. Update: `src/components/layout/StickyStatsFooter.tsx`
+- Add a "Launchpads" dropdown button to the left of the region selector
+- Same visual pattern: button shows current selected launchpad + token count
+- Dropdown opens upward with header "Launchpads" + refresh button
+- Each row: launchpad icon (14x14) + name + token count (color-coded)
+- Selected item gets left border accent like regions
+- Icons: use local assets for Pump.fun and Meteora, external URLs for others
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+### 4. Update: `supabase/config.toml`
+- Add `[functions.launchpad-stats]` with `verify_jwt = false`
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+## Visual Layout (matching screenshot style)
+```text
+┌──────────────────────────┐
+│  Launchpads            ↻ │
+├──────────────────────────┤
+│ 🟢 Pump.fun      1,234  │
+│ 🔵 Meteora          892  │
+│ │🔵 Bags.fm         456  │  ← selected
+│ 🟠 Bonk             321  │
+│ 🟣 Moonshot         198  │
+│ 🟢 Believe          156  │
+│ 🟣 Boop              89  │
+│ 🟣 Phantom            45 │
+└──────────────────────────┘
+```
 
-### Technical Details
-
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+Token counts will be color-coded: green (>500), yellow (100-500), red (<100) to match the ping color scheme.
 
