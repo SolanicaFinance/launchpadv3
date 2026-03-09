@@ -91,17 +91,17 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
       to={tradeUrl}
       className="pulse-card group relative overflow-hidden"
     >
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.address || token.symbol} />
-      </div>
-      {/* Row 1: Avatar + Info + Metrics */}
-      <div className="relative z-10 flex items-start gap-2.5">
+      <div className="relative">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.address || token.symbol} />
+        </div>
+        {/* Row 1: Avatar + Info + Metrics */}
+        <div className="relative z-10 flex items-start gap-2.5">
         {/* Avatar */}
         <div className="pulse-avatar-wrap">
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.imageUrl}
-              fallbackSrc={token.address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.address}.png` : undefined}
               fallbackText={token.symbol}
               size={48}
               loading="eager"
@@ -193,6 +193,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
               </>
             )}
           </div>
+        </div>
         </div>
       </div>
 

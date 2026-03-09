@@ -90,17 +90,17 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
 
   return (
     <Link to={tradeUrl} className="pulse-card group relative overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
-      </div>
-      {/* Row 1: Avatar + Info + Metrics */}
-      <div className="relative z-10 flex items-start gap-2.5">
+      <div className="relative">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
+        </div>
+        {/* Row 1: Avatar + Info + Metrics */}
+        <div className="relative z-10 flex items-start gap-2.5">
         {/* Avatar */}
         <div className="pulse-avatar-wrap">
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.image_url}
-              fallbackSrc={token.mint_address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png` : undefined}
               fallbackText={token.ticker}
               size={48}
               loading="eager"
@@ -192,6 +192,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
               </>
             )}
           </div>
+        </div>
         </div>
       </div>
 
