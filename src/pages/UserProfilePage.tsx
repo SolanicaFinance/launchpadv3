@@ -4,7 +4,7 @@ import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, ExternalLink, Copy, CheckCircle, BadgeCheck, Menu, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, BarChart3 } from "lucide-react";
+import { Loader2, ExternalLink, Copy, CheckCircle, BadgeCheck, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
