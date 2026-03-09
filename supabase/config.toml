@@ -417,3 +417,6 @@ verify_jwt = false
 
 [functions.fetch-wallet-holdings]
 verify_jwt = false
+
+[functions.scan-kol-tweets]
+verify_jwt = false

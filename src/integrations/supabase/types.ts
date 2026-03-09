@@ -4000,6 +4000,104 @@ export type Database = {
         }
         Relationships: []
       }
+      kol_accounts: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          is_active: boolean
+          last_scanned_at: string | null
+          last_scanned_tweet_id: string | null
+          profile_image_url: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          last_scanned_tweet_id?: string | null
+          profile_image_url?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          last_scanned_tweet_id?: string | null
+          profile_image_url?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
+      kol_contract_tweets: {
+        Row: {
+          chain: string
+          contract_address: string
+          created_at: string
+          id: string
+          kol_account_id: string
+          kol_profile_image: string | null
+          kol_username: string
+          token_image_url: string | null
+          token_market_cap: number | null
+          token_name: string | null
+          token_price_usd: number | null
+          token_symbol: string | null
+          tweet_id: string
+          tweet_text: string | null
+          tweet_url: string | null
+          tweeted_at: string
+        }
+        Insert: {
+          chain?: string
+          contract_address: string
+          created_at?: string
+          id?: string
+          kol_account_id: string
+          kol_profile_image?: string | null
+          kol_username: string
+          token_image_url?: string | null
+          token_market_cap?: number | null
+          token_name?: string | null
+          token_price_usd?: number | null
+          token_symbol?: string | null
+          tweet_id: string
+          tweet_text?: string | null
+          tweet_url?: string | null
+          tweeted_at: string
+        }
+        Update: {
+          chain?: string
+          contract_address?: string
+          created_at?: string
+          id?: string
+          kol_account_id?: string
+          kol_profile_image?: string | null
+          kol_username?: string
+          token_image_url?: string | null
+          token_market_cap?: number | null
+          token_name?: string | null
+          token_price_usd?: number | null
+          token_symbol?: string | null
+          tweet_id?: string
+          tweet_text?: string | null
+          tweet_url?: string | null
+          tweeted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_contract_tweets_kol_account_id_fkey"
+            columns: ["kol_account_id"]
+            isOneToOne: false
+            referencedRelation: "kol_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       launch_idempotency_locks: {
         Row: {
           completed_at: string | null

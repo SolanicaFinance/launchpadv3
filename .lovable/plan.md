@@ -1,110 +1,45 @@
 
 
-# X Tracker — KOL Tweet Contract Address Monitor
+## Two Issues to Fix
 
-## Overview
-Create a new "X Tracker" page that monitors ~110 KOLs from the provided PDF for tweets containing contract addresses (Solana or EVM). When a KOL tweets a CA, the system captures the tweet and fetches live token data, displaying it as a card grid.
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-## Architecture
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-```text
-Cron (5 min) → scan-kol-tweets edge function
-                  ├── For each KOL: fetch last tweets via twitterapi.io
-                  ├── Regex detect CAs (Solana base58 / EVM 0x...)
-                  ├── Store in kol_contract_tweets table
-                  └── Track last_scanned_tweet_id per KOL
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-Frontend: /x-tracker → XTrackerPage
-                  ├── Fetch kol_contract_tweets from DB
-                  ├── For each CA: show token data (name, price, mcap)
-                  └── Display as card grid with KOL avatar, tweet text, token info
-```
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-## Database
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### New table: `kol_accounts`
-Stores the tracked KOL usernames and their scan state.
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| username | text | unique, not null |
-| display_name | text | nullable |
-| profile_image_url | text | nullable |
-| last_scanned_tweet_id | text | last tweet ID processed |
-| last_scanned_at | timestamptz | timestamp of last scan |
-| is_active | boolean | default true |
-| created_at | timestamptz | default now() |
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-### New table: `kol_contract_tweets`
-Stores detected CA tweets.
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| kol_account_id | uuid | FK → kol_accounts |
-| tweet_id | text | unique, not null |
-| tweet_text | text | |
-| tweet_url | text | |
-| contract_address | text | the detected CA |
-| chain | text | 'solana' or 'evm' |
-| kol_username | text | denormalized |
-| kol_profile_image | text | denormalized |
-| token_name | text | nullable, fetched later |
-| token_symbol | text | nullable |
-| token_image_url | text | nullable |
-| token_price_usd | numeric | nullable |
-| token_market_cap | numeric | nullable |
-| tweeted_at | timestamptz | tweet creation time |
-| created_at | timestamptz | default now() |
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-RLS: Public read (SELECT) for all, no insert/update/delete from client. Edge function uses service role.
+### Technical Details
 
-### Seed data
-Insert all ~110 KOL usernames from the PDF into `kol_accounts`.
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-## Edge Function: `scan-kol-tweets`
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-1. Fetch all active KOLs from `kol_accounts`
-2. For each KOL, call `https://api.twitterapi.io/twitter/user/last_tweets?userName={username}` using `TWITTERAPI_IO_KEY`
-3. Filter tweets newer than `last_scanned_tweet_id` (compare tweet IDs, which are chronological)
-4. Regex scan each tweet for:
-   - Solana: `[1-9A-HJ-NP-Za-km-z]{32,44}` (base58, 32-44 chars)
-   - EVM: `0x[a-fA-F0-9]{40}`
-5. For detected CAs, try to fetch token metadata (use existing `token-metadata` or DexScreener API)
-6. Insert into `kol_contract_tweets`
-7. Update `last_scanned_tweet_id` and `last_scanned_at` on `kol_accounts`
-8. Rate limit: batch KOLs in groups, ~20 per invocation to avoid API limits
-
-## Frontend
-
-### New page: `XTrackerPage.tsx` at `/x-tracker`
-- Grid of cards, each showing:
-  - KOL avatar + username (top left)
-  - Tweet text (truncated)
-  - Detected token info: name, symbol, chain badge (SOL/EVM), price, market cap
-  - Link to tweet + link to token on trade page or explorer
-  - Time ago badge
-- Filters: chain (all/solana/evm), sort by newest
-- Auto-refresh every 60s from DB
-
-### Sidebar update
-Add "X Tracker" nav item with a Twitter/radar icon between Alpha and Agents.
-
-### Route update in `App.tsx`
-Add `/x-tracker` route pointing to `XTrackerPage`.
-
-## Files
-
-1. **DB migration** — Create `kol_accounts` and `kol_contract_tweets` tables + RLS policies + seed KOL usernames
-2. `supabase/functions/scan-kol-tweets/index.ts` — New edge function
-3. `supabase/config.toml` — Add `[functions.scan-kol-tweets]` entry
-4. `src/pages/XTrackerPage.tsx` — New page
-5. `src/components/x-tracker/KolTweetCard.tsx` — Tweet card component
-6. `src/hooks/useKolTweets.ts` — Hook to fetch from DB
-7. `src/components/layout/Sidebar.tsx` — Add nav link
-8. `src/App.tsx` — Add route
-
-## Cron Setup
-After edge function is deployed, set up pg_cron to invoke `scan-kol-tweets` every 5 minutes using `pg_net.http_post`.
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
