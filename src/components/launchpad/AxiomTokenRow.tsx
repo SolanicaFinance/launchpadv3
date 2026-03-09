@@ -90,7 +90,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
 
   return (
     <Link to={tradeUrl} className="pulse-card group relative overflow-hidden">
-      <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} />
+      <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
       {/* Row 1: Avatar + Info + Metrics */}
       <div className="flex items-start gap-2.5">
         {/* Avatar */}

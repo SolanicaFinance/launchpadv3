@@ -204,7 +204,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
     >
       {/* Sparkline background */}
       <div className="absolute inset-0 z-0 opacity-40">
-        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} />
+        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
       </div>
 
       {/* King crown glow for #1 */}

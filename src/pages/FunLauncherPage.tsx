@@ -302,7 +302,7 @@ export default function FunLauncherPage() {
                     >
                       {/* Sparkline background */}
                       <div className="absolute inset-0 z-0 opacity-40">
-                        <SparklineCanvas data={token.mint_address && sparklines?.[token.mint_address]?.length >= 2 ? sparklines[token.mint_address] : [1, 1]} />
+                        <SparklineCanvas data={token.mint_address && sparklines?.[token.mint_address]?.length >= 2 ? sparklines[token.mint_address] : [1, 1]} seed={token.mint_address || token.id} />
                       </div>
                       {/* Image */}
                       <div className="relative w-full z-[1]" style={{ paddingBottom: "65%" }}>

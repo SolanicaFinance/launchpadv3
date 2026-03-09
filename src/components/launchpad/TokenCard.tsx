@@ -162,7 +162,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
     >
       {/* Sparkline background */}
       <div className="absolute inset-0 z-0 opacity-40">
-        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} />
+        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
       </div>
 
       {/* ── Token Image ── */}

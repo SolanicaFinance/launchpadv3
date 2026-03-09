@@ -2,35 +2,50 @@ import { memo, useRef, useEffect } from "react";
 
 interface SparklineCanvasProps {
   data: number[];
+  seed?: string;
 }
 
-/** Deterministic hash from a number array to seed micro-variance */
-function seedFromData(data: number[]): number {
-  let h = 0;
-  for (let i = 0; i < data.length; i++) {
-    h = ((h << 5) - h + (data[i] * 1000) | 0) | 0;
+/** Hash a string into a deterministic integer */
+function hashString(str: string): number {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h + str.charCodeAt(i)) | 0;
   }
   return Math.abs(h);
 }
 
-/** Add synthetic micro-variance to flat data so chart shows organic movement */
-function normalizeFlatData(data: number[]): number[] {
-  const mean = data.reduce((a, b) => a + b, 0) / data.length;
+/** Seeded pseudo-random number generator (0-1) */
+function seededRandom(seed: number, index: number): number {
+  const x = Math.sin(seed * 9301 + index * 49297 + 233280) * 49297;
+  return x - Math.floor(x);
+}
+
+/** Generate unique synthetic curve when data is flat or has ≤1 point */
+function normalizeFlatData(data: number[], seed: string): number[] {
+  const mean = data.length > 0 ? data.reduce((a, b) => a + b, 0) / data.length : 1;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min;
 
   // If range < 0.1% of mean, data is effectively flat
-  if (mean === 0 || range / Math.abs(mean) < 0.001) {
-    const seed = seedFromData(data);
-    const amplitude = Math.abs(mean) * 0.008 || 0.001;
-    // Deterministic random walk
-    let v = mean;
+  if (data.length <= 2 || mean === 0 || range / Math.abs(mean) < 0.001) {
+    const h = hashString(seed);
+    const numPoints = 24;
+    const amplitude = Math.abs(mean) * 0.015 || 0.005;
+    // Use hash to vary frequency and phase per token
+    const freq1 = 0.15 + (h % 100) / 500;        // 0.15 - 0.35
+    const freq2 = 0.08 + ((h >> 8) % 100) / 800;  // 0.08 - 0.205
+    const phase1 = (h % 360) * Math.PI / 180;
+    const phase2 = ((h >> 4) % 360) * Math.PI / 180;
+    const drift = ((h % 7) - 3) * amplitude * 0.3; // slight overall trend
+
     const result: number[] = [];
-    for (let i = 0; i < Math.max(data.length, 12); i++) {
-      const pseudo = Math.sin(seed * (i + 1) * 0.1) * 0.5 + 0.5;
-      v += (pseudo - 0.48) * amplitude;
-      result.push(v);
+    for (let i = 0; i < numPoints; i++) {
+      const t = i / (numPoints - 1);
+      const wave = Math.sin(i * freq1 + phase1) * 0.6
+                 + Math.sin(i * freq2 + phase2) * 0.4
+                 + (seededRandom(h, i) - 0.5) * 0.3;
+      result.push(mean + wave * amplitude + drift * t);
     }
     return result;
   }
@@ -39,6 +54,7 @@ function normalizeFlatData(data: number[]): number[] {
 
 export const SparklineCanvas = memo(function SparklineCanvas({
   data,
+  seed = "",
 }: SparklineCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -59,8 +75,11 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Normalize flat data
-    const normalized = normalizeFlatData(data.length === 1 ? [data[0], data[0]] : data);
+    // Normalize flat data with unique seed
+    const normalized = normalizeFlatData(
+      data.length === 1 ? [data[0], data[0]] : data,
+      seed
+    );
     const points = normalized.length < 2 ? [normalized[0], normalized[0]] : normalized;
 
     const min = Math.min(...points);
@@ -70,9 +89,9 @@ export const SparklineCanvas = memo(function SparklineCanvas({
 
     const lineColor = isUp ? "34, 197, 94" : "239, 68, 68";
 
-    // Right-aligned: chart occupies the right 55% of card
-    const chartLeft = width * 0.45;
-    const chartWidth = width - chartLeft;
+    // Full width
+    const chartLeft = 0;
+    const chartWidth = width;
     const padY = 8;
     const chartH = height - padY * 2;
 
@@ -80,10 +99,9 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     const getX = (i: number) => chartLeft + i * stepX;
     const getY = (v: number) => padY + chartH - ((v - min) / range) * chartH;
 
-    // Build coordinate pairs
     const coords = points.map((v, i) => ({ x: getX(i), y: getY(v) }));
 
-    // Draw smooth curve using quadratic bezier
+    // Draw smooth curve
     ctx.beginPath();
     ctx.moveTo(coords[0].x, coords[0].y);
 
@@ -95,7 +113,6 @@ export const SparklineCanvas = memo(function SparklineCanvas({
         const yMid = (coords[i].y + coords[i + 1].y) / 2;
         ctx.quadraticCurveTo(coords[i].x, coords[i].y, xMid, yMid);
       }
-      // Final segment to last point
       const last = coords[coords.length - 1];
       ctx.lineTo(last.x, last.y);
     }
@@ -106,7 +123,7 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     ctx.lineCap = "round";
     ctx.stroke();
 
-    // Gradient fill under curve
+    // Gradient fill
     ctx.lineTo(chartLeft + chartWidth, height);
     ctx.lineTo(chartLeft, height);
     ctx.closePath();
@@ -116,7 +133,7 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     gradient.addColorStop(1, `rgba(${lineColor}, 0.02)`);
     ctx.fillStyle = gradient;
     ctx.fill();
-  }, [data]);
+  }, [data, seed]);
 
   if (data.length < 1) return null;
 
