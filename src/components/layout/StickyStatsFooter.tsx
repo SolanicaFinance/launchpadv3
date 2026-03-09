@@ -328,7 +328,7 @@ export function StickyStatsFooter() {
                         <Layers style={{ width: "24px", height: "24px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                       )}
                       <span style={{ flex: 1, fontWeight: 500, textTransform: "none" }}>{label}</span>
-                      <span style={{ fontWeight: 700, color: getCountColor(lp.total), fontSize: "36px", lineHeight: 1 }}>
+                      <span style={{ fontWeight: 700, color: getCountColor(lp.total), fontSize: "22px", lineHeight: 1 }}>
                         {lp.total.toLocaleString()}
                       </span>
                     </div>
