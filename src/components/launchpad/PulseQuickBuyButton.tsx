@@ -180,14 +180,18 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           toast.error("Token address not available");
           return;
         }
+        const ticker = funToken?.ticker ?? codexToken?.symbol ?? '';
+        const toastId = `quick-buy-${Date.now()}`;
+        toast.loading("⚡ Trade Executing...", { id: toastId, description: `Buying ${quickBuyAmount} SOL of $${ticker}` });
         setBuyingAmount(quickBuyAmount);
         executeFastSwap(token, quickBuyAmount, true, 500)
           .then((result) => {
             if (result.success) {
-              toast.success(`Bought with ${quickBuyAmount} SOL`, {
-                description: result.signature ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms` : undefined,
+              toast.success("✅ Trade Executed!", {
+                id: toastId,
+                description: result.signature ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms` : `Bought ${quickBuyAmount} SOL of $${ticker}`,
                 action: result.signature
-                  ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
+                  ? { label: "View TX", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
                   : undefined,
               });
               queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
@@ -195,7 +199,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           })
           .catch((err: any) => {
             console.error("[PulseQuickBuy] swap failed:", err);
-            toast.error("Swap failed", { description: err?.message?.slice(0, 80) || "Unknown error" });
+            toast.error("❌ Trade Failed", { id: toastId, description: err?.message?.slice(0, 80) || "Unknown error" });
           })
           .finally(() => setBuyingAmount(null));
         return;
@@ -216,18 +220,22 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
         return;
       }
 
+      const ticker = funToken?.ticker ?? codexToken?.symbol ?? '';
+      const toastId = `quick-buy-${Date.now()}`;
+      toast.loading("⚡ Trade Executing...", { id: toastId, description: `Buying ${amount} SOL of $${ticker}` });
       setBuyingAmount(amount);
 
       try {
         const result = await executeFastSwap(token, amount, true, 500);
         if (result.success) {
-          toast.success(`Bought with ${amount} SOL`, {
+          toast.success("✅ Trade Executed!", {
+            id: toastId,
             description: result.signature
               ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms`
-              : undefined,
+              : `Bought ${amount} SOL of $${ticker}`,
             action: result.signature
               ? {
-                  label: "View",
+                  label: "View TX",
                   onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank"),
                 }
               : undefined,
@@ -236,9 +244,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
         }
       } catch (err: any) {
         console.error("[PulseQuickBuy] swap failed:", err);
-        toast.error("Swap failed", {
-          description: err?.message?.slice(0, 80) || "Unknown error",
-        });
+        toast.error("❌ Trade Failed", { id: toastId, description: err?.message?.slice(0, 80) || "Unknown error" });
       } finally {
         setBuyingAmount(null);
         setOpen(false);
@@ -268,23 +274,26 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
         return;
       }
 
+      const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
+      const name = funToken?.name ?? codexToken?.name ?? '';
+      const toastId = `quick-sell-${Date.now()}`;
+      toast.loading("⚡ Selling...", { id: toastId, description: `Selling 100% of $${ticker}` });
       setIsSelling(true);
       try {
         const result = await executeFastSwap(token, tokenBalance, false, 500);
         if (result.success) {
-          const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
-          const name = funToken?.name ?? codexToken?.name ?? '';
-          toast.success(`Sold 100% of $${ticker}`, {
+          toast.success(`✅ Sold 100% of $${ticker}`, {
+            id: toastId,
             description: `${name}${result.signature ? ` · TX: ${result.signature.slice(0, 8)}...` : ''}${lastLatencyMs ? ` · ${lastLatencyMs}ms` : ''}`,
             action: result.signature
-              ? { label: "View", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
+              ? { label: "View TX", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
               : undefined,
           });
           queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
         }
       } catch (err: any) {
         console.error("[PulseQuickSell] sell failed:", err);
-        toast.error("Sell failed", { description: err?.message?.slice(0, 80) || "Unknown error" });
+        toast.error("❌ Sell Failed", { id: toastId, description: err?.message?.slice(0, 80) || "Unknown error" });
       } finally {
         setIsSelling(false);
       }
