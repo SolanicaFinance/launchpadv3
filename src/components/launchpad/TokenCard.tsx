@@ -170,6 +170,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
         <div className="absolute inset-0">
           <OptimizedTokenImage
             src={token.image_url}
+            fallbackSrc={token.mint_address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png` : undefined}
             alt={token.name}
             fallbackText={token.ticker}
             size={400}
