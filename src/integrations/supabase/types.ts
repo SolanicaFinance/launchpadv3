@@ -478,6 +478,7 @@ export type Database = {
           amount_tokens: number
           created_at: string
           id: string
+          price_sol: number | null
           price_usd: number | null
           token_mint: string
           token_name: string | null
@@ -493,6 +494,7 @@ export type Database = {
           amount_tokens?: number
           created_at?: string
           id?: string
+          price_sol?: number | null
           price_usd?: number | null
           token_mint: string
           token_name?: string | null
@@ -508,6 +510,7 @@ export type Database = {
           amount_tokens?: number
           created_at?: string
           id?: string
+          price_sol?: number | null
           price_usd?: number | null
           token_mint?: string
           token_name?: string | null

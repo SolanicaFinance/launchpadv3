@@ -1,0 +1,1 @@
+ALTER TABLE public.alpha_trades ADD COLUMN IF NOT EXISTS price_sol NUMERIC;

@@ -1,56 +1,45 @@
 
 
-# Alpha Tracker — Detailed Trade Analytics with Holding Status & PnL
+## Two Issues to Fix
 
-## Current State
-- `alpha_trades` table stores individual buy/sell events with: wallet, token, SOL amount, token amount, trade_type, tx_hash, timestamp
-- No `price_usd` is recorded (always null), no holding status or PnL tracking
-- UI is a flat list of trade rows with minimal info
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-## Plan
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-### 1. Add `price_sol` column to `alpha_trades` table
-- Store the token's price_sol at time of trade (already available in the edge function)
-- This enables accurate PnL calculations
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**Migration:**
-```sql
-ALTER TABLE public.alpha_trades ADD COLUMN price_sol NUMERIC;
-```
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-### 2. Update edge function to record `price_sol`
-- In `launchpad-swap/index.ts`, pass `newPrice` (already computed) into the alpha_trades insert
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### 3. Compute holding status & PnL client-side
-- In `useAlphaTrades`, group all trades by `(wallet_address, token_mint)` to build a position summary per trader/token:
-  - **Total bought** (sum of buy amounts in SOL & tokens)
-  - **Total sold** (sum of sell amounts in SOL & tokens)
-  - **Net tokens remaining** = bought_tokens - sold_tokens
-  - **Still holding?** = net_tokens > 0
-  - **Realized PnL** = sell_sol_total - (buy_avg_price × sold_tokens)
-  - **Status badge**: "HOLDING" (green), "SOLD" (red/neutral), "PARTIAL" (yellow)
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-### 4. Redesign Alpha Tracker UI
-Transform from simple list to a detailed trade feed with expandable rows:
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-**Each trade row shows:**
-- Trader avatar + name
-- BUY/SELL badge
-- Token ticker (linked to trade page)
-- SOL amount + token amount
-- Price per token at time of trade
-- Exact timestamp (e.g. "Mar 6, 4:40 PM") + relative time ("2d ago")
-- TX link to Solscan
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-**Position status section (right side of row):**
-- Holding status badge: "HOLDING 🟢" / "SOLD 🔴" / "PARTIAL 🟡"
-- If holding: show remaining token count
-- If sold (partially or fully): show realized PnL in SOL with +/- color
-- Net position as a compact line: "Bought 2.5 SOL → Sold 1.8 SOL → PnL: +0.3 SOL"
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-### 5. Files to modify
-1. **Migration** — add `price_sol` column
-2. **`supabase/functions/launchpad-swap/index.ts`** — record `price_sol: newPrice` in both alpha_trades insert sites
-3. **`src/hooks/useAlphaTrades.ts`** — add `price_sol` to interface, add position computation helper that groups trades
-4. **`src/pages/AlphaTrackerPage.tsx`** — redesign UI with detailed rows showing timestamps, PnL, holding status badges, and enriched trade data
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
