@@ -19,7 +19,7 @@ const STRATEGIES = [
     icon: Shield,
     color: "text-emerald-400",
     borderColor: "border-emerald-500/30",
-    bgAccent: "bg-emerald-500/8",
+    bgAccent: "bg-emerald-500/10",
     glowColor: "shadow-[0_0_40px_-12px_hsl(160_84%_39%/0.3)]",
     profitShare: "60%",
     riskLevel: "Low",
@@ -36,7 +36,7 @@ const STRATEGIES = [
     icon: Target,
     color: "text-amber-400",
     borderColor: "border-amber-500/30",
-    bgAccent: "bg-amber-500/8",
+    bgAccent: "bg-amber-500/10",
     glowColor: "shadow-[0_0_40px_-12px_hsl(38_92%_50%/0.3)]",
     profitShare: "55%",
     riskLevel: "Medium",
@@ -53,7 +53,7 @@ const STRATEGIES = [
     icon: Zap,
     color: "text-red-400",
     borderColor: "border-red-500/30",
-    bgAccent: "bg-red-500/8",
+    bgAccent: "bg-red-500/10",
     glowColor: "shadow-[0_0_40px_-12px_hsl(0_84%_60%/0.3)]",
     profitShare: "50%",
     riskLevel: "High",
@@ -63,7 +63,7 @@ const STRATEGIES = [
     description: "Maximum alpha extraction. Larger positions targeting breakout narratives and momentum plays.",
     highlights: ["High reward potential", "Narrative plays", "Momentum trading"],
   },
-] as const;
+];
 
 /* ── Stat Box ── */
 function StatBox({ label, value, icon: Icon, accent }: {
@@ -83,7 +83,7 @@ function StatBox({ label, value, icon: Icon, accent }: {
 
 /* ── Featured Agent Card ── */
 function FeaturedAgentCard({ strategy, agentData }: {
-  strategy: typeof STRATEGIES[number];
+  strategy: (typeof STRATEGIES)[number];
   agentData?: {
     totalProfit: number;
     totalTrades: number;

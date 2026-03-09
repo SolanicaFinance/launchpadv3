@@ -9,14 +9,16 @@ serve(async (req) => {
 });
 
 /* ORIGINAL CODE BELOW — kept for reference but never reached */
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+// import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
+/*
+const corsHeaders_original = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+*/
 
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
 
