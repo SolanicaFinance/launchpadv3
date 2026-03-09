@@ -75,7 +75,6 @@ export default function UserProfilePage() {
               ) : (
                 <img src={defaultAvatar} alt="Default avatar" className="w-full h-full object-cover" />
               )}
-              )}
             </div>
             <div className="flex-1 min-w-0 pb-1">
               <div className="flex items-center gap-2">
