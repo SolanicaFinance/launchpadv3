@@ -19,7 +19,7 @@ const STRATEGIES = [
     icon: Shield,
     color: "text-emerald-400",
     borderColor: "border-emerald-500/30",
-    bgAccent: "bg-emerald-500/8",
+    bgAccent: "bg-emerald-500/10",
     glowColor: "shadow-[0_0_40px_-12px_hsl(160_84%_39%/0.3)]",
     profitShare: "60%",
     riskLevel: "Low",
