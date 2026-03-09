@@ -209,7 +209,7 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 export default function HomePage() {
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
   const { data: kolTweets } = useKolTweets("all");
-  const { trades: alphaTrades, loading: alphaLoading } = useAlphaTrades(10);
+  const { trades: alphaTrades, loading: alphaLoading, positions: alphaPositions } = useAlphaTrades(10);
   const { markets: leverageMarkets, loading: leverageLoading } = useAsterMarkets();
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
