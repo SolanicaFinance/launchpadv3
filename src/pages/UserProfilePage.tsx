@@ -120,6 +120,14 @@ export default function UserProfilePage() {
           )}
 
           {isOwnProfile && isRegistered && !profile.verified_type && (
+            <button
+              onClick={() => setVerifyOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 mb-3"
+            >
+              <BadgeCheck className="w-3.5 h-3.5" />
+              Verify Account
+            </button>
+          )}
 
           <EditProfileModal
             open={editOpen}
