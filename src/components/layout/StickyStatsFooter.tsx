@@ -268,15 +268,17 @@ export function StickyStatsFooter() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "6px 8px 8px",
+                  padding: "6px 8px 12px",
                   borderBottom: "1px solid hsl(var(--border))",
-                  marginBottom: "4px",
+                  marginBottom: "6px",
                 }}>
                   <span style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "12px",
+                    fontSize: "36px",
+                    lineHeight: 1,
                     fontWeight: 600,
                     color: "hsl(var(--foreground))",
+                    letterSpacing: "-0.02em",
                   }}>
                     Launchpads
                   </span>
@@ -289,8 +291,8 @@ export function StickyStatsFooter() {
                     color: "hsl(var(--muted-foreground))",
                   }}>
                     <RefreshCw style={{
-                      width: "13px",
-                      height: "13px",
+                      width: "20px",
+                      height: "20px",
                       transition: "transform 0.6s",
                       transform: lpRefreshing ? "rotate(360deg)" : "none",
                     }} />
