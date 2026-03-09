@@ -162,6 +162,7 @@ export function useUserProfile(identifier: string | undefined) {
   });
 
   const wallet = profileQuery.data?.solana_wallet_address || (identifier && isWalletAddress(identifier) ? identifier : undefined);
+  const profileId = profileQuery.data?.isRegistered ? profileQuery.data?.id : undefined;
 
   const tokensQuery = useQuery({
     queryKey: ["user-profile-tokens", wallet],
