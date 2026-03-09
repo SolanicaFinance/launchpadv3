@@ -253,14 +253,14 @@ export function StickyStatsFooter() {
             {launchpadOpen && (
               <div style={{
                 position: "absolute",
-                bottom: "calc(100% + 6px)",
+                bottom: "calc(100% + 8px)",
                 right: 0,
-                width: "240px",
-                background: "hsl(var(--card))",
+                width: "300px",
+                background: "linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
                 border: "1px solid hsl(var(--border))",
-                borderRadius: "10px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                padding: "6px",
+                borderRadius: "16px",
+                boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
+                padding: "12px 10px",
                 zIndex: 100000,
               }}>
                 {/* Header */}
