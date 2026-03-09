@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
   // Silence noisy (but harmless) Rollup warnings coming from some dependencies.
   // This keeps CI logs clean while preserving real warnings/errors.
   build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       onwarn(warning, warn) {
         if (warning?.code === "INVALID_ANNOTATION") return;

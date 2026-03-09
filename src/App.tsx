@@ -20,8 +20,8 @@ import { DomainRouter } from "@/components/DomainRouter";
 import { StickyStatsFooter } from "@/components/layout/StickyStatsFooter";
 import { MatrixModeProvider } from "@/contexts/MatrixModeContext";
 
-// Critical: Load FunLauncherPage eagerly for instant home page
-import FunLauncherPage from "./pages/FunLauncherPage";
+// Lazy load FunLauncherPage like all other pages to reduce build memory
+const FunLauncherPage = lazyWithRetry(() => import("./pages/FunLauncherPage"));
 
 // Lazy load other pages
 const FunTokenDetailPage = lazyWithRetry(() => import("./pages/FunTokenDetailPage"));

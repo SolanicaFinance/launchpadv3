@@ -1,35 +1,45 @@
 
 
-## Diagnosis: Persistent "Failed to Build" Error
+## Two Issues to Fix
 
-After thorough investigation, here is what I found:
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-### Root Causes Identified
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-**1. Out-of-Memory (OOM) during Vite build**
-- The project has **71 page files**, **160+ edge functions**, and massive dependencies: `@solana/web3.js`, `viem`, `wagmi`, `@rainbow-me/rainbowkit`, `@meteora-ag/*`, `recharts`, etc.
-- `FunLauncherPage` is **eagerly imported** (line 24 of `App.tsx`) while all other pages use lazy loading. This forces Rollup to process its entire dependency tree upfront, significantly increasing peak memory usage during bundling.
-- The generic "failed to build" with no specific error message is the classic signature of a build runner OOM crash.
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**2. Duplicate `serve()` in edge function**
-- `supabase/functions/x-bot-scan/index.ts` has 481 lines. The disabled stub ends at line 9, but lines 203-481 contain a **second `serve()` call that is NOT commented out**. This causes an edge function deploy failure, which may cascade to block the overall project build.
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-### Plan
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-**Step 1: Make FunLauncherPage lazy-loaded** (`src/App.tsx`)
-- Change the eager import on line 24 to use `lazyWithRetry()` like every other page
-- Wrap its Route usage in `<Suspense>` with the `RouteLoader` fallback
-- This dramatically reduces the initial bundle graph Rollup must process in one pass
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-**Step 2: Truncate dead code in x-bot-scan** (`supabase/functions/x-bot-scan/index.ts`)
-- Keep only lines 1-9 (the disabled stub with single `serve()` call)
-- Delete lines 10-481 entirely (unreachable dead code with duplicate `serve()`)
-- This removes the edge function deploy blocker
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-**Step 3: Add build memory optimization** (`vite.config.ts`)
-- Set `build.target: 'esnext'` to skip unnecessary syntax transforms
-- Set `build.minify: 'esbuild'` (faster, less memory than terser)
-- Increase `build.chunkSizeWarningLimit` to avoid Rollup spending resources on warnings
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-These three changes together address both the memory pressure (Steps 1 & 3) and the edge function deploy failure (Step 2) that are causing the persistent build failures.
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
