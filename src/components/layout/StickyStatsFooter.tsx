@@ -309,26 +309,26 @@ export function StickyStatsFooter() {
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "8px",
+                        gap: "12px",
                         width: "100%",
-                        padding: "7px 8px",
-                        borderRadius: "6px",
+                        padding: "12px 8px",
+                        borderRadius: "8px",
                         fontFamily: "'IBM Plex Mono', monospace",
-                        fontSize: "12px",
+                        fontSize: "18px",
                         color: "hsl(var(--foreground))",
                       }}
                     >
                       {icon ? (
                         <img
                           src={icon}
-                          alt=""
-                          style={{ width: "14px", height: "14px", borderRadius: "3px", objectFit: "contain", flexShrink: 0 }}
+                          alt={label}
+                          style={{ width: "24px", height: "24px", borderRadius: "6px", objectFit: "contain", flexShrink: 0, background: "hsl(var(--muted))" }}
                         />
                       ) : (
-                        <Layers style={{ width: "14px", height: "14px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+                        <Layers style={{ width: "24px", height: "24px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                       )}
-                      <span style={{ flex: 1, fontWeight: 500 }}>{label}</span>
-                      <span style={{ fontWeight: 600, color: getCountColor(lp.total), fontSize: "11px" }}>
+                      <span style={{ flex: 1, fontWeight: 500, textTransform: "none" }}>{label}</span>
+                      <span style={{ fontWeight: 700, color: getCountColor(lp.total), fontSize: "36px", lineHeight: 1 }}>
                         {lp.total.toLocaleString()}
                       </span>
                     </div>
