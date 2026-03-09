@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -8,7 +6,13 @@ const corsHeaders = {
 
 let cachedData: any = null;
 let cachedAt = 0;
-const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const CACHE_TTL = 3 * 60 * 1000;
+
+type ProtocolRow = {
+  name: string;
+  vol24h: number;
+  change: number;
+};
 
 async function fetchWithTimeout(url: string, opts: RequestInit = {}, timeoutMs = 8000): Promise<Response> {
   const controller = new AbortController();
@@ -20,214 +24,93 @@ async function fetchWithTimeout(url: string, opts: RequestInit = {}, timeoutMs =
   }
 }
 
-// DeFi Llama: Solana DEX volumes (free, no key needed)
 async function fetchDefiLlamaDexVolumes() {
   try {
-    const res = await fetchWithTimeout("https://api.llama.fi/overview/dexs/Solana?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true");
+    const res = await fetchWithTimeout(
+      "https://api.llama.fi/overview/dexs/Solana?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true",
+    );
     if (!res.ok) return null;
+
     const data = await res.json();
-    
-    // data.totalDataChart not needed, we want protocol breakdown
-    const total24h = data.total24h || 0;
-    const total48hto24h = data.total48hto24h || 0;
+    const total24h = Number(data.total24h || 0);
+    const total48hto24h = Number(data.total48hto24h || 0);
     const change24h = total48hto24h > 0 ? ((total24h - total48hto24h) / total48hto24h) * 100 : 0;
-    
-    // Per-protocol volumes
-    const protocols: Array<{ name: string; vol24h: number; change: number }> = [];
-    if (data.protocols && Array.isArray(data.protocols)) {
+
+    const protocols: ProtocolRow[] = [];
+    if (Array.isArray(data.protocols)) {
       for (const p of data.protocols) {
-        if (p.total24h && p.total24h > 0) {
-          const pChange = p.total48hto24h > 0
-            ? ((p.total24h - p.total48hto24h) / p.total48hto24h) * 100
-            : 0;
-          protocols.push({
-            name: p.name || p.displayName || "Unknown",
-            vol24h: p.total24h,
-            change: pChange,
-          });
-        }
+        const vol24h = Number(p?.total24h || 0);
+        if (vol24h <= 0) continue;
+
+        const prev24h = Number(p?.total48hto24h || 0);
+        const pChange = prev24h > 0 ? ((vol24h - prev24h) / prev24h) * 100 : 0;
+
+        protocols.push({
+          name: p?.name || p?.displayName || "Unknown",
+          vol24h,
+          change: pChange,
+        });
       }
     }
-    // Sort by volume descending
+
     protocols.sort((a, b) => b.vol24h - a.vol24h);
-    
-    return { total24h, change24h, protocols: protocols.slice(0, 6) };
-  } catch (_) {
+
+    return { total24h, change24h, protocols };
+  } catch {
     return null;
   }
 }
 
-// DeFi Llama: Solana chain overview for TVL/general stats
-async function fetchDefiLlamaChainStats() {
+async function fetchGeckoTerminalTrades() {
   try {
-    const res = await fetchWithTimeout("https://api.llama.fi/v2/historicalChainTvl/Solana");
+    const res = await fetchWithTimeout("https://api.geckoterminal.com/api/v2/networks/solana/trending_pools?page=1", {}, 9000);
     if (!res.ok) return null;
-    const data = await res.json();
-    // Get latest TVL
-    if (Array.isArray(data) && data.length > 0) {
-      const latest = data[data.length - 1];
-      const prev = data.length > 1 ? data[data.length - 2] : latest;
-      return {
-        tvl: latest.tvl || 0,
-        tvlChange: prev.tvl > 0 ? ((latest.tvl - prev.tvl) / prev.tvl) * 100 : 0,
-      };
+
+    const json = await res.json();
+    const rows = Array.isArray(json?.data) ? json.data : [];
+
+    let buys = 0;
+    let sells = 0;
+
+    for (const row of rows) {
+      const h24 = row?.attributes?.transactions?.h24 || {};
+      buys += Number(h24?.buys || 0);
+      sells += Number(h24?.sells || 0);
     }
-    return null;
-  } catch (_) {
-    return null;
-  }
-}
-
-// Our own DB stats: token creation count, graduated (migrations), trade stats
-async function fetchOwnDbStats() {
-  try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    // Total tokens created (all time)
-    const { count: totalTokens } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true });
-
-    // Tokens created in last 24h
-    const now = new Date();
-    const h24ago = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const h48ago = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
-
-    const { count: created24h } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", h24ago);
-
-    const { count: created48hTo24h } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", h48ago)
-      .lt("created_at", h24ago);
-
-    // Graduated tokens (migrations)
-    const { count: totalGraduated } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "graduated");
-
-    const { count: graduated24h } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "graduated")
-      .gte("created_at", h24ago);
-
-    const { count: graduated48hTo24h } = await supabase
-      .from("fun_tokens")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "graduated")
-      .gte("created_at", h48ago)
-      .lt("created_at", h24ago);
-
-    // Transaction stats from launchpad_transactions
-    const { count: trades24h } = await supabase
-      .from("launchpad_transactions")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", h24ago);
-
-    const { count: trades48hTo24h } = await supabase
-      .from("launchpad_transactions")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", h48ago)
-      .lt("created_at", h24ago);
-
-    // Unique traders in 24h
-    const { data: tradersData } = await supabase
-      .from("launchpad_transactions")
-      .select("user_wallet")
-      .gte("created_at", h24ago);
-    const uniqueTraders24h = new Set(tradersData?.map((t: any) => t.user_wallet) || []).size;
-
-    const { data: tradersDataPrev } = await supabase
-      .from("launchpad_transactions")
-      .select("user_wallet")
-      .gte("created_at", h48ago)
-      .lt("created_at", h24ago);
-    const uniqueTradersPrev = new Set(tradersDataPrev?.map((t: any) => t.user_wallet) || []).size;
-
-    // Buy vs sell volume
-    const { data: buyTrades } = await supabase
-      .from("launchpad_transactions")
-      .select("sol_amount")
-      .eq("transaction_type", "buy")
-      .gte("created_at", h24ago);
-    const buyVolSol = (buyTrades || []).reduce((s: number, t: any) => s + (Number(t.sol_amount) || 0), 0);
-    const buyCount = (buyTrades || []).length;
-
-    const { data: sellTrades } = await supabase
-      .from("launchpad_transactions")
-      .select("sol_amount")
-      .eq("transaction_type", "sell")
-      .gte("created_at", h24ago);
-    const sellVolSol = (sellTrades || []).reduce((s: number, t: any) => s + (Number(t.sol_amount) || 0), 0);
-    const sellCount = (sellTrades || []).length;
-
-    // Launchpad type breakdown for volumes
-    const { data: lpVolumes } = await supabase
-      .from("fun_tokens")
-      .select("launchpad_type, volume_24h_sol")
-      .not("launchpad_type", "is", null);
-    
-    const lpVolumeMap: Record<string, number> = {};
-    for (const t of (lpVolumes || [])) {
-      const lp = t.launchpad_type || "unknown";
-      lpVolumeMap[lp] = (lpVolumeMap[lp] || 0) + (Number(t.volume_24h_sol) || 0);
-    }
-
-    const createdChange = (created48hTo24h || 0) > 0
-      ? (((created24h || 0) - (created48hTo24h || 0)) / (created48hTo24h || 1)) * 100
-      : 0;
-    const graduatedChange = (graduated48hTo24h || 0) > 0
-      ? (((graduated24h || 0) - (graduated48hTo24h || 0)) / (graduated48hTo24h || 1)) * 100
-      : 0;
-    const tradesChange = (trades48hTo24h || 0) > 0
-      ? (((trades24h || 0) - (trades48hTo24h || 0)) / (trades48hTo24h || 1)) * 100
-      : 0;
-    const tradersChange = uniqueTradersPrev > 0
-      ? ((uniqueTraders24h - uniqueTradersPrev) / uniqueTradersPrev) * 100
-      : 0;
 
     return {
-      totalTokens: totalTokens || 0,
-      created24h: created24h || 0,
-      createdChange,
-      totalGraduated: totalGraduated || 0,
-      graduated24h: graduated24h || 0,
-      graduatedChange,
-      trades24h: trades24h || 0,
-      tradesChange,
-      uniqueTraders24h,
-      tradersChange,
-      buyVolSol,
-      buyCount,
-      sellVolSol,
-      sellCount,
-      totalVolSol: buyVolSol + sellVolSol,
-      lpVolumeMap,
+      buyCount: buys,
+      sellCount: sells,
+      totalTrades: buys + sells,
     };
-  } catch (e) {
-    console.error("DB stats error:", e);
+  } catch {
     return null;
   }
 }
 
-// SOL price from CoinGecko (free)
 async function fetchSolPrice(): Promise<number> {
   try {
     const res = await fetchWithTimeout("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
-    if (res.ok) {
-      const data = await res.json();
-      return data?.solana?.usd || 0;
-    }
-  } catch (_) {}
-  return 0;
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return Number(data?.solana?.usd || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function protocolVolumeByName(protocols: ProtocolRow[], matcher: RegExp): number {
+  return protocols
+    .filter((p) => matcher.test(p.name.toLowerCase()))
+    .reduce((sum, p) => sum + p.vol24h, 0);
+}
+
+function protocolChangeByName(protocols: ProtocolRow[], matcher: RegExp): number {
+  const matched = protocols.filter((p) => matcher.test(p.name.toLowerCase()));
+  if (!matched.length) return 0;
+  const totalVol = matched.reduce((sum, p) => sum + p.vol24h, 0);
+  if (totalVol <= 0) return matched[0].change;
+  return matched.reduce((sum, p) => sum + p.change * (p.vol24h / totalVol), 0);
 }
 
 Deno.serve(async (req) => {
@@ -242,73 +125,92 @@ Deno.serve(async (req) => {
       });
     }
 
-    const [dexVolumes, dbStats, solPrice] = await Promise.all([
+    const [dexVolumes, geckoTrades, solPrice] = await Promise.all([
       fetchDefiLlamaDexVolumes(),
-      fetchOwnDbStats(),
+      fetchGeckoTerminalTrades(),
       fetchSolPrice(),
     ]);
 
-    const totalVolUsd = dexVolumes?.total24h || 0;
-    const volChange = dexVolumes?.change24h || 0;
+    const totalVolUsd = Number(dexVolumes?.total24h || 0);
+    const volChange = Number(dexVolumes?.change24h || 0);
 
-    // Our own volume in USD
-    const ownVolUsd = (dbStats?.totalVolSol || 0) * solPrice;
-    const buyVolUsd = (dbStats?.buyVolSol || 0) * solPrice;
-    const sellVolUsd = (dbStats?.sellVolSol || 0) * solPrice;
+    const buyCount = Number(geckoTrades?.buyCount || 0);
+    const sellCount = Number(geckoTrades?.sellCount || 0);
+    const totalTrades = Number(geckoTrades?.totalTrades || 0);
 
-    // Top protocols from DeFi Llama
-    const topProtocols = (dexVolumes?.protocols || []).slice(0, 3).map((p: any) => ({
+    const tradeRatioDenom = buyCount + sellCount;
+    const buyRatio = tradeRatioDenom > 0 ? buyCount / tradeRatioDenom : 0.5;
+    const sellRatio = 1 - buyRatio;
+
+    const buyVolUsd = totalVolUsd * buyRatio;
+    const sellVolUsd = totalVolUsd * sellRatio;
+    const buyVolSol = solPrice > 0 ? buyVolUsd / solPrice : 0;
+    const sellVolSol = solPrice > 0 ? sellVolUsd / solPrice : 0;
+
+    const protocols = dexVolumes?.protocols || [];
+
+    const topProtocols = protocols.slice(0, 3).map((p) => ({
       name: p.name,
       vol24hUsd: p.vol24h,
       change: p.change,
     }));
 
-    // Launchpad volumes from our DB
-    const lpVolumes = Object.entries(dbStats?.lpVolumeMap || {})
-      .map(([type, volSol]) => ({
-        type,
-        vol24hUsd: (volSol as number) * solPrice,
-        vol24hSol: volSol as number,
-      }))
-      .sort((a, b) => b.vol24hUsd - a.vol24hUsd)
-      .slice(0, 3);
+    // Fixed launchpad set (as requested), all values from external protocol feed (no DB)
+    const launchpadRows = [
+      {
+        type: "pumpfun",
+        matcher: /pump/,
+      },
+      {
+        type: "bonk",
+        matcher: /bonk/,
+      },
+      {
+        type: "moonshot",
+        matcher: /moonshot/,
+      },
+    ];
+
+    const topLaunchpads = launchpadRows.map((lp) => {
+      const vol24hUsd = protocolVolumeByName(protocols, lp.matcher);
+      const change = protocolChangeByName(protocols, lp.matcher);
+      const vol24hSol = solPrice > 0 ? vol24hUsd / solPrice : 0;
+      return {
+        type: lp.type,
+        vol24hUsd,
+        vol24hSol,
+        change,
+      };
+    });
 
     const result = {
-      // Market overview
       totalVol24hUsd: totalVolUsd,
       volChange24h: volChange,
       solPrice,
 
-      // Trade stats (from our platform)
-      totalTrades: dbStats?.trades24h || 0,
-      tradesChange: dbStats?.tradesChange || 0,
-      uniqueTraders: dbStats?.uniqueTraders24h || 0,
-      tradersChange: dbStats?.tradersChange || 0,
+      totalTrades,
+      tradesChange: 0,
+      uniqueTraders: 0,
+      tradersChange: 0,
 
-      // Buy/sell breakdown (our platform)
-      buyCount: dbStats?.buyCount || 0,
+      buyCount,
       buyVolUsd,
-      buyVolSol: dbStats?.buyVolSol || 0,
-      sellCount: dbStats?.sellCount || 0,
+      buyVolSol,
+      sellCount,
       sellVolUsd,
-      sellVolSol: dbStats?.sellVolSol || 0,
-      ownVolUsd,
+      sellVolSol,
+      ownVolUsd: totalVolUsd,
 
-      // Token stats
-      tokensCreated: dbStats?.totalTokens || 0,
-      created24h: dbStats?.created24h || 0,
-      createdChange: dbStats?.createdChange || 0,
-      migrations: dbStats?.totalGraduated || 0,
-      graduated24h: dbStats?.graduated24h || 0,
-      graduatedChange: dbStats?.graduatedChange || 0,
+      tokensCreated: 0,
+      created24h: 0,
+      createdChange: 0,
+      migrations: 0,
+      graduated24h: 0,
+      graduatedChange: 0,
 
-      // Top protocols (Solana-wide from DeFi Llama)
       topProtocols,
+      topLaunchpads,
 
-      // Top launchpads (our platform data)
-      topLaunchpads: lpVolumes,
-
-      // Timestamp
       updatedAt: new Date().toISOString(),
     };
 
