@@ -310,8 +310,9 @@ export function StickyStatsFooter() {
               <div style={{
                 position: isMobile ? "fixed" : "absolute",
                 bottom: isMobile ? "48px" : "calc(100% + 6px)",
-                right: isMobile ? "8px" : 0,
-                left: isMobile ? undefined : undefined,
+                right: isMobile ? undefined : 0,
+                left: isMobile ? "50%" : undefined,
+                transform: isMobile ? "translateX(-50%)" : undefined,
                 width: isMobile ? "180px" : "220px",
                 maxWidth: isMobile ? "calc(100vw - 16px)" : undefined,
                 background: "hsl(var(--card))",
