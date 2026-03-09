@@ -58,10 +58,9 @@ export function OptimizedTokenImage({
   alt,
   ...props
 }: OptimizedTokenImageProps) {
-  const [errorCount, setErrorCount] = useState(0);
+  const [hasError, setHasError] = useState(false);
 
-  // No src at all → show text
-  if (!src && !fallbackSrc) {
+  if (!src || hasError) {
     return (
       <div
         className={cn(
@@ -74,28 +73,7 @@ export function OptimizedTokenImage({
     );
   }
 
-  // Determine which URL to show based on error count
-  const currentSrc =
-    errorCount === 0 && src
-      ? src
-      : errorCount <= 1 && fallbackSrc
-        ? fallbackSrc
-        : null;
-
-  if (!currentSrc) {
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-center bg-secondary text-xs font-bold text-muted-foreground",
-          className
-        )}
-      >
-        {fallbackText?.slice(0, 2) ?? "?"}
-      </div>
-    );
-  }
-
-  const optimizedSrc = getOptimizedUrl(currentSrc, size);
+  const optimizedSrc = getOptimizedUrl(src, size);
 
   return (
     <img
@@ -104,7 +82,10 @@ export function OptimizedTokenImage({
       loading="lazy"
       decoding="async"
       className={className}
-      onError={() => setErrorCount((c) => c + 1)}
+      onError={(event) => {
+        setHasError(true);
+        props.onError?.(event);
+      }}
       {...props}
     />
   );
