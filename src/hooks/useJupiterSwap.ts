@@ -45,7 +45,11 @@ export function useJupiterSwap() {
         slippageBps: slippageBps.toString(),
       });
 
-      const response = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`);
+      const headers: Record<string, string> = {};
+      const jupApiKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
+      if (jupApiKey) headers['x-api-key'] = jupApiKey;
+
+      const response = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`, { headers });
       
       if (!response.ok) {
         const error = await response.json();
@@ -80,9 +84,13 @@ export function useJupiterSwap() {
       }
 
       // Step 2: Get swap transaction
+      const swapHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      const jupKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
+      if (jupKey) swapHeaders['x-api-key'] = jupKey;
+
       const swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: swapHeaders,
         body: JSON.stringify({
           quoteResponse: quote,
           userPublicKey: userWallet,
