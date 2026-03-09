@@ -270,97 +270,9 @@ export function StickyStatsFooter() {
                 position: "absolute",
                 bottom: "calc(100% + 8px)",
                 right: 0,
-                width: "320px",
-                background: "linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "16px",
-                boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
-                padding: "12px 10px",
                 zIndex: 100000,
               }}>
-                {/* Header */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "6px 8px 12px",
-                  borderBottom: "1px solid hsl(var(--border))",
-                  marginBottom: "6px",
-                }}>
-                  <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "28px",
-                    lineHeight: 1,
-                    fontWeight: 600,
-                    color: "hsl(var(--foreground))",
-                    letterSpacing: "-0.02em",
-                  }}>
-                    Launchpads
-                  </span>
-                  <button onClick={handleLpRefresh} style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "2px",
-                    display: "flex",
-                    color: "hsl(var(--muted-foreground))",
-                  }}>
-                    <RefreshCw style={{
-                      width: "20px",
-                      height: "20px",
-                      transition: "transform 0.6s",
-                      transform: lpRefreshing ? "rotate(360deg)" : "none",
-                    }} />
-                  </button>
-                </div>
-
-                {/* Launchpad list */}
-                {(launchpadStats || []).map((lp) => {
-                  const icon = getLaunchpadIcon(lp.type);
-                  const label = getLaunchpadLabel(lp.type);
-                  return (
-                    <div
-                      key={lp.type}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        width: "100%",
-                        padding: "14px 8px",
-                        borderRadius: "8px",
-                        fontFamily: "'IBM Plex Mono', monospace",
-                        fontSize: "18px",
-                        color: "hsl(var(--foreground))",
-                      }}
-                    >
-                      {icon ? (
-                        <img
-                          src={icon}
-                          alt={label}
-                          style={{ width: "40px", height: "40px", borderRadius: "8px", objectFit: "contain", flexShrink: 0, background: "hsl(var(--muted))" }}
-                        />
-                      ) : (
-                        <Layers style={{ width: "40px", height: "40px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-                      )}
-                      <span style={{ flex: 1, fontWeight: 500, textTransform: "none" }}>{label}</span>
-                      <span style={{ fontWeight: 700, color: "hsl(142, 71%, 45%)", fontSize: "20px", lineHeight: 1 }}>
-                        {lp.total.toLocaleString()}
-                      </span>
-                    </div>
-                  );
-                })}
-
-                {(!launchpadStats || launchpadStats.length === 0) && (
-                  <div style={{
-                    padding: "12px 8px",
-                    textAlign: "center",
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "11px",
-                    color: "hsl(var(--muted-foreground))",
-                  }}>
-                    Loading...
-                  </div>
-                )}
+                <MarketLighthouse onRefresh={handleLpRefresh} refreshing={lpRefreshing} />
               </div>
             )}
           </div>
