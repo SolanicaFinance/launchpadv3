@@ -98,6 +98,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.image_url}
+              fallbackSrc={token.mint_address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png` : undefined}
               fallbackText={token.ticker}
               size={48}
               loading="eager"

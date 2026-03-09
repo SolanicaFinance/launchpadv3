@@ -99,6 +99,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.imageUrl}
+              fallbackSrc={token.address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.address}.png` : undefined}
               fallbackText={token.symbol}
               size={48}
               loading="eager"

@@ -157,8 +157,13 @@ Deno.serve(async (req) => {
       
       // BSC fallback: use Trust Wallet asset repo for token logos
       if (!imageUrl && address && safeNetworkId === BSC_NETWORK_ID) {
-        const checksumAddr = address; // Codex typically returns checksummed addresses
+        const checksumAddr = address;
         imageUrl = `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${checksumAddr}/logo.png`;
+      }
+
+      // Solana fallback: use DexScreener CDN for token images
+      if (!imageUrl && address && safeNetworkId === SOLANA_NETWORK_ID) {
+        imageUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`;
       }
 
       return {

@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 interface OptimizedTokenImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string | null | undefined;
   fallbackText?: string;
+  /** Fallback image URL to try before showing text placeholder */
+  fallbackSrc?: string | null;
   /** Target render size in px — used to request a smaller image */
   size?: number;
 }
@@ -39,14 +41,16 @@ function getOptimizedUrl(src: string, size: number): string {
 export function OptimizedTokenImage({
   src,
   fallbackText,
+  fallbackSrc,
   size = 200,
   className,
   alt,
   ...props
 }: OptimizedTokenImageProps) {
-  const [error, setError] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
 
-  if (!src || error) {
+  // No src at all → show text
+  if (!src && !fallbackSrc) {
     return (
       <div
         className={cn(
@@ -59,7 +63,28 @@ export function OptimizedTokenImage({
     );
   }
 
-  const optimizedSrc = getOptimizedUrl(src, size);
+  // Determine which URL to show based on error count
+  const currentSrc =
+    errorCount === 0 && src
+      ? src
+      : errorCount <= 1 && fallbackSrc
+        ? fallbackSrc
+        : null;
+
+  if (!currentSrc) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center bg-secondary text-xs font-bold text-muted-foreground",
+          className
+        )}
+      >
+        {fallbackText?.slice(0, 2) ?? "?"}
+      </div>
+    );
+  }
+
+  const optimizedSrc = getOptimizedUrl(currentSrc, size);
 
   return (
     <img
@@ -68,7 +93,7 @@ export function OptimizedTokenImage({
       loading="lazy"
       decoding="async"
       className={className}
-      onError={() => setError(true)}
+      onError={() => setErrorCount((c) => c + 1)}
       {...props}
     />
   );
