@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, Radar, RefreshCw } from "lucide-react";
+import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
+import { Radar, RefreshCw } from "lucide-react";
 import { useKolTweets } from "@/hooks/useKolTweets";
 import { KolTweetCard } from "@/components/x-tracker/KolTweetCard";
 import { cn } from "@/lib/utils";
@@ -9,32 +8,16 @@ import { cn } from "@/lib/utils";
 type ChainFilter = "all" | "solana" | "evm";
 
 export default function XTrackerPage() {
-  const isMobile = useIsMobile();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [chain, setChain] = useState<ChainFilter>("all");
   const { data: tweets, isLoading, refetch, isFetching } = useKolTweets(chain);
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
-
-      <main className={cn("flex-1 min-h-screen", !isMobile && "ml-[48px]")}>
-        {/* Mobile header */}
-        {isMobile && (
-          <div className="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border">
-            <button onClick={() => setMobileOpen(true)}>
-              <Menu className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <Radar className="w-5 h-5 text-primary" />
-            <span className="text-sm font-bold">X Tracker</span>
-          </div>
-        )}
-
-        <div className="max-w-7xl mx-auto px-4 py-6 pb-20">
+    <LaunchpadLayout showKingOfTheHill={false}>
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-20">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              {!isMobile && <Radar className="w-6 h-6 text-primary" />}
+              <Radar className="w-6 h-6 text-primary" />
               <div>
                 <h1 className="text-xl font-bold text-foreground">X Tracker</h1>
                 <p className="text-xs text-muted-foreground">
@@ -97,7 +80,6 @@ export default function XTrackerPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </LaunchpadLayout>
   );
 }

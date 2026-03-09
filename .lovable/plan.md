@@ -1,60 +1,45 @@
 
 
-## Plan: Create Landing Page + Move Launchpad
+## Two Issues to Fix
 
-### Overview
-1. Rename current `/` (FunLauncherPage) to `/launchpad` route
-2. Create a new professional landing page at `/` that showcases Saturn Trading platform
-3. Fix XTrackerPage missing header (it uses raw Sidebar but no AppHeader)
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-### Route Changes (App.tsx)
-- Change `"/"` to render new `HomePage` (not `PunchDomainRoot`)
-- Add `/launchpad` route pointing to `FunLauncherPage`
-- Update sidebar nav: Home → `/`, add "Launchpad" → `/launchpad`
-- Keep PunchDomainRoot logic for punchlaunch.fun domain
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-### New File: `src/pages/HomePage.tsx`
-A professional landing page using `LaunchpadLayout` with these sections:
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**1. Hero Section**
-- Saturn logo + "Saturn Trade" title
-- Tagline: "The fastest AI-powered trading terminal on Solana"
-- Brief description of platform features (trading terminal, referral system, launchpad)
-- CTA buttons: "Open Terminal" → `/trade`, "Launch Token" → `/launchpad`
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-**2. Mini Pulse Section (limited tokens)**
-- Reuse `AxiomTerminalGrid` or build a lightweight version showing only 5 new pairs, 5 final stretch, 5 migrated
-- Pass a `limit={5}` prop or slice data before passing
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-**3. Last 20 Tokens Launched**
-- Reuse `useJustLaunched` or `useFunTokensPaginated` hook, show horizontal scroll or grid of 20 token cards
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-**4. King of the Hill**
-- Reuse existing `<KingOfTheHill />` component
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-**5. Alpha Tracker Section (last 10)**
-- Use `useAlphaTrades(10)` hook
-- Show compact trade cards in a grid/list
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-**6. X Tracker Section (last ~6 tweets)**
-- Use `useKolTweets()` hook, show first 6 `KolTweetCard` components
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-**7. Leverage Section (top 6 pairs)**
-- Use `useAsterMarkets()` hook, show top 6 by volume
-- Compact cards with symbol, price, 24h change, volume
+### Technical Details
 
-### Fix: XTrackerPage Header
-- XTrackerPage uses `Sidebar` directly but doesn't use `AppHeader`
-- Add `AppHeader` import and render it like other pages, or switch to `LaunchpadLayout`
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-### Sidebar Update (Sidebar.tsx)
-- Add "Launchpad" nav item with `Plus` or `Rocket` icon pointing to `/launchpad`
-- Keep "Home" pointing to `/`
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-### Files to create/modify:
-- **Create**: `src/pages/HomePage.tsx`
-- **Edit**: `src/App.tsx` (routes)
-- **Edit**: `src/components/layout/Sidebar.tsx` (add launchpad link)
-- **Edit**: `src/pages/XTrackerPage.tsx` (add AppHeader)
-- **Edit**: `src/components/launchpad/AxiomTerminalGrid.tsx` (add optional `limit` prop)
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
