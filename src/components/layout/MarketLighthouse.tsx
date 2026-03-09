@@ -68,9 +68,11 @@ const S = {
 export function MarketLighthouse({
   onRefresh,
   refreshing,
+  compact = false,
 }: {
   onRefresh: (e: React.MouseEvent) => void;
   refreshing: boolean;
+  compact?: boolean;
 }) {
   const { data, isLoading, refetch } = useMarketLighthouse();
   const [activeTab, setActiveTab] = useState<string>("24h");
