@@ -13,9 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   Zap, Rocket, ArrowRight, Crosshair, Radar, CandlestickChart,
-  ArrowUpRight, ArrowDownRight, ExternalLink, TrendingUp, Shield, Users, Bot
+  ArrowUpRight, ArrowDownRight, Shield, Users, Bot
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { format } from "date-fns";
 import saturnLogo from "@/assets/saturn-logo.png";
 
@@ -74,7 +74,6 @@ function LeverageCard({ market }: { market: AsterMarket }) {
       to={`/leverage?symbol=${market.symbol}`}
       className="relative flex flex-col gap-2 p-3.5 rounded-xl bg-card/60 border border-border/50 hover:border-primary/30 transition-all group overflow-hidden"
     >
-      {/* Sparkline background */}
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-xl">
         <SparklineCanvas data={[1, 1]} seed={market.symbol} />
       </div>
@@ -93,6 +92,63 @@ function LeverageCard({ market }: { market: AsterMarket }) {
       </div>
       <div className="relative z-10 text-[10px] text-muted-foreground">Vol {formatVol}</div>
     </Link>
+  );
+}
+
+/* ── Compact Pulse Token Row ── */
+function PulseTokenRow({ token }: { token: CodexPairToken }) {
+  const mcap = token.marketCap;
+  const formatMcap = mcap >= 1e6 ? `$${(mcap / 1e6).toFixed(2)}M` : mcap >= 1e3 ? `$${(mcap / 1e3).toFixed(1)}K` : `$${mcap.toFixed(0)}`;
+  const change = token.change24h;
+  const isPositive = change >= 0;
+
+  return (
+    <Link
+      to={`/trade/${token.address}`}
+      className="relative flex items-center gap-2.5 px-3 py-2 rounded-lg bg-card/40 border border-border/30 hover:border-primary/30 transition-all overflow-hidden"
+    >
+      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
+        <SparklineCanvas data={[1, 1]} seed={token.address || token.symbol} />
+      </div>
+      <OptimizedTokenImage
+        src={token.imageUrl}
+        alt={token.name}
+        className="w-7 h-7 rounded-full shrink-0 relative z-10"
+      />
+      <div className="flex-1 min-w-0 relative z-10">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-foreground truncate">{token.symbol}</span>
+          {token.graduationPercent > 0 && token.graduationPercent < 100 && (
+            <span className="text-[9px] text-muted-foreground font-mono">{token.graduationPercent.toFixed(0)}%</span>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground truncate block">{token.name}</span>
+      </div>
+      <div className="text-right shrink-0 relative z-10">
+        <div className="text-[11px] font-bold text-foreground font-mono">{formatMcap}</div>
+        <div className={cn("text-[10px] font-mono font-semibold", isPositive ? "text-emerald-400" : "text-red-400")}>
+          {isPositive ? "+" : ""}{change.toFixed(1)}%
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ── Pulse Column ── */
+function PulseColumn({ title, tokens, loading }: { title: string; tokens: CodexPairToken[]; loading: boolean }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">{title}</div>
+      {loading ? (
+        Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 rounded-lg" />
+        ))
+      ) : tokens.length > 0 ? (
+        tokens.map((t) => <PulseTokenRow key={t.address || t.symbol} token={t} />)
+      ) : (
+        <div className="text-center py-6 text-[11px] text-muted-foreground">No tokens</div>
+      )}
+    </div>
   );
 }
 
@@ -125,9 +181,6 @@ export default function HomePage() {
   const { data: kolTweets } = useKolTweets("all");
   const { trades: alphaTrades, loading: alphaLoading } = useAlphaTrades(10);
   const { markets: leverageMarkets, loading: leverageLoading } = useAsterMarkets();
-  const { data: kolTweets } = useKolTweets("all");
-  const { trades: alphaTrades, loading: alphaLoading } = useAlphaTrades(10);
-  const { markets: leverageMarkets, loading: leverageLoading } = useAsterMarkets();
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
   const limitedCompleting = useMemo(() => (codexCompleting || []).slice(0, 5), [codexCompleting]);
@@ -145,7 +198,6 @@ export default function HomePage() {
       <div className="relative z-10">
         {/* ═══ Hero Section ═══ */}
         <section className="relative overflow-hidden">
-          {/* Gradient bg */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
@@ -178,7 +230,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Feature pills */}
             <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
               {[
                 { icon: Zap, label: "Fastest Execution" },
@@ -199,11 +250,8 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 py-6">
           <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* New Pairs */}
             <PulseColumn title="⚡ New Pairs" tokens={limitedNewPairs} loading={codexLoading} />
-            {/* Final Stretch */}
             <PulseColumn title="🔥 Final Stretch" tokens={limitedCompleting} loading={codexLoading} />
-            {/* Migrated */}
             <PulseColumn title="🚀 Migrated" tokens={limitedGraduated} loading={codexLoading} />
           </div>
         </section>
