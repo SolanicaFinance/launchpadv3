@@ -28,7 +28,7 @@ const REGIONS = [
 const LAUNCHPAD_CONFIG: Record<string, { label: string; icon: string; isLocal?: boolean }> = {
   pumpfun: { label: "pumpfun", icon: pumpfunPill, isLocal: true },
   bonk: { label: "bonk", icon: bonkIcon, isLocal: true },
-  meteora: { label: "meteora", icon: tunaLogo, isLocal: true },
+  meteora: { label: "meteora", icon: meteoraIcon, isLocal: true },
   bags: { label: "bags.fm", icon: bagsIcon, isLocal: true },
   moonshot: { label: "moonshot", icon: moonshotIcon, isLocal: true },
   raydium: { label: "raydium", icon: raydiumIcon, isLocal: true },
