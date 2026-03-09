@@ -1,23 +1,81 @@
 import { AlphaTradeRecord } from "@/hooks/useUserProfile";
 import { PositionSummary } from "@/lib/tradeUtils";
+import { TokenHolding } from "@/hooks/useWalletHoldings";
 import { Link } from "react-router-dom";
 import { ExternalLink, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { timeAgo, formatTokenAmt, formatMcap } from "@/lib/tradeUtils";
+import { useMemo } from "react";
+
+interface MergedPosition {
+  token_mint: string;
+  token_ticker: string | null;
+  token_image_url: string | null;
+  status: string;
+  total_bought_sol: number;
+  net_tokens: number;
+  realized_pnl_sol: number;
+  wallet_address: string;
+  hasAlphaData: boolean;
+}
 
 interface PositionsTabProps {
   alphaTrades: AlphaTradeRecord[];
   positions: Map<string, PositionSummary>;
   loading: boolean;
+  onChainHoldings?: TokenHolding[];
+  holdingsLoading?: boolean;
 }
 
-export function ProfilePositionsTab({ alphaTrades, positions, loading }: PositionsTabProps) {
-  const activePositions = Array.from(positions.values()).filter((p) => p.status === "HOLDING" || p.status === "PARTIAL");
+export function ProfilePositionsTab({ alphaTrades, positions, loading, onChainHoldings = [], holdingsLoading = false }: PositionsTabProps) {
+  const mergedPositions = useMemo(() => {
+    const result: MergedPosition[] = [];
+    const seenMints = new Set<string>();
 
-  if (loading) {
+    // First add all alpha positions that are active
+    for (const pos of positions.values()) {
+      if (pos.status === "HOLDING" || pos.status === "PARTIAL") {
+        seenMints.add(pos.token_mint);
+        const trade = alphaTrades.find((t) => t.token_mint === pos.token_mint);
+        result.push({
+          token_mint: pos.token_mint,
+          token_ticker: pos.token_ticker,
+          token_image_url: trade?.token_image_url ?? null,
+          status: pos.status,
+          total_bought_sol: pos.total_bought_sol,
+          net_tokens: pos.net_tokens,
+          realized_pnl_sol: pos.realized_pnl_sol,
+          wallet_address: pos.wallet_address,
+          hasAlphaData: true,
+        });
+      }
+    }
+
+    // Then add on-chain holdings not already covered by alpha
+    for (const h of onChainHoldings) {
+      if (!seenMints.has(h.mint)) {
+        seenMints.add(h.mint);
+        result.push({
+          token_mint: h.mint,
+          token_ticker: null,
+          token_image_url: null,
+          status: "HOLDING",
+          total_bought_sol: 0,
+          net_tokens: h.balance,
+          realized_pnl_sol: 0,
+          wallet_address: "",
+          hasAlphaData: false,
+        });
+      }
+    }
+
+    return result;
+  }, [positions, alphaTrades, onChainHoldings]);
+
+  if (loading || holdingsLoading) {
     return <div className="p-6 flex justify-center"><div className="w-4 h-4 border-2 border-transparent border-t-primary rounded-full animate-spin" /></div>;
   }
 
-  if (activePositions.length === 0) {
+  if (mergedPositions.length === 0) {
     return <p className="p-6 text-center text-muted-foreground text-sm font-mono">No active positions</p>;
   }
 
@@ -32,18 +90,16 @@ export function ProfilePositionsTab({ alphaTrades, positions, loading }: Positio
         <span className="text-right">PnL</span>
         <span></span>
       </div>
-      {activePositions.map((pos) => {
-        // Find latest trade for this position to get image
-        const trade = alphaTrades.find((t) => t.token_mint === pos.token_mint);
+      {mergedPositions.map((pos) => {
         const pnlPositive = pos.realized_pnl_sol >= 0;
 
         return (
-          <div key={`${pos.wallet_address}::${pos.token_mint}`} className="grid grid-cols-[1fr_60px_70px_70px_56px_40px] gap-2 px-4 py-2.5 items-center hover:bg-muted/20 transition-colors">
+          <div key={pos.token_mint} className="grid grid-cols-[1fr_60px_70px_70px_56px_40px] gap-2 px-4 py-2.5 items-center hover:bg-muted/20 transition-colors">
             {/* Token */}
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-6 w-6 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center shrink-0">
-                {trade?.token_image_url ? (
-                  <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
+                {pos.token_image_url ? (
+                  <img src={pos.token_image_url} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-[7px] font-bold text-muted-foreground">
                     {(pos.token_ticker || "??").slice(0, 2).toUpperCase()}
@@ -52,7 +108,7 @@ export function ProfilePositionsTab({ alphaTrades, positions, loading }: Positio
               </div>
               <div className="min-w-0">
                 <Link to={`/trade/${pos.token_mint}`} className="text-[11px] font-semibold text-foreground hover:text-primary truncate block">
-                  ${pos.token_ticker || pos.token_mint.slice(0, 6)}
+                  {pos.token_ticker ? `$${pos.token_ticker}` : `${pos.token_mint.slice(0, 6)}...`}
                 </Link>
                 <span className="text-[9px] text-muted-foreground/50 font-mono">{pos.token_mint.slice(0, 4)}..{pos.token_mint.slice(-4)}</span>
               </div>
@@ -67,7 +123,7 @@ export function ProfilePositionsTab({ alphaTrades, positions, loading }: Positio
 
             {/* Bought SOL */}
             <span className="text-[10px] font-mono text-right text-foreground tabular-nums">
-              {pos.total_bought_sol.toFixed(3)} SOL
+              {pos.hasAlphaData ? `${pos.total_bought_sol.toFixed(3)} SOL` : "—"}
             </span>
 
             {/* Net Tokens */}
@@ -76,8 +132,8 @@ export function ProfilePositionsTab({ alphaTrades, positions, loading }: Positio
             </span>
 
             {/* PnL */}
-            <span className={`text-[10px] font-mono text-right tabular-nums ${pnlPositive ? "text-green-400" : "text-red-400"}`}>
-              {pnlPositive ? "+" : ""}{pos.realized_pnl_sol.toFixed(3)}
+            <span className={`text-[10px] font-mono text-right tabular-nums ${pos.hasAlphaData ? (pnlPositive ? "text-green-400" : "text-red-400") : "text-muted-foreground"}`}>
+              {pos.hasAlphaData ? `${pnlPositive ? "+" : ""}${pos.realized_pnl_sol.toFixed(3)}` : "—"}
             </span>
 
             {/* Explorer */}

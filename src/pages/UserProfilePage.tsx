@@ -173,7 +173,7 @@ export default function UserProfilePage() {
             <>
               <TabsContent value="positions">
                 <div className="border border-border/30 rounded-lg bg-card overflow-hidden">
-                  <ProfilePositionsTab alphaTrades={alphaTrades} positions={alphaPositions} loading={alphaTradesLoading} />
+                  <ProfilePositionsTab alphaTrades={alphaTrades} positions={alphaPositions} loading={alphaTradesLoading} onChainHoldings={walletHoldings} holdingsLoading={holdingsLoading} />
                 </div>
               </TabsContent>
               <TabsContent value="activity">

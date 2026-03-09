@@ -414,3 +414,6 @@ verify_jwt = false
 
 [functions.codex-chart-data]
 verify_jwt = false
+
+[functions.fetch-wallet-holdings]
+verify_jwt = false
