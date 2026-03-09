@@ -163,10 +163,6 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
       {/* ── Token Image ── */}
       <div className="relative z-10 w-full" style={{ paddingBottom: "54%" }}>
         <div className="absolute inset-0">
-          {/* Sparkline background - on top of image, below text overlays */}
-          <div className="absolute inset-0 z-[1] opacity-40 pointer-events-none">
-            <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
-          </div>
           <OptimizedTokenImage
             src={token.image_url}
             fallbackSrc={token.mint_address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png` : undefined}
@@ -216,6 +212,10 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
 
       {/* ── Card Body ── */}
       <div className="relative z-10 px-3 pt-3 pb-2.5 flex flex-col">
+        {/* Sparkline background - in card body area */}
+        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-b-lg">
+          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
+        </div>
         {/* Name + Ticker row */}
         <div className="flex items-center justify-between gap-2 mb-1">
           <h3 className="text-sm font-bold truncate leading-tight" style={{ color: "hsl(0 0% 95%)" }}>
