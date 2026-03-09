@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import defaultAvatar from "@/assets/default-avatar.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -72,9 +73,8 @@ export default function UserProfilePage() {
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.display_name || ""} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-                  {(profile.display_name || profile.username || "?")[0]?.toUpperCase()}
-                </div>
+                <img src={defaultAvatar} alt="Default avatar" className="w-full h-full object-cover" />
+              )}
               )}
             </div>
             <div className="flex-1 min-w-0 pb-1">
