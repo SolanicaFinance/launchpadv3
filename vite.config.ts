@@ -28,11 +28,16 @@ export default defineConfig(({ mode }) => ({
         manualChunks(id) {
           // Split heavy vendor deps into separate chunks to reduce peak memory
           if (id.includes('node_modules/@solana')) return 'vendor-solana';
-          if (id.includes('node_modules/viem') || id.includes('node_modules/wagmi') || id.includes('node_modules/@rainbow-me')) return 'vendor-evm';
+          if (id.includes('node_modules/viem')) return 'vendor-viem';
+          if (id.includes('node_modules/wagmi') || id.includes('node_modules/@rainbow-me')) return 'vendor-evm';
           if (id.includes('node_modules/@meteora-ag')) return 'vendor-meteora';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
           if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
           if (id.includes('node_modules/lightweight-charts')) return 'vendor-lwcharts';
+          if (id.includes('node_modules/@privy-io')) return 'vendor-privy';
+          if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
+          if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack';
+          if (id.includes('node_modules/bn.js') || id.includes('node_modules/buffer') || id.includes('node_modules/bs58')) return 'vendor-crypto-utils';
         },
       },
     },
