@@ -14,6 +14,7 @@ import { ProfileTradingStats } from "@/components/profile/ProfileTradingStats";
 import { ProfilePositionsTab, ProfileActivityTab } from "@/components/profile/ProfileTradingTabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatSol, truncateWallet } from "@/lib/tradeUtils";
+import { useWalletHoldings } from "@/hooks/useWalletHoldings";
 
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();
