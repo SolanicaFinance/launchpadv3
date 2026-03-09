@@ -197,19 +197,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══ Mini Pulse Section ═══ */}
+        {/* ═══ Live Pulse Section ═══ */}
         <section className="max-w-7xl mx-auto px-4 py-6">
-          <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Full Terminal" />
-          <AxiomTerminalGrid
-            tokens={tokens.slice(0, 5)}
-            solPrice={solPrice}
-            isLoading={tokensLoading || codexLoading}
-            codexNewPairs={limitedNewPairs}
-            codexCompleting={limitedCompleting}
-            codexGraduated={limitedGraduated}
-            quickBuyAmount={quickBuyAmount}
-            onQuickBuyChange={setQuickBuyAmount}
-          />
+          <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* New Pairs */}
+            <PulseColumn title="⚡ New Pairs" tokens={limitedNewPairs} loading={codexLoading} />
+            {/* Final Stretch */}
+            <PulseColumn title="🔥 Final Stretch" tokens={limitedCompleting} loading={codexLoading} />
+            {/* Migrated */}
+            <PulseColumn title="🚀 Migrated" tokens={limitedGraduated} loading={codexLoading} />
+          </div>
         </section>
 
         {/* ═══ Just Launched ═══ */}
