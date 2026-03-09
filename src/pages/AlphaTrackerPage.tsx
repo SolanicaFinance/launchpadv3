@@ -4,26 +4,7 @@ import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filte
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
-
-function timeAgo(dateStr: string) {
-  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h`;
-  return `${Math.floor(s / 86400)}d`;
-}
-
-function formatTokenAmt(v: number): string {
-  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-  return v.toFixed(0);
-}
-
-function formatMcap(v: number): string {
-  if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;
-  return v.toFixed(1);
-}
+import { timeAgo, formatTokenAmt, formatMcap } from "@/lib/tradeUtils";
 
 function StatusPill({ status }: { status: PositionSummary["status"] }) {
   const c = {
@@ -186,9 +167,12 @@ export default function AlphaTrackerPage() {
                   <div className="min-w-0 flex items-center gap-1.5">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-semibold text-foreground truncate leading-none">
+                        <Link
+                          to={`/profile/${trade.wallet_address}`}
+                          className="text-[10px] font-semibold text-foreground truncate leading-none hover:text-primary hover:underline transition-colors"
+                        >
                           {trade.trader_display_name || `${trade.wallet_address.slice(0, 4)}..${trade.wallet_address.slice(-3)}`}
-                        </span>
+                        </Link>
                       </div>
                       <Link
                         to={`/trade/${trade.token_mint}`}

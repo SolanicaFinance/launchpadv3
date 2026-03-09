@@ -1,48 +1,45 @@
 
 
-# Make Alpha Tracker Traders Clickable + Enhanced Profile Trading Analytics
+## Two Issues to Fix
 
-## Overview
-Two changes: (1) make trader names in Alpha Tracker link to `/profile/:wallet`, and (2) add a comprehensive trading analytics section to the user profile page inspired by the reference screenshot.
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-## 1. Alpha Tracker — Clickable Traders
-**File: `src/pages/AlphaTrackerPage.tsx`**
-- Wrap trader name/avatar with `<Link to={/profile/${trade.wallet_address}}>` 
-- The profile page already resolves by wallet address via `isWalletAddress()` check in `useUserProfile`
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-## 2. User Profile — Trading Analytics Dashboard
-**File: `src/hooks/useUserProfile.ts`**
-- Add a new query to fetch `alpha_trades` for the profile's wallet address
-- Compute position summaries (reuse `computePositions` logic from `useAlphaTrades`)
-- Calculate aggregate stats: total PnL, realized PnL, total transactions (buys/sells), and PnL distribution buckets
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**File: `src/pages/UserProfilePage.tsx`**
-Add a trading analytics section above or within the tabs, inspired by the screenshot:
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-### Stats Cards Row (3 columns):
-- **Balance**: Total value in SOL (sum of current holdings × price), tradeable balance, unrealized PnL
-- **Performance**: Total PnL, Realized PnL, Total TXNs (with buy/sell counts colored green/red)
-- **PnL Distribution**: Breakdown by percentage ranges (>500%, 200-500%, 0-200%, 0 to -50%, < -50%) with counts and colored bar
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### New Tabs:
-Add **"Active Positions"** and **"Activity"** tabs alongside existing Tokens/Trades:
-- **Active Positions**: Grid showing tokens still held — Type (BUY), Token name/logo, Amount (SOL), Market Cap at entry, Age, Explorer link
-- **Activity**: Chronological feed of all alpha trades for this wallet (same as current trades but enriched with alpha data)
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-### Data Sources:
-- `alpha_trades` filtered by `wallet_address` = profile's wallet
-- Position computation reused from `useAlphaTrades.ts` (extract `computePositions` to shared util)
-- Token images from `tokens` table (same pattern as `useAlphaTrades`)
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-## 3. Extract Shared Utilities
-**New file: `src/lib/tradeUtils.ts`**
-- Move `computePositions()` and `PositionSummary` interface here so both `useAlphaTrades` and `useUserProfile` can use them
-- Move formatting helpers (`formatTokenAmt`, `formatMcap`, `timeAgo`)
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-## Files to modify:
-1. `src/pages/AlphaTrackerPage.tsx` — wrap trader with Link
-2. `src/hooks/useUserProfile.ts` — add alpha trades query for wallet
-3. `src/pages/UserProfilePage.tsx` — add trading analytics dashboard (stats cards + new tabs)
-4. `src/lib/tradeUtils.ts` (new) — shared position computation utilities
-5. `src/hooks/useAlphaTrades.ts` — import from shared util instead of local
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

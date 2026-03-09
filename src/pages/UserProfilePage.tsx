@@ -9,22 +9,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { VerifyAccountModal } from "@/components/launchpad/VerifyAccountModal";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { ProfileTradingStats } from "@/components/profile/ProfileTradingStats";
+import { ProfilePositionsTab, ProfileActivityTab } from "@/components/profile/ProfileTradingTabs";
 import { useQueryClient } from "@tanstack/react-query";
-
-function truncateWallet(addr: string | null) {
-  if (!addr) return "—";
-  return addr.slice(0, 4) + "..." + addr.slice(-4);
-}
-
-function formatSol(val: number | null) {
-  if (val === null || val === undefined) return "—";
-  if (val >= 1000) return (val / 1000).toFixed(1) + "K";
-  return val.toFixed(2);
-}
+import { formatSol, truncateWallet } from "@/lib/tradeUtils";
 
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();
-  const { profile, isLoading, error, tokens, tokensLoading, trades, tradesLoading } = useUserProfile(identifier);
+  const { profile, isLoading, error, tokens, tokensLoading, trades, tradesLoading, alphaTrades, alphaTradesLoading, alphaPositions, tradingStats } = useUserProfile(identifier);
   const { profileId } = useAuth();
   const [copied, setCopied] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
@@ -59,6 +51,8 @@ export default function UserProfilePage() {
       </LaunchpadLayout>
     );
   }
+
+  const hasAlphaData = alphaTrades.length > 0;
 
   return (
     <LaunchpadLayout hideFooter>
@@ -129,14 +123,14 @@ export default function UserProfilePage() {
             </button>
           )}
 
-        <EditProfileModal
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          profile={profile}
-          onSaved={() => queryClient.invalidateQueries({ queryKey: ["user-profile", identifier] })}
-        />
+          <EditProfileModal
+            open={editOpen}
+            onClose={() => setEditOpen(false)}
+            profile={profile}
+            onSaved={() => queryClient.invalidateQueries({ queryKey: ["user-profile", identifier] })}
+          />
 
-        <VerifyAccountModal open={verifyOpen} onOpenChange={setVerifyOpen} />
+          <VerifyAccountModal open={verifyOpen} onOpenChange={setVerifyOpen} />
 
           {/* Stats Row */}
           <div className="grid grid-cols-4 gap-3 border border-border/30 rounded-lg p-3 bg-muted/20">
@@ -151,12 +145,36 @@ export default function UserProfilePage() {
           </p>
         </div>
 
+        {/* Trading Analytics */}
+        {hasAlphaData && <ProfileTradingStats stats={tradingStats} />}
+
         {/* Tabs */}
-        <Tabs defaultValue="tokens" className="mt-4">
+        <Tabs defaultValue={hasAlphaData ? "positions" : "tokens"} className="mt-4">
           <TabsList className="bg-muted/30 border border-border/30 w-full justify-start">
+            {hasAlphaData && (
+              <>
+                <TabsTrigger value="positions" className="font-mono text-xs uppercase tracking-wider">Positions</TabsTrigger>
+                <TabsTrigger value="activity" className="font-mono text-xs uppercase tracking-wider">Activity</TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="tokens" className="font-mono text-xs uppercase tracking-wider">Tokens</TabsTrigger>
             <TabsTrigger value="trades" className="font-mono text-xs uppercase tracking-wider">Trades</TabsTrigger>
           </TabsList>
+
+          {hasAlphaData && (
+            <>
+              <TabsContent value="positions">
+                <div className="border border-border/30 rounded-lg bg-card overflow-hidden">
+                  <ProfilePositionsTab alphaTrades={alphaTrades} positions={alphaPositions} loading={alphaTradesLoading} />
+                </div>
+              </TabsContent>
+              <TabsContent value="activity">
+                <div className="border border-border/30 rounded-lg bg-card overflow-hidden">
+                  <ProfileActivityTab alphaTrades={alphaTrades} loading={alphaTradesLoading} />
+                </div>
+              </TabsContent>
+            </>
+          )}
 
           <TabsContent value="tokens">
             <div className="border border-border/30 rounded-lg bg-card overflow-hidden">

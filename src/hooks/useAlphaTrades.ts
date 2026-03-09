@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { computePositions, PositionSummary } from "@/lib/tradeUtils";
+
+export type { PositionSummary } from "@/lib/tradeUtils";
 
 export interface AlphaTrade {
   id: string;
@@ -19,73 +22,6 @@ export interface AlphaTrade {
   token_image_url?: string | null;
 }
 
-export interface PositionSummary {
-  wallet_address: string;
-  token_mint: string;
-  token_ticker: string | null;
-  total_bought_sol: number;
-  total_sold_sol: number;
-  total_bought_tokens: number;
-  total_sold_tokens: number;
-  net_tokens: number;
-  avg_buy_price_sol: number;
-  realized_pnl_sol: number;
-  status: "HOLDING" | "SOLD" | "PARTIAL";
-}
-
-function computePositions(trades: AlphaTrade[]): Map<string, PositionSummary> {
-  const map = new Map<string, PositionSummary>();
-
-  for (const t of trades) {
-    const key = `${t.wallet_address}::${t.token_mint}`;
-    let pos = map.get(key);
-    if (!pos) {
-      pos = {
-        wallet_address: t.wallet_address,
-        token_mint: t.token_mint,
-        token_ticker: t.token_ticker,
-        total_bought_sol: 0,
-        total_sold_sol: 0,
-        total_bought_tokens: 0,
-        total_sold_tokens: 0,
-        net_tokens: 0,
-        avg_buy_price_sol: 0,
-        realized_pnl_sol: 0,
-        status: "HOLDING",
-      };
-      map.set(key, pos);
-    }
-
-    if (t.trade_type === "buy") {
-      pos.total_bought_sol += t.amount_sol;
-      pos.total_bought_tokens += t.amount_tokens;
-    } else {
-      pos.total_sold_sol += t.amount_sol;
-      pos.total_sold_tokens += t.amount_tokens;
-    }
-  }
-
-  for (const pos of map.values()) {
-    pos.net_tokens = pos.total_bought_tokens - pos.total_sold_tokens;
-    pos.avg_buy_price_sol =
-      pos.total_bought_tokens > 0
-        ? pos.total_bought_sol / pos.total_bought_tokens
-        : 0;
-    const costOfSold = pos.avg_buy_price_sol * pos.total_sold_tokens;
-    pos.realized_pnl_sol = pos.total_sold_sol - costOfSold;
-
-    if (pos.net_tokens <= 0) {
-      pos.status = "SOLD";
-    } else if (pos.total_sold_tokens > 0) {
-      pos.status = "PARTIAL";
-    } else {
-      pos.status = "HOLDING";
-    }
-  }
-
-  return map;
-}
-
 export function useAlphaTrades(limit = 50) {
   const [trades, setTrades] = useState<AlphaTrade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +37,6 @@ export function useAlphaTrades(limit = 50) {
       const tradesData = data as AlphaTrade[];
       setTrades(tradesData);
 
-      // Fetch token images for unique mints
       const mints = [...new Set(tradesData.map((t) => t.token_mint).filter(Boolean))];
       if (mints.length > 0) {
         const { data: tokens } = await supabase
@@ -142,7 +77,6 @@ export function useAlphaTrades(limit = 50) {
 
   const positions = useMemo(() => computePositions(trades), [trades]);
 
-  // Enrich trades with token images
   const enrichedTrades = useMemo(() => {
     return trades.map((t) => ({
       ...t,
