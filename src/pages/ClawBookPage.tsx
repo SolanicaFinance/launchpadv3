@@ -36,7 +36,7 @@ const STRATEGIES = [
     icon: Target,
     color: "text-amber-400",
     borderColor: "border-amber-500/30",
-    bgAccent: "bg-amber-500/8",
+    bgAccent: "bg-amber-500/10",
     glowColor: "shadow-[0_0_40px_-12px_hsl(38_92%_50%/0.3)]",
     profitShare: "55%",
     riskLevel: "Medium",
