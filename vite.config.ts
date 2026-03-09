@@ -17,8 +17,11 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     chunkSizeWarningLimit: 2000,
     sourcemap: false,
-    cssCodeSplit: true,
+    cssCodeSplit: false,
     reportCompressedSize: false,
+    commonjsOptions: {
+      ignoreTryCatch: 'remove',
+    },
     rollupOptions: {
       onwarn(warning, warn) {
         if (warning?.code === "INVALID_ANNOTATION") return;
