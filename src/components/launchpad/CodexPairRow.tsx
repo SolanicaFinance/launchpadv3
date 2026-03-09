@@ -91,9 +91,11 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
       to={tradeUrl}
       className="pulse-card group relative overflow-hidden"
     >
-      <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.address || token.symbol} />
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.address || token.symbol} />
+      </div>
       {/* Row 1: Avatar + Info + Metrics */}
-      <div className="flex items-start gap-2.5">
+      <div className="relative z-10 flex items-start gap-2.5">
         {/* Avatar */}
         <div className="pulse-avatar-wrap">
           <div className="pulse-avatar">
@@ -195,7 +197,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
       </div>
 
       {/* Row 2: Bottom bar */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+      <div className="relative z-10 flex items-center justify-between mt-2 pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
           {/* Progress % — only show for Solana launchpad tokens */}
           {!isBnb && (

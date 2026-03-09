@@ -213,7 +213,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
       )}
 
       {/* Top: Rank badge + Avatar + Info */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="relative z-10 flex items-center gap-3 mb-4">
         {/* Rank Badge */}
         <div className={cn(
           "flex-shrink-0 flex items-center justify-center rounded-xl font-black text-white shadow-lg",
@@ -273,7 +273,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
       </div>
 
       {/* Middle: MCAP + Holders grid */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="relative z-10 grid grid-cols-2 gap-3 mb-3">
         <div>
           <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">MCap</span>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -298,7 +298,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
           </div>
         </div>
       </div>
-      <div className="mb-3">
+      <div className="relative z-10 mb-3">
         <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Vol 24h</span>
         <span className="text-sm font-mono font-bold text-foreground/80">
           ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 ? (token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)) : "0"}
@@ -306,12 +306,12 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-3">
+      <div className="relative z-10 mb-3">
         <ProgressBar value={progress} />
       </div>
 
       {/* Bottom Tools Row */}
-      <div className="pt-3 border-t border-border/10 space-y-2">
+      <div className="relative z-10 pt-3 border-t border-border/10 space-y-2">
         {/* Social icons row */}
         <div className="flex items-center gap-1">
           <TooltipProvider delayDuration={200}>

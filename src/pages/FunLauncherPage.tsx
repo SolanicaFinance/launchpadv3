@@ -305,7 +305,7 @@ export default function FunLauncherPage() {
                         <SparklineCanvas data={token.mint_address && sparklines?.[token.mint_address]?.length >= 2 ? sparklines[token.mint_address] : [1, 1]} seed={token.mint_address || token.id} />
                       </div>
                       {/* Image */}
-                      <div className="relative w-full z-[1]" style={{ paddingBottom: "65%" }}>
+                      <div className="relative w-full z-10" style={{ paddingBottom: "65%" }}>
                         <div className="absolute inset-0">
                           {token.image_url ? (
                             <img src={token.image_url} alt={token.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} />
@@ -323,7 +323,7 @@ export default function FunLauncherPage() {
                         </div>
                       </div>
                       {/* Info */}
-                      <div className="p-1.5">
+                      <div className="relative z-10 p-1.5">
                         <div className="text-[11px] font-semibold text-foreground truncate">{token.name}</div>
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-mono text-success">${token.ticker}</span>
