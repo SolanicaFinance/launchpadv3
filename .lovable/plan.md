@@ -1,45 +1,50 @@
 
 
-## Two Issues to Fix
+# Fix: Support Any Solana Wallet on Profile Page
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+## Problem
+When visiting `/profile/{wallet_address}` for a wallet not registered in our system, it throws "Profile not found" because `useUserProfile` requires a match in the `profiles` table.
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+## Solution
+Make the profile page work for **any** Solana wallet address by creating a fallback "global" profile when no registered profile exists.
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+### 1. Update `useUserProfile.ts` — Return a synthetic profile for unregistered wallets
+- When `isWalletAddress(identifier)` is true and no profile is found in the DB, instead of throwing an error, return a **synthetic UserProfile** object with the wallet address and sensible defaults (no username, no bio, "Global User" display, etc.)
+- Add a `isRegistered: boolean` flag to the return value so the UI can distinguish
+- The `wallet` variable should fall back to `identifier` when it's a wallet address but no profile exists — this allows alpha trades, tokens, etc. to still load
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+### 2. Update `UserProfilePage.tsx` — Show "Global" badge for unregistered wallets
+- Remove the "Profile not found" error for wallet addresses — instead render the profile page with available on-chain data
+- Show a visual indicator like "Global Wallet" or "Unregistered" badge
+- Hide "Edit profile" and "Verify Account" buttons for non-registered profiles
+- The alpha trades, positions, tokens created, and trading stats will all still work since they query by wallet address
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+### Key Changes in `useUserProfile.ts`:
+```typescript
+// Instead of throwing when no profile found for a wallet:
+if (!data && isWalletAddress(identifier)) {
+  return {
+    id: identifier, // use wallet as pseudo-id
+    username: null,
+    display_name: null,
+    bio: null,
+    avatar_url: null,
+    cover_url: null,
+    website: null,
+    verified_type: null,
+    followers_count: 0,
+    following_count: 0,
+    posts_count: 0,
+    created_at: new Date().toISOString(),
+    solana_wallet_address: identifier,
+  } as UserProfile;
+}
+```
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+- The `wallet` variable derivation changes: use `profileQuery.data?.solana_wallet_address` OR fall back to `identifier` if it's a wallet address
+- Alpha trades query already works by wallet, so it will load automatically
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
-
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
-
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
-
-### Technical Details
-
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files to modify:
+1. **`src/hooks/useUserProfile.ts`** — fallback synthetic profile + `isRegistered` flag
+2. **`src/pages/UserProfilePage.tsx`** — handle unregistered wallets gracefully, show "Global Wallet" indicator
 
