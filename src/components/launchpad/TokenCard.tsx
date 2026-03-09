@@ -163,8 +163,8 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
       {/* ── Token Image ── */}
       <div className="relative z-10 w-full" style={{ paddingBottom: "54%" }}>
         <div className="absolute inset-0">
-          {/* Sparkline background - restricted to image area */}
-          <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+          {/* Sparkline background - on top of image, below text overlays */}
+          <div className="absolute inset-0 z-[1] opacity-40 pointer-events-none">
             <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
           </div>
           <OptimizedTokenImage
