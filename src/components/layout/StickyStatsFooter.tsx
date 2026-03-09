@@ -6,7 +6,7 @@ import { useLaunchpadStats } from "@/hooks/useLaunchpadStats";
 import { useLocation } from "react-router-dom";
 import { ChevronDown, Server, RefreshCw, Layers } from "lucide-react";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
-import tunaLogo from "@/assets/tuna-logo.png";
+import meteoraIcon from "@/assets/meteora-icon.svg";
 import bonkIcon from "@/assets/bonk-icon.jpg";
 import bagsIcon from "@/assets/bags-icon.ico";
 import moonshotIcon from "@/assets/moonshot-icon.ico";
@@ -28,7 +28,7 @@ const REGIONS = [
 const LAUNCHPAD_CONFIG: Record<string, { label: string; icon: string; isLocal?: boolean }> = {
   pumpfun: { label: "pumpfun", icon: pumpfunPill, isLocal: true },
   bonk: { label: "bonk", icon: bonkIcon, isLocal: true },
-  meteora: { label: "meteora", icon: tunaLogo, isLocal: true },
+  meteora: { label: "meteora", icon: meteoraIcon, isLocal: true },
   bags: { label: "bags.fm", icon: bagsIcon, isLocal: true },
   moonshot: { label: "moonshot", icon: moonshotIcon, isLocal: true },
   raydium: { label: "raydium", icon: raydiumIcon, isLocal: true },
@@ -240,27 +240,28 @@ export function StickyStatsFooter() {
                 cursor: "pointer",
               }}
             >
-              {/* Show first 3 launchpad icons stacked */}
-              {(launchpadStats || []).slice(0, 3).map((lp, i) => {
-                const icon = getLaunchpadIcon(lp.type);
-                return icon ? (
-                  <img
-                    key={lp.type}
-                    src={icon}
-                    alt=""
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid hsl(var(--muted))",
-                      marginLeft: i > 0 ? "-6px" : "0",
-                      position: "relative",
-                      zIndex: 3 - i,
-                    }}
-                  />
-                ) : null;
-              })}
+              {/* Hardcoded 3 icons: pumpfun, bonk, meteora */}
+              {[
+                { icon: pumpfunPill, alt: "pumpfun" },
+                { icon: bonkIcon, alt: "bonk" },
+                { icon: meteoraIcon, alt: "meteora" },
+              ].map((item, i) => (
+                <img
+                  key={item.alt}
+                  src={item.icon}
+                  alt={item.alt}
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid hsl(var(--muted))",
+                    marginLeft: i > 0 ? "-6px" : "0",
+                    position: "relative",
+                    zIndex: 3 - i,
+                  }}
+                />
+              ))}
             </button>
 
             {launchpadOpen && (
@@ -268,7 +269,7 @@ export function StickyStatsFooter() {
                 position: "absolute",
                 bottom: "calc(100% + 8px)",
                 right: 0,
-                width: "300px",
+                width: "320px",
                 background: "linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "16px",
@@ -324,7 +325,7 @@ export function StickyStatsFooter() {
                         alignItems: "center",
                         gap: "12px",
                         width: "100%",
-                        padding: "12px 8px",
+                        padding: "14px 8px",
                         borderRadius: "8px",
                         fontFamily: "'IBM Plex Mono', monospace",
                         fontSize: "18px",
@@ -335,13 +336,13 @@ export function StickyStatsFooter() {
                         <img
                           src={icon}
                           alt={label}
-                          style={{ width: "24px", height: "24px", borderRadius: "6px", objectFit: "contain", flexShrink: 0, background: "hsl(var(--muted))" }}
+                          style={{ width: "40px", height: "40px", borderRadius: "8px", objectFit: "contain", flexShrink: 0, background: "hsl(var(--muted))" }}
                         />
                       ) : (
-                        <Layers style={{ width: "24px", height: "24px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+                        <Layers style={{ width: "40px", height: "40px", color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
                       )}
                       <span style={{ flex: 1, fontWeight: 500, textTransform: "none" }}>{label}</span>
-                      <span style={{ fontWeight: 700, color: getCountColor(lp.total), fontSize: "22px", lineHeight: 1 }}>
+                      <span style={{ fontWeight: 700, color: "hsl(142, 71%, 45%)", fontSize: "20px", lineHeight: 1 }}>
                         {lp.total.toLocaleString()}
                       </span>
                     </div>
