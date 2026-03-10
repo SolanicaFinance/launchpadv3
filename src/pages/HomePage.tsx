@@ -19,6 +19,7 @@ import saturnLogo from "@/assets/saturn-logo.png";
 const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
 const XTrackerSection = lazy(() => import("@/components/home/XTrackerSection"));
 const LeverageSection = lazy(() => import("@/components/home/LeverageSection"));
+const TradingAgentsShowcase = lazy(() => import("@/components/home/TradingAgentsShowcase"));
 
 /* ── Compact Pulse Token Row ── */
 function PulseTokenRow({ token }: { token: CodexPairToken }) {
