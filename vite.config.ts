@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks(id) {
+          // React MUST be in its own chunk so it's available before all others
+          if (id.includes('node_modules/react-dom')) return 'vendor-react';
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-router')) return 'vendor-react';
           // Split heavy vendor deps into separate chunks to reduce peak memory
           if (id.includes('node_modules/@solana')) return 'vendor-solana';
           if (id.includes('node_modules/viem')) return 'vendor-viem';
