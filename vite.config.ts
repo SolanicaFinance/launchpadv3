@@ -29,11 +29,11 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks(id) {
-          // Only split deps that DON'T import React directly
-          // Privy, TanStack, Radix all depend on React and must stay in the main chunk
+          // ONLY split libraries that have ZERO React dependency chain.
+          // wagmi, rainbow, Privy, TanStack, Radix all transitively import React
+          // and MUST stay in the main chunk to avoid "createContext is undefined" errors.
           if (id.includes('node_modules/@solana')) return 'vendor-solana';
           if (id.includes('node_modules/viem')) return 'vendor-viem';
-          if (id.includes('node_modules/wagmi') || id.includes('node_modules/@rainbow-me')) return 'vendor-evm';
           if (id.includes('node_modules/@meteora-ag')) return 'vendor-meteora';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
           if (id.includes('node_modules/lightweight-charts')) return 'vendor-lwcharts';
