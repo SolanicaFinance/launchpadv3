@@ -91,13 +91,10 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
   return (
     <Link to={tradeUrl} className="pulse-card group relative overflow-hidden">
       <div className="relative">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
-        </div>
         {/* Row 1: Avatar + Info + Metrics */}
         <div className="relative z-10 flex items-start gap-2.5">
-        {/* Avatar */}
-        <div className="pulse-avatar-wrap">
+        {/* Avatar - no sparkline behind it */}
+        <div className="pulse-avatar-wrap relative z-20">
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.image_url}
@@ -111,8 +108,11 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
           {token.status === 'graduated' && <div className="pulse-verified-dot" />}
         </div>
 
-        {/* Center info block */}
-        <div className="flex-1 min-w-0">
+        {/* Center info block - sparkline starts here */}
+        <div className="flex-1 min-w-0 relative">
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded">
+            <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
+          </div>
           {/* Line 1: Name + symbol + link */}
           <div className="flex items-center gap-1">
             <span className="text-[13px] font-bold text-foreground truncate leading-tight">{token.ticker}</span>
