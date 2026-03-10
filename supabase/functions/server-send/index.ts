@@ -1,6 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import {
-  getPrivyUser,
   findSolanaEmbeddedWallet,
   signAndSendTransaction,
 } from "../_shared/privy-server-wallet.ts";
@@ -11,13 +10,46 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PRIVY_API_BASE = "https://auth.privy.io";
+
+function getAuthHeaders(): Record<string, string> {
+  const appId = Deno.env.get("PRIVY_APP_ID");
+  const appSecret = Deno.env.get("PRIVY_APP_SECRET");
+  if (!appId || !appSecret) throw new Error("PRIVY_APP_ID and PRIVY_APP_SECRET must be configured");
+  const credentials = btoa(`${appId}:${appSecret}`);
+  return {
+    Authorization: `Basic ${credentials}`,
+    "privy-app-id": appId,
+    "Content-Type": "application/json",
+  };
+}
+
 /**
- * Server-side SOL send — no client popup needed.
- * 
- * Body: { walletAddress, toAddress, amountSol, adminSecret }
- * 
- * Uses Privy server-side signing to build & send a SOL transfer.
+ * Look up a Privy user by their Solana wallet address.
  */
+async function findPrivyUserByWallet(walletAddress: string) {
+  const res = await fetch(`${PRIVY_API_BASE}/api/v1/users/search`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      query: walletAddress,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Privy user search failed (${res.status}): ${body}`);
+  }
+
+  const data = await res.json();
+  // Search returns an array of users
+  const users = data.data || data.users || data;
+  if (Array.isArray(users) && users.length > 0) {
+    return users[0];
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,60 +73,104 @@ Deno.serve(async (req) => {
     }
 
     const heliusRpcUrl = Deno.env.get("HELIUS_RPC_URL")!;
+
+    console.log("[server-send] Resolving wallet for:", walletAddress);
+
+    // Strategy 1: Check profiles table for cached wallet ID
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("[server-send] Resolving wallet for:", walletAddress);
+    let walletId: string | null = null;
 
-    // 1. Look up the user's Privy wallet ID from profiles
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, privy_wallet_id, privy_did, solana_wallet_address")
-      .eq("solana_wallet_address", walletAddress)
+      .or(`solana_wallet_address.eq.${walletAddress}`)
       .maybeSingle();
 
-    if (!profile) {
-      return new Response(
-        JSON.stringify({ error: "No profile found for wallet: " + walletAddress }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (profile?.privy_wallet_id) {
+      walletId = profile.privy_wallet_id;
+      console.log("[server-send] Found cached wallet ID from profile:", walletId);
     }
 
-    let walletId = profile.privy_wallet_id;
-    const privyDid = profile.privy_did;
-
-    // If no wallet ID cached, resolve from Privy API
-    if (!walletId && privyDid) {
-      console.log("[server-send] No cached wallet ID, fetching from Privy API...");
-      const privyUser = await getPrivyUser(privyDid);
-      const embeddedWallet = findSolanaEmbeddedWallet(privyUser);
-      if (!embeddedWallet) {
-        return new Response(
-          JSON.stringify({ error: "No Solana embedded wallet found for this user" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    // Strategy 2: Search Privy API directly by wallet address
+    if (!walletId) {
+      console.log("[server-send] No cached wallet ID, searching Privy API by wallet address...");
+      
+      try {
+        const privyUser = await findPrivyUserByWallet(walletAddress);
+        if (privyUser) {
+          const embeddedWallet = findSolanaEmbeddedWallet(privyUser);
+          if (embeddedWallet) {
+            walletId = embeddedWallet.walletId;
+            console.log("[server-send] Found wallet via Privy search:", walletId);
+            
+            // Cache it in profile if we have one
+            if (profile?.id) {
+              await supabase
+                .from("profiles")
+                .update({ privy_wallet_id: walletId, privy_did: privyUser.id })
+                .eq("id", profile.id);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[server-send] Privy search failed, trying user listing...", e);
       }
-      walletId = embeddedWallet.walletId;
+    }
 
-      // Cache it for next time
-      await supabase
-        .from("profiles")
-        .update({ privy_wallet_id: walletId })
-        .eq("id", profile.id);
+    // Strategy 3: List all Privy users and find matching wallet
+    if (!walletId) {
+      console.log("[server-send] Trying Privy users list...");
+      try {
+        const res = await fetch(`${PRIVY_API_BASE}/api/v1/users`, {
+          method: "GET",
+          headers: getAuthHeaders(),
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const users = data.data || data.users || data;
+          if (Array.isArray(users)) {
+            for (const user of users) {
+              const accounts = user.linked_accounts || [];
+              const match = accounts.find(
+                (a: any) => a.type === "wallet" && a.address === walletAddress
+              );
+              if (match) {
+                const embedded = findSolanaEmbeddedWallet(user);
+                if (embedded) {
+                  walletId = embedded.walletId;
+                  console.log("[server-send] Found wallet via user list:", walletId);
+                  
+                  if (profile?.id) {
+                    await supabase
+                      .from("profiles")
+                      .update({ privy_wallet_id: walletId, privy_did: user.id })
+                      .eq("id", profile.id);
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[server-send] Privy list failed:", e);
+      }
     }
 
     if (!walletId) {
       return new Response(
-        JSON.stringify({ error: "Cannot resolve Privy wallet ID. User may need to log in first." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Cannot resolve Privy wallet ID for address: " + walletAddress + ". Make sure this is a Privy embedded wallet." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     console.log("[server-send] Building SOL transfer:", { from: walletAddress, to: toAddress, sol: amountSol });
 
-    // 2. Build the SOL transfer transaction
-    // Use @solana/web3.js via esm.sh
+    // Build the SOL transfer transaction
     const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = 
       await import("https://esm.sh/@solana/web3.js@1.98.0");
 
@@ -111,13 +187,11 @@ Deno.serve(async (req) => {
       })
     );
 
-    // Get recent blockhash
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
     transaction.recentBlockhash = blockhash;
     transaction.lastValidBlockHeight = lastValidBlockHeight;
     transaction.feePayer = fromPubkey;
 
-    // 3. Serialize and sign via Privy server-side
     const serialized = transaction.serialize({
       requireAllSignatures: false,
       verifySignatures: false,
