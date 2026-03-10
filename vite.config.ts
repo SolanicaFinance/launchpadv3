@@ -29,9 +29,9 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks(id) {
-          // React MUST be in its own chunk so it's available before all others
-          if (id.includes('node_modules/react-dom')) return 'vendor-react';
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-router')) return 'vendor-react';
+          // Do NOT split react/react-dom — they must stay in the default chunk
+          // to avoid circular initialization issues with Privy and TanStack
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return undefined;
           // Split heavy vendor deps into separate chunks to reduce peak memory
           if (id.includes('node_modules/@solana')) return 'vendor-solana';
           if (id.includes('node_modules/viem')) return 'vendor-viem';
