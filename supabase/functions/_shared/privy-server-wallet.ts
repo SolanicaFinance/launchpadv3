@@ -3,8 +3,10 @@
  * 
  * Wraps the Privy REST API for server-side wallet operations.
  * Uses Basic Auth with PRIVY_APP_ID:PRIVY_APP_SECRET.
+ * Includes authorization signature for wallet RPC calls.
  * 
  * Docs: https://docs.privy.io/reference/rest-auth/
+ * Auth Signatures: https://docs.privy.io/api-reference/authorization-signatures
  */
 
 const PRIVY_API_BASE = "https://auth.privy.io";
@@ -16,13 +18,93 @@ interface PrivyWalletAccount {
   wallet_client: string;
   wallet_client_type: string;
   connector_type: string;
-  id?: string;  // wallet_id for server signing
+  id?: string;
 }
 
 interface PrivyUser {
   id: string;
   linked_accounts: PrivyWalletAccount[];
 }
+
+// --- RFC 8785 JSON Canonicalization ---
+
+function canonicalize(value: unknown): string {
+  if (value === null || typeof value === "boolean" || typeof value === "number" || typeof value === "string") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return "[" + value.map(canonicalize).join(",") + "]";
+  }
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    const entries = keys
+      .filter((k) => obj[k] !== undefined)
+      .map((k) => JSON.stringify(k) + ":" + canonicalize(obj[k]));
+    return "{" + entries.join(",") + "}";
+  }
+  return "null";
+}
+
+// --- Authorization Signature ---
+
+async function getAuthorizationSignature(
+  url: string,
+  body: Record<string, unknown>
+): Promise<string> {
+  const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
+  if (!authKeyRaw) {
+    throw new Error("PRIVY_AUTHORIZATION_KEY must be configured for wallet RPC calls");
+  }
+
+  const appId = Deno.env.get("PRIVY_APP_ID");
+  if (!appId) {
+    throw new Error("PRIVY_APP_ID must be configured");
+  }
+
+  // Strip "wallet-auth:" prefix if present
+  const privKeyBase64 = authKeyRaw.replace(/^wallet-auth:/, "");
+
+  // Decode base64 to DER bytes
+  const privKeyDer = Uint8Array.from(atob(privKeyBase64), (c) => c.charCodeAt(0));
+
+  // Import as ECDSA P-256 PKCS8 key
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    privKeyDer.buffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
+
+  // Build the signature payload per Privy docs
+  const payload = {
+    version: 1,
+    method: "POST",
+    url,
+    body,
+    headers: {
+      "privy-app-id": appId,
+    },
+  };
+
+  // Canonicalize and encode
+  const canonicalized = canonicalize(payload);
+  const encoder = new TextEncoder();
+  const payloadBytes = encoder.encode(canonicalized);
+
+  // Sign with ECDSA P-256 + SHA-256
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    payloadBytes
+  );
+
+  // Return base64-encoded signature
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+// --- Auth Headers ---
 
 function getAuthHeaders(): Record<string, string> {
   const appId = Deno.env.get("PRIVY_APP_ID");
@@ -59,7 +141,6 @@ export async function getPrivyUser(privyDid: string): Promise<PrivyUser> {
 
 /**
  * Find the Solana embedded wallet from a Privy user's linked accounts.
- * Returns { address, walletId } or null.
  */
 export function findSolanaEmbeddedWallet(
   user: PrivyUser
@@ -81,32 +162,34 @@ export function findSolanaEmbeddedWallet(
 
 /**
  * Sign and send a Solana transaction using Privy's server-side wallet RPC.
- * 
- * @param walletId - The Privy wallet ID (from linked_accounts[].id)
- * @param serializedTransaction - Base64-encoded serialized transaction
- * @param rpcUrl - Solana RPC URL for broadcasting
- * @returns The transaction signature
+ * Includes the required privy-authorization-signature header.
  */
 export async function signAndSendTransaction(
   walletId: string,
   serializedTransaction: string,
   rpcUrl: string
 ): Promise<string> {
-  const res = await fetch(
-    `${PRIVY_API_BASE}/api/v1/wallets/${encodeURIComponent(walletId)}/rpc`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        method: "signAndSendTransaction",
-        caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-        params: {
-          transaction: serializedTransaction,
-          encoding: "base64",
-        },
-      }),
-    }
-  );
+  const url = `${PRIVY_API_BASE}/api/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
+  const bodyObj = {
+    method: "signAndSendTransaction",
+    caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+    params: {
+      transaction: serializedTransaction,
+      encoding: "base64",
+    },
+  };
+
+  // Generate authorization signature
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "privy-authorization-signature": authSignature,
+    },
+    body: JSON.stringify(bodyObj),
+  });
 
   if (!res.ok) {
     const body = await res.text();
@@ -118,31 +201,34 @@ export async function signAndSendTransaction(
 }
 
 /**
- * Sign a Solana transaction without sending (returns signed tx bytes).
- * 
- * @param walletId - The Privy wallet ID
- * @param serializedTransaction - Base64-encoded serialized transaction
- * @returns Base64-encoded signed transaction
+ * Sign a Solana transaction without sending.
+ * Includes the required privy-authorization-signature header.
  */
 export async function signTransaction(
   walletId: string,
   serializedTransaction: string
 ): Promise<string> {
-  const res = await fetch(
-    `${PRIVY_API_BASE}/api/v1/wallets/${encodeURIComponent(walletId)}/rpc`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        method: "signTransaction",
-        caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-        params: {
-          transaction: serializedTransaction,
-          encoding: "base64",
-        },
-      }),
-    }
-  );
+  const url = `${PRIVY_API_BASE}/api/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
+  const bodyObj = {
+    method: "signTransaction",
+    caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+    params: {
+      transaction: serializedTransaction,
+      encoding: "base64",
+    },
+  };
+
+  // Generate authorization signature
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "privy-authorization-signature": authSignature,
+    },
+    body: JSON.stringify(bodyObj),
+  });
 
   if (!res.ok) {
     const body = await res.text();
