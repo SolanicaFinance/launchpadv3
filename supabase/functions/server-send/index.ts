@@ -24,16 +24,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { walletAddress, toAddress, amountSol, adminSecret } = await req.json();
-
-    // Admin gate for safety
-    const expectedSecret = Deno.env.get("TWITTER_BOT_ADMIN_SECRET");
-    if (!adminSecret || adminSecret !== expectedSecret) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { walletAddress, toAddress, amountSol } = await req.json();
 
     if (!walletAddress || !toAddress || !amountSol) {
       return new Response(
