@@ -18,7 +18,7 @@ const PanelMyLaunchesTab = lazy(() => import("@/components/panel/PanelMyLaunches
 const PanelPhantomTab = lazy(() => import("@/components/panel/PanelPhantomTab"));
 const PanelReferralsTab = lazy(() => import("@/components/panel/PanelReferralsTab"));
 const RecentNfaAgents = lazy(() => import("@/components/panel/RecentNfaAgents"));
-const WalletManagerPanel = lazy(() => import("@/components/wallet/WalletManagerPanel"));
+const PanelWalletTab = lazy(() => import("@/components/wallet/PanelWalletTab"));
 
 function TabLoader() {
   return (
