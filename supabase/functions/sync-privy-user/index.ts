@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { getPrivyUser, findSolanaEmbeddedWallet } from "../_shared/privy-server-wallet.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
