@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
           if (id.includes('node_modules/lightweight-charts')) return 'vendor-lwcharts';
           if (id.includes('node_modules/bn.js') || id.includes('node_modules/buffer') || id.includes('node_modules/bs58')) return 'vendor-crypto-utils';
+          if (id.includes('node_modules/@phosphor-icons')) return 'vendor-phosphor';
+          if (id.includes('node_modules/@rainbow-me') || id.includes('node_modules/wagmi')) return 'vendor-evm';
         },
       },
     },

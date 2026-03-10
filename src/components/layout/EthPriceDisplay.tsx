@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendUp, TrendDown } from "@phosphor-icons/react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PriceData {
@@ -93,9 +93,9 @@ export function EthPriceDisplay() {
         isPositive ? 'text-success' : 'text-destructive'
       }`}>
         {isPositive ? (
-          <TrendUp className="h-3 w-3" weight="bold" />
+          <TrendingUp className="h-3 w-3" />
         ) : (
-          <TrendDown className="h-3 w-3" weight="bold" />
+          <TrendingDown className="h-3 w-3" />
         )}
         <span>{isPositive ? '+' : ''}{priceData.change24h.toFixed(2)}%</span>
       </div>
