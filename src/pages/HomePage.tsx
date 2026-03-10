@@ -2,10 +2,7 @@ import { Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { KingOfTheHill } from "@/components/launchpad/KingOfTheHill";
 import { JustLaunched } from "@/components/launchpad/JustLaunched";
-import { KolTweetCard } from "@/components/x-tracker/KolTweetCard";
-import { useKolTweets } from "@/hooks/useKolTweets";
-import { useAlphaTrades, type AlphaTrade, type PositionSummary } from "@/hooks/useAlphaTrades";
-import { useAsterMarkets, type AsterMarket } from "@/hooks/useAsterMarkets";
+import { LazySection } from "@/components/ui/LazySection";
 import { useCodexNewPairs, SOLANA_NETWORK_ID, type CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { SparklineCanvas } from "@/components/launchpad/SparklineCanvas";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
@@ -15,114 +12,13 @@ import {
   Zap, Rocket, ArrowRight, Crosshair, Radar, CandlestickChart,
   ArrowUpRight, ArrowDownRight, Shield, Users, Bot
 } from "lucide-react";
-import { useMemo } from "react";
-import { timeAgo, formatTokenAmt } from "@/lib/tradeUtils";
+import { useMemo, lazy, Suspense } from "react";
 import saturnLogo from "@/assets/saturn-logo.png";
 
-/* ── Status Pill ── */
-function StatusPill({ status }: { status: "HOLDING" | "PARTIAL" | "SOLD" }) {
-  const c = {
-    HOLDING: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    PARTIAL: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    SOLD: "bg-red-500/10 text-red-400 border-red-500/20",
-  }[status];
-  return (
-    <span className={`px-1.5 py-px rounded border text-[8px] font-bold tracking-wide ${c}`}>
-      {status}
-    </span>
-  );
-}
-
-/* ── Detailed Alpha Trade Row ── */
-function AlphaTradeRow({ trade, position }: { trade: AlphaTrade; position?: PositionSummary }) {
-  const isBuy = trade.trade_type === "buy";
-  return (
-    <Link
-      to={`/trade/${trade.token_mint}`}
-      className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-card/60 border border-border/50 hover:border-primary/30 transition-all group"
-    >
-      {/* Token Logo */}
-      <div className="h-7 w-7 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center shrink-0">
-        {trade.token_image_url ? (
-          <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-[7px] font-bold text-muted-foreground">
-            {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
-          </span>
-        )}
-      </div>
-
-      {/* Trader + Token */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-foreground truncate">
-            ${trade.token_ticker || trade.token_name || "???"}
-          </span>
-          <span className={cn(
-            "inline-flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded",
-            isBuy ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
-          )}>
-            {isBuy ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-            {isBuy ? "BUY" : "SELL"}
-          </span>
-          {position && <StatusPill status={position.status} />}
-        </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[9px] text-muted-foreground font-mono truncate">
-            {trade.trader_display_name || `${trade.wallet_address.slice(0, 4)}...${trade.wallet_address.slice(-4)}`}
-          </span>
-          <span className="text-border">·</span>
-          <span className="text-[9px] text-muted-foreground font-mono">
-            {formatTokenAmt(trade.amount_tokens)} tokens
-          </span>
-        </div>
-      </div>
-
-      {/* Right: SOL + Time */}
-      <div className="text-right shrink-0">
-        <div className={cn("text-[11px] font-bold font-mono tabular-nums", isBuy ? "text-emerald-400" : "text-red-400")}>
-          {isBuy ? "+" : "-"}{trade.amount_sol.toFixed(3)} SOL
-        </div>
-        <div className="text-[9px] text-muted-foreground font-mono">
-          {timeAgo(trade.created_at)}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/* ── Compact Leverage Market Card ── */
-function LeverageCard({ market }: { market: AsterMarket }) {
-  const change = parseFloat(market.priceChangePercent);
-  const isPositive = change >= 0;
-  const vol = parseFloat(market.quoteVolume);
-  const formatVol = vol >= 1e6 ? `$${(vol / 1e6).toFixed(1)}M` : `$${(vol / 1e3).toFixed(0)}K`;
-
-  return (
-    <Link
-      to={`/leverage?symbol=${market.symbol}`}
-      className="relative flex flex-col gap-2 p-3.5 rounded-xl bg-card/60 border border-border/50 hover:border-primary/30 transition-all group overflow-hidden"
-    >
-      <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-xl">
-        <SparklineCanvas data={[1, 1]} seed={market.symbol} />
-      </div>
-      <div className="relative z-10 flex items-center justify-between">
-        <span className="text-sm font-bold text-foreground">{market.baseAsset}/{market.quoteAsset}</span>
-        <span className="text-[10px] text-muted-foreground font-mono">{market.maxLeverage}x</span>
-      </div>
-      <div className="relative z-10 flex items-center justify-between">
-        <span className="text-xs font-mono text-foreground">${parseFloat(market.lastPrice).toLocaleString()}</span>
-        <span className={cn(
-          "text-xs font-bold",
-          isPositive ? "text-emerald-400" : "text-red-400"
-        )}>
-          {isPositive ? "+" : ""}{change.toFixed(2)}%
-        </span>
-      </div>
-      <div className="relative z-10 text-[10px] text-muted-foreground">Vol {formatVol}</div>
-    </Link>
-  );
-}
+// Lazy load heavy below-fold section components
+const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
+const XTrackerSection = lazy(() => import("@/components/home/XTrackerSection"));
+const LeverageSection = lazy(() => import("@/components/home/LeverageSection"));
 
 /* ── Compact Pulse Token Row ── */
 function PulseTokenRow({ token }: { token: CodexPairToken }) {
@@ -205,22 +101,14 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
   );
 }
 
+export { SectionHeader };
+
 export default function HomePage() {
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
-  const { data: kolTweets } = useKolTweets("all");
-  const { trades: alphaTrades, loading: alphaLoading, positions: alphaPositions } = useAlphaTrades(10);
-  const { markets: leverageMarkets, loading: leverageLoading } = useAsterMarkets();
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
   const limitedCompleting = useMemo(() => (codexCompleting || []).slice(0, 5), [codexCompleting]);
   const limitedGraduated = useMemo(() => (codexGraduated || []).slice(0, 5), [codexGraduated]);
-  const limitedTweets = useMemo(() => (kolTweets || []).slice(0, 6), [kolTweets]);
-  const topLeverage = useMemo(() => {
-    if (!leverageMarkets.length) return [];
-    return [...leverageMarkets]
-      .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-      .slice(0, 6);
-  }, [leverageMarkets]);
 
   return (
     <LaunchpadLayout hideFooter noPadding>
@@ -296,57 +184,35 @@ export default function HomePage() {
           <KingOfTheHill />
         </section>
 
-        {/* ═══ Alpha Tracker ═══ */}
-        <section className="max-w-7xl mx-auto px-4 py-6">
-          <SectionHeader icon={Crosshair} title="Alpha Trades" linkTo="/alpha-tracker" linkLabel="View All" />
-          {alphaLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {alphaTrades.slice(0, 10).map((t) => (
-                <AlphaTradeRow key={t.id} trade={t} position={alphaPositions.get(`${t.wallet_address}::${t.token_mint}`)} />
-              ))}
-            </div>
-          )}
-        </section>
+        {/* ═══ Alpha Tracker (lazy) ═══ */}
+        <LazySection>
+          <section className="max-w-7xl mx-auto px-4 py-6">
+            <SectionHeader icon={Crosshair} title="Alpha Trades" linkTo="/alpha-tracker" linkLabel="View All" />
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>}>
+              <AlphaSection />
+            </Suspense>
+          </section>
+        </LazySection>
 
-        {/* ═══ X Tracker ═══ */}
-        <section className="max-w-7xl mx-auto px-4 py-6">
-          <SectionHeader icon={Radar} title="X Tracker" linkTo="/x-tracker" linkLabel="View All" />
-          {limitedTweets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {limitedTweets.map((t) => (
-                <KolTweetCard key={t.id} tweet={t} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-sm text-muted-foreground">No KOL tweets yet.</div>
-          )}
-        </section>
+        {/* ═══ X Tracker (lazy) ═══ */}
+        <LazySection>
+          <section className="max-w-7xl mx-auto px-4 py-6">
+            <SectionHeader icon={Radar} title="X Tracker" linkTo="/x-tracker" linkLabel="View All" />
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>}>
+              <XTrackerSection />
+            </Suspense>
+          </section>
+        </LazySection>
 
-        {/* ═══ Leverage ═══ */}
-        <section className="max-w-7xl mx-auto px-4 py-6 pb-20">
-          <SectionHeader icon={CandlestickChart} title="Leverage Trading" linkTo="/leverage" linkLabel="Open Terminal" />
-          {leverageLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
-            </div>
-          ) : topLeverage.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {topLeverage.map((m) => (
-                <LeverageCard key={m.symbol} market={m} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-sm text-muted-foreground">No leverage markets available.</div>
-          )}
-        </section>
+        {/* ═══ Leverage (lazy) ═══ */}
+        <LazySection>
+          <section className="max-w-7xl mx-auto px-4 py-6 pb-20">
+            <SectionHeader icon={CandlestickChart} title="Leverage Trading" linkTo="/leverage" linkLabel="Open Terminal" />
+            <Suspense fallback={<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>}>
+              <LeverageSection />
+            </Suspense>
+          </section>
+        </LazySection>
       </div>
     </LaunchpadLayout>
   );
