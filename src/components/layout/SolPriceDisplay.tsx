@@ -112,9 +112,9 @@ export function SolPriceDisplay() {
         isPositive ? 'text-success' : 'text-destructive'
       }`}>
         {isPositive ? (
-          <TrendUp className="h-3 w-3" weight="bold" />
+          <TrendingUp className="h-3 w-3" />
         ) : (
-          <TrendDown className="h-3 w-3" weight="bold" />
+          <TrendingDown className="h-3 w-3" />
         )}
         <span>{isPositive ? '+' : ''}{priceData.change24h.toFixed(2)}%</span>
       </div>

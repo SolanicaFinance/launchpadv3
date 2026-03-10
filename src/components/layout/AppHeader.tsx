@@ -96,7 +96,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           rel="noopener noreferrer"
           className="flex items-center justify-center h-7 w-7 rounded-sm transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-surface-hover"
         >
-          <XLogo className="h-3.5 w-3.5" weight="fill" />
+          <XIcon className="h-3.5 w-3.5" />
         </a>
 
         {isAuthenticated ? (

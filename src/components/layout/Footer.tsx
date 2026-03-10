@@ -71,7 +71,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="https://x.com/saturntrade" target="_blank" rel="noopener noreferrer" className="hover:text-success transition-colors duration-200 flex items-center gap-1.5">
-                  <XLogo className="h-3.5 w-3.5" weight="fill" />
+                  <XIcon className="h-3.5 w-3.5" />
                   Twitter/X
                 </a>
               </li>
