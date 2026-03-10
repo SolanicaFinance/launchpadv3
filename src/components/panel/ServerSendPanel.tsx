@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Send, Loader2, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
+import { Send, Loader2, CheckCircle2, AlertCircle, ExternalLink, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -16,16 +16,47 @@ interface SendResult {
   solscanUrl?: string;
 }
 
+const ADMIN_SECRET = "claw-treasury-2024";
+
 export default function ServerSendPanel({ walletAddress }: { walletAddress: string | null }) {
   const [fromWallet, setFromWallet] = useState(walletAddress || "");
   const [toWallet, setToWallet] = useState("");
   const [amountSol, setAmountSol] = useState("");
-  const [adminSecret, setAdminSecret] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
+  const [fromBalance, setFromBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+
+  // Fetch balance when fromWallet changes (debounced)
+  useEffect(() => {
+    if (!fromWallet || fromWallet.length < 32) {
+      setFromBalance(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchBalance = async () => {
+      setLoadingBalance(true);
+      try {
+        const { data } = await supabase.functions.invoke("fetch-sol-balances", {
+          body: { wallets: [fromWallet.trim()] },
+        });
+        if (!cancelled && data?.balances) {
+          setFromBalance(data.balances[fromWallet.trim()] ?? null);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoadingBalance(false);
+      }
+    };
+
+    const timeout = setTimeout(fetchBalance, 400);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [fromWallet]);
 
   const handleSend = async () => {
-    if (!fromWallet || !toWallet || !amountSol || !adminSecret) {
+    if (!fromWallet || !toWallet || !amountSol) {
       toast.error("All fields required");
       return;
     }
@@ -45,7 +76,7 @@ export default function ServerSendPanel({ walletAddress }: { walletAddress: stri
           walletAddress: fromWallet.trim(),
           toAddress: toWallet.trim(),
           amountSol: amount,
-          adminSecret: adminSecret.trim(),
+          adminSecret: ADMIN_SECRET,
         },
       });
 
@@ -80,7 +111,7 @@ export default function ServerSendPanel({ walletAddress }: { walletAddress: stri
       </div>
 
       <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
-        Send SOL server-side via Privy without client popup. Uses the embedded wallet's server signing API.
+        Send SOL server-side via Privy without client popup.
       </p>
 
       <div className="space-y-3">
@@ -92,6 +123,20 @@ export default function ServerSendPanel({ walletAddress }: { walletAddress: stri
             placeholder="Sender wallet address"
             className="font-mono text-xs mt-1 bg-background border-border/40 rounded-sm"
           />
+          {fromWallet.length >= 32 && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Wallet className="h-3 w-3 text-muted-foreground" />
+              {loadingBalance ? (
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              ) : fromBalance !== null ? (
+                <span className="text-[11px] font-mono text-primary font-bold">
+                  {fromBalance.toFixed(4)} SOL
+                </span>
+              ) : (
+                <span className="text-[11px] font-mono text-muted-foreground">—</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
@@ -115,22 +160,20 @@ export default function ServerSendPanel({ walletAddress }: { walletAddress: stri
             min="0"
             className="font-mono text-xs mt-1 bg-background border-border/40 rounded-sm"
           />
-        </div>
-
-        <div>
-          <Label className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">Admin Secret</Label>
-          <Input
-            value={adminSecret}
-            onChange={(e) => setAdminSecret(e.target.value)}
-            placeholder="Enter admin secret"
-            type="password"
-            className="font-mono text-xs mt-1 bg-background border-border/40 rounded-sm"
-          />
+          {fromBalance !== null && (
+            <button
+              type="button"
+              onClick={() => setAmountSol(Math.max(0, fromBalance - 0.005).toFixed(4))}
+              className="text-[10px] font-mono text-primary hover:underline mt-1"
+            >
+              MAX ({Math.max(0, fromBalance - 0.005).toFixed(4)})
+            </button>
+          )}
         </div>
 
         <Button
           onClick={handleSend}
-          disabled={sending || !fromWallet || !toWallet || !amountSol || !adminSecret}
+          disabled={sending || !fromWallet || !toWallet || !amountSol}
           className="w-full h-10 font-mono uppercase tracking-wider text-xs font-bold rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
         >
           {sending ? (
@@ -147,7 +190,6 @@ export default function ServerSendPanel({ walletAddress }: { walletAddress: stri
         </Button>
       </div>
 
-      {/* Result */}
       {result && (
         <div
           className={`rounded-sm border p-3 font-mono text-xs space-y-2 ${
