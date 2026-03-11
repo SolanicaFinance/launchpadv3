@@ -315,7 +315,7 @@ export function StickyStatsFooter() {
           scrollbarWidth: "none",
           msOverflowStyle: "none",
         }}>
-          <StatItem label="TKN" value={totalLpTokens.toLocaleString()} />
+          {platformUsers !== null && <StatItem label="Users" value={platformUsers.toLocaleString()} />}
         </div>
 
         {/* RIGHT: Launchpads + Region */}
