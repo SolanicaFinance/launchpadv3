@@ -42,7 +42,12 @@ async function syncHeliusWebhook(supabase: ReturnType<typeof createClient>) {
   const webhookSecret = Deno.env.get("HELIUS_WEBHOOK_SECRET") || "";
 
   try {
-    const updateBody: Record<string, unknown> = { accountAddresses, webhookURL };
+    const updateBody: Record<string, unknown> = {
+      accountAddresses,
+      webhookURL,
+      webhookType: "enhanced",
+      transactionTypes: ["ANY"],
+    };
     if (webhookSecret) {
       updateBody.authHeader = webhookSecret;
     }
