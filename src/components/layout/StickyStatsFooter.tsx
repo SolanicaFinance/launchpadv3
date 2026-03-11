@@ -226,7 +226,11 @@ export function StickyStatsFooter() {
                 transition: "all 0.15s",
               }}
             >
-              <Wallet style={{ width: "11px", height: "11px" }} />
+              <Wallet style={{
+                width: "11px",
+                height: "11px",
+                animation: trackerShaking ? "tracker-shake 0.5s ease-in-out 0s 2" : "none",
+              }} />
               <span>Tracker</span>
             </button>
 
