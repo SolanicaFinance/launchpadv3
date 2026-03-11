@@ -479,7 +479,8 @@ export function KingOfTheHill() {
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -290 : 290, behavior: "smooth" });
+    const cardWidth = el.querySelector(':scope > *')?.getBoundingClientRect().width ?? el.clientWidth;
+    el.scrollBy({ left: dir === "left" ? -cardWidth - 12 : cardWidth + 12, behavior: "smooth" });
   };
 
   return (
@@ -525,7 +526,7 @@ export function KingOfTheHill() {
 
         <div
           ref={scrollRef}
-          className="flex-1 flex flex-row gap-3 md:gap-4 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide mx-1 md:mx-0 [&>*]:snap-center [&>*]:min-w-[280px] [&>*]:flex-shrink-0 md:[&>*]:min-w-0 md:[&>*]:flex-shrink"
+          className="flex-1 flex flex-row gap-3 md:gap-4 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide mx-1 md:mx-0 [&>*]:snap-center [&>*]:min-w-[calc(100%-16px)] [&>*]:flex-shrink-0 md:[&>*]:min-w-0 md:[&>*]:flex-shrink md:[&>*]:snap-align-none"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {isLoading

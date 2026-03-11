@@ -10,9 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   Zap, Rocket, ArrowRight, Crosshair, Radar, CandlestickChart,
-  ArrowUpRight, ArrowDownRight, Shield, Users, Bot
+  ArrowUpRight, ArrowDownRight, Shield, Users, Bot, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } from "react";
 import saturnLogo from "@/assets/saturn-logo.png";
 
 // Lazy load heavy below-fold section components
@@ -104,6 +104,102 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 
 export { SectionHeader };
 
+/* ── Live Pulse Section with mobile horizontal scroll ── */
+function LivePulseSection({ newPairs, completing, graduated, loading }: {
+  newPairs: CodexPairToken[];
+  completing: CodexPairToken[];
+  graduated: CodexPairToken[];
+  loading: boolean;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", updateScrollState); ro.disconnect(); };
+  }, [updateScrollState]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const colWidth = el.querySelector(':scope > *')?.getBoundingClientRect().width ?? el.clientWidth;
+    el.scrollBy({ left: dir === "left" ? -colWidth - 12 : colWidth + 12, behavior: "smooth" });
+  };
+
+  // Mobile: show Migrated first, then New Pairs, then Final Stretch
+  const mobileColumns = [
+    { title: "🚀 Migrated", tokens: graduated },
+    { title: "⚡ New Pairs", tokens: newPairs },
+    { title: "🔥 Final Stretch", tokens: completing },
+  ];
+
+  return (
+    <section className="max-w-7xl mx-auto px-4 py-6">
+      <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
+      
+      {/* Desktop: 3-column grid */}
+      <div className="hidden md:grid grid-cols-3 gap-4">
+        <PulseColumn title="⚡ New Pairs" tokens={newPairs} loading={loading} />
+        <PulseColumn title="🔥 Final Stretch" tokens={completing} loading={loading} />
+        <PulseColumn title="🚀 Migrated" tokens={graduated} loading={loading} />
+      </div>
+
+      {/* Mobile: horizontal scroll with arrows */}
+      <div className="md:hidden flex items-center">
+        <button
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          className={cn(
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
+            "bg-muted/60 border border-border/40 transition-all",
+            canScrollLeft ? "text-foreground/90 hover:bg-muted" : "text-muted-foreground/30 cursor-default",
+          )}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex-1 flex flex-row gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide mx-1 [&>*]:snap-center [&>*]:min-w-[calc(100%-8px)] [&>*]:flex-shrink-0"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {mobileColumns.map(col => (
+            <div key={col.title} className="min-w-0">
+              <PulseColumn title={col.title} tokens={col.tokens} loading={loading} />
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          className={cn(
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
+            "bg-muted/60 border border-border/40 transition-all",
+            canScrollRight ? "text-foreground/90 hover:bg-muted" : "text-muted-foreground/30 cursor-default",
+          )}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </section>
+  );
+}
 export default function HomePage() {
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
 
@@ -165,14 +261,12 @@ export default function HomePage() {
         </section>
 
         {/* ═══ Live Pulse Section ═══ */}
-        <section className="max-w-7xl mx-auto px-4 py-6">
-          <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <PulseColumn title="⚡ New Pairs" tokens={limitedNewPairs} loading={codexLoading} />
-            <PulseColumn title="🔥 Final Stretch" tokens={limitedCompleting} loading={codexLoading} />
-            <PulseColumn title="🚀 Migrated" tokens={limitedGraduated} loading={codexLoading} />
-          </div>
-        </section>
+        <LivePulseSection
+          newPairs={limitedNewPairs}
+          completing={limitedCompleting}
+          graduated={limitedGraduated}
+          loading={codexLoading}
+        />
 
         {/* ═══ Trading Agents Showcase ═══ */}
         <LazySection>
