@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLaunchpadStats } from "@/hooks/useLaunchpadStats";
 import { useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, Server, RefreshCw, Layers, Wallet, Rocket } from "lucide-react";
 import { MarketLighthouse } from "./MarketLighthouse";
 import { WalletTrackerPanel } from "./WalletTrackerPanel";
