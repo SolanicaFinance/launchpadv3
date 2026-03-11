@@ -99,11 +99,21 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Ensure the profile exists (Privy users may not have synced yet)
-        await supabase.from("profiles").upsert(
-          { id: user_profile_id },
-          { onConflict: "id", ignoreDuplicates: true },
-        );
+        // Ensure the profile exists so FK constraint is satisfied
+        const { data: existing } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user_profile_id)
+          .maybeSingle();
+
+        if (!existing) {
+          const shortId = user_profile_id.replace(/-/g, "").slice(0, 12);
+          await supabase.from("profiles").insert({
+            id: user_profile_id,
+            username: `wallet_${shortId}`,
+            display_name: `Tracker ${shortId}`,
+          });
+        }
 
         const { data, error } = await supabase.from("tracked_wallets").insert({
           user_profile_id,
