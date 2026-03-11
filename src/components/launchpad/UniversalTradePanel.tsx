@@ -415,12 +415,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         {/* Share P&L */}
         <div className="flex items-center justify-between py-2 border-t border-border/30">
           <span className="text-[10px] font-mono text-muted-foreground">Share your P&L</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] font-mono font-bold text-[#c8ff00] bg-[#c8ff00]/10 px-1.5 py-0.5 rounded">+200</span>
-            <button className="text-[10px] font-mono font-bold text-[#c8ff00] hover:text-[#d9ff33] flex items-center gap-1 transition-colors">
-              TWEET <ExternalLink className="h-2.5 w-2.5" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setProfitCardData({
+                action: isBuy ? 'buy' : 'sell',
+                amountSol: numericAmount || 0,
+                tokenTicker: token.ticker,
+                tokenName: token.name,
+              });
+              setShowProfitCard(true);
+            }}
+            className="text-[10px] font-mono font-bold text-[#c8ff00] hover:text-[#d9ff33] flex items-center gap-1.5 transition-colors bg-[#c8ff00]/10 px-2.5 py-1 rounded-md hover:bg-[#c8ff00]/15"
+          >
+            🪐 Generate PNL Card
+          </button>
         </div>
 
         {/* Advanced Settings */}
