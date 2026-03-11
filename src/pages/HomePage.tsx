@@ -119,13 +119,13 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 
 export { SectionHeader };
 
-/* ── Content wrapper class — wider on large screens ── */
-const CONTENT_MAX = "max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1800px]";
+/* ── Content wrapper — fluid on large screens ── */
+const CW = "w-full max-w-7xl xl:max-w-[92vw] 2xl:max-w-[1800px]";
 
 /* ── Section Divider ── */
 function SectionDivider() {
   return (
-    <div className={`${CONTENT_MAX} mx-auto px-4`}>
+    <div className={`${CW} mx-auto px-4`}>
       <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
     </div>
   );
@@ -173,7 +173,7 @@ function LivePulseSection({ newPairs, completing, graduated, loading }: {
   ];
 
   return (
-    <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+    <section className={`${CW} mx-auto px-4 py-6`}>
       <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
       
       {/* Desktop: 3-column grid */}
@@ -227,6 +227,29 @@ function LivePulseSection({ newPairs, completing, graduated, loading }: {
   );
 }
 
+/* ── Mini hot-pair teaser for above-the-fold ── */
+function HotPairPill({ token }: { token: CodexPairToken }) {
+  const change = token.change24h;
+  const isPositive = change >= 0;
+  return (
+    <Link
+      to={`/trade/${token.address}`}
+      className="group flex items-center gap-2 px-3 py-1.5 rounded-full
+                 bg-card/20 backdrop-blur-md border border-border/20
+                 hover:border-primary/40 hover:bg-card/40 transition-all duration-200 shrink-0"
+    >
+      <OptimizedTokenImage src={token.imageUrl} alt={token.symbol} className="w-5 h-5 rounded-full" />
+      <span className="text-[11px] font-bold text-foreground">{token.symbol}</span>
+      <span className={cn(
+        "text-[10px] font-mono font-bold",
+        isPositive ? "text-emerald-400" : "text-red-400"
+      )}>
+        {isPositive ? "+" : ""}{change.toFixed(1)}%
+      </span>
+    </Link>
+  );
+}
+
 export default function HomePage() {
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
 
@@ -234,11 +257,18 @@ export default function HomePage() {
   const limitedCompleting = useMemo(() => (codexCompleting || []).slice(0, 5), [codexCompleting]);
   const limitedGraduated = useMemo(() => (codexGraduated || []).slice(0, 5), [codexGraduated]);
 
+  // Hot pairs for above-fold teaser — top 6 by absolute change
+  const hotPairs = useMemo(() => {
+    const all = [...(codexNewPairs || []), ...(codexCompleting || []), ...(codexGraduated || [])];
+    return all.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h)).slice(0, 6);
+  }, [codexNewPairs, codexCompleting, codexGraduated]);
+
   return (
     <LaunchpadLayout hideFooter noPadding>
       <div className="relative z-10">
-        {/* ═══ Hero Section — Premium Redesign ═══ */}
-        <section className="relative overflow-hidden min-h-[80vh] sm:min-h-[85vh] flex items-center justify-center"
+        {/* ═══ Hero Section — Compact & Immersive ═══ */}
+        <section
+          className="relative overflow-hidden flex items-center justify-center py-12 sm:py-16 md:py-20 lg:py-24"
           style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, hsl(220 60% 8%) 0%, hsl(220 40% 3%) 60%, hsl(0 0% 0%) 100%)" }}
         >
           {/* Ambient glow orbs */}
@@ -250,7 +280,7 @@ export default function HomePage() {
             style={{ background: "radial-gradient(circle, hsl(280 60% 50% / 0.025) 0%, transparent 70%)", animationDuration: "8s" }} />
 
           {/* Orbit ring decoration */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] pointer-events-none opacity-[0.04]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] pointer-events-none opacity-[0.04]">
             <div className="absolute inset-0 rounded-full border border-primary" style={{ transform: "rotateX(65deg)" }} />
             <div className="absolute inset-[40px] rounded-full border border-primary/60" style={{ transform: "rotateX(65deg) rotateZ(15deg)" }} />
           </div>
@@ -262,8 +292,6 @@ export default function HomePage() {
               { x: "85%", y: "30%", size: "1.5px", dur: "15s", delay: "2s" },
               { x: "25%", y: "70%", size: "1px", dur: "18s", delay: "5s" },
               { x: "70%", y: "60%", size: "2px", dur: "14s", delay: "3s" },
-              { x: "50%", y: "15%", size: "1.5px", dur: "16s", delay: "7s" },
-              { x: "90%", y: "80%", size: "1px", dur: "20s", delay: "1s" },
             ].map((p, i) => (
               <div
                 key={i}
@@ -280,15 +308,14 @@ export default function HomePage() {
           </div>
 
           {/* Gradient fade to content below */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
           {/* Hero Content */}
-          <div className="relative z-10 max-w-4xl mx-auto px-4 pt-16 pb-20 text-center">
-            {/* Saturn Logo with orbit glow */}
-            <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6 animate-fade-in">
+          <div className="relative z-10 w-full max-w-4xl mx-auto px-4 text-center">
+            {/* Saturn Logo */}
+            <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-5 animate-fade-in">
               <div className="absolute inset-[-12px] rounded-full pointer-events-none"
                 style={{ background: "radial-gradient(circle, hsl(38 90% 50% / 0.15) 0%, transparent 70%)" }} />
-              <div className="absolute inset-[-6px] rounded-full border border-amber-500/10 pointer-events-none" style={{ transform: "rotateX(60deg)" }} />
               <img
                 src={saturnLogo}
                 alt="Saturn Trade"
@@ -296,9 +323,9 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Title with gradient */}
+            {/* Title */}
             <h1
-              className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-4 animate-fade-in"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-3 animate-fade-in"
               style={{
                 background: "linear-gradient(135deg, hsl(48 96% 53%) 0%, hsl(84 81% 44%) 100%)",
                 WebkitBackgroundClip: "text",
@@ -313,28 +340,28 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p
-              className="text-lg sm:text-xl md:text-2xl text-foreground/80 max-w-2xl mx-auto mb-3 font-medium animate-fade-in"
-              style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+              className="text-base sm:text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto mb-2 font-medium animate-fade-in"
+              style={{ animationDelay: "0.15s", animationFillMode: "both" }}
             >
               The fastest AI-powered trading terminal on Solana
             </p>
 
             {/* Description */}
             <p
-              className="text-sm sm:text-base text-muted-foreground/60 max-w-xl mx-auto mb-10 leading-relaxed animate-fade-in"
-              style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+              className="text-xs sm:text-sm text-muted-foreground/60 max-w-xl mx-auto mb-7 leading-relaxed animate-fade-in"
+              style={{ animationDelay: "0.2s", animationFillMode: "both" }}
             >
               Lightning-fast execution, built-in launchpad, referral rewards, smart alpha tracking, and AI-powered agents — all in one terminal.
             </p>
 
             {/* CTA Buttons */}
             <div
-              className="flex items-center justify-center gap-4 flex-wrap mb-12 animate-fade-in"
-              style={{ animationDelay: "0.4s", animationFillMode: "both" }}
+              className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-7 animate-fade-in"
+              style={{ animationDelay: "0.25s", animationFillMode: "both" }}
             >
               <Link
                 to="/trade"
-                className="group relative flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base text-background
+                className="group relative flex items-center gap-2.5 px-7 py-3 rounded-full font-bold text-sm text-background
                            transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_hsl(72_100%_50%/0.3)]
                            active:scale-[0.97]"
                 style={{
@@ -342,30 +369,29 @@ export default function HomePage() {
                   boxShadow: "0 0 20px hsl(72 100% 50% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.15)",
                 }}
               >
-                {/* Shine effect */}
                 <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
                   <div className="absolute -left-full top-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-700" />
                 </div>
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Zap className="w-4 h-4" />
                 Open Terminal
               </Link>
               <Link
                 to="/launchpad"
-                className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base
+                className="group flex items-center gap-2.5 px-7 py-3 rounded-full font-bold text-sm
                            text-foreground border border-border/60 bg-card/20 backdrop-blur-sm
                            transition-all duration-300 hover:scale-105 hover:border-primary/50
                            hover:bg-primary/5 hover:shadow-[0_0_30px_hsl(72_100%_50%/0.1)]
                            active:scale-[0.97]"
               >
-                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Rocket className="w-4 h-4" />
                 Launch Token
               </Link>
             </div>
 
             {/* Feature Badges */}
             <div
-              className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap animate-fade-in"
-              style={{ animationDelay: "0.55s", animationFillMode: "both" }}
+              className="flex items-center justify-center gap-2.5 sm:gap-3 flex-wrap mb-6 animate-fade-in"
+              style={{ animationDelay: "0.35s", animationFillMode: "both" }}
             >
               {[
                 { icon: Zap, label: "Fastest Execution" },
@@ -375,18 +401,31 @@ export default function HomePage() {
               ].map(({ icon: FIcon, label }) => (
                 <div
                   key={label}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-full
+                  className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-card/10 backdrop-blur-md border border-border/20
-                             text-xs sm:text-sm text-muted-foreground/80
+                             text-[11px] sm:text-xs text-muted-foreground/80
                              transition-all duration-300
-                             hover:border-primary/30 hover:bg-primary/5 hover:-translate-y-1
+                             hover:border-primary/30 hover:bg-primary/5 hover:-translate-y-0.5
                              hover:shadow-[0_8px_24px_hsl(72_100%_50%/0.08)]"
                 >
-                  <FIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary/70 group-hover:text-primary transition-colors" />
+                  <FIcon className="w-3.5 h-3.5 text-primary/70 group-hover:text-primary transition-colors" />
                   {label}
                 </div>
               ))}
             </div>
+
+            {/* Hot Pairs Teaser — above-the-fold social proof */}
+            {hotPairs.length > 0 && (
+              <div
+                className="flex items-center justify-center gap-2 flex-wrap animate-fade-in"
+                style={{ animationDelay: "0.45s", animationFillMode: "both" }}
+              >
+                <span className="text-[10px] text-muted-foreground/40 uppercase tracking-widest font-semibold mr-1">Trending</span>
+                {hotPairs.map(t => (
+                  <HotPairPill key={t.address} token={t} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -402,8 +441,8 @@ export default function HomePage() {
         {/* ═══ Trading Agents Showcase ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
-            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-3 gap-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}</div>}>
+          <section className={`${CW} mx-auto px-4 py-6`}>
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}</div>}>
               <TradingAgentsShowcase />
             </Suspense>
           </section>
@@ -411,21 +450,21 @@ export default function HomePage() {
 
         {/* ═══ Just Launched ═══ */}
         <SectionDivider />
-        <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+        <section className={`${CW} mx-auto px-4 py-6`}>
           <SectionHeader icon={Rocket} title="Just Launched" linkTo="/launchpad" linkLabel="View All" />
           <JustLaunched />
         </section>
 
         {/* ═══ King of the Hill ═══ */}
         <SectionDivider />
-        <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+        <section className={`${CW} mx-auto px-4 py-6`}>
           <KingOfTheHill />
         </section>
 
         {/* ═══ Alpha Tracker (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+          <section className={`${CW} mx-auto px-4 py-6`}>
             <SectionHeader icon={Crosshair} title="Alpha Trades" linkTo="/alpha-tracker" linkLabel="View All" />
             <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>}>
               <AlphaSection />
@@ -436,7 +475,7 @@ export default function HomePage() {
         {/* ═══ X Tracker (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+          <section className={`${CW} mx-auto px-4 py-6`}>
             <SectionHeader icon={Radar} title="X Tracker" linkTo="/x-tracker" linkLabel="View All" />
             <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>}>
               <XTrackerSection />
@@ -447,7 +486,7 @@ export default function HomePage() {
         {/* ═══ Leverage (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className={`${CONTENT_MAX} mx-auto px-4 py-8 pb-20`}>
+          <section className={`${CW} mx-auto px-4 py-6 pb-20`}>
             <SectionHeader icon={CandlestickChart} title="Leverage Trading" linkTo="/leverage" linkLabel="Open Terminal" />
             <Suspense fallback={<div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>}>
               <LeverageSection />
