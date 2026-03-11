@@ -340,7 +340,7 @@ export function WalletTrackerPanel({
               marginBottom: "2px",
             }}
           >
-            <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500 }}>Created</span>
+            <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500 }}>Added</span>
             <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500 }}>Name</span>
             <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500, textAlign: "right" }}>Balance</span>
             <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500, textAlign: "right" }}>Last Active</span>
