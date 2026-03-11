@@ -174,14 +174,8 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         <div className="text-4xl">🎓</div>
         <h3 className="font-bold text-sm font-mono uppercase tracking-widest">Token Graduated</h3>
         <p className="text-muted-foreground text-xs font-mono">
-          This token has graduated to the DEX. Trade on Jupiter or other DEX aggregators.
+          This token has graduated to the DEX and is now trading on-chain.
         </p>
-        <Button
-          className="w-full h-10 font-mono text-xs uppercase tracking-widest"
-          onClick={() => window.open(`https://jup.ag/swap/SOL-${token.mint_address}`, '_blank')}
-        >
-          Trade on Jupiter
-        </Button>
       </div>
     );
   }
