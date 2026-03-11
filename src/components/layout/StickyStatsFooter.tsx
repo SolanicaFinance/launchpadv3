@@ -62,7 +62,7 @@ function getLaunchpadIcon(type: string): string | null {
 }
 
 export function StickyStatsFooter() {
-  const { data: stats } = useClawStats();
+  const stats = null; // Agent stats removed
   const { data: launchpadStats, refetch: refetchLaunchpads } = useLaunchpadStats();
   const isMobile = useIsMobile();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
