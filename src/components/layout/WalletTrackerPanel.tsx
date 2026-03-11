@@ -650,8 +650,11 @@ function PanelTradesTab({ wallets, sz, f, navigate }: { wallets: any[]; sz: any;
           {/* Token icon */}
           <OptimizedTokenImage
             src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
-            fallbackSrc={`https://raw.githubusercontent.com/niclas555/solana-token-list/main/assets/${t.token_mint}/logo.png`}
+            fallbackSrc={`https://cdn.jsdelivr.net/gh/niclas555/solana-token-list@main/assets/${t.token_mint}/logo.png`}
             fallbackText={t.token_ticker || "?"}
+            size={40}
+            loading="eager"
+            decoding="sync"
             style={{ width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
             className="bg-[#222]"
           />

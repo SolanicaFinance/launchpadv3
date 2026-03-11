@@ -90,8 +90,8 @@ export function OptimizedTokenImage({
     <img
       src={activeSrc}
       alt={alt || ""}
-      loading="lazy"
-      decoding="async"
+      loading={props.loading || "lazy"}
+      decoding={props.decoding || "async"}
       className={className}
       onError={(event) => {
         if (!hasError) {
