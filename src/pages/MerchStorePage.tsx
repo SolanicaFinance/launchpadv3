@@ -53,8 +53,8 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "hat-beanie",
-    name: "Saturn Beanie",
-    description: "Knit beanie with woven Saturn patch",
+    name: "MoonDexo Beanie",
+    description: "Knit beanie with woven MoonDexo patch",
     priceSol: 0.12,
     category: "accessory",
     colors: [
