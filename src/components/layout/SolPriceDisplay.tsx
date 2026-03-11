@@ -84,9 +84,9 @@ export function SolPriceDisplay() {
   const isPositive = priceData.change24h >= 0;
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 bg-secondary rounded-md">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/20 backdrop-blur-sm border border-border/20 group hover:border-border/40 transition-all duration-300">
       {/* Solana Logo */}
-      <svg viewBox="0 0 397.7 311.7" className="h-4 w-4" fill="none">
+      <svg viewBox="0 0 397.7 311.7" className="h-4 w-4 flex-shrink-0" fill="none">
         <linearGradient id="solGrad1" x1="360.879" x2="141.213" y1="351.455" y2="-69.294" gradientTransform="matrix(1 0 0 -1 0 314)" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#00ffa3"/>
           <stop offset="1" stopColor="#dc1fff"/>
@@ -104,19 +104,19 @@ export function SolPriceDisplay() {
         <path fill="url(#solGrad3)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
       </svg>
       
-      <span className="text-xs font-medium text-foreground">
+      <span className="text-sm md:text-base font-bold text-foreground font-mono tracking-tight tabular-nums">
         ${priceData.price.toFixed(2)}
       </span>
       
-      <div className={`flex items-center gap-0.5 text-xs font-medium ${
-        isPositive ? 'text-success' : 'text-destructive'
+      <div className={`flex items-center gap-0.5 text-xs font-bold font-mono px-1.5 py-0.5 rounded-md ${
+        isPositive ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
       }`}>
         {isPositive ? (
           <TrendingUp className="h-3 w-3" />
         ) : (
           <TrendingDown className="h-3 w-3" />
         )}
-        <span>{isPositive ? '+' : ''}{priceData.change24h.toFixed(2)}%</span>
+        <span className="tabular-nums">{isPositive ? '+' : ''}{priceData.change24h.toFixed(2)}%</span>
       </div>
     </div>
   );
