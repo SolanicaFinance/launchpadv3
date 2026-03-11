@@ -234,49 +234,152 @@ export default function HomePage() {
   return (
     <LaunchpadLayout hideFooter noPadding>
       <div className="relative z-10">
-        {/* ═══ Hero Section — UNTOUCHED ═══ */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+        {/* ═══ Hero Section — Premium Redesign ═══ */}
+        <section className="relative overflow-hidden min-h-[80vh] sm:min-h-[85vh] flex items-center justify-center"
+          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, hsl(220 60% 8%) 0%, hsl(220 40% 3%) 60%, hsl(0 0% 0%) 100%)" }}
+        >
+          {/* Ambient glow orbs */}
+          <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(ellipse, hsl(72 100% 50% / 0.04) 0%, transparent 70%)" }} />
+          <div className="absolute top-[30%] left-[20%] w-[300px] h-[300px] rounded-full pointer-events-none animate-pulse"
+            style={{ background: "radial-gradient(circle, hsl(200 80% 50% / 0.03) 0%, transparent 70%)", animationDuration: "6s" }} />
+          <div className="absolute top-[20%] right-[15%] w-[250px] h-[250px] rounded-full pointer-events-none animate-pulse"
+            style={{ background: "radial-gradient(circle, hsl(280 60% 50% / 0.025) 0%, transparent 70%)", animationDuration: "8s" }} />
 
-          <div className="relative max-w-5xl mx-auto px-4 pt-12 pb-10 text-center">
-            <img src={saturnLogo} alt="Saturn Trade" className="w-16 h-16 mx-auto mb-4 drop-shadow-[0_0_20px_hsl(var(--primary)/0.4)]" />
-            <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-3">
+          {/* Orbit ring decoration */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] sm:w-[800px] sm:h-[800px] pointer-events-none opacity-[0.04]">
+            <div className="absolute inset-0 rounded-full border border-primary" style={{ transform: "rotateX(65deg)" }} />
+            <div className="absolute inset-[40px] rounded-full border border-primary/60" style={{ transform: "rotateX(65deg) rotateZ(15deg)" }} />
+          </div>
+
+          {/* Floating particles */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[
+              { x: "10%", y: "20%", size: "2px", dur: "12s", delay: "0s" },
+              { x: "85%", y: "30%", size: "1.5px", dur: "15s", delay: "2s" },
+              { x: "25%", y: "70%", size: "1px", dur: "18s", delay: "5s" },
+              { x: "70%", y: "60%", size: "2px", dur: "14s", delay: "3s" },
+              { x: "50%", y: "15%", size: "1.5px", dur: "16s", delay: "7s" },
+              { x: "90%", y: "80%", size: "1px", dur: "20s", delay: "1s" },
+            ].map((p, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full bg-primary/30 animate-pulse"
+                style={{
+                  left: p.x, top: p.y,
+                  width: p.size, height: p.size,
+                  animationDuration: p.dur,
+                  animationDelay: p.delay,
+                  boxShadow: `0 0 6px hsl(72 100% 50% / 0.3)`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Gradient fade to content below */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+
+          {/* Hero Content */}
+          <div className="relative z-10 max-w-4xl mx-auto px-4 pt-16 pb-20 text-center">
+            {/* Saturn Logo with orbit glow */}
+            <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6 animate-fade-in">
+              <div className="absolute inset-[-12px] rounded-full pointer-events-none"
+                style={{ background: "radial-gradient(circle, hsl(38 90% 50% / 0.15) 0%, transparent 70%)" }} />
+              <div className="absolute inset-[-6px] rounded-full border border-amber-500/10 pointer-events-none" style={{ transform: "rotateX(60deg)" }} />
+              <img
+                src={saturnLogo}
+                alt="Saturn Trade"
+                className="w-full h-full relative z-10 drop-shadow-[0_0_30px_hsl(38_90%_50%/0.35)]"
+              />
+            </div>
+
+            {/* Title with gradient */}
+            <h1
+              className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-4 animate-fade-in"
+              style={{
+                background: "linear-gradient(135deg, hsl(48 96% 53%) 0%, hsl(84 81% 44%) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                textShadow: "0 0 60px hsl(72 100% 50% / 0.15)",
+                animationDelay: "0.1s",
+                animationFillMode: "both",
+              }}
+            >
               Saturn Trade
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto mb-2">
+
+            {/* Subtitle */}
+            <p
+              className="text-lg sm:text-xl md:text-2xl text-foreground/80 max-w-2xl mx-auto mb-3 font-medium animate-fade-in"
+              style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+            >
               The fastest AI-powered trading terminal on Solana
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground/60 max-w-md mx-auto mb-8">
+
+            {/* Description */}
+            <p
+              className="text-sm sm:text-base text-muted-foreground/60 max-w-xl mx-auto mb-10 leading-relaxed animate-fade-in"
+              style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+            >
               Lightning-fast execution, built-in launchpad, referral rewards, smart alpha tracking, and AI-powered agents — all in one terminal.
             </p>
 
-            <div className="flex items-center justify-center gap-3 flex-wrap">
+            {/* CTA Buttons */}
+            <div
+              className="flex items-center justify-center gap-4 flex-wrap mb-12 animate-fade-in"
+              style={{ animationDelay: "0.4s", animationFillMode: "both" }}
+            >
               <Link
                 to="/trade"
-                className="btn-gradient-green flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm"
+                className="group relative flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base text-background
+                           transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_hsl(72_100%_50%/0.3)]
+                           active:scale-[0.97]"
+                style={{
+                  background: "linear-gradient(135deg, hsl(48 96% 53%) 0%, hsl(84 81% 44%) 60%, hsl(72 100% 50%) 100%)",
+                  boxShadow: "0 0 20px hsl(72 100% 50% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.15)",
+                }}
               >
-                <Zap className="w-4 h-4" />
+                {/* Shine effect */}
+                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+                  <div className="absolute -left-full top-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-[200%] transition-transform duration-700" />
+                </div>
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                 Open Terminal
               </Link>
               <Link
                 to="/launchpad"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-card border border-border hover:border-primary/40 text-foreground transition-colors"
+                className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base
+                           text-foreground border border-border/60 bg-card/20 backdrop-blur-sm
+                           transition-all duration-300 hover:scale-105 hover:border-primary/50
+                           hover:bg-primary/5 hover:shadow-[0_0_30px_hsl(72_100%_50%/0.1)]
+                           active:scale-[0.97]"
               >
-                <Rocket className="w-4 h-4" />
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
                 Launch Token
               </Link>
             </div>
 
-            <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
+            {/* Feature Badges */}
+            <div
+              className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap animate-fade-in"
+              style={{ animationDelay: "0.55s", animationFillMode: "both" }}
+            >
               {[
                 { icon: Zap, label: "Fastest Execution" },
                 { icon: Shield, label: "Secure Trading" },
                 { icon: Users, label: "Referral System" },
                 { icon: Bot, label: "AI Agents" },
               ].map(({ icon: FIcon, label }) => (
-                <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 border border-border/50 text-xs text-muted-foreground">
-                  <FIcon className="w-3.5 h-3.5 text-primary/70" />
+                <div
+                  key={label}
+                  className="group flex items-center gap-2 px-4 py-2 rounded-full
+                             bg-card/10 backdrop-blur-md border border-border/20
+                             text-xs sm:text-sm text-muted-foreground/80
+                             transition-all duration-300
+                             hover:border-primary/30 hover:bg-primary/5 hover:-translate-y-1
+                             hover:shadow-[0_8px_24px_hsl(72_100%_50%/0.08)]"
+                >
+                  <FIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary/70 group-hover:text-primary transition-colors" />
                   {label}
                 </div>
               ))}
