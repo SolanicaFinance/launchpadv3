@@ -1,45 +1,46 @@
 
 
-## Two Issues to Fix
+## Plan: Copy Trading Info Box, Alerts Toggle with Sound, Realtime Notifications, Tab Persistence
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### Issues Found
+1. **Copy Trading switch** has no `onCheckedChange` — clicking does nothing
+2. **Alerts bell** has no click handler — just decorative icons
+3. **No realtime subscription** for wallet trades in the tracker page — no live notifications or sounds
+4. **Tab resets to "All"** on every re-render because `activeTab` state resets when `wallets` data refreshes (the `fetchTrades` useEffect depends on `wallets` which changes reference on each fetch)
+5. **`useWalletTracker` hook** doesn't expose `toggleNotifications` or `toggleCopyTrading` functions
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+### Changes
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+**1. `src/hooks/useWalletTracker.ts` — Add toggle functions**
+- Add `toggleNotifications(walletId, enabled)` and `toggleCopyTrading(walletId, enabled)` that call the edge function with `action: "update"`
+- Optimistically update local `wallets` state so UI reflects immediately
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+**2. `src/pages/WalletTrackerPage.tsx` — Four fixes**
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+a) **Copy Trading info box**: When Copy Trading switch is toggled ON, show an info dialog/banner: "Copy Trading and many other options are available to Holders only." Switch stays off. Use a simple state-driven info box that appears inline or as a small modal.
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+b) **Alerts bell click handler**: Wire `toggleNotifications` from the hook. When alerts are ON: wallet receives realtime trade notifications with toast + sound. When OFF: no notifications for that wallet.
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+c) **Realtime subscription**: Add a `useEffect` that subscribes to `postgres_changes` on `wallet_trades` table (INSERT events). When a new trade arrives for a tracked wallet with `notifications_enabled`:
+   - Show a toast notification with wallet label, trade type, token, and SOL amount
+   - Play buy/sell sound using `useTradeSounds` hook
+   - This gives sub-second notification latency since Helius webhook → `wallet_trades` insert → Supabase Realtime → client
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+d) **Tab persistence**: Prevent tab reset by stabilizing the `wallets` dependency in the `fetchTrades` useEffect. Use a ref or memoize the addresses array so the effect doesn't re-trigger on every wallet fetch.
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+**3. `src/components/layout/WalletTrackerPanel.tsx` — Same fixes for panel**
+- Wire alerts toggle with the hook's `toggleNotifications`
+- Copy trade switch shows the same "Holders only" info box
+- Add the same realtime subscription for notifications + sounds
+
+**4. Sound integration**
+- Import and use `useTradeSounds` in both the page and panel
+- On realtime trade INSERT: call `playBuy()` or `playSell()` based on `trade_type`
+- The bell toggle per-wallet controls whether that wallet's trades trigger notifications/sounds
 
 ### Technical Details
-
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+- The realtime channel subscription filters on `wallet_trades` table INSERT events
+- On each event, check if `payload.new.wallet_address` matches a tracked wallet with `notifications_enabled === true`
+- If yes, show toast + play sound
+- Tab state is preserved by removing `wallets` from the `fetchTrades` useEffect dependency (use a ref for addresses instead)
 
