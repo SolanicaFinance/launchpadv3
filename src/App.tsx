@@ -66,6 +66,7 @@ const PunchGamesPage = lazyWithRetry(() => import("./pages/PunchGamesPage"));
 const PunchTokenDetailPage = lazyWithRetry(() => import("./pages/PunchTokenDetailPage"));
 const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
 const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"));
+const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
@@ -120,6 +121,7 @@ const App = () => (
                    <Routes>
                     <Route path="/" element={<DomainRoot />} />
                     <Route path="/launchpad" element={<FunLauncherPage />} />
+                    <Route path="/launchpad/create" element={<CreateTokenPage />} />
                     
                      {/* Chain-specific launch routes */}
                      <Route path="/launch" element={<Navigate to="/launch/solana" replace />} />

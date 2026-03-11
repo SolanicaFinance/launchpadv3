@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,14 @@ export default function FunLauncherPage() {
   const { chain, chainConfig, isSolana, isChainEnabled } = useChainRoute();
   const { setChain } = useChain();
   const [searchParams, setSearchParams] = useSearchParams();
+  const funNavigate = useNavigate();
+
+  // Redirect legacy ?create=1 to dedicated create page
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      funNavigate("/launchpad/create", { replace: true });
+    }
+  }, [searchParams, funNavigate]);
 
   const [claimsPage, setClaimsPage] = useState(1);
   const [creatorFeesPage, setCreatorFeesPage] = useState(1);
@@ -122,14 +131,10 @@ export default function FunLauncherPage() {
     else { setQbInput(String(quickBuyAmount)); }
   }, [qbInput, quickBuyAmount, activePreset]);
 
-  // Create token dialog — triggered by ?create=1 URL param
-  const showCreateDialog = searchParams.get("create") === "1";
-  const openCreateDialog = () => setSearchParams({ create: "1" });
-  const closeCreateDialog = () => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete("create");
-    setSearchParams(newParams);
-  };
+  // Create token — redirect to dedicated page; keep legacy ?create=1 compat
+  const showCreateDialog = false; // modal no longer used
+  const openCreateDialog = () => { window.location.href = "/launchpad/create"; };
+  const closeCreateDialog = () => {};
 
   const totalClaimed = claimsSummary?.totalClaimedSol ?? 0;
   const totalPayouts = useMemo(() => distributions.reduce((sum, d) => sum + Number(d.amount_sol || 0), 0), [distributions]);
