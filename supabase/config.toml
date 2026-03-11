@@ -432,3 +432,6 @@ verify_jwt = false
 
 [functions.server-trade]
 verify_jwt = false
+
+[functions.wallet-tracker-manage]
+verify_jwt = false
