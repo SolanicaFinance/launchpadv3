@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } from "react";
 import saturnLogo from "@/assets/saturn-logo.png";
-import heroTerminalMockup from "@/assets/hero-terminal-mockup.png";
-import heroLaunchMockup from "@/assets/hero-launch-mockup.png";
+import heroTerminalMockup from "@/assets/hero-terminal-mockup.jpg";
+import heroLaunchMockup from "@/assets/hero-launch-mockup.jpg";
 
 // Lazy load heavy below-fold section components
 const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
