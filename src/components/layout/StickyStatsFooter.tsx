@@ -71,13 +71,16 @@ export function StickyStatsFooter() {
   const [regionOpen, setRegionOpen] = useState(false);
   const [launchpadOpen, setLaunchpadOpen] = useState(false);
   const [walletTrackerOpen, setWalletTrackerOpen] = useState(false);
+  const [newPairsOpen, setNewPairsOpen] = useState(false);
   const [pings, setPings] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [lpRefreshing, setLpRefreshing] = useState(false);
   const [wtRefreshing, setWtRefreshing] = useState(false);
+  const [npRefreshing, setNpRefreshing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lpDropdownRef = useRef<HTMLDivElement>(null);
   const wtDropdownRef = useRef<HTMLDivElement>(null);
+  const npDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
