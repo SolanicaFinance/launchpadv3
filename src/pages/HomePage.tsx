@@ -10,9 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   Zap, Rocket, ArrowRight, Crosshair, Radar, CandlestickChart,
-  ArrowUpRight, ArrowDownRight, Shield, Users, Bot
+  ArrowUpRight, ArrowDownRight, Shield, Users, Bot, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } from "react";
 import saturnLogo from "@/assets/saturn-logo.png";
 
 // Lazy load heavy below-fold section components
