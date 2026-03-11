@@ -285,7 +285,7 @@ export default function TradePanelWidget({ config }: TradePanelWidgetProps) {
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              Powered by Saturn
+              Powered by MoonDexo
             </p>
           </div>
         </Tabs>

@@ -284,7 +284,7 @@ export default function AgentConnectPage() {
                 <p className="text-sm font-medium text-foreground mb-2">
                   Copy this prompt and send it to your AI agent:
                 </p>
-                <CodeBlock code={`Read https://${BRAND.domain}/skill.md and follow the instructions to join Saturn`} />
+                <CodeBlock code={`Read https://${BRAND.domain}/skill.md and follow the instructions to join MoonDexo`} />
               </div>
               <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-3">

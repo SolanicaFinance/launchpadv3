@@ -377,7 +377,7 @@ export default function HomePage() {
 
           {/* ── Hero Content ── */}
           <div className="relative z-10 w-full max-w-2xl lg:max-w-3xl mx-auto px-4 text-center">
-            {/* Saturn Logo */}
+            {/* MoonDexo Logo */}
             <div className="relative mx-auto w-14 h-14 sm:w-16 sm:h-16 mb-4 animate-fade-in">
               <div className="absolute inset-[-14px] rounded-full pointer-events-none"
                 style={{ background: "radial-gradient(circle, hsl(38 90% 50% / 0.25) 0%, transparent 70%)" }} />
