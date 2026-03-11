@@ -77,7 +77,7 @@ export default function FunLauncherPage() {
   const shouldRedirectToCreate = searchParams.get("create") === "1";
   useEffect(() => {
     if (shouldRedirectToCreate) {
-      funNavigate("/launchpad/create", { replace: true });
+      funNavigate("/launchpad", { replace: true });
     }
   }, [shouldRedirectToCreate, funNavigate]);
 
@@ -134,7 +134,7 @@ export default function FunLauncherPage() {
 
   // Create token — redirect to dedicated page; keep legacy ?create=1 compat
   const showCreateDialog = false; // modal no longer used
-  const openCreateDialog = () => { window.location.href = "/launchpad/create"; };
+  const openCreateDialog = () => { window.location.href = "/launchpad"; };
   const closeCreateDialog = () => {};
 
   const totalClaimed = claimsSummary?.totalClaimedSol ?? 0;

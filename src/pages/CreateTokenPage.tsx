@@ -3,8 +3,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { TokenLauncher } from "@/components/launchpad/TokenLauncher";
-import { Rocket, ExternalLink, CheckCircle2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Rocket, ExternalLink, CheckCircle2, ArrowLeft, Shield, Zap, Coins } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 
 interface LaunchResult {
   success: boolean;
@@ -34,35 +34,69 @@ export default function CreateTokenPage() {
       <div className="md:ml-[48px] flex flex-col min-h-screen">
         <AppHeader onMobileMenuOpen={() => setMobileOpen(true)} />
 
-        <main className="flex-1 px-4 py-8 md:py-12">
-          {/* Floating ambient orbs */}
+        <main className="flex-1 relative">
+          {/* Ambient orbs */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
             <div className="launch-page-orb launch-page-orb-1" />
             <div className="launch-page-orb launch-page-orb-2" />
             <div className="launch-page-orb launch-page-orb-3" />
+            <div className="launch-page-orb-4" />
           </div>
 
-          <div className="relative z-10 max-w-[620px] mx-auto">
-            {/* Page header */}
-            <div className="mb-8 md:mb-10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="launch-page-icon-badge">
-                  <Rocket className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight leading-tight">
-                    Launch Token
-                  </h1>
-                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5 font-mono tracking-wide">
-                    via Phantom Wallet
-                  </p>
-                </div>
-              </div>
-              {/* Neon gradient divider */}
-              <div className="mt-4 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-            </div>
+          {/* Back link */}
+          <div className="relative z-10 max-w-5xl mx-auto px-4 pt-6">
+            <Link
+              to="/terminal"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground hover:text-primary transition-colors duration-200 group"
+            >
+              <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+              Back to Terminal
+            </Link>
+          </div>
 
-            {/* Form or Success */}
+          {/* Hero Section */}
+          <div className="relative z-10 max-w-5xl mx-auto px-4 pt-8 md:pt-16 pb-6">
+            <div className="text-center space-y-4">
+              {/* Neon icon */}
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl launch-hero-icon-badge mb-2">
+                <Rocket className="w-7 h-7 text-foreground" />
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+                Launch Your Token on{" "}
+                <span className="launch-hero-gradient-text">Saturn</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                Create fast, fair, AI-powered memecoins — atomic dev buy, zero frontrun, instant trading
+              </p>
+
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-2 flex-wrap pt-2">
+                <span className="launch-trust-badge">
+                  <img src="/phantom-icon.png" alt="" className="w-3.5 h-3.5 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  Phantom
+                </span>
+                <span className="launch-trust-badge">
+                  <Coins className="w-3 h-3 text-primary" />
+                  <span className="font-mono">~0.02 SOL</span>
+                </span>
+                <span className="launch-trust-badge">
+                  <Zap className="w-3 h-3 text-primary" />
+                  Bonding Curve
+                </span>
+                <span className="launch-trust-badge">
+                  <Shield className="w-3 h-3 text-success" />
+                  Anti-Snipe
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Main content: form */}
+          <div className="relative z-10 max-w-[640px] mx-auto px-4">
             {lastResult?.success && lastResult.mintAddress ? (
               <SuccessResult result={lastResult} onReset={handleReset} />
             ) : (
@@ -97,7 +131,7 @@ function SuccessResult({
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-400 max-w-[620px] mx-auto">
+    <div className="space-y-6 animate-in fade-in duration-400 max-w-[640px] mx-auto">
       {/* Token card */}
       <div className="launch-page-form-container rounded-2xl p-6 flex items-center gap-4">
         {result.imageUrl ? (
@@ -159,10 +193,10 @@ function SuccessResult({
           Launch Another
         </button>
         <button
-          onClick={() => navigate("/launchpad")}
+          onClick={() => navigate("/terminal")}
           className="flex-1 py-3.5 rounded-xl text-sm font-medium text-muted-foreground bg-muted/30 hover:bg-muted/50 transition-all active:scale-[0.97] duration-200"
         >
-          Back to Launchpad
+          Back to Terminal
         </button>
       </div>
     </div>
