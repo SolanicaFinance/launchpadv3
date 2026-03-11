@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SettingsModal } from "@/components/settings/SettingsModal";
 import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 import { PortfolioModal } from "@/components/portfolio/PortfolioModal";
+import { useChain } from "@/contexts/ChainContext";
+import { useEvmWallet } from "@/hooks/useEvmWallet";
 
 function HeaderWalletBalanceInner() {
   const { isAuthenticated, logout } = useAuth();
