@@ -44,8 +44,8 @@ const TAB_CONFIG = [
   
   { value: "follower-scan", label: "Followers", icon: Users },
   { value: "promo", label: "Promo/Influencer", icon: Shield },
-  { value: "clawbook", label: "ClawBook", icon: Shield },
-  { value: "claw-launch", label: "Claw Launch", icon: Rocket },
+  { value: "clawbook", label: "Saturn Forum", icon: Shield },
+  { value: "claw-launch", label: "Saturn Launch", icon: Rocket },
   { value: "partner-fees", label: "Partner Fees", icon: Wallet },
 ] as const;
 
