@@ -551,7 +551,7 @@ export default function FunTokenDetailPage() {
   );
 
   const ChartSection = ({ chartHeight = 460 }: { chartHeight?: number }) => (
-    <div className="trade-glass-panel-glow overflow-hidden" style={{ backgroundColor: 'hsl(222 40% 3% / 0.8)' }}>
+    <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
       <CodexChart tokenAddress={token.mint_address || mintAddress || ''} height={chartHeight} />
     </div>
   );
