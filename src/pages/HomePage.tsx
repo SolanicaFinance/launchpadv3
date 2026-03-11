@@ -325,32 +325,32 @@ export default function HomePage() {
           {/* ── Flanking Product Screenshots ── */}
           {/* Left: Trading Terminal mockup */}
           <div
-            className="absolute left-[-8%] top-[8%] w-[42%] max-w-[520px] pointer-events-none hidden lg:block"
+            className="absolute left-[-6%] top-[4%] w-[44%] max-w-[580px] pointer-events-none hidden lg:block"
             style={{
-              transform: "perspective(1200px) rotateY(12deg) rotateX(-2deg)",
-              opacity: 0.3,
-              filter: "blur(6px)",
-              maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
+              transform: "perspective(1200px) rotateY(14deg) rotateX(-3deg)",
+              opacity: 0.4,
+              filter: "blur(4px)",
+              maskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/10 shadow-[0_0_40px_hsl(72_100%_50%/0.06)]">
+            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
               <img src={heroTerminalMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
 
           {/* Right: Token Launch mockup */}
           <div
-            className="absolute right-[-8%] top-[12%] w-[40%] max-w-[500px] pointer-events-none hidden lg:block"
+            className="absolute right-[-6%] top-[6%] w-[42%] max-w-[540px] pointer-events-none hidden lg:block"
             style={{
-              transform: "perspective(1200px) rotateY(-12deg) rotateX(-2deg)",
-              opacity: 0.3,
-              filter: "blur(6px)",
-              maskImage: "linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%)",
+              transform: "perspective(1200px) rotateY(-14deg) rotateX(-3deg)",
+              opacity: 0.4,
+              filter: "blur(4px)",
+              maskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/10 shadow-[0_0_40px_hsl(72_100%_50%/0.06)]">
+            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
               <img src={heroLaunchMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
