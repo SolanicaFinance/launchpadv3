@@ -93,7 +93,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
     >
       <div className="relative">
         {/* Sparkline background - starts after avatar (left offset ~60px) */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" style={{ left: '60px' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.address || token.symbol} />
         </div>
         {/* Row 1: Avatar + Info + Metrics */}
