@@ -292,10 +292,10 @@ export default function HomePage() {
           <div className="absolute top-[15%] right-[12%] w-[280px] h-[280px] rounded-full pointer-events-none animate-pulse"
             style={{ background: "radial-gradient(circle, hsl(280 60% 50% / 0.025) 0%, transparent 70%)", animationDuration: "10s" }} />
 
-          {/* Orbit rings */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] pointer-events-none opacity-[0.035]">
-            <div className="absolute inset-0 rounded-full border border-primary animate-spin-slow" style={{ transform: "rotateX(68deg)", animationDuration: "40s" }} />
-            <div className="absolute inset-[50px] rounded-full border border-primary/50" style={{ transform: "rotateX(68deg) rotateZ(20deg)" }} />
+          {/* Orbit rings — positioned above hero text to avoid crossing description */}
+          <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] pointer-events-none opacity-[0.03]">
+            <div className="absolute inset-0 rounded-full border border-primary/40 animate-spin-slow" style={{ transform: "rotateX(75deg)", animationDuration: "40s" }} />
+            <div className="absolute inset-[50px] rounded-full border border-primary/20" style={{ transform: "rotateX(75deg) rotateZ(20deg)" }} />
           </div>
 
           {/* Floating particles — slower, elegant */}
