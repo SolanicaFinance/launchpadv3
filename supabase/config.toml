@@ -435,3 +435,9 @@ verify_jwt = false
 
 [functions.wallet-tracker-manage]
 verify_jwt = false
+
+[functions.bnb-deploy-portal]
+verify_jwt = false
+
+[functions.bnb-swap]
+verify_jwt = false
