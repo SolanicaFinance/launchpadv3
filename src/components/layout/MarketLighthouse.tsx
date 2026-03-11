@@ -298,7 +298,11 @@ function IconCard({ icon, label, value, change, compact }: { icon: string; label
       alignItems: "center",
       gap: compact ? "2px" : "3px",
     }}>
-      <img src={icon} alt={label} style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+      {icon ? (
+        <img src={icon} alt={label} style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+      ) : (
+        <div style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: compact ? "10px" : "13px", fontWeight: 700, color: "#aaa" }}>{label.charAt(0)}</div>
+      )}
       <span style={{ fontSize: compact ? "10px" : "13px", fontWeight: 700 }}>{value}</span>
       {change !== undefined && (
         <span style={{ fontSize: compact ? "8px" : "10px", color: change >= 0 ? g : r, fontWeight: 500 }}>{fPct(change)}</span>
