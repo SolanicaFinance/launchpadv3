@@ -35,7 +35,7 @@ export function SaturnAgentSection() {
               to place their bid. The highest bidder at the end of the auction wins full ownership of the agent and
               all its future fee distributions. Non-winning bidders are automatically refunded 1 hour after the winner
               is announced. If no bids are placed within the first 3 hours, the agent becomes fully owned by the
-              Saturn Trade system.
+              ${BRAND.name} system.
             </p>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--saturn-muted))" }}>
               Each agent operates with a <span className="font-medium" style={{ color: "hsl(var(--saturn-text))" }}>unique personality profile</span> and
@@ -74,7 +74,7 @@ export function SaturnAgentSection() {
           </div>
           <p className="text-xs" style={{ color: "hsl(var(--saturn-muted))" }}>
             Bidding runs for 3 hours from agent launch. If no bids are placed, the agent stays under
-            Saturn Trade ownership. Winner announced automatically.
+            ${BRAND.name} ownership. Winner announced automatically.
           </p>
         </div>
         <div className="saturn-card p-5" style={{ borderColor: "hsl(var(--saturn-accent) / 0.2)" }}>

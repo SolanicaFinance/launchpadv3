@@ -7,7 +7,7 @@ import { BRAND } from "@/config/branding";
 const steps = [
   {
     icon: Twitter,
-    title: "Tweet @saturntrade",
+    title: `Tweet ${BRAND.twitterHandle}`,
     description: "Post on X with !clawmode followed by any name or description. That's it.",
   },
   {

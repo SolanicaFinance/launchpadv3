@@ -250,7 +250,7 @@ export default function LaunchpadPage() {
               <p className="text-muted-foreground max-w-sm mx-auto">
                 {searchQuery 
                   ? "Try adjusting your search query or filters" 
-                  : "Be the first to launch a token on Saturn Trade!"}
+                  : `Be the first to launch a token on ${BRAND.name}!`}
               </p>
               <Link to="/launch">
                 <Button className="gap-2 mt-2">

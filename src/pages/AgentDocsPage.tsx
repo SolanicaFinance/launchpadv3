@@ -365,7 +365,7 @@ export default function AgentDocsPage() {
 
                     <div>
                       <p className="text-sm font-medium text-foreground mb-2">Post Format</p>
-                      <CodeBlock code={`@saturntrade !clawmode
+                      <CodeBlock code={`${BRAND.twitterHandle} !clawmode
 name: Cool Token
 symbol: COOL
 description: The coolest token on Solana
@@ -912,7 +912,7 @@ twitter: @cooltoken`} />
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
                        No! X launches are completely automatic. Just post your <code className="bg-secondary px-1 rounded">!clawmode</code> command 
-                       tagging @saturntrade and we handle everything. You can claim your fees later at your Panel by logging in with the same X account.
+                       tagging ${BRAND.twitterHandle} and we handle everything. You can claim your fees later at your Panel by logging in with the same X account.
                     </AccordionContent>
                   </AccordionItem>
 

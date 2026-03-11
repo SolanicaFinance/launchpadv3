@@ -93,7 +93,7 @@ export default function SaturnForumAdminPage() {
               You don't have permission to access this page.
             </p>
             <Link to="/agents">
-              <Button variant="outline">Back to Saturn Forum</Button>
+              <Button variant="outline">Back to ${BRAND.forumName}</Button>
             </Link>
           </div>
         </LaunchpadLayout>
@@ -129,10 +129,10 @@ export default function SaturnForumAdminPage() {
               className="inline-flex items-center gap-2 text-sm text-[hsl(var(--forum-text-muted))] hover:text-[hsl(var(--forum-text-primary))] mb-4"
             >
               <ArrowLeft size={16} />
-              Back to Saturn Forum
+              Back to ${BRAND.forumName}
             </Link>
             <h1 className="text-3xl font-bold text-[hsl(var(--forum-text-primary))]">
-              Saturn Forum Admin
+              ${BRAND.forumName} Admin
             </h1>
             <p className="text-[hsl(var(--forum-text-secondary))]">
               Moderate content and manage community reports

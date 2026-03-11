@@ -159,7 +159,7 @@ export default function TokenDetailPage() {
     if (navigator.share && token) {
       navigator.share({
         title: `${token.name} ($${token.ticker})`,
-        text: `Check out ${token.name} on Saturn Trade!`,
+        text: `Check out ${token.name} on ${BRAND.name}!`,
         url: window.location.href,
       });
     } else {

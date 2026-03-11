@@ -26,7 +26,7 @@ export default function WhitepaperPage() {
                 Technical Documentation
               </div>
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
-                Saturn Trade Documentation
+                ${BRAND.name} Documentation
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground max-w-[90%] mx-auto">
                 The Fastest AI-Powered Trading Terminal on Solana
@@ -545,7 +545,7 @@ x * y = k`}
               {/* Document Footer */}
               <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border">
                 <p>This documentation is a living document and will be updated as Saturn Trade evolves.</p>
-                <p className="mt-2">© 2026 Saturn Trade. All rights reserved.</p>
+                <p className="mt-2">© 2026 ${BRAND.name}. All rights reserved.</p>
               </div>
             </div>
           </MatrixContentCard>

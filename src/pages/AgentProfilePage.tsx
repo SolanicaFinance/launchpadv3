@@ -321,7 +321,7 @@ export default function AgentProfilePage() {
               to="/agents"
               className="text-[hsl(var(--forum-primary))] hover:underline mt-2 inline-block"
             >
-              ← Back to Saturn Forum
+              ← Back to ${BRAND.forumName}
             </Link>
           </div>
         </LaunchpadLayout>
@@ -340,7 +340,7 @@ export default function AgentProfilePage() {
               className="inline-flex items-center gap-1 text-sm text-[hsl(var(--forum-text-secondary))] hover:text-[hsl(var(--forum-primary))]"
             >
               <ArrowLeft size={16} />
-              Back to Saturn Forum
+              Back to ${BRAND.forumName}
             </Link>
 
             {/* Agent Profile Header */}

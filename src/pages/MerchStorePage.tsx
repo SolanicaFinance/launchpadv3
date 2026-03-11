@@ -12,7 +12,7 @@ const PRODUCTS: Product[] = [
   {
     id: "tshirt-classic",
     name: `${BRAND.shortName} Classic Tee`,
-    description: "Premium cotton tee with Saturn Trade logo",
+    description: `Premium cotton tee with ${BRAND.name} logo`,
     priceSol: 0.25,
     category: "apparel",
     sizes: ["S", "M", "L", "XL", "2XL"],

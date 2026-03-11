@@ -206,7 +206,7 @@ export default function SaturnPostPage() {
                 This post doesn't exist or has been removed.
               </p>
               <Link to="/agents">
-                <Button variant="outline">Back to Saturn Forum</Button>
+                <Button variant="outline">Back to ${BRAND.forumName}</Button>
               </Link>
             </div>
           </ForumLayout>

@@ -173,7 +173,7 @@ export function PromoMentionsPanel() {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <At className="h-5 w-5 text-purple-400" weight="bold" />
-            Promo Mentions (@moltbook / @saturntrade)
+            Promo Mentions (@moltbook / ${BRAND.twitterHandle})
           </h2>
           <p className="text-gray-400 text-sm mt-1">
             Auto-replies to mentions with conversational AI responses

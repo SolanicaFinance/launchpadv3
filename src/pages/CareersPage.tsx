@@ -429,7 +429,7 @@ export default function CareersPage() {
                 className="bg-primary hover:bg-primary/90 gap-2"
               >
                 <XLogo className="h-5 w-5" weight="fill" />
-                DM @saturntrade on X
+                DM ${BRAND.twitterHandle} on X
               </Button>
             </CardContent>
           </Card>

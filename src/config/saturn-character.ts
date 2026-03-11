@@ -1,4 +1,5 @@
 /**
+import { BRAND } from "@/config/branding";
  * Claw Character Definition
  * 
  * This file defines the personality and behavior of @saturntrade's reply bot.
