@@ -43,6 +43,9 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
             src={tweet.kol_profile_image}
             alt={tweet.kol_username}
             className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
+            loading="lazy"
+            width={32}
+            height={32}
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">

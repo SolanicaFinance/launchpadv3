@@ -4023,6 +4023,7 @@ export type Database = {
       }
       kol_accounts: {
         Row: {
+          cached_avatar_url: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -4033,6 +4034,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          cached_avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -4043,6 +4045,7 @@ export type Database = {
           username: string
         }
         Update: {
+          cached_avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
