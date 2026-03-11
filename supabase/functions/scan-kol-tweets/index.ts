@@ -171,16 +171,52 @@ Deno.serve(async (req) => {
 
         runCounters.tweetsFetched += tweets.length;
 
-        // Update profile image if available
+        // Update profile image if available — cache small avatar in storage
         const authorInfo = tweets[0]?.author || data?.user;
         if (authorInfo?.profile_image_url_https || authorInfo?.profileImageUrl) {
-          const imgUrl = authorInfo.profile_image_url_https || authorInfo.profileImageUrl;
+          let imgUrl = authorInfo.profile_image_url_https || authorInfo.profileImageUrl;
+          
+          // Use Twitter's mini size (24x24) for fast loading
+          imgUrl = imgUrl.replace(/_normal\./, "_mini.").replace(/_bigger\./, "_mini.");
+          
+          const updateData: Record<string, string> = {
+            profile_image_url: imgUrl,
+            display_name: authorInfo.name || authorInfo.displayName || kol.display_name,
+          };
+
+          // Try to cache avatar in storage for fastest loading
+          if (!kol.cached_avatar_url) {
+            try {
+              const avatarResp = await fetch(imgUrl);
+              if (avatarResp.ok) {
+                const blob = await avatarResp.blob();
+                const ext = imgUrl.includes(".png") ? "png" : "jpg";
+                const path = `${kol.username}.${ext}`;
+                
+                const { error: uploadErr } = await supabase.storage
+                  .from("kol-avatars")
+                  .upload(path, blob, { 
+                    contentType: blob.type || `image/${ext}`,
+                    upsert: true,
+                  });
+                
+                if (!uploadErr) {
+                  const { data: urlData } = supabase.storage
+                    .from("kol-avatars")
+                    .getPublicUrl(path);
+                  if (urlData?.publicUrl) {
+                    updateData.cached_avatar_url = urlData.publicUrl;
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn(`[scan] Failed to cache avatar for @${kol.username}:`, e);
+            }
+          }
+          
           await supabase
             .from("kol_accounts")
-            .update({
-              profile_image_url: imgUrl,
-              display_name: authorInfo.name || authorInfo.displayName || kol.display_name,
-            })
+            .update(updateData)
             .eq("id", kol.id);
         }
 
