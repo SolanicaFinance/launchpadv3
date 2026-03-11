@@ -53,6 +53,7 @@ const TAB_CONFIG = [
 export default function AdminPanelPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "treasury";
 
@@ -63,10 +64,13 @@ export default function AdminPanelPage() {
   }, []);
 
   const handleLogin = () => {
+    setError("");
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
       localStorage.setItem("admin_panel_auth", "true");
       localStorage.setItem("treasury_admin_auth", "true");
+    } else {
+      setError("Incorrect password");
     }
   };
 
@@ -96,6 +100,9 @@ export default function AdminPanelPage() {
                 placeholder="Enter admin password"
               />
             </div>
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
             <Button className="w-full" onClick={handleLogin}>
               <Lock className="w-4 h-4 mr-2" />
               Unlock
