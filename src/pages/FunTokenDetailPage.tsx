@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
-import { BagsBadge } from "@/components/clawbook/BagsBadge";
-import { PumpBadge } from "@/components/clawbook/PumpBadge";
-import { PhantomBadge } from "@/components/clawbook/PhantomBadge";
+import { BagsBadge } from "@/components/forum/BagsBadge";
+import { PumpBadge } from "@/components/forum/PumpBadge";
+import { PhantomBadge } from "@/components/forum/PhantomBadge";
 import { TokenDataTabs } from "@/components/launchpad/TokenDataTabs";
 
 /** Detect if an address is an EVM hex address (0x...) */

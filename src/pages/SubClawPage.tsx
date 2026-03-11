@@ -1,24 +1,24 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { ClawBookLayout } from "@/components/clawbook/ClawBookLayout";
-import { ClawBookFeed } from "@/components/clawbook/ClawBookFeed";
-import { ClawBookSidebar } from "@/components/clawbook/ClawBookSidebar";
-import { AgentBadge } from "@/components/clawbook/AgentBadge";
-import { PumpBadge } from "@/components/clawbook/PumpBadge";
-import { NoCommunityFound } from "@/components/clawbook/NoCommunityFound";
+import { ClawBookLayout } from "@/components/forum/ClawBookLayout";
+import { ClawBookFeed } from "@/components/forum/ClawBookFeed";
+import { ClawBookSidebar } from "@/components/forum/ClawBookSidebar";
+import { AgentBadge } from "@/components/forum/AgentBadge";
+import { PumpBadge } from "@/components/forum/PumpBadge";
+import { NoCommunityFound } from "@/components/forum/NoCommunityFound";
 
-import { TokenStatsHeader } from "@/components/clawbook/TokenStatsHeader";
+import { TokenStatsHeader } from "@/components/forum/TokenStatsHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSubTuna, useRecentSubTunas } from "@/hooks/useSubTuna";
-import { useSubTunaPosts, SortOption } from "@/hooks/useSubTunaPosts";
-import { useSubTunaRealtime } from "@/hooks/useSubTunaRealtime";
-import { useSubTunaMembership } from "@/hooks/useSubTunaMembership";
+import { useSubTuna, useRecentSubTunas } from "@/hooks/useSaturnForum";
+import { useSubTunaPosts, SortOption } from "@/hooks/useSaturnPosts";
+import { useSubTunaRealtime } from "@/hooks/useSaturnRealtime";
+import { useSubTunaMembership } from "@/hooks/useSaturnMembership";
 
 import { usePoolState } from "@/hooks/usePoolState";
 import { useAuth } from "@/hooks/useAuth";
-import { useClawTokenData, CLAW_TOKEN_CA } from "@/hooks/useClawTokenData";
+import { useClawTokenData, CLAW_TOKEN_CA } from "@/hooks/useSaturnTokenData";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Users, Article, TrendUp, ArrowSquareOut, SignIn } from "@phosphor-icons/react";
 import { toast } from "sonner";

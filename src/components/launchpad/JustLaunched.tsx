@@ -6,9 +6,9 @@ import { useJustLaunched, type JustLaunchedToken } from "@/hooks/useJustLaunched
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { PumpBadge } from "@/components/clawbook/PumpBadge";
-import { BagsBadge } from "@/components/clawbook/BagsBadge";
-import { PhantomBadge } from "@/components/clawbook/PhantomBadge";
+import { PumpBadge } from "@/components/forum/PumpBadge";
+import { BagsBadge } from "@/components/forum/BagsBadge";
+import { PhantomBadge } from "@/components/forum/PhantomBadge";
 
 function formatUsdMarketCap(marketCapSol: number, solPrice: number): string {
   const usdValue = marketCapSol * solPrice;

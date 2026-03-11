@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { MatrixBackground } from "@/components/claw/MatrixBackground";
-import { ClawHero } from "@/components/claw/ClawHero";
-import { ClawStatsBar } from "@/components/claw/ClawStatsBar";
-import { ClawAgentSection } from "@/components/claw/ClawAgentSection";
-import { ClawTokenGrid } from "@/components/claw/ClawTokenGrid";
-import { ClawTradingSection } from "@/components/claw/ClawTradingSection";
-import { ClawBribeSection } from "@/components/claw/ClawBribeSection";
-import { ClawForumSection } from "@/components/claw/ClawForumSection";
+import { MatrixBackground } from "@/components/saturn/MatrixBackground";
+import { ClawHero } from "@/components/saturn/ClawHero";
+import { ClawStatsBar } from "@/components/saturn/ClawStatsBar";
+import { ClawAgentSection } from "@/components/saturn/ClawAgentSection";
+import { ClawTokenGrid } from "@/components/saturn/ClawTokenGrid";
+import { ClawTradingSection } from "@/components/saturn/ClawTradingSection";
+import { ClawBribeSection } from "@/components/saturn/ClawBribeSection";
+import { ClawForumSection } from "@/components/saturn/ClawForumSection";
 import "@/styles/saturn-theme.css";
 import { MatrixContentCard } from "@/components/layout/MatrixContentCard";
 

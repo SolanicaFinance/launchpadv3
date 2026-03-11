@@ -1,4 +1,4 @@
-import { useClawStats } from "@/hooks/useClawStats";
+import { useClawStats } from "@/hooks/useSaturnStats";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Skeleton } from "@/components/ui/skeleton";
 

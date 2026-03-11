@@ -1,7 +1,7 @@
 import { useState } from "react";
 import QRCode from "react-qr-code";
-import { useClawTradingAgents } from "@/hooks/useClawTradingAgents";
-import { useClawBribe } from "@/hooks/useClawBribe";
+import { useClawTradingAgents } from "@/hooks/useSaturnTradingAgents";
+import { useClawBribe } from "@/hooks/useSaturnBribe";
 import { Copy, Check, Loader2, Sparkles } from "lucide-react";
 
 export function ClawBribeSection() {

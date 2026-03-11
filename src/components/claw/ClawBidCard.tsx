@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Timer, TrendingUp, Gavel, Copy, Check, ArrowUpRight } from "lucide-react";
-import { useClawBidCountdown } from "@/hooks/useClawBidCountdown";
-import { useClawAgentBid, MIN_BID_SOL, BID_INCREMENT_SOL } from "@/hooks/useClawAgentBid";
+import { useClawBidCountdown } from "@/hooks/useSaturnBidCountdown";
+import { useClawAgentBid, MIN_BID_SOL, BID_INCREMENT_SOL } from "@/hooks/useSaturnAgentBid";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 

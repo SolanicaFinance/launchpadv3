@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, Sparkles, Loader2, Rocket, Wand2 } from "lucide-react";
-import { useClawAdminLaunch } from "@/hooks/useClawAdminLaunch";
-import { useClawIdeaGenerate } from "@/hooks/useClawIdeaGenerate";
+import { useClawAdminLaunch } from "@/hooks/useSaturnAdminLaunch";
+import { useClawIdeaGenerate } from "@/hooks/useSaturnIdeaGenerate";
 import { toast } from "@/hooks/use-toast";
 
 type LaunchMode = "ai-generate" | "ai-trading" | "custom";

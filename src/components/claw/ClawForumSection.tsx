@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useClawCommunities, useClawPosts } from "@/hooks/useClawCommunities";
+import { useClawCommunities, useClawPosts } from "@/hooks/useSaturnCommunities";
 import { Loader2, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 

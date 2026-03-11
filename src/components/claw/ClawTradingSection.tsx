@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Target, Zap, Bot, Wallet, TrendingUp } from "lucide-react";
-import { useClawTradingAgents, useClawTradingAgentLeaderboard } from "@/hooks/useClawTradingAgents";
+import { useClawTradingAgents, useClawTradingAgentLeaderboard } from "@/hooks/useSaturnTradingAgents";
 import { TradingAgentCard, TradingAgentCardSkeleton, FearGreedGauge } from "@/components/trading";
 
 export function ClawTradingSection() {

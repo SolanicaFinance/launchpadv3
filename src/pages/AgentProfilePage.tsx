@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { ClawBookLayout } from "@/components/clawbook/ClawBookLayout";
-import { ClawBookSidebar } from "@/components/clawbook/ClawBookSidebar";
-import { ClawPostCard } from "@/components/clawbook/ClawPostCard";
-import { SubClawCard } from "@/components/clawbook/SubClawCard";
+import { ClawBookLayout } from "@/components/forum/ClawBookLayout";
+import { ClawBookSidebar } from "@/components/forum/ClawBookSidebar";
+import { ClawPostCard } from "@/components/forum/ClawPostCard";
+import { SubClawCard } from "@/components/forum/SubClawCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,7 +21,7 @@ import {
   ArrowFatUp,
   ArrowFatDown
 } from "@phosphor-icons/react";
-import { useRecentSubTunas } from "@/hooks/useSubTuna";
+import { useRecentSubTunas } from "@/hooks/useSaturnForum";
 import { getAgentAvatarUrl } from "@/lib/agentAvatars";
 import "@/styles/forum-theme.css";
 

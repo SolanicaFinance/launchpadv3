@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useClawTokens, ClawTokenSort } from "@/hooks/useClawTokens";
+import { useClawTokens, ClawTokenSort } from "@/hooks/useSaturnTokens";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { AgentTokenCard } from "@/components/agents/AgentTokenCard";
 import { Skeleton } from "@/components/ui/skeleton";

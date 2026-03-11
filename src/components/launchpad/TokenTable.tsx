@@ -17,9 +17,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { PumpBadge } from "@/components/clawbook/PumpBadge";
-import { BagsBadge } from "@/components/clawbook/BagsBadge";
-import { PhantomBadge } from "@/components/clawbook/PhantomBadge";
+import { PumpBadge } from "@/components/forum/PumpBadge";
+import { BagsBadge } from "@/components/forum/BagsBadge";
+import { PhantomBadge } from "@/components/forum/PhantomBadge";
 
 interface TokenTableProps {
   solPrice: number | null;
