@@ -190,13 +190,14 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
   };
 
   const toggleNotifications = async (id: string, enabled: boolean) => {
+    if (!profileId) return;
     try {
-      const { error } = await supabase
-        .from('tracked_wallets')
-        .update({ notifications_enabled: enabled })
-        .eq('id', id);
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: { action: 'update', user_profile_id: profileId, wallet_id: id, updates: { notifications_enabled: enabled } },
+      });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
       queryClient.invalidateQueries({ queryKey: ['tracked-wallets'] });
     } catch (error) {
       toast({ title: "Failed to update", variant: "destructive" });
