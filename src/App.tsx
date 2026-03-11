@@ -161,8 +161,10 @@ const App = () => (
                     <Route path="/partnerfees" element={<Navigate to="/admin?tab=partner-fees" replace />} />
                     <Route path="/whitepaper" element={<WhitepaperPage />} />
                     
-                     <Route path="/sdk" element={<ClawSDKPage />} />
-                     <Route path="/opentuna" element={<Navigate to="/sdk" replace />} />
+                     <Route path="/sdk" element={<Navigate to="/" replace />} />
+                     <Route path="/opentuna" element={<Navigate to="/" replace />} />
+                     <Route path="/api" element={<Navigate to="/" replace />} />
+                     <Route path="/api/docs" element={<Navigate to="/" replace />} />
                     <Route path="/careers" element={<CareersPage />} />
                     <Route path="/admin/x-bots" element={<Navigate to="/admin?tab=xbots" replace />} />
                     <Route path="/admin/follower-scan" element={<Navigate to="/admin?tab=follower-scan" replace />} />
