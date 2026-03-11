@@ -376,7 +376,7 @@ export default function HomePage() {
                 Open Terminal
               </Link>
               <Link
-                to="/launchpad"
+                to="/?create=1"
                 className="group flex items-center gap-2.5 px-7 py-3 rounded-full font-bold text-sm
                            text-foreground border border-border/60 bg-card/20 backdrop-blur-sm
                            transition-all duration-300 hover:scale-105 hover:border-primary/50
