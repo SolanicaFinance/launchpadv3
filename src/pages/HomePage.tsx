@@ -325,32 +325,42 @@ export default function HomePage() {
           {/* ── Flanking Product Screenshots ── */}
           {/* Left: Trading Terminal mockup */}
           <div
-            className="absolute left-[-6%] top-[4%] w-[44%] max-w-[580px] pointer-events-none hidden lg:block"
+            className="absolute left-[-4%] top-[2%] w-[48%] max-w-[640px] pointer-events-none hidden lg:block z-0"
             style={{
-              transform: "perspective(1200px) rotateY(14deg) rotateX(-3deg)",
-              opacity: 0.4,
-              filter: "blur(4px)",
-              maskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
+              transform: "perspective(1400px) rotateY(12deg) rotateX(-2deg)",
+              opacity: 0.55,
+              filter: "blur(2px) brightness(0.7)",
+              maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 60%, transparent 95%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 60%, transparent 95%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
+            <div className="relative rounded-xl overflow-hidden"
+              style={{
+                border: "1px solid hsl(84 81% 44% / 0.2)",
+                boxShadow: "0 0 40px hsl(84 81% 44% / 0.1), 0 0 80px hsl(84 81% 44% / 0.05), inset 0 0 30px hsl(0 0% 0% / 0.3)",
+              }}
+            >
               <img src={heroTerminalMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
 
           {/* Right: Token Launch mockup */}
           <div
-            className="absolute right-[-6%] top-[6%] w-[42%] max-w-[540px] pointer-events-none hidden lg:block"
+            className="absolute right-[-4%] top-[4%] w-[46%] max-w-[600px] pointer-events-none hidden lg:block z-0"
             style={{
-              transform: "perspective(1200px) rotateY(-14deg) rotateX(-3deg)",
-              opacity: 0.4,
-              filter: "blur(4px)",
-              maskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
+              transform: "perspective(1400px) rotateY(-12deg) rotateX(-2deg)",
+              opacity: 0.55,
+              filter: "blur(2px) brightness(0.7)",
+              maskImage: "linear-gradient(to left, transparent 0%, black 8%, black 60%, transparent 95%)",
+              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 8%, black 60%, transparent 95%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
+            <div className="relative rounded-xl overflow-hidden"
+              style={{
+                border: "1px solid hsl(84 81% 44% / 0.2)",
+                boxShadow: "0 0 40px hsl(84 81% 44% / 0.1), 0 0 80px hsl(84 81% 44% / 0.05), inset 0 0 30px hsl(0 0% 0% / 0.3)",
+              }}
+            >
               <img src={heroLaunchMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
