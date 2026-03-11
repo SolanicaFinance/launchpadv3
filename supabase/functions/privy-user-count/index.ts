@@ -34,26 +34,34 @@ Deno.serve(async (req) => {
 
     const auth = btoa(`${appId}:${appSecret}`);
 
-    // Fetch first page just to get the total count
-    const res = await fetch("https://auth.privy.io/api/v1/users?limit=1", {
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "privy-app-id": appId,
-      },
-    });
+    let total = 0;
+    let cursor: string | undefined;
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Privy API error:", res.status, text);
-      return new Response(JSON.stringify({ error: "Privy API error" }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    do {
+      const url = new URL("https://auth.privy.io/api/v1/users");
+      url.searchParams.set("limit", "100");
+      if (cursor) url.searchParams.set("cursor", cursor);
+
+      const res = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Basic ${auth}`,
+          "privy-app-id": appId,
+        },
       });
-    }
 
-    const data = await res.json();
-    // Privy returns { data: [...], total: number, next_cursor?: string }
-    const total = data.total ?? data.data?.length ?? 0;
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Privy API error:", res.status, text);
+        return new Response(JSON.stringify({ error: "Privy API error" }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const page = await res.json();
+      total += page.data?.length ?? 0;
+      cursor = page.next_cursor || undefined;
+    } while (cursor);
 
     cachedCount = total;
     cachedAt = now;
