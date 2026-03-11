@@ -173,7 +173,7 @@ function LivePulseSection({ newPairs, completing, graduated, loading }: {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-8">
+    <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
       <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
       
       {/* Desktop: 3-column grid */}
