@@ -1,45 +1,44 @@
 
 
-## Two Issues to Fix
+## Fix: Privy User Count Returns 1 Instead of 500+
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### Root Cause
+The Privy REST API (`GET /api/v1/users`) does **not** return a `total` field. The response only contains `data` (array) and `next_cursor`. The current code does `data.total ?? data.data?.length ?? 0`, which falls back to `data.data.length` = 1 (since we set `limit=1`).
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+### Solution
+Paginate through all users to get an accurate count. The Privy API returns up to 100 users per page with cursor-based pagination. For ~500 users, this means ~5 API calls (fast, server-side).
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+### Changes
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+**File: `supabase/functions/privy-user-count/index.ts`**
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+Replace the single `fetch` call with a pagination loop:
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+```typescript
+let totalCount = 0;
+let cursor: string | undefined;
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+do {
+  const url = new URL("https://auth.privy.io/api/v1/users");
+  url.searchParams.set("limit", "100");
+  if (cursor) url.searchParams.set("cursor", cursor);
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+  const res = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "privy-app-id": appId,
+    },
+  });
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+  if (!res.ok) { /* handle error */ }
 
-### Technical Details
+  const page = await res.json();
+  totalCount += page.data?.length ?? 0;
+  cursor = page.next_cursor || undefined;
+} while (cursor);
+```
 
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+- Keep the existing 5-minute cache so this loop only runs once every 5 minutes
+- Cache stays in-memory on the edge function instance
+- ~500 users = ~5 requests, completes in under 2 seconds
 
