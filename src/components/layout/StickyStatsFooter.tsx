@@ -78,10 +78,18 @@ export function StickyStatsFooter() {
   const [lpRefreshing, setLpRefreshing] = useState(false);
   const [wtRefreshing, setWtRefreshing] = useState(false);
   const [npRefreshing, setNpRefreshing] = useState(false);
+  const [trackerShaking, setTrackerShaking] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lpDropdownRef = useRef<HTMLDivElement>(null);
   const wtDropdownRef = useRef<HTMLDivElement>(null);
   const npDropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleTradeNotification = useCallback(() => {
+    setTrackerShaking(true);
+    setTimeout(() => setTrackerShaking(false), 1000);
+  }, []);
+
+  useWalletTradeNotifications({ onTrade: handleTradeNotification });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
