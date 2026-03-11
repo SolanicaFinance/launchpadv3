@@ -3357,6 +3357,7 @@ export type Database = {
           bags_creator: string | null
           bags_pool_address: string | null
           bags_signature: string | null
+          bonding_curve_type: string | null
           bonding_progress: number | null
           chain: string | null
           chain_id: number | null
@@ -3373,6 +3374,7 @@ export type Database = {
           fair_launch_duration_mins: number | null
           fair_launch_ends_at: string | null
           fee_mode: string | null
+          graduation_threshold_bnb: number | null
           holder_count: number | null
           id: string
           image_url: string | null
@@ -3382,6 +3384,7 @@ export type Database = {
           market_cap_sol: number | null
           mint_address: string | null
           name: string
+          portal_address: string | null
           price_24h_ago: number | null
           price_change_24h: number | null
           price_sol: number | null
@@ -3389,6 +3392,8 @@ export type Database = {
           pumpfun_creator: string | null
           pumpfun_signature: string | null
           punch_creator_wallet: string | null
+          real_bnb_reserves: number | null
+          real_token_reserves: number | null
           starting_mcap_usd: number | null
           status: string | null
           telegram_url: string | null
@@ -3402,6 +3407,8 @@ export type Database = {
           twitter_verified: boolean | null
           twitter_verified_type: string | null
           updated_at: string | null
+          virtual_bnb_reserves: number | null
+          virtual_token_reserves: number | null
           volume_24h_sol: number | null
           website_url: string | null
         }
@@ -3412,6 +3419,7 @@ export type Database = {
           bags_creator?: string | null
           bags_pool_address?: string | null
           bags_signature?: string | null
+          bonding_curve_type?: string | null
           bonding_progress?: number | null
           chain?: string | null
           chain_id?: number | null
@@ -3428,6 +3436,7 @@ export type Database = {
           fair_launch_duration_mins?: number | null
           fair_launch_ends_at?: string | null
           fee_mode?: string | null
+          graduation_threshold_bnb?: number | null
           holder_count?: number | null
           id?: string
           image_url?: string | null
@@ -3437,6 +3446,7 @@ export type Database = {
           market_cap_sol?: number | null
           mint_address?: string | null
           name: string
+          portal_address?: string | null
           price_24h_ago?: number | null
           price_change_24h?: number | null
           price_sol?: number | null
@@ -3444,6 +3454,8 @@ export type Database = {
           pumpfun_creator?: string | null
           pumpfun_signature?: string | null
           punch_creator_wallet?: string | null
+          real_bnb_reserves?: number | null
+          real_token_reserves?: number | null
           starting_mcap_usd?: number | null
           status?: string | null
           telegram_url?: string | null
@@ -3457,6 +3469,8 @@ export type Database = {
           twitter_verified?: boolean | null
           twitter_verified_type?: string | null
           updated_at?: string | null
+          virtual_bnb_reserves?: number | null
+          virtual_token_reserves?: number | null
           volume_24h_sol?: number | null
           website_url?: string | null
         }
@@ -3467,6 +3481,7 @@ export type Database = {
           bags_creator?: string | null
           bags_pool_address?: string | null
           bags_signature?: string | null
+          bonding_curve_type?: string | null
           bonding_progress?: number | null
           chain?: string | null
           chain_id?: number | null
@@ -3483,6 +3498,7 @@ export type Database = {
           fair_launch_duration_mins?: number | null
           fair_launch_ends_at?: string | null
           fee_mode?: string | null
+          graduation_threshold_bnb?: number | null
           holder_count?: number | null
           id?: string
           image_url?: string | null
@@ -3492,6 +3508,7 @@ export type Database = {
           market_cap_sol?: number | null
           mint_address?: string | null
           name?: string
+          portal_address?: string | null
           price_24h_ago?: number | null
           price_change_24h?: number | null
           price_sol?: number | null
@@ -3499,6 +3516,8 @@ export type Database = {
           pumpfun_creator?: string | null
           pumpfun_signature?: string | null
           punch_creator_wallet?: string | null
+          real_bnb_reserves?: number | null
+          real_token_reserves?: number | null
           starting_mcap_usd?: number | null
           status?: string | null
           telegram_url?: string | null
@@ -3512,6 +3531,8 @@ export type Database = {
           twitter_verified?: boolean | null
           twitter_verified_type?: string | null
           updated_at?: string | null
+          virtual_bnb_reserves?: number | null
+          virtual_token_reserves?: number | null
           volume_24h_sol?: number | null
           website_url?: string | null
         }
