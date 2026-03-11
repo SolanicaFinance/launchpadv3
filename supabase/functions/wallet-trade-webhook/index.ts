@@ -204,6 +204,10 @@ function parseTrade(tx: HeliusEnrichedTx, trackedAddresses: Set<string>) {
     ? result.solAmount / result.tokenAmount
     : 0;
 
+  const txTime = tx.timestamp
+    ? new Date(tx.timestamp * 1000).toISOString()
+    : new Date().toISOString();
+
   return {
     signature: tx.signature,
     slot: tx.slot ?? null,
@@ -213,6 +217,7 @@ function parseTrade(tx: HeliusEnrichedTx, trackedAddresses: Set<string>) {
     sol_amount: result.solAmount,
     token_amount: result.tokenAmount,
     price_per_token: pricePerToken,
+    created_at: txTime,
   };
 }
 
