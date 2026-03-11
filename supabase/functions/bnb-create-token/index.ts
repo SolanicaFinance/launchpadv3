@@ -20,7 +20,7 @@ const corsHeaders = {
 };
 
 // ============================================================================
-// TunaPortal ABI (only the functions we call)
+// SaturnPortal ABI (only the functions we call)
 // ============================================================================
 const PORTAL_ABI = [
   {
