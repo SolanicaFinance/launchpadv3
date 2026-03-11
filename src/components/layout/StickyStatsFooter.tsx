@@ -316,24 +316,26 @@ export function StickyStatsFooter() {
           </div>
         </div>
 
-        {/* CENTER: Stats */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          flex: "1 1 0%",
-          justifyContent: "center",
-          minWidth: 0,
-          overflowX: "auto",
-          overflowY: "hidden",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-            <Users style={{ width: "11px", height: "11px", color: "rgba(255,255,255,0.4)" }} />
-            <StatItem label="Users" value={platformUsers !== null ? platformUsers.toLocaleString() : "—"} />
+        {/* CENTER: Stats — hidden on mobile */}
+        {!isMobile && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            flex: "1 1 0%",
+            justifyContent: "center",
+            minWidth: 0,
+            overflowX: "auto",
+            overflowY: "hidden",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+              <Users style={{ width: "11px", height: "11px", color: "rgba(255,255,255,0.4)" }} />
+              <StatItem label="Users" value={platformUsers !== null ? platformUsers.toLocaleString() : "—"} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* RIGHT: Launchpads + Region */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
