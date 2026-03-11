@@ -59,9 +59,9 @@ export function NewPairsPanel({ onRefresh, refreshing, compact }: NewPairsPanelP
     <div
       onClick={(e) => e.stopPropagation()}
       style={{
-        width: compact ? "calc(100vw - 16px)" : "380px",
-        maxWidth: "420px",
-        maxHeight: compact ? "70vh" : "460px",
+        width: compact ? "300px" : "380px",
+        maxWidth: compact ? "calc(100vw - 16px)" : "420px",
+        maxHeight: compact ? "50vh" : "460px",
         background: "#141416",
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "10px",
