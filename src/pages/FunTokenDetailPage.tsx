@@ -45,7 +45,14 @@ function getExplorerUrl(addr: string, isBsc: boolean): string {
 function getTradeUrl(addr: string, isBsc: boolean): string {
   return isBsc
     ? `https://pancakeswap.finance/swap?outputCurrency=${addr}&chain=bsc`
-    : `https://axiom.trade/meme/${addr}?chain=sol`;
+    : `https://solscan.io/token/${addr}`;
+}
+
+function getRiskLevel(volume: number, liquidity: number, holders: number): { label: string; className: string } {
+  const ratio = liquidity > 0 ? volume / liquidity : 0;
+  if (holders >= 100 && liquidity >= 10000 && ratio < 5) return { label: 'Lower Risk', className: 'trade-risk-low' };
+  if (holders >= 20 && liquidity >= 1000) return { label: 'Medium Risk', className: 'trade-risk-medium' };
+  return { label: 'Higher Risk', className: 'trade-risk-high' };
 }
 
 const TOTAL_SUPPLY = 1_000_000_000;
