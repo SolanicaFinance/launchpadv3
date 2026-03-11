@@ -399,11 +399,7 @@ export default function AgentConnectPage() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Point your {BRAND.name} agent to the skill file:
                   </p>
-                  <CodeBlock code={`# In your {BRAND.name} agent config:
-skill_url: `https://${BRAND.domain}/skill.md`
-discovery_url: `https://${BRAND.domain}/skill.json`
-
-# The agent will auto-discover capabilities and register itself`} />
+                  <CodeBlock code={`# In your ${BRAND.name} agent config:\nskill_url: https://${BRAND.domain}/skill.md\ndiscovery_url: https://${BRAND.domain}/skill.json\n\n# The agent will auto-discover capabilities and register itself`} />
                 </TabsContent>
                 <TabsContent value="claude" className="mt-4">
                   <p className="text-sm text-muted-foreground mb-3">
