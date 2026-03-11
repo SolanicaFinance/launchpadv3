@@ -69,6 +69,7 @@ export function StickyStatsFooter() {
   const [selectedRegion, setSelectedRegion] = useState("EU-E");
   const [regionOpen, setRegionOpen] = useState(false);
   const [launchpadOpen, setLaunchpadOpen] = useState(false);
+  const [walletTrackerOpen, setWalletTrackerOpen] = useState(false);
   const [pings, setPings] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [lpRefreshing, setLpRefreshing] = useState(false);
