@@ -251,6 +251,17 @@ function HotPairPill({ token }: { token: CodexPairToken }) {
 }
 
 export default function HomePage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+    const createParam = new URLSearchParams(location.search).get("create");
+    if (createParam === "1") {
+      navigate("/launchpad?create=1", { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
+
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
