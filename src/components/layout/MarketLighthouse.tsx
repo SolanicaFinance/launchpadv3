@@ -12,6 +12,7 @@ import jupiterIcon from "@/assets/jupiter-icon.svg";
 import phoenixIcon from "@/assets/phoenix-icon.png";
 import lifinityIcon from "@/assets/lifinity-icon.ico";
 import pumpswapIcon from "@/assets/pumpswap-icon.png";
+import solfiIcon from "@/assets/solfi-icon.png";
 
 const LAUNCHPAD_ICONS: Record<string, string> = {
   pumpfun: pumpfunPill,
