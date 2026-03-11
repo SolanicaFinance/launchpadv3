@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
         walletAddress: agent.wallet_address,
         apiKey: apiKey, // Only returned once - store securely!
         apiKeyPrefix: agent.api_key_prefix,
-        dashboardUrl: "https://saturn.trade/agents/dashboard",
+        dashboardUrl: `https://${BRAND.domain}/agents/dashboard",
         message: "Store your API key securely - it cannot be retrieved later!",
       }),
       {
@@ -153,7 +154,7 @@ Deno.serve(async (req) => {
         error: error instanceof Error ? error.message : "Unknown error",
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json` },
         status: 500,
       }
     );

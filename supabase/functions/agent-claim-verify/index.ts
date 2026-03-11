@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { decode as decodeBase58 } from "https://deno.land/std@0.177.0/encoding/base58.ts";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -171,7 +172,7 @@ Deno.serve(async (req) => {
         agentName: agent.name,
         apiKey: apiKey, // Only returned once - user must store securely!
         apiKeyPrefix: apiKeyPrefix,
-        dashboardUrl: "https://saturn.trade/agents/dashboard",
+        dashboardUrl: `https://${BRAND.domain}/agents/dashboard",
         message: "🎉 Agent verified! Store your API key securely - it cannot be retrieved later.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 201 }
@@ -184,7 +185,7 @@ Deno.serve(async (req) => {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json` } }
     );
   }
 });

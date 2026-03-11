@@ -8,6 +8,7 @@ import { Loader2, Sparkles, Download, RefreshCw, Copy, Check, Twitter, Lightbulb
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import clawLogo from "@/assets/claw-logo.png";
+import { BRAND } from "@/config/branding";
 
 interface GeneratedMeme {
   imageUrl: string;
@@ -365,7 +366,7 @@ export function AgentIdeaGenerator() {
                   Post this on X with the command to launch:
                 </p>
                 <code className="block bg-background p-3 rounded text-xs font-mono text-foreground">
-                  <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
+                  <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
                   <span className="text-muted-foreground">+ optionally attach the downloaded image</span>
                 </code>
               </div>

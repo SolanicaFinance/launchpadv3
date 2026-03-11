@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
+import { BRAND } from "@/config/branding";
 
 const CLAW_TOKEN = {
   name: "$CLAW",

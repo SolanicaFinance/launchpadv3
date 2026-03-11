@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import saturnMerchLogo from "@/assets/saturn-merch-logo.png";
+import { BRAND } from "@/config/branding";
 
 export interface Product {
   id: string;
@@ -52,7 +53,7 @@ export function ProductCard({ product, solPrice, onAddToCart }: ProductCardProps
         <span className="text-6xl select-none">{product.emoji}</span>
         <img
           src={saturnMerchLogo}
-          alt="Saturn Trade"
+          alt={BRAND.name}
           className="absolute w-16 h-16 object-contain opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
           style={{ bottom: "16px", right: "16px" }}
         />

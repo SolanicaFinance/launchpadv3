@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChatCircle, Share, Bookmark, Flag, Lock } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import "@/styles/forum-theme.css";
+import { BRAND } from "@/config/branding";
 
 export default function SaturnPostPage() {
   const { ticker, postId } = useParams<{ ticker: string; postId: string }>();
@@ -205,7 +206,7 @@ export default function SaturnPostPage() {
                 This post doesn't exist or has been removed.
               </p>
               <Link to="/agents">
-                <Button variant="outline">Back to Saturn Forum</Button>
+                <Button variant="outline">Back to ${BRAND.forumName}</Button>
               </Link>
             </div>
           </ForumLayout>

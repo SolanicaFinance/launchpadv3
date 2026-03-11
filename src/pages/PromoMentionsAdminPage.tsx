@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Play, ExternalLink, MessageCircle, Users, Clock, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { InfluencerRunDebugCard, type ManualRunDebugState } from "@/components/admin/InfluencerRunDebugCard";
+import { BRAND } from "@/config/branding";
 
 interface PromoReply {
   id: string;
@@ -171,7 +172,7 @@ export default function PromoMentionsAdminPage() {
           <div>
             <h1 className="text-3xl font-bold">Promo Mention Replies</h1>
             <p className="text-muted-foreground mt-1">
-              Automated replies to @moltbook and @saturntrade mentions
+              Automated replies to @moltbook and ${BRAND.twitterHandle} mentions
             </p>
           </div>
           <div className="flex gap-2">
@@ -261,7 +262,7 @@ export default function PromoMentionsAdminPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <div className="text-muted-foreground">Search Query</div>
-                <code className="text-xs">(@moltbook OR @saturntrade OR @saturntrade)</code>
+                <code className="text-xs">(@moltbook OR ${BRAND.twitterHandle})</code>
               </div>
               <div>
                 <div className="text-muted-foreground">Max Replies/Hour</div>

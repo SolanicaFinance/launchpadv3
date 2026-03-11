@@ -41,8 +41,9 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BRAND } from "@/config/branding";
 
-const API_BASE_URL = "https://saturn.trade/functions/v1";
+const API_BASE_URL = `https://${BRAND.domain}/functions/v1`;
 
 // X icon component (matching brand identity)
 const XIcon = ({ className }: { className?: string }) => (
@@ -364,7 +365,7 @@ export default function AgentDocsPage() {
 
                     <div>
                       <p className="text-sm font-medium text-foreground mb-2">Post Format</p>
-                      <CodeBlock code={`@saturntrade !clawmode
+                      <CodeBlock code={`${BRAND.twitterHandle} !clawmode
 name: Cool Token
 symbol: COOL
 description: The coolest token on Solana
@@ -376,7 +377,7 @@ twitter: @cooltoken`} />
                     <div className="bg-primary/10 rounded-lg p-4">
                       <p className="text-sm font-medium text-foreground mb-2">How it works:</p>
                       <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                        <li>Post a tweet tagging <code className="bg-secondary px-1 rounded">@saturntrade</code> with the <code className="bg-secondary px-1 rounded">!clawmode</code> command</li>
+                        <li>Post a tweet tagging <code className="bg-secondary px-1 rounded">{BRAND.twitterHandle}</code> with the <code className="bg-secondary px-1 rounded">!clawmode</code> command</li>
                         <li>Our bot scans X every minute for new posts</li>
                         <li>We analyze your last 20 tweets to learn your writing style</li>
                         <li>Token is created on-chain with a fresh deployer wallet</li>
@@ -657,7 +658,7 @@ twitter: @cooltoken`} />
               <div className="gate-card-header">
                 <h2 className="gate-card-title">
                   <MessageSquare className="h-5 w-5" />
-                  Social Features (Saturn Forum)
+                  Social Features ({BRAND.forumName})
                 </h2>
                 <p className="text-sm text-muted-foreground">Your agent's community hub</p>
               </div>
@@ -911,7 +912,7 @@ twitter: @cooltoken`} />
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
                        No! X launches are completely automatic. Just post your <code className="bg-secondary px-1 rounded">!clawmode</code> command 
-                       tagging @saturntrade and we handle everything. You can claim your fees later at your Panel by logging in with the same X account.
+                       tagging ${BRAND.twitterHandle} and we handle everything. You can claim your fees later at your Panel by logging in with the same X account.
                     </AccordionContent>
                   </AccordionItem>
 

@@ -28,8 +28,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BRAND } from "@/config/branding";
 
-const HEADER_LOGO_SRC = "/saturn-logo.png";
 
 export default function TokenDetailPage() {
   const { mintAddress } = useParams<{ mintAddress: string }>();
@@ -159,7 +159,7 @@ export default function TokenDetailPage() {
     if (navigator.share && token) {
       navigator.share({
         title: `${token.name} ($${token.ticker})`,
-        text: `Check out ${token.name} on Saturn Trade!`,
+        text: `Check out ${token.name} on ${BRAND.name}!`,
         url: window.location.href,
       });
     } else {
@@ -214,8 +214,8 @@ export default function TokenDetailPage() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-4 px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src={HEADER_LOGO_SRC} alt="Saturn Trade" className="h-8 w-8 rounded-lg object-cover" />
-            <span className="text-lg font-bold">Saturn Trade</span>
+            <img src={BRAND.logoPath} alt={BRAND.name} className="h-8 w-8 rounded-lg object-cover" />
+            <span className="text-lg font-bold">{BRAND.name}</span>
           </Link>
           <div className="flex items-center gap-3 flex-1">
             <Avatar className="h-8 w-8 rounded-lg">

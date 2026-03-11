@@ -16,6 +16,7 @@ import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } fro
 import saturnLogo from "@/assets/saturn-logo.png";
 import heroTerminalMockup from "@/assets/hero-terminal-mockup.png";
 import heroLaunchMockup from "@/assets/hero-launch-mockup.png";
+import { BRAND } from "@/config/branding";
 
 // Lazy load heavy below-fold section components
 const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
@@ -382,7 +383,7 @@ export default function HomePage() {
                 style={{ background: "radial-gradient(circle, hsl(38 90% 50% / 0.25) 0%, transparent 70%)" }} />
               <img
                 src={saturnLogo}
-                alt="Saturn Trade"
+                alt={BRAND.name}
                 className="w-full h-full relative z-10 drop-shadow-[0_0_40px_hsl(38_90%_50%/0.5)]"
               />
             </div>
@@ -399,7 +400,7 @@ export default function HomePage() {
                 animationFillMode: "both",
               }}
             >
-              Saturn Trade
+{BRAND.name}
             </h1>
 
             {/* Subtitle */}

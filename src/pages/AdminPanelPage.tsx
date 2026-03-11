@@ -26,6 +26,7 @@ const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
+import { BRAND } from "@/config/branding";
 
 function TabLoader() {
   return (
@@ -44,7 +45,7 @@ const TAB_CONFIG = [
   
   { value: "follower-scan", label: "Followers", icon: Users },
   { value: "promo", label: "Promo/Influencer", icon: Shield },
-  { value: "forum", label: "Saturn Forum", icon: Shield },
+  { value: "forum", label: BRAND.forumName, icon: Shield },
   { value: "saturn-launch", label: "Saturn Launch", icon: Rocket },
   { value: "partner-fees", label: "Partner Fees", icon: Wallet },
 ] as const;

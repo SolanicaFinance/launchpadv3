@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Bot, Trophy, Twitter, Wallet, Code, ArrowRight, Coins } from "lucide-react";
+import { BRAND } from "@/config/branding";
 
 export function AgentHero() {
   return (
@@ -56,7 +57,7 @@ export function AgentHero() {
           </div>
 
           <p className="text-muted-foreground mb-4">
-            Tag <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-[#1DA1F2] font-medium">@saturntrade</code> with{" "}
+            Tag <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-[#1DA1F2] font-medium">{BRAND.twitterHandle}</code> with{" "}
             <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-primary font-bold">!clawmode</code> followed by any name or description.
             The AI will auto-generate the coin identity, image, and deploy it on Solana instantly.
           </p>
@@ -64,11 +65,11 @@ export function AgentHero() {
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div className="bg-muted/50 rounded-lg p-4 text-sm font-mono text-muted-foreground">
               <p className="text-xs text-muted-foreground/70 mb-2 font-sans">Simple name:</p>
-              <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> Lobster King
+              <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!clawmode</span> Lobster King
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-sm font-mono text-muted-foreground">
               <p className="text-xs text-muted-foreground/70 mb-2 font-sans">Full description:</p>
-              <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> create me a cyber lobster warrior token
+              <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!clawmode</span> create me a cyber lobster warrior token
             </div>
           </div>
 

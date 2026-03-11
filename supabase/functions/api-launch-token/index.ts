@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -206,7 +207,7 @@ serve(async (req) => {
         poolAddress: createResult.dbcPoolAddress || createResult.poolAddress,
         solscanUrl: `https://solscan.io/token/${createResult.mintAddress}`,
         tradeUrl: `https://axiom.trade/meme/${createResult.dbcPoolAddress || createResult.mintAddress}`,
-        launchpadUrl: launchpad ? `https://saturn.trade/fun/${createResult.mintAddress}` : null,
+        launchpadUrl: launchpad ? `https://${BRAND.domain}/fun/${createResult.mintAddress}` : null,
         // Fee info
         feeInfo: {
           tradingFeeBps,

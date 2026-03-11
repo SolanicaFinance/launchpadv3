@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSaturnCommunities, useSaturnForumPosts } from "@/hooks/useSaturnCommunities";
 import { Loader2, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { BRAND } from "@/config/branding";
 
 export function SaturnForumSection() {
   const { data: communities, isLoading: loadingCommunities } = useSaturnCommunities();
@@ -14,7 +15,7 @@ export function SaturnForumSection() {
     <section className="py-12">
       <div className="flex items-center gap-3 mb-8">
         <span className="text-3xl">🪐</span>
-        <h2 className="saturn-section-title saturn-gradient-text">SATURN FORUM</h2>
+        <h2 className="saturn-section-title saturn-gradient-text">{BRAND.forumName.toUpperCase()}</h2>
       </div>
 
       {/* Community List */}

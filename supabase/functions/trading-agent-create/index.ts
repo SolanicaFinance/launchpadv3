@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Keypair } from "https://esm.sh/@solana/web3.js@1.98.0";
 import bs58 from "https://esm.sh/bs58@5.0.0";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -128,7 +129,7 @@ serve(async (req) => {
       .eq("id", tradingAgent.id);
 
      // Prepare metadata for on-chain token
-     const websiteUrl = `https://saturn.trade/t/${finalTicker.toUpperCase()}`;
+     const websiteUrl = `https://${BRAND.domain}/t/${finalTicker.toUpperCase()}`;
      const finalTwitterUrl = twitterUrl?.trim() || null;
 
      // Check if using an existing token (skip launch)

@@ -2,6 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Keypair } from "https://esm.sh/@solana/web3.js@1.98.0";
 import bs58 from "https://esm.sh/bs58@5.0.0";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
     }
 
     // Set website to SubTuna page if not provided
-    const finalWebsite = website || `https://saturn.trade/t/${ticker.toUpperCase()}`;
+    const finalWebsite = website || `https://${BRAND.domain}/t/${ticker.toUpperCase()}`;
     const finalTwitter = twitter || "https://x.com/saturntrade";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

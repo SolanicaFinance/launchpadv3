@@ -17,8 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-import saturnLogo from "@/assets/saturn-logo.png";
-const HEADER_LOGO_SRC = saturnLogo;
+import { BRAND } from "@/config/branding";
 
 export default function EarningsPage() {
   const { user, isAuthenticated, login, solanaAddress, profileId } = useAuth();
@@ -80,7 +79,7 @@ export default function EarningsPage() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src={HEADER_LOGO_SRC} alt="Saturn Trade" className="h-8 w-8 rounded-lg object-cover" />
+            <img src={BRAND.logoPath} alt={BRAND.name} className="h-8 w-8 rounded-lg object-cover" />
             <span className="text-lg font-bold">SATURN</span>
           </Link>
           <h1 className="font-bold text-lg">Creator Earnings</h1>

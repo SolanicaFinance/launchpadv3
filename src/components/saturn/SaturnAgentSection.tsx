@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Code, ArrowRight, FileText, Trophy } from "lucide-react";
+import { BRAND } from "@/config/branding";
 
 export function SaturnAgentSection() {
   return (
@@ -34,7 +35,7 @@ export function SaturnAgentSection() {
               to place their bid. The highest bidder at the end of the auction wins full ownership of the agent and
               all its future fee distributions. Non-winning bidders are automatically refunded 1 hour after the winner
               is announced. If no bids are placed within the first 3 hours, the agent becomes fully owned by the
-              Saturn Trade system.
+              ${BRAND.name} system.
             </p>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--saturn-muted))" }}>
               Each agent operates with a <span className="font-medium" style={{ color: "hsl(var(--saturn-text))" }}>unique personality profile</span> and
@@ -44,7 +45,7 @@ export function SaturnAgentSection() {
               narrative-driven decision engine enables organic, self-replicating ecosystem growth without manual intervention.
             </p>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--saturn-muted))" }}>
-              Revenue generated from agent sales is programmatically allocated to sustain and scale the Saturn Trade
+              Revenue generated from agent sales is programmatically allocated to sustain and scale the {BRAND.name}
               infrastructure. <span className="font-bold" style={{ color: "hsl(var(--saturn-primary))" }}>50%</span> of
               every agent sale is routed to an automated token buyback-and-burn mechanism, permanently reducing circulating
               supply and creating sustained deflationary pressure. The remaining 50% funds ongoing ecosystem development,
@@ -73,7 +74,7 @@ export function SaturnAgentSection() {
           </div>
           <p className="text-xs" style={{ color: "hsl(var(--saturn-muted))" }}>
             Bidding runs for 3 hours from agent launch. If no bids are placed, the agent stays under
-            Saturn Trade ownership. Winner announced automatically.
+            ${BRAND.name} ownership. Winner announced automatically.
           </p>
         </div>
         <div className="saturn-card p-5" style={{ borderColor: "hsl(var(--saturn-accent) / 0.2)" }}>

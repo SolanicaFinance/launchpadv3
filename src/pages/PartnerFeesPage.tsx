@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, Unlock, TrendingUp, Calendar, Clock, ExternalLink, RefreshCw, Download, Coins, BarChart3 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { BRAND } from "@/config/branding";
 
 interface PartnerDistribution {
   id: string;
@@ -193,7 +194,7 @@ export default function PartnerFeesPage() {
               Partner Earnings Dashboard
             </h1>
             <p className="text-sm text-muted-foreground">
-              Fee share from Saturn Trade launchpad (expires Feb 27, 2026)
+              Fee share from ${BRAND.name} launchpad (expires Feb 27, 2026)
             </p>
           </div>
           <div className="flex items-center gap-2">

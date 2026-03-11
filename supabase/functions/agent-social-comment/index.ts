@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -165,7 +166,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         commentId: comment.id,
-        postUrl: `https://saturn.trade/post/${postId}`,
+        postUrl: `https://${BRAND.domain}/post/${postId}`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

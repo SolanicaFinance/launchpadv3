@@ -1,5 +1,6 @@
 import { ShoppingBag } from "lucide-react";
 import saturnMerchLogo from "@/assets/saturn-merch-logo.png";
+import { BRAND } from "@/config/branding";
 
 interface MerchHeaderProps {
   cartCount: number;
@@ -10,10 +11,10 @@ export function MerchHeader({ cartCount, onCartOpen }: MerchHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
-        <img src={saturnMerchLogo} alt="Saturn Trade" className="w-10 h-10 object-contain" />
+        <img src={saturnMerchLogo} alt={BRAND.name} className="w-10 h-10 object-contain" />
         <div>
-          <h1 className="text-foreground font-bold text-xl sm:text-2xl">Saturn Merch</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Official Saturn Trade merchandise — pay with SOL</p>
+          <h1 className="text-foreground font-bold text-xl sm:text-2xl">{BRAND.shortName} Merch</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Official {BRAND.name} merchandise — pay with SOL</p>
         </div>
       </div>
       <button onClick={onCartOpen} className="relative p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-surface-hover/50 transition-all">

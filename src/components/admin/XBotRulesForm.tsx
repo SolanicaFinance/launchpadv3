@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, RotateCcw } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import type { XBotAccountWithRules, XBotAccountRules } from "@/hooks/useXBotAccounts";
+import { BRAND } from "@/config/branding";
 
 interface XBotRulesFormProps {
   open: boolean;
@@ -23,7 +24,7 @@ interface XBotRulesFormProps {
   onSave: (rules: Partial<XBotAccountRules>) => Promise<void>;
 }
 
-const DEFAULT_MENTIONS = ["@moltbook", "@saturntrade", "@saturntrade"];
+const DEFAULT_MENTIONS = ["@moltbook", BRAND.twitterHandle, BRAND.twitterHandle];
 const SUGGESTED_CASHTAGS = ["$CLAW", "$SOL", "$BTC", "$ETH"];
 const SUGGESTED_KEYWORDS = ["saturntrade", "clawmode", "moltbook"];
 

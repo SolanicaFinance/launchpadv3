@@ -6,12 +6,13 @@ import { MerchHeader } from "@/components/merch/MerchHeader";
 import { ProductCard, type Product, type CartItem } from "@/components/merch/ProductCard";
 import { CartDrawer } from "@/components/merch/CartDrawer";
 import { CheckoutFlow } from "@/components/merch/CheckoutFlow";
+import { BRAND } from "@/config/branding";
 
 const PRODUCTS: Product[] = [
   {
     id: "tshirt-classic",
-    name: "Saturn Classic Tee",
-    description: "Premium cotton tee with Saturn Trade logo",
+    name: `${BRAND.shortName} Classic Tee`,
+    description: `Premium cotton tee with ${BRAND.name} logo`,
     priceSol: 0.25,
     category: "apparel",
     sizes: ["S", "M", "L", "XL", "2XL"],
@@ -25,7 +26,7 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "hoodie-pro",
-    name: "Saturn Pro Hoodie",
+    name: `${BRAND.shortName} Pro Hoodie`,
     description: "Heavyweight hoodie with embroidered logo",
     priceSol: 0.5,
     category: "apparel",
@@ -39,7 +40,7 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "hat-snapback",
-    name: "Saturn Snapback",
+    name: `${BRAND.shortName} Snapback`,
     description: "Structured snapback with embroidered Saturn logo",
     priceSol: 0.15,
     category: "accessory",
@@ -65,7 +66,7 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "sticker-pack",
-    name: "Saturn Sticker Pack",
+    name: `${BRAND.shortName} Sticker Pack`,
     description: "5 die-cut vinyl stickers — weatherproof",
     priceSol: 0.05,
     category: "sticker",

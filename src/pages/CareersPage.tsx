@@ -22,6 +22,7 @@ import {
 import { XLogo } from "@phosphor-icons/react";
 import { Footer } from "@/components/layout/Footer";
 import { MatrixContentCard } from "@/components/layout/MatrixContentCard";
+import { BRAND } from "@/config/branding";
 
 interface Position {
   title: string;
@@ -428,7 +429,7 @@ export default function CareersPage() {
                 className="bg-primary hover:bg-primary/90 gap-2"
               >
                 <XLogo className="h-5 w-5" weight="fill" />
-                DM @saturntrade on X
+                DM ${BRAND.twitterHandle} on X
               </Button>
             </CardContent>
           </Card>

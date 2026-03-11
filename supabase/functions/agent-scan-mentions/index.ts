@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { createHmac } from "node:crypto";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,7 +106,7 @@ async function getAuthenticatedUserId(
   return data.data?.id || null;
 }
 
-// Fetch mentions of @saturntrade using official X.com API
+// Fetch mentions of ${BRAND.twitterHandle} using official X.com API
 async function fetchMentions(
   userId: string,
   consumerKey: string,
@@ -357,7 +358,7 @@ Deno.serve(async (req) => {
 
             const tokenName = tokenData.name || post.parsed_name || "Token";
             const tokenTicker = tokenData.ticker || post.parsed_symbol || "TOKEN";
-            const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${tokenData.mint_address}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
+            const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${tokenData.mint_address}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on ${BRAND.domain}`;
 
             const catchUpResult = await replyToTweet(
               post.post_id,
@@ -541,7 +542,7 @@ Deno.serve(async (req) => {
                 if (mintAddress) {
                   const tokenName = tokenData?.name || postData?.parsed_name || "Token";
                   const tokenTicker = tokenData?.ticker || postData?.parsed_symbol || "TOKEN";
-                  const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
+                  const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on ${BRAND.domain}`;
 
                   const catchUpReply = await replyToTweet(
                     tweetId,
@@ -621,7 +622,7 @@ Deno.serve(async (req) => {
             console.log(`[agent-scan-mentions] ⏭️ Skipping reply to ${tweetId} - already replied`);
           } else {
             // New format: full CA, no links, token name/symbol
-            const replyText = `🦞 Token launched on $SOL!\n\n$${processResult.tokenSymbol || "TOKEN"} - ${processResult.tokenName || "Token"}\nCA: ${processResult.mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
+            const replyText = `🦞 Token launched on $SOL!\n\n$${processResult.tokenSymbol || "TOKEN"} - ${processResult.tokenName || "Token"}\nCA: ${processResult.mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on ${BRAND.domain}`;
 
             const replyResult = await replyToTweet(
               tweetId,

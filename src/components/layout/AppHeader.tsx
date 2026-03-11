@@ -11,6 +11,7 @@ import { usePanelNav } from "@/hooks/usePanelNav";
 import { HeaderWalletBalance } from "./HeaderWalletBalance";
 import { useAuth } from "@/hooks/useAuth";
 import saturnLogo from "@/assets/saturn-logo.png";
+import { BRAND } from "@/config/branding";
 
 interface TopBarProps {
   onMobileMenuOpen?: () => void;

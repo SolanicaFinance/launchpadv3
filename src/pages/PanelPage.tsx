@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Wallet, Briefcase, DollarSign, Rocket, Ghost, LogOut, Users, Copy, Check, ExternalLink, Terminal } from "lucide-react";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { copyToClipboard } from "@/lib/clipboard";
+import { BRAND } from "@/config/branding";
 
 const PanelWalletBar = lazy(() => import("@/components/panel/PanelWalletBar"));
 const PanelPortfolioTab = lazy(() => import("@/components/panel/PanelPortfolioTab"));
@@ -73,7 +74,7 @@ export default function PanelPage() {
             >
               <img
                 src={saturnLogo}
-                alt="Saturn Trade"
+                alt={BRAND.name}
                 className="w-16 h-16 mx-auto mb-5 drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
               />
               <h1 className="text-xl font-black text-foreground mb-1 tracking-tight font-mono uppercase">
@@ -108,7 +109,7 @@ export default function PanelPage() {
           <div className="pt-5 pb-4 flex items-center gap-3">
             <img
               src={saturnLogo}
-              alt="Saturn Trade"
+              alt={BRAND.name}
               className="w-9 h-9 drop-shadow-[0_0_16px_hsl(var(--primary)/0.3)] flex-shrink-0"
             />
             <div className="flex-1 min-w-0">

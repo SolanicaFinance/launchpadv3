@@ -15,6 +15,7 @@ import { PulseQuickBuyButton } from "@/components/launchpad/PulseQuickBuyButton"
 import { useSparklineBatch } from "@/hooks/useSparklineBatch";
 import { SparklineCanvas } from "@/components/launchpad/SparklineCanvas";
 import type { FunToken } from "@/hooks/useFunTokensPaginated";
+import { BRAND } from "@/config/branding";
 
 /* ── rank config ── */
 const RANKS = [
@@ -488,7 +489,7 @@ export function KingOfTheHill() {
       {/* Premium Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <img src="/saturn-logo.png" alt="Saturn" className="w-6 h-6 md:w-9 md:h-9 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+          <img src=BRAND.logoPath alt="Saturn" className="w-6 h-6 md:w-9 md:h-9 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
           <div>
             <h2 className="text-[13px] md:text-base font-black uppercase tracking-[0.08em] text-foreground" style={{ textShadow: "0 0 20px rgba(245,158,11,0.15)" }}>
               King of the Hill

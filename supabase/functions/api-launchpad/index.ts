@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -229,7 +230,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         launchpad,
-        domain: subdomain ? `${subdomain}.saturn.trade` : null,
+        domain: subdomain ? `${subdomain}.${BRAND.domain}` : null,
       }), {
         status: 201,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

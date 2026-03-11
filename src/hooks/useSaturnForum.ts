@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BRAND } from "@/config/branding";
 
 interface SubTuna {
   id: string;
@@ -107,7 +108,7 @@ export function useSaturnCommunity(ticker?: string) {
             id: "claw-platform-token",
             ticker: "CLAW",
             name: "CLAW",
-            imageUrl: "/saturn-logo.png",
+            imageUrl: BRAND.logoPath,
             mintAddress: "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",
             // Price/market cap fetched separately via useSaturnTokenData
             marketCapSol: undefined,

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SaturnAdminLaunchPanel } from "@/components/saturn/SaturnAdminLaunchPanel";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { BRAND } from "@/config/branding";
 
 export default function SaturnAdminLaunchPage() {
   const [authorized, setAuthorized] = useState(false);
@@ -44,7 +45,7 @@ export default function SaturnAdminLaunchPage() {
           className="flex items-center gap-2 text-sm mb-6 hover:opacity-80"
           style={{ color: "hsl(var(--saturn-muted))" }}
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Saturn Trade
+          <ArrowLeft className="h-4 w-4" /> Back to {BRAND.name}
         </button>
         <SaturnAdminLaunchPanel />
       </div>

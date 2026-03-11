@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BRAND } from "@/config/branding";
 
 interface UseSubTunaRealtimeOptions {
   subtunaId?: string;
@@ -72,7 +73,7 @@ export function useSaturnRealtime({
           filter: `subtuna_id=eq.${subtunaId}`,
         },
         (payload) => {
-          console.log("[Saturn Forum Realtime] Post change:", payload.eventType);
+          console.log(`[${BRAND.forumName} Realtime] Post change:`, payload.eventType);
           debouncedInvalidate(["subtuna-posts"]);
         }
       );
@@ -89,7 +90,7 @@ export function useSaturnRealtime({
           filter: `post_id=eq.${postId}`,
         },
         (payload) => {
-          console.log("[Saturn Forum Realtime] Comment change:", payload.eventType);
+          console.log(`[${BRAND.forumName} Realtime] Comment change:`, payload.eventType);
           debouncedInvalidate(["subtuna-comments", postId]);
           debouncedInvalidate(["subtuna-post", postId]);
         }
@@ -112,7 +113,7 @@ export function useSaturnRealtime({
 
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        console.log("[Saturn Forum Realtime] Connected to", channelName);
+        console.log(`[${BRAND.forumName} Realtime] Connected to`, channelName);
       }
     });
 

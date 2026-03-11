@@ -6,6 +6,7 @@ import { Copy, Check, ExternalLink, Loader2, Megaphone, AlertCircle } from "luci
 import { toast } from "sonner";
 import { useTokenPromotions } from "@/hooks/useTokenPromotions";
 import QRCode from "react-qr-code";
+import { BRAND } from "@/config/branding";
 
 interface PromoteModalProps {
   isOpen: boolean;
@@ -112,7 +113,7 @@ export function PromoteModal({
             Promote {tokenName} (${tokenTicker})
           </DialogTitle>
           <DialogDescription>
-            Pay 1 SOL to promote this token on @saturntrade's X account for 24 hours.
+            Pay 1 SOL to promote this token on ${BRAND.twitterHandle}'s X account for 24 hours.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,7 +179,7 @@ export function PromoteModal({
 
               {/* Disclaimer */}
               <p className="text-xs text-muted-foreground text-center">
-                Once payment is confirmed, your token will be promoted on @saturntrade's X account
+                Once payment is confirmed, your token will be promoted on ${BRAND.twitterHandle}'s X account
                 with a "PAID PROMOTION" disclosure.
               </p>
             </>
@@ -204,7 +205,7 @@ export function PromoteModal({
               </div>
               <h3 className="text-lg font-semibold text-primary">Promotion Live!</h3>
               <p className="text-sm text-muted-foreground mt-2">
-                Your token has been promoted on @saturntrade's X account.
+                Your token has been promoted on ${BRAND.twitterHandle}'s X account.
                 <br />
                 The promotion will be active for 24 hours.
               </p>

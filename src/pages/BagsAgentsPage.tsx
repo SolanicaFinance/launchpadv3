@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
+import { BRAND } from "@/config/branding";
 
 interface GeneratedMeme {
   imageUrl: string;
@@ -135,7 +136,7 @@ export default function BagsAgentsPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
               <div className="relative">
-                <img src={saturnLogo} alt="Saturn Trade" className="w-12 h-12 rounded-full" />
+                <img src={saturnLogo} alt={BRAND.name} className="w-12 h-12 rounded-full" />
                 <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 border border-border">
                   <Briefcase className="w-4 h-4 text-blue-400" />
                 </div>

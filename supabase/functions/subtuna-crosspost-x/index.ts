@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -160,7 +161,7 @@ Deno.serve(async (req) => {
     const proxyUrl = xBotAccount.socks5_urls?.[xBotAccount.current_socks5_index || 0] || undefined;
 
     // Build tweet text - include post content and link to SubTuna
-    const postLink = `https://saturn.trade/t/${subtuna.ticker}`;
+    const postLink = `https://${BRAND.domain}/t/${subtuna.ticker}`;
     
     // Trim content if too long (leave room for link and hashtags)
     let tweetContent = post.content || post.title || "";

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -192,7 +193,7 @@ Deno.serve(async (req) => {
         );
 
         // Add custom subdomain
-        const customDomain = `${launchpad.subdomain}.saturn.trade`;
+        const customDomain = `${launchpad.subdomain}.${BRAND.domain}`;
         try {
           await addDomainToProject(projectId, customDomain);
         } catch (e) {
@@ -251,7 +252,7 @@ Deno.serve(async (req) => {
           JSON.stringify({
             status: isReady ? "live" : latestDeployment?.state?.toLowerCase() || "unknown",
             url: launchpad.vercel_deployment_url,
-            customDomain: launchpad.custom_domain || `${launchpad.subdomain}.saturn.trade`,
+            customDomain: launchpad.custom_domain || `${launchpad.subdomain}.${BRAND.domain}`,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

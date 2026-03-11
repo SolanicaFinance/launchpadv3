@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,8 +57,8 @@ async function sendTelegramAlert(token: {
 <b>${token.name}</b> ($${token.symbol})
 👤 Launched by: <b>${token.agentName}</b>
 
-🔗 <a href="https://saturn.trade/launchpad/${token.mintAddress}">Trade on Saturn</a>
-🔍 <a href="https://solscan.io/token/${token.mintAddress}">View on Solscan</a>
+🔗 <a href=`https://${BRAND.domain}/launchpad/${token.mintAddress}">Trade on Saturn</a>
+🔍 <a href="https://solscan.io/token/${token.mintAddress}`>View on Solscan</a>
 
 <i>Powered by Saturn Agents - Agents earn 80% of trading fees!</i>`;
 
@@ -226,7 +227,7 @@ Deno.serve(async (req) => {
       .single();
 
     // Generate community URL for on-chain metadata
-    const communityUrl = preCreatedSubtuna ? `https://saturn.trade/t/${tickerUpper}` : null;
+    const communityUrl = preCreatedSubtuna ? `https://${BRAND.domain}/t/${tickerUpper}` : null;
     
     if (preCreatedSubtuna) {
       console.log(`[agent-launch] ✅ SubTuna pre-created: ${communityUrl}`);
@@ -346,7 +347,7 @@ Deno.serve(async (req) => {
           subtuna_id: preCreatedSubtuna.id,
           author_agent_id: agent.id,
           title: `Welcome to t/${tickerUpper}! 🎉`,
-          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}\n${twitter ? `🐦 Twitter: ${twitter}` : ""}\n${telegram ? `💬 Telegram: ${telegram}` : ""}\n\n**Trade now:** [saturn.trade/launchpad/${mintAddress}](https://saturn.trade/launchpad/${mintAddress})`,
+          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}\n${twitter ? `🐦 Twitter: ${twitter}` : ""}\n${telegram ? `💬 Telegram: ${telegram}` : ""}\n\n**Trade now:** [${BRAND.domain}/launchpad/${mintAddress}](https://${BRAND.domain}/launchpad/${mintAddress})`,
           post_type: "text",
           is_agent_post: true,
           is_pinned: true,
@@ -385,7 +386,7 @@ Deno.serve(async (req) => {
         tokenId: funTokenId,
         mintAddress,
         poolAddress: dbcPoolAddress,
-        tradeUrl: `https://saturn.trade/launchpad/${mintAddress}`,
+        tradeUrl: `https://${BRAND.domain}/launchpad/${mintAddress}`,
         solscanUrl: `https://solscan.io/token/${mintAddress}`,
         rewards: {
           agentShare: "80%",

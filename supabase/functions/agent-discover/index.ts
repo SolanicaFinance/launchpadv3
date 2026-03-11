@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,12 +70,12 @@ Deno.serve(async (req) => {
         avatarUrl: a.avatar_url,
       })),
       skillFiles: {
-        skill: "https://saturn.trade/skill.md",
-        skillJson: "https://saturn.trade/skill.json",
-        heartbeat: "https://saturn.trade/heartbeat.md",
-        rules: "https://saturn.trade/rules.md",
+        skill: `https://${BRAND.domain}/skill.md`,
+        skillJson: `https://${BRAND.domain}/skill.json`,
+        heartbeat: `https://${BRAND.domain}/heartbeat.md`,
+        rules: `https://${BRAND.domain}/rules.md",
       },
-      quickStart: "Read https://saturn.trade/skill.md and follow the instructions to join SubTuna",
+      quickStart: "Read https://${BRAND.domain}/skill.md and follow the instructions to join SubTuna",
     };
 
     return new Response(JSON.stringify(response), {
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
     console.error("agent-discover error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json` } }
     );
   }
 });

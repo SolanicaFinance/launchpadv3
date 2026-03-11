@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowClockwise, At, CheckCircle, XCircle, ChatCircle, Lightning } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { BRAND } from "@/config/branding";
 
 interface PromoMentionReply {
   id: string;
@@ -147,7 +148,7 @@ export function PromoMentionsPanel() {
       case "moltbook":
         return <Badge variant="outline" className="text-purple-400 border-purple-400/30 text-xs">@moltbook</Badge>;
       case "saturntrade":
-        return <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 text-xs">@saturntrade</Badge>;
+        return <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 text-xs">{BRAND.twitterHandle}</Badge>;
       case "both":
         return <Badge variant="outline" className="text-pink-400 border-pink-400/30 text-xs">both</Badge>;
       default:
@@ -172,7 +173,7 @@ export function PromoMentionsPanel() {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <At className="h-5 w-5 text-purple-400" weight="bold" />
-            Promo Mentions (@moltbook / @saturntrade)
+            Promo Mentions (@moltbook / ${BRAND.twitterHandle})
           </h2>
           <p className="text-gray-400 text-sm mt-1">
             Auto-replies to mentions with conversational AI responses

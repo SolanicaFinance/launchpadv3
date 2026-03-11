@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { BRAND } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,7 +41,7 @@ async function fetchWithTimeout(
 async function searchMentions(bearerToken: string): Promise<Tweet[]> {
   const searchUrl = new URL("https://api.x.com/2/tweets/search/recent");
   // Search for mentions of our accounts - no -is:reply so we catch reply mentions too
-  searchUrl.searchParams.set("query", "(@moltbook OR @saturntrade OR @saturntrade) -is:retweet");
+  searchUrl.searchParams.set("query", "(@moltbook OR ${BRAND.twitterHandle} OR ${BRAND.twitterHandle}) -is:retweet");
   searchUrl.searchParams.set("max_results", "20");
   searchUrl.searchParams.set("tweet.fields", "created_at,author_id,conversation_id,in_reply_to_user_id,referenced_tweets");
   searchUrl.searchParams.set("expansions", "author_id");
@@ -91,8 +92,8 @@ async function searchMentions(bearerToken: string): Promise<Tweet[]> {
 
 function determineMentionType(text: string): string {
   const hasMoltbook = text.toLowerCase().includes("@moltbook");
-  const hasOpenclaw = text.toLowerCase().includes("@saturntrade");
-  const hasClawmode = text.toLowerCase().includes("@saturntrade");
+  const hasOpenclaw = text.toLowerCase().includes("${BRAND.twitterHandle}");
+  const hasClawmode = text.toLowerCase().includes("${BRAND.twitterHandle}");
   
   const count = [hasMoltbook, hasOpenclaw, hasClawmode].filter(Boolean).length;
   if (count > 2) return "multiple";
@@ -173,7 +174,7 @@ serve(async (req) => {
     }, { onConflict: "lock_name" });
 
     // Cleanup old queue entries
-    await supabase.from("promo_mention_queue").delete().lt("created_at", new Date(Date.now() - 3600000).toISOString());
+    await supabase.from("promo_mention_queue").delete().lt("created_at`, new Date(Date.now() - 3600000).toISOString());
 
     // Search for mentions using Official X API
     const tweets = await searchMentions(X_BEARER_TOKEN);

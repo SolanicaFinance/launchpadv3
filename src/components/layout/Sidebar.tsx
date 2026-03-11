@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { usePanelNav } from "@/hooks/usePanelNav";
 import { useMatrixMode } from "@/contexts/MatrixModeContext";
 import saturnLogo from "@/assets/saturn-logo.png";
+import { BRAND } from "@/config/branding";
 
 const LOGO_SRC = saturnLogo;
 
@@ -50,7 +51,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         <Link to="/" onClick={onLinkClick} className="group transition-all duration-300">
           <img
             src={LOGO_SRC}
-            alt="Saturn Trade"
+            alt={BRAND.name}
             className={cn(
               "object-contain rounded-sm flex-shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(72_100%_50%/0.5)]",
               isMobile ? "h-8 w-8" : "h-7 w-7"
