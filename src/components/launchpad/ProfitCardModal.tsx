@@ -54,7 +54,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
         useCORS: true,
       });
       const link = document.createElement("a");
-      link.download = `saturntrade-${data.tokenTicker}-${Date.now()}.png`;
+      link.download = `moondexo-${data.tokenTicker}-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (e) {

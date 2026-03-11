@@ -31,7 +31,7 @@ interface SendTokenModalProps {
 
 type Step = "form" | "confirm" | "sending" | "success" | "error";
 
-const RECENT_KEY = "saturn-recent-addresses";
+const RECENT_KEY = "moondexo-recent-addresses";
 function getRecentAddresses(): string[] {
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]").slice(0, 5);
