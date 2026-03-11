@@ -144,7 +144,7 @@ export function MarketLighthouse({
       <div style={{ marginBottom: compact ? "6px" : "10px" }}>
         <div style={{ ...S.row, justifyContent: "space-between", marginBottom: "4px" }}>
           <div style={{ ...S.row, gap: "6px" }}>
-            <span style={{ fontSize: sz.fs.label, color: muted }}>24h Vol</span>
+            <span style={{ fontSize: sz.fs.label, color: muted }}>{activeTab} Vol</span>
             <span style={{ fontSize: sz.fs.val, fontWeight: 700 }}>{fUsd(totalVol)}</span>
           </div>
           <span style={{ fontSize: sz.fs.change, color: volChange >= 0 ? g : r }}>{fPct(volChange)}</span>
