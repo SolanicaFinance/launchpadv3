@@ -404,7 +404,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div
-              className="flex items-center justify-center gap-3 flex-wrap mb-5 animate-fade-in"
+              className="flex items-center justify-center gap-3 flex-wrap mb-4 animate-fade-in"
               style={{ animationDelay: "0.25s", animationFillMode: "both" }}
             >
               <Link
