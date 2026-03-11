@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Plus, Download, Upload, Trash2, Search, Wallet, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useState } from "react";
+import { RefreshCw, Plus, Download, Upload, Trash2, Search, Wallet, Loader2, Maximize2 } from "lucide-react";
+import { useWalletTracker, TRACKER_TABS, type TrackerTab, shortAddr } from "@/hooks/useWalletTracker";
 import { formatDistanceToNow } from "date-fns";
-
-const TABS = ["All", "Manager", "Trades", "Monitor"] as const;
-type Tab = typeof TABS[number];
+import { useNavigate } from "react-router-dom";
 
 const g = "#00FFAA";
 const r = "#FF4D4D";
@@ -14,33 +10,6 @@ const dim = "#888";
 const muted = "#AAAAAA";
 const bg = "#0F0F0F";
 const cardBg = "#1A1A1A";
-
-interface TrackedWallet {
-  id: string;
-  wallet_address: string;
-  wallet_label: string | null;
-  created_at: string;
-  is_copy_trading_enabled: boolean;
-  notifications_enabled: boolean;
-  total_pnl_sol: number | null;
-  trades_copied: number | null;
-}
-
-interface WalletWithBalance extends TrackedWallet {
-  balance: number | null;
-  lastActive: string | null;
-}
-
-function shortAddr(addr: string) {
-  return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
-}
-
-function getRpcUrl(): string {
-  if (typeof window !== "undefined" && (window as any).__PUBLIC_CONFIG__?.HELIUS_RPC_URL) {
-    return (window as any).__PUBLIC_CONFIG__.HELIUS_RPC_URL;
-  }
-  return import.meta.env.VITE_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";
-}
 
 export function WalletTrackerPanel({
   onRefresh,
@@ -51,106 +20,33 @@ export function WalletTrackerPanel({
   refreshing: boolean;
   compact?: boolean;
 }) {
-  const { isAuthenticated, profileId, login } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>("All");
+  const navigate = useNavigate();
+  const {
+    isAuthenticated,
+    login,
+    wallets,
+    loading,
+    adding,
+    fetchWallets,
+    addWallet,
+    removeWallet,
+    removeAll,
+  } = useWalletTracker();
+
+  const [activeTab, setActiveTab] = useState<TrackerTab>("All");
   const [search, setSearch] = useState("");
-  const [wallets, setWallets] = useState<WalletWithBalance[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAddr, setNewAddr] = useState("");
   const [newLabel, setNewLabel] = useState("");
 
   const f = "'Inter','SF Pro Display',-apple-system,sans-serif";
 
-  const fetchWallets = useCallback(async () => {
-    if (!profileId) return;
-    setLoading(true);
-    try {
-      const { data: resp, error: fnError } = await supabase.functions.invoke("wallet-tracker-manage", {
-        body: { action: "list", user_profile_id: profileId },
-      });
-
-      if (fnError) throw fnError;
-      const tracked = (resp?.data || []) as TrackedWallet[];
-
-      // Fetch balances and last tx time in parallel
-      const connection = new Connection(getRpcUrl(), "confirmed");
-      const enriched: WalletWithBalance[] = await Promise.all(
-        tracked.map(async (w) => {
-          let balance: number | null = null;
-          let lastActive: string | null = null;
-          try {
-            const pub = new PublicKey(w.wallet_address);
-            const [lamports, sigs] = await Promise.all([
-              connection.getBalance(pub),
-              connection.getSignaturesForAddress(pub, { limit: 1 }),
-            ]);
-            balance = lamports / LAMPORTS_PER_SOL;
-            if (sigs.length > 0 && sigs[0].blockTime) {
-              lastActive = new Date(sigs[0].blockTime * 1000).toISOString();
-            }
-          } catch {}
-          return { ...w, balance, lastActive };
-        })
-      );
-      setWallets(enriched);
-    } catch (err) {
-      console.error("Failed to fetch tracked wallets:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [profileId]);
-
-  useEffect(() => {
-    if (profileId) fetchWallets();
-  }, [profileId, fetchWallets]);
-
   const handleAdd = async () => {
-    if (!profileId || !newAddr.trim()) return;
-    setAdding(true);
-    try {
-      const { data: resp, error: fnError } = await supabase.functions.invoke("wallet-tracker-manage", {
-        body: {
-          action: "add",
-          user_profile_id: profileId,
-          wallet_address: newAddr.trim(),
-          wallet_label: newLabel.trim() || null,
-        },
-      });
-      if (fnError) throw fnError;
-      if (resp?.error) throw new Error(resp.error);
+    const ok = await addWallet(newAddr, newLabel);
+    if (ok) {
       setNewAddr("");
       setNewLabel("");
       setShowAddForm(false);
-      fetchWallets();
-    } catch (err) {
-      console.error("Failed to add wallet:", err);
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const handleRemoveAll = async () => {
-    if (!profileId) return;
-    try {
-      await supabase.functions.invoke("wallet-tracker-manage", {
-        body: { action: "clear", user_profile_id: profileId },
-      });
-      setWallets([]);
-    } catch (err) {
-      console.error("Failed to remove wallets:", err);
-    }
-  };
-
-  const handleRemove = async (id: string) => {
-    try {
-      await supabase.functions.invoke("wallet-tracker-manage", {
-        body: { action: "remove", user_profile_id: profileId, wallet_id: id },
-      });
-      setWallets((prev) => prev.filter((w) => w.id !== id));
-    } catch (err) {
-      console.error("Failed to remove wallet:", err);
     }
   };
 
@@ -188,9 +84,16 @@ export function WalletTrackerPanel({
           <Wallet style={{ width: compact ? "12px" : "14px", height: compact ? "12px" : "14px", color: "#fff" }} />
           <span style={{ fontSize: sz.fs.h, fontWeight: 600 }}>Wallet Tracker</span>
           {loading && <Loader2 style={{ width: "12px", height: "12px", animation: "spin 1s linear infinite", color: dim }} />}
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate("/wallet-tracker"); }}
+            title="Open full page"
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", color: dim }}
+          >
+            <Maximize2 style={{ width: compact ? "10px" : "12px", height: compact ? "10px" : "12px" }} />
+          </button>
         </div>
         <div style={{ display: "flex", gap: "2px" }}>
-          {TABS.map((t) => (
+          {TRACKER_TABS.map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
@@ -345,7 +248,7 @@ export function WalletTrackerPanel({
             <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500, textAlign: "right" }}>Balance</span>
             <span style={{ fontSize: sz.fs.label, color: dim, fontWeight: 500, textAlign: "right" }}>Last Active</span>
             <button
-              onClick={handleRemoveAll}
+              onClick={removeAll}
               title="Remove All"
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: r }}
             >
@@ -394,7 +297,7 @@ export function WalletTrackerPanel({
                     : "—"}
                 </span>
                 <button
-                  onClick={() => handleRemove(w.id)}
+                  onClick={() => removeWallet(w.id)}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", color: dim }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = r)}
                   onMouseLeave={(e) => (e.currentTarget.style.color = dim)}

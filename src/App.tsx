@@ -188,6 +188,7 @@ const App = () => (
                      <Route path="/punch/token/:mintAddress" element={<PunchTokenDetailPage />} />
                      <Route path="/punch-games" element={<PunchGamesPage />} />
                      <Route path="/link/:code" element={<ReferralRedirectPage />} />
+                     <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                   </div>
