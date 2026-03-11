@@ -636,14 +636,23 @@ function PanelTradesTab({ wallets, sz, f, navigate }: { wallets: any[]; sz: any;
       {trades.map((t) => (
         <div
           key={t.id}
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/launchpad/${t.token_mint}`); }}
           style={{
             display: "flex",
             alignItems: "center",
             gap: "6px",
             padding: "5px 6px",
             borderBottom: "1px solid #1a1a1a",
+            cursor: "pointer",
           }}
         >
+          {/* Token icon */}
+          <img
+            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
+            alt=""
+            style={{ width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, objectFit: "cover", background: "#222" }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
           <span
             style={{
               fontSize: "8px",
