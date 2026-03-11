@@ -106,6 +106,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <RuntimeConfigBootstrap />
+    <BrandingProvider>
     <PrivyProviderWrapper>
       <ChainProvider>
         <EvmWalletProvider>
