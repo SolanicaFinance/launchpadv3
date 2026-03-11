@@ -1,45 +1,55 @@
 
 
-## Two Issues to Fix
+## Fix: Wallet Tracker — Missing Trade Notifications
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### Root Cause
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+The **webhook receiver edge function is missing**. Here's the current flow:
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+```text
+Tracked wallet makes a trade on-chain
+        │
+        ▼
+Helius webhook fires (configured via wallet-tracker-manage)
+        │
+        ▼
+POST → ??? (NO ENDPOINT EXISTS)     ← Problem is here
+        │
+        ▼
+wallet_trades table (EMPTY — never gets populated)
+        │
+        ▼
+Supabase Realtime → WalletTrackerPanel listens for INSERTs
+        │
+        ▼
+Toast + Sound (never fires because no data arrives)
+```
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+The `wallet-tracker-manage` function correctly syncs addresses to the Helius webhook, and the frontend correctly subscribes to `wallet_trades` INSERTs via Realtime. But there is no edge function to receive the Helius webhook POST and insert rows into `wallet_trades`.
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+### Fix: Create `wallet-trade-webhook` Edge Function
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+**1. Create `supabase/functions/wallet-trade-webhook/index.ts`**
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+- Receives POST from Helius enhanced webhook (array of enriched transactions)
+- Validates the webhook using `HELIUS_WEBHOOK_SECRET` (Authorization header)
+- For each transaction, parses swap data:
+  - Extracts `token_mint`, `token_name`, `sol_amount`, `token_amount`, `trade_type` (buy/sell) from Helius enhanced transaction format (nativeTransfers, tokenTransfers, swap events)
+  - Looks up `tracked_wallet_id` from `tracked_wallets` table by matching wallet address
+- Inserts parsed trade into `wallet_trades` table
+- Returns 200 so Helius doesn't retry
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+**2. Register in `supabase/config.toml`**
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+Add `verify_jwt = false` since Helius calls this externally (not via Supabase client). Authentication uses the webhook secret instead.
 
-### Technical Details
+**3. Configure Helius Webhook URL**
 
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+The Helius webhook needs to point to: `https://<project-id>.supabase.co/functions/v1/wallet-trade-webhook`
 
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
+This may need a one-time update — either manually via Helius dashboard or by updating the `syncHeliusWebhook` function to also set the `webhookURL` field when creating/updating the webhook.
 
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files Changed
+- `supabase/functions/wallet-trade-webhook/index.ts` — New file (webhook receiver)
+- `supabase/config.toml` — Add `verify_jwt = false` for the new function
 
