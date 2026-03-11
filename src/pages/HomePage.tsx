@@ -438,7 +438,7 @@ export default function HomePage() {
 
             {/* Feature Badges */}
             <div
-              className="flex items-center justify-center gap-2 flex-wrap mb-4 animate-fade-in"
+              className="flex items-center justify-center gap-2 flex-wrap mb-3 animate-fade-in"
               style={{ animationDelay: "0.35s", animationFillMode: "both" }}
             >
               {[
