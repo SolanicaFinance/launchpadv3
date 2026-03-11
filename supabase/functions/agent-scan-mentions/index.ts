@@ -426,7 +426,7 @@ Deno.serve(async (req) => {
           "🐟 To launch your token",
           "Powered by Claw Agents",
           "Powered by TUNA Agents",
-          "is now live on Saturn!",
+          "is now live on MoonDexo!",
           "is now live on TUNA!",
           "80% of fees go to you",
         ];

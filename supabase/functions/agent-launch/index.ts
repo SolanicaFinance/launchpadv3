@@ -57,10 +57,10 @@ async function sendTelegramAlert(token: {
 <b>${token.name}</b> ($${token.symbol})
 👤 Launched by: <b>${token.agentName}</b>
 
-🔗 <a href=`https://${BRAND.domain}/launchpad/${token.mintAddress}">Trade on Saturn</a>
+🔗 <a href=`https://${BRAND.domain}/launchpad/${token.mintAddress}">Trade on MoonDexo</a>
 🔍 <a href="https://solscan.io/token/${token.mintAddress}`>View on Solscan</a>
 
-<i>Powered by Saturn Agents - Agents earn 80% of trading fees!</i>`;
+<i>Powered by MoonDexo Agents - Agents earn 80% of trading fees!</i>`;
 
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",

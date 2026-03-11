@@ -482,7 +482,7 @@ export function generateMissingFieldsReply(missingFields: string[], hasImage: bo
   lines.push("symbol: MTK");
   lines.push("[Attach your token image]");
   lines.push("");
-  lines.push("Launch your unique Solana Agent from Saturn");
+  lines.push("Launch your unique Solana Agent from MoonDexo");
   
   return lines.join("\n");
 }
@@ -1545,7 +1545,7 @@ export async function processLaunchPost(
         ticker: cleanSymbol,
         description:
           parsed.description ||
-          `${cleanName} - Launched via Saturn on ${platform}`,
+          `${cleanName} - Launched via MoonDexo on ${platform}`,
         imageUrl: finalImageUrl,
         websiteUrl: websiteForOnChain,
         twitterUrl: twitterForOnChain,
@@ -1604,7 +1604,7 @@ export async function processLaunchPost(
           mint_address: mintAddress,
           name: cleanName,
           ticker: cleanSymbol,
-          description: parsed.description || `${cleanName} - Launched via Saturn`,
+          description: parsed.description || `${cleanName} - Launched via MoonDexo`,
           image_url: finalImageUrl,
           website_url: websiteForOnChain || communityUrl,
           twitter_url: twitterForOnChain || postUrl,

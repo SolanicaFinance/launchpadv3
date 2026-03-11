@@ -974,7 +974,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           "🦞 Hey @",
           "🦞 Token launched!",
           "🦞 Trading Agent launched",
-          "Powered by Saturn",
+          "Powered by MoonDexo",
           "Trading-Fees goes to your Panel",
           "is now live on TUNA!",
           "claim them any time",
