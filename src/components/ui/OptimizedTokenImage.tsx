@@ -60,31 +60,45 @@ export function OptimizedTokenImage({
   ...props
 }: OptimizedTokenImageProps) {
   const [hasError, setHasError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
 
-  if (!src || hasError) {
+  const showFallbackSrc = hasError && _fallbackSrc && !fallbackError;
+
+  if ((!src && !_fallbackSrc) || (hasError && !_fallbackSrc) || (hasError && fallbackError)) {
     return (
       <div
         className={cn(
           "flex items-center justify-center bg-secondary text-xs font-bold text-muted-foreground",
           className
         )}
+        {...props}
       >
         {fallbackText?.slice(0, 2) ?? "?"}
       </div>
     );
   }
 
-  const optimizedSrc = getOptimizedUrl(src, size);
+  const activeSrc = showFallbackSrc
+    ? getOptimizedUrl(_fallbackSrc!, size)
+    : src
+      ? getOptimizedUrl(src, size)
+      : _fallbackSrc
+        ? getOptimizedUrl(_fallbackSrc, size)
+        : "";
 
   return (
     <img
-      src={optimizedSrc}
+      src={activeSrc}
       alt={alt || ""}
       loading="lazy"
       decoding="async"
       className={className}
       onError={(event) => {
-        setHasError(true);
+        if (!hasError) {
+          setHasError(true);
+        } else {
+          setFallbackError(true);
+        }
         onError?.(event);
       }}
       {...props}
