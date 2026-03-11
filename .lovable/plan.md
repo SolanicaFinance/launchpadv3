@@ -1,45 +1,42 @@
 
 
-## Two Issues to Fix
+## Plan: Replace Create Token Popup with Phantom Launcher
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+### Current State
+- The "+" button (in sidebar and header) links to `/?create=1`, which opens `CreateTokenModal`
+- `CreateTokenModal` currently just shows instructions to tweet at @saturntrade on X — no actual launch capability
+- The Phantom launch flow already exists in `TokenLauncher` component (mode="phantom"), used in `PanelPhantomTab`
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+### What Changes
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+**1. Rewrite `CreateTokenModal` to embed the Phantom launcher**
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+Replace the current "tweet instructions" content in `src/components/launchpad/CreateTokenModal.tsx` with:
+- Import and render `<TokenLauncher bare defaultMode="phantom" />` inside the modal
+- Keep the modal shell (backdrop, close button, mobile drag handle) but replace the body content
+- Add success result display (mint address, trade link) similar to `PanelPhantomTab`
+- On successful launch, show the result inline and allow "Launch Another" or close
+- The modal already has responsive mobile/desktop styling — keep that
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+**2. Update modal sizing**
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+The current modal is `max-w-[540px]`. The Phantom launcher UI needs slightly more room for:
+- Phantom connect button
+- Sub-mode tabs (Random / Describe / Realistic / Custom)
+- Token preview with image, name, ticker fields
+- Trading fee slider
+- Dev buy input
+- Launch button
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+Increase to `max-w-[600px]` and ensure `max-h-[90vh]` with overflow scroll works for the launcher content.
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+**3. No backend changes needed**
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+The Phantom launch flow already works end-to-end via:
+- `usePhantomWallet` hook (connect, sign, send)
+- `fun-phantom-create` edge function (builds unsigned transactions)
+- Token is signed by Phantom and sent to chain
 
-### Technical Details
-
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
-
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+### Files to Edit
+- `src/components/launchpad/CreateTokenModal.tsx` — full rewrite to embed `TokenLauncher` with `defaultMode="phantom"`
 
