@@ -67,14 +67,12 @@ export function WalletTrackerPanel({
     if (!profileId) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("tracked_wallets")
-        .select("*")
-        .eq("user_profile_id", profileId)
-        .order("created_at", { ascending: false });
+      const { data: resp, error: fnError } = await supabase.functions.invoke("wallet-tracker-manage", {
+        body: { action: "list", user_profile_id: profileId },
+      });
 
-      if (error) throw error;
-      const tracked = (data || []) as TrackedWallet[];
+      if (fnError) throw fnError;
+      const tracked = (resp?.data || []) as TrackedWallet[];
 
       // Fetch balances in parallel
       const connection = new Connection(getRpcUrl(), "confirmed");
