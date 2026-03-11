@@ -134,7 +134,7 @@ export default function FunLauncherPage() {
 
   // Create token — redirect to dedicated page; keep legacy ?create=1 compat
   const showCreateDialog = false; // modal no longer used
-  const openCreateDialog = () => { window.location.href = "/launchpad/create"; };
+  const openCreateDialog = () => { window.location.href = "/launchpad"; };
   const closeCreateDialog = () => {};
 
   const totalClaimed = claimsSummary?.totalClaimedSol ?? 0;
