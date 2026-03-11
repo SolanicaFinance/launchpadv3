@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
     const portalAddress = receipt.contractAddress;
     if (!portalAddress) throw new Error("No contract address in receipt");
 
-    console.log(`[Portal Deploy] ✅ TunaPortal deployed at: ${portalAddress}`);
+    console.log(`[Portal Deploy] ✅ SaturnPortal deployed at: ${portalAddress}`);
 
     return new Response(JSON.stringify({
       success: true,
