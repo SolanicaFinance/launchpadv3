@@ -704,13 +704,7 @@ export default function FunTokenDetailPage() {
                   {token.telegram_url && <a href={token.telegram_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5"><MessageCircle className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
                   {token.mint_address && <a href={`https://solscan.io/token/${token.mint_address}`} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5"><ExternalLink className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
                 </div>
-                <a href={`https://axiom.trade/meme/${token.dbc_pool_address || token.mint_address}?chain=sol`} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" className="h-8 lg:h-7 px-2.5 text-[9px] font-mono gap-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-all hover:shadow-[0_0_12px_hsl(var(--primary)/0.15)]">
-                    <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                    <span className="hidden sm:inline">Axiom</span>
-                  </Button>
-                </a>
-                {(token as any).launchpad_type === 'bags' && token.mint_address && (
+                 {(token as any).launchpad_type === 'bags' && token.mint_address && (
                   <a href={`https://bags.fm/coin/${token.mint_address}`} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex">
                     <Button size="sm" className="h-8 lg:h-7 px-2.5 text-[9px] font-mono gap-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg">
                       <Briefcase className="h-2.5 w-2.5" />bags
