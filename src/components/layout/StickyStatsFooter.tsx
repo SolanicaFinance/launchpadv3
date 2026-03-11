@@ -201,8 +201,6 @@ export function StickyStatsFooter() {
           <StatItem label="FEES" value={`${feesClaimed} SOL`} />
           <Divider />
           <StatItem label="POSTS" value={agentPosts.toLocaleString()} />
-          <Divider />
-          <StatItem label="PAYOUTS" value={`${payouts} SOL`} />
         </div>
 
         {/* Connection + Launchpads + Region */}
