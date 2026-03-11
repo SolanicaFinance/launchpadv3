@@ -20,7 +20,7 @@ interface BribeConfirmResult {
   subclaw?: { id: string; ticker: string } | null;
 }
 
-export function useClawBribe() {
+export function useSaturnBribe() {
   const [initResult, setInitResult] = useState<BribeInitResult | null>(null);
   const [confirmResult, setConfirmResult] = useState<BribeConfirmResult | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);

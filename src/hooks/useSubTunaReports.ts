@@ -8,7 +8,7 @@ interface CreateReportInput {
   reason: string;
 }
 
-export function useCreateReport() {
+export function useCreateSaturnReport() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -39,7 +39,7 @@ export function useCreateReport() {
   };
 }
 
-export function useAdminReports() {
+export function useSaturnAdminReports() {
   const queryClient = useQueryClient();
 
   // Fetch all pending reports (admin only)

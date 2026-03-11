@@ -2,10 +2,10 @@ import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { ClawBookLayout } from "@/components/forum/ClawBookLayout";
-import { ClawBookSidebar } from "@/components/forum/ClawBookSidebar";
-import { ClawVoteButtons } from "@/components/forum/ClawVoteButtons";
-import { ClawCommentTree } from "@/components/forum/ClawCommentTree";
+import { ForumLayout } from "@/components/forum/ForumLayout";
+import { ForumSidebar } from "@/components/forum/ForumSidebar";
+import { ForumVoteButtons } from "@/components/forum/ForumVoteButtons";
+import { ForumCommentTree } from "@/components/forum/ForumCommentTree";
 import { AgentBadge } from "@/components/forum/AgentBadge";
 import { FormattedContent } from "@/components/forum/FormattedContent";
 import { ReportModal } from "@/components/forum/ReportModal";
@@ -14,17 +14,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
-import { useSubTunaComments } from "@/hooks/useSaturnComments";
-import { useSubTunaPosts } from "@/hooks/useSaturnPosts";
-import { useRecentSubTunas } from "@/hooks/useSaturnForum";
-import { useCreateReport } from "@/hooks/useSaturnReports";
+import { useSaturnComments } from "@/hooks/useSaturnComments";
+import { useSaturnPosts } from "@/hooks/useSaturnPosts";
+import { useRecentCommunities } from "@/hooks/useSaturnForum";
+import { useCreateSaturnReport } from "@/hooks/useSaturnReports";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChatCircle, Share, Bookmark, Flag, Lock } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import "@/styles/forum-theme.css";
 
-export default function ClawPostPage() {
+export default function SaturnPostPage() {
   const { ticker, postId } = useParams<{ ticker: string; postId: string }>();
   const [userVote, setUserVote] = useState<1 | -1 | null>(null);
   const [commentVotes, setCommentVotes] = useState<Record<string, 1 | -1>>({});
@@ -32,9 +32,9 @@ export default function ClawPostPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   const { user, isAuthenticated, profileId, login } = useAuth();
-  const { data: recentSubtunas } = useRecentSubTunas();
-  const { vote: voteOnPost } = useSubTunaPosts({});
-  const { createReport, isCreating: isReporting } = useCreateReport();
+  const { data: recentSubtunas } = useRecentCommunities();
+  const { vote: voteOnPost } = useSaturnPosts({});
+  const { createReport, isCreating: isReporting } = useCreateSaturnReport();
 
   // Fetch the post - support both UUID and slug lookup
   const { data: post, isLoading: isLoadingPost } = useQuery({
@@ -87,7 +87,7 @@ export default function ClawPostPage() {
     isLoading: isLoadingComments,
     addComment,
     voteComment,
-  } = useSubTunaComments({ postId: post?.id || "", enabled: !!post?.id });
+  } = useSaturnComments({ postId: post?.id || "", enabled: !!post?.id });
 
   const handleVote = useCallback((voteType: 1 | -1) => {
     if (!isAuthenticated || !profileId) {
@@ -138,7 +138,7 @@ export default function ClawPostPage() {
           toast.success("Comment added!");
         },
         onError: (error: any) => {
-          console.error("[ClawPostPage] Comment error:", error);
+          console.error("[SaturnPostPage] Comment error:", error);
           toast.error(error.message || "Failed to add comment");
         },
       }
@@ -180,13 +180,13 @@ export default function ClawPostPage() {
     return (
       <div className="forum-theme">
         <LaunchpadLayout showKingOfTheHill={false}>
-          <ClawBookLayout leftSidebar={<ClawBookSidebar />}>
+          <ForumLayout leftSidebar={<ForumSidebar />}>
             <div className="space-y-4">
               <Skeleton className="h-8 w-48" />
               <Skeleton className="h-64 w-full" />
               <Skeleton className="h-32 w-full" />
             </div>
-          </ClawBookLayout>
+          </ForumLayout>
         </LaunchpadLayout>
       </div>
     );
@@ -196,7 +196,7 @@ export default function ClawPostPage() {
     return (
       <div className="forum-theme">
         <LaunchpadLayout showKingOfTheHill={false}>
-          <ClawBookLayout leftSidebar={<ClawBookSidebar />}>
+          <ForumLayout leftSidebar={<ForumSidebar />}>
             <div className="forum-card p-8 text-center">
               <h2 className="text-xl font-bold text-[hsl(var(--forum-text-primary))] mb-2">
                 Post Not Found
@@ -208,7 +208,7 @@ export default function ClawPostPage() {
                 <Button variant="outline">Back to ClawBook</Button>
               </Link>
             </div>
-          </ClawBookLayout>
+          </ForumLayout>
         </LaunchpadLayout>
       </div>
     );
@@ -280,8 +280,8 @@ export default function ClawPostPage() {
   return (
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
-        <ClawBookLayout
-          leftSidebar={<ClawBookSidebar recentSubtunas={recentSubtunas} />}
+        <ForumLayout
+          leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}
           rightSidebar={<RightSidebar />}
         >
           <Link
@@ -295,7 +295,7 @@ export default function ClawPostPage() {
           <div className="forum-card">
             <div className="flex">
               <div className="p-3 flex flex-col items-center">
-                <ClawVoteButtons
+                <ForumVoteButtons
                   upvotes={post.upvotes || 0}
                   downvotes={post.downvotes || 0}
                   userVote={userVote}
@@ -465,7 +465,7 @@ export default function ClawPostPage() {
                 <Skeleton className="h-16 w-full" />
               </div>
             ) : (
-              <ClawCommentTree
+              <ForumCommentTree
                 comments={comments}
                 userVotes={commentVotes}
                 onVote={handleCommentVote}
@@ -483,7 +483,7 @@ export default function ClawPostPage() {
             onSubmit={handleReport}
             isSubmitting={isReporting}
           />
-        </ClawBookLayout>
+        </ForumLayout>
       </LaunchpadLayout>
     </div>
   );

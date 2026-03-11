@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-export function useClawAdminLaunch() {
+export function useSaturnAdminLaunch() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

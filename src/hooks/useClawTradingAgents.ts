@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { TradingAgent } from "@/hooks/useTradingAgents";
 
-export function useClawTradingAgents(options?: {
+export function useSaturnTradingAgents(options?: {
   sortBy?: string;
   status?: string;
   strategy?: string;
@@ -36,7 +36,7 @@ export function useClawTradingAgents(options?: {
   });
 }
 
-export function useClawTradingAgentLeaderboard(limit = 20) {
+export function useSaturnTradingAgentLeaderboard(limit = 20) {
   return useQuery({
     queryKey: ["claw-trading-agent-leaderboard", limit],
     queryFn: async () => {

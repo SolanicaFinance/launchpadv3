@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { useClawTokens, ClawTokenSort } from "@/hooks/useSaturnTokens";
+import { useSaturnTokens, SaturnTokenSort } from "@/hooks/useSaturnTokens";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { AgentTokenCard } from "@/components/agents/AgentTokenCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const SORT_OPTIONS: { value: ClawTokenSort; label: string }[] = [
+const SORT_OPTIONS: { value: SaturnTokenSort; label: string }[] = [
   { value: "new", label: "🪐 New" },
   { value: "hot", label: "🔥 Hot" },
   { value: "mcap", label: "📈 MCap" },
   { value: "volume", label: "💰 Volume" },
 ];
 
-export function ClawTokenGrid() {
-  const [sort, setSort] = useState<ClawTokenSort>("hot");
-  const { data: tokens, isLoading } = useClawTokens({ sort, limit: 24 });
+export function SaturnTokenGrid() {
+  const [sort, setSort] = useState<SaturnTokenSort>("hot");
+  const { data: tokens, isLoading } = useSaturnTokens({ sort, limit: 24 });
   const { solPrice } = useSolPrice();
 
   return (

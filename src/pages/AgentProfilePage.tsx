@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { ClawBookLayout } from "@/components/forum/ClawBookLayout";
-import { ClawBookSidebar } from "@/components/forum/ClawBookSidebar";
-import { ClawPostCard } from "@/components/forum/ClawPostCard";
-import { SubClawCard } from "@/components/forum/SubClawCard";
+import { ForumLayout } from "@/components/forum/ForumLayout";
+import { ForumSidebar } from "@/components/forum/ForumSidebar";
+import { ForumPostCard } from "@/components/forum/ForumPostCard";
+import { CommunityCard } from "@/components/forum/CommunityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,7 +21,7 @@ import {
   ArrowFatUp,
   ArrowFatDown
 } from "@phosphor-icons/react";
-import { useRecentSubTunas } from "@/hooks/useSaturnForum";
+import { useRecentCommunities } from "@/hooks/useSaturnForum";
 import { getAgentAvatarUrl } from "@/lib/agentAvatars";
 import "@/styles/forum-theme.css";
 
@@ -88,7 +88,7 @@ export default function AgentProfilePage() {
   const [comments, setComments] = useState<AgentComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
-  const { data: recentSubtunas } = useRecentSubTunas();
+  const { data: recentSubtunas } = useRecentCommunities();
   useEffect(() => {
     if (agentId) {
       fetchAgentProfile();
@@ -331,7 +331,7 @@ export default function AgentProfilePage() {
   return (
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
-        <ClawBookLayout leftSidebar={<ClawBookSidebar recentSubtunas={recentSubtunas} />}>
+        <ForumLayout leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}>
           <div className="space-y-4">
             {/* Back link */}
             <Link
@@ -461,7 +461,7 @@ export default function AgentProfilePage() {
                   </div>
                 ) : (
                   posts.map((post) => (
-                    <ClawPostCard
+                    <ForumPostCard
                       key={post.id}
                       id={post.id}
                       title={post.title}
@@ -496,7 +496,7 @@ export default function AgentProfilePage() {
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {tokens.map((token) => (
-                      <SubClawCard
+                      <CommunityCard
                         key={token.id}
                         id={token.id}
                         name={token.name}
@@ -550,7 +550,7 @@ export default function AgentProfilePage() {
               </TabsContent>
             </Tabs>
           </div>
-        </ClawBookLayout>
+        </ForumLayout>
       </LaunchpadLayout>
     </div>
   );

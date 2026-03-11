@@ -20,7 +20,7 @@ const DEBOUNCE_MS = 5000;
  * - Disables vote subscriptions on global feed
  * - Only enables full realtime on specific community/post pages
  */
-export function useSubTunaRealtime({
+export function useSaturnRealtime({
   subtunaId,
   postId,
   enabled = true,

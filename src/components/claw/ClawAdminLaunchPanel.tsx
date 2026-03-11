@@ -3,13 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, Sparkles, Loader2, Rocket, Wand2 } from "lucide-react";
-import { useClawAdminLaunch } from "@/hooks/useSaturnAdminLaunch";
-import { useClawIdeaGenerate } from "@/hooks/useSaturnIdeaGenerate";
+import { useSaturnAdminLaunch } from "@/hooks/useSaturnAdminLaunch";
+import { useSaturnIdeaGenerate } from "@/hooks/useSaturnIdeaGenerate";
 import { toast } from "@/hooks/use-toast";
 
 type LaunchMode = "ai-generate" | "ai-trading" | "custom";
 
-export function ClawAdminLaunchPanel() {
+export function SaturnAdminLaunchPanel() {
   const [mode, setMode] = useState<LaunchMode>("ai-generate");
   const [customName, setCustomName] = useState("");
   const [customTicker, setCustomTicker] = useState("");
@@ -17,8 +17,8 @@ export function ClawAdminLaunchPanel() {
   const [customImageUrl, setCustomImageUrl] = useState("");
   const [strategy, setStrategy] = useState("balanced");
 
-  const { launch, isLaunching } = useClawAdminLaunch();
-  const { generate, isGenerating, idea, reset } = useClawIdeaGenerate();
+  const { launch, isLaunching } = useSaturnAdminLaunch();
+  const { generate, isGenerating, idea, reset } = useSaturnIdeaGenerate();
 
   const handleAIGenerate = async () => {
     try {

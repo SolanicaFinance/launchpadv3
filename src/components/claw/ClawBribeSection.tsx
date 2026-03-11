@@ -1,12 +1,12 @@
 import { useState } from "react";
 import QRCode from "react-qr-code";
-import { useClawTradingAgents } from "@/hooks/useSaturnTradingAgents";
-import { useClawBribe } from "@/hooks/useSaturnBribe";
+import { useSaturnTradingAgents } from "@/hooks/useSaturnTradingAgents";
+import { useSaturnBribe } from "@/hooks/useSaturnBribe";
 import { Copy, Check, Loader2, Sparkles } from "lucide-react";
 
-export function ClawBribeSection() {
-  const { data: agents, isLoading } = useClawTradingAgents({ status: "active" });
-  const { initBribe, confirmBribe, reset, initResult, confirmResult, isInitializing, isConfirming } = useClawBribe();
+export function SaturnBribeSection() {
+  const { data: agents, isLoading } = useSaturnTradingAgents({ status: "active" });
+  const { initBribe, confirmBribe, reset, initResult, confirmResult, isInitializing, isConfirming } = useSaturnBribe();
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [briberWallet, setBriberWallet] = useState("");
   const [txSignature, setTxSignature] = useState("");

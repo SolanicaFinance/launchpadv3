@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // Types based on database schema
-export interface ClawAgent {
+export interface SaturnAgent {
   id: string;
   name: string;
   agent_type: string;
@@ -25,7 +25,7 @@ export interface ClawAgent {
   updated_at: string;
 }
 
-export interface ClawDNA {
+export interface SaturnDNA {
   id: string;
   agent_id: string;
   personality: string;
@@ -41,7 +41,7 @@ export interface ClawDNA {
   updated_at: string;
 }
 
-export interface ClawSonarConfig {
+export interface SaturnSonarConfig {
   id: string;
   agent_id: string;
   mode: string;
@@ -56,7 +56,7 @@ export interface ClawSonarConfig {
   paused_reason: string | null;
 }
 
-export interface ClawSonarPing {
+export interface SaturnSonarPing {
   id: string;
   agent_id: string;
   action: string;
@@ -71,7 +71,7 @@ export interface ClawSonarPing {
   context_snapshot: any;
 }
 
-export interface ClawFin {
+export interface SaturnFin {
   id: string;
   name: string;
   display_name: string;
@@ -93,7 +93,7 @@ export interface ClawFin {
   created_at: string;
 }
 
-export interface ClawCurrentFlow {
+export interface SaturnCurrentFlow {
   id: string;
   requester_agent_id: string;
   provider_agent_id: string | null;
@@ -111,7 +111,7 @@ export interface ClawCurrentFlow {
   completed_at: string | null;
 }
 
-export interface ClawDeepMemory {
+export interface SaturnDeepMemory {
   id: string;
   agent_id: string;
   content: string;
@@ -126,7 +126,7 @@ export interface ClawDeepMemory {
 }
 
 // Fetch all agents for the connected wallet
-export function useClawAgents(walletAddress: string | null) {
+export function useSaturnAgents(walletAddress: string | null) {
   return useQuery({
     queryKey: ['clawsdk-agents', walletAddress],
     queryFn: async () => {
@@ -139,14 +139,14 @@ export function useClawAgents(walletAddress: string | null) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as ClawAgent[];
+      return data as SaturnAgent[];
     },
     enabled: !!walletAddress,
   });
 }
 
 // Fetch single agent by ID
-export function useClawAgent(agentId: string | null) {
+export function useSaturnAgent(agentId: string | null) {
   return useQuery({
     queryKey: ['clawsdk-agent', agentId],
     queryFn: async () => {
@@ -159,14 +159,14 @@ export function useClawAgent(agentId: string | null) {
         .single();
       
       if (error) throw error;
-      return data as ClawAgent;
+      return data as SaturnAgent;
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch DNA for an agent
-export function useClawDNA(agentId: string | null) {
+export function useSaturnDNA(agentId: string | null) {
   return useQuery({
     queryKey: ['clawsdk-dna', agentId],
     queryFn: async () => {
@@ -179,14 +179,14 @@ export function useClawDNA(agentId: string | null) {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data as ClawDNA | null;
+      return data as SaturnDNA | null;
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch Sonar config for an agent
-export function useClawSonarConfig(agentId: string | null) {
+export function useSaturnSonarConfig(agentId: string | null) {
   return useQuery({
     queryKey: ['clawsdk-sonar-config', agentId],
     queryFn: async () => {
@@ -199,14 +199,14 @@ export function useClawSonarConfig(agentId: string | null) {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data as ClawSonarConfig | null;
+      return data as SaturnSonarConfig | null;
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch recent pings for an agent
-export function useClawSonarPings(agentId: string | null, limit = 20) {
+export function useSaturnSonarPings(agentId: string | null, limit = 20) {
   return useQuery({
     queryKey: ['clawsdk-sonar-pings', agentId, limit],
     queryFn: async () => {
@@ -220,14 +220,14 @@ export function useClawSonarPings(agentId: string | null, limit = 20) {
         .limit(limit);
       
       if (error) throw error;
-      return data as ClawSonarPing[];
+      return data as SaturnSonarPing[];
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch all available fins
-export function useClawFins() {
+export function useSaturnFins() {
   return useQuery({
     queryKey: ['clawsdk-fins'],
     queryFn: async () => {
@@ -238,13 +238,13 @@ export function useClawFins() {
         .order('total_uses', { ascending: false });
       
       if (error) throw error;
-      return data as ClawFin[];
+      return data as SaturnFin[];
     },
   });
 }
 
 // Fetch installed fins for an agent
-export function useClawFinRack(agentId: string | null) {
+export function useSaturnFinRack(agentId: string | null) {
   return useQuery({
     queryKey: ['clawsdk-fin-rack', agentId],
     queryFn: async () => {
@@ -266,7 +266,7 @@ export function useClawFinRack(agentId: string | null) {
 }
 
 // Fetch transactions for an agent
-export function useClawCurrentFlows(agentId: string | null, limit = 20) {
+export function useSaturnCurrentFlows(agentId: string | null, limit = 20) {
   return useQuery({
     queryKey: ['clawsdk-current-flows', agentId, limit],
     queryFn: async () => {
@@ -280,14 +280,14 @@ export function useClawCurrentFlows(agentId: string | null, limit = 20) {
         .limit(limit);
       
       if (error) throw error;
-      return data as ClawCurrentFlow[];
+      return data as SaturnCurrentFlow[];
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch memories for an agent
-export function useClawMemories(agentId: string | null, memoryType?: string, limit = 20) {
+export function useSaturnMemories(agentId: string | null, memoryType?: string, limit = 20) {
   return useQuery({
     queryKey: ['clawsdk-memories', agentId, memoryType, limit],
     queryFn: async () => {
@@ -307,14 +307,14 @@ export function useClawMemories(agentId: string | null, memoryType?: string, lim
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as ClawDeepMemory[];
+      return data as SaturnDeepMemory[];
     },
     enabled: !!agentId,
   });
 }
 
 // Fetch platform stats (all agents, total pings, etc.)
-export function useClawStats() {
+export function useSaturnStats() {
   return useQuery({
     queryKey: ['clawsdk-stats'],
     queryFn: async () => {
@@ -351,7 +351,7 @@ export function useClawStats() {
 }
 
 // Mutation: Create a new agent
-export function useCreateClawAgent() {
+export function useCreateSaturnAgent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -391,7 +391,7 @@ export function useCreateClawAgent() {
 }
 
 // Mutation: Update DNA
-export function useUpdateClawDNA() {
+export function useUpdateSaturnDNA() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -439,7 +439,7 @@ export function useUpdateClawDNA() {
 }
 
 // Mutation: Update Sonar config
-export function useUpdateClawSonar() {
+export function useUpdateSaturnSonar() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -500,7 +500,7 @@ export function useUpdateClawSonar() {
 }
 
 // Mutation: Install a fin
-export function useInstallClawFin() {
+export function useInstallSaturnFin() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -539,7 +539,7 @@ export function useInstallClawFin() {
 // API KEY MANAGEMENT
 // ============================================================================
 
-export interface ClawApiKey {
+export interface SaturnApiKey {
   id: string;
   agent_id: string;
   key_prefix: string;
@@ -551,7 +551,7 @@ export interface ClawApiKey {
 }
 
 // Fetch API keys for an agent
-export function useClawApiKeys(agentId: string | null) {
+export function useSaturnApiKeys(agentId: string | null) {
   return useQuery({
     queryKey: ['clawsdk-api-keys', agentId],
     queryFn: async () => {
@@ -565,14 +565,14 @@ export function useClawApiKeys(agentId: string | null) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as ClawApiKey[];
+      return data as SaturnApiKey[];
     },
     enabled: !!agentId,
   });
 }
 
 // Mutation: Generate API key
-export function useCreateClawApiKey() {
+export function useCreateSaturnApiKey() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -602,7 +602,7 @@ export function useCreateClawApiKey() {
 }
 
 // Mutation: Revoke API key
-export function useRevokeClawApiKey() {
+export function useRevokeSaturnApiKey() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   

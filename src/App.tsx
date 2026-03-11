@@ -31,9 +31,9 @@ const LaunchpadTemplatePage = lazyWithRetry(() => import("./pages/LaunchpadTempl
 const InvestigateTokenPage = lazyWithRetry(() => import("./pages/InvestigateTokenPage"));
 const TradePage = lazyWithRetry(() => import("./pages/TradePage"));
 const WidgetPage = lazyWithRetry(() => import("./pages/WidgetPage"));
-const ClawBookPage = lazyWithRetry(() => import("./pages/ClawBookPage"));
-const SubClawPage = lazyWithRetry(() => import("./pages/SubClawPage"));
-const ClawPostPage = lazyWithRetry(() => import("./pages/ClawPostPage"));
+const SaturnForumPage = lazyWithRetry(() => import("./pages/SaturnForumPage"));
+const SaturnCommunityPage = lazyWithRetry(() => import("./pages/SaturnCommunityPage"));
+const SaturnPostPage = lazyWithRetry(() => import("./pages/SaturnPostPage"));
 const AgentDocsPage = lazyWithRetry(() => import("./pages/AgentDocsPage"));
 const AgentDashboardPage = lazyWithRetry(() => import("./pages/AgentDashboardPage"));
 const AgentLeaderboardPage = lazyWithRetry(() => import("./pages/AgentLeaderboardPage"));
@@ -44,7 +44,7 @@ const TradingAgentProfilePage = lazyWithRetry(() => import("./pages/TradingAgent
 const WhitepaperPage = lazyWithRetry(() => import("./pages/WhitepaperPage"));
 
 const CareersPage = lazyWithRetry(() => import("./pages/CareersPage"));
-const ClawModePage = lazyWithRetry(() => import("./pages/ClawModePage"));
+const SaturnModePage = lazyWithRetry(() => import("./pages/SaturnModePage"));
 const TunnelDistributePage = lazyWithRetry(() => import("./pages/TunnelDistributePage"));
 const CompressedDistributePage = lazyWithRetry(() => import("./pages/CompressedDistributePage"));
 const DecompressPage = lazyWithRetry(() => import("./pages/DecompressPage"));
@@ -142,9 +142,9 @@ const App = () => (
                      <Route path="/profile/:identifier" element={<UserProfilePage />} />
                     <Route path="/investigate-token" element={<InvestigateTokenPage />} />
                     <Route path="/widget/:type" element={<WidgetPage />} />
-                    <Route path="/agents" element={<ClawBookPage />} />
-                    <Route path="/t/:ticker" element={<SubClawPage />} />
-                    <Route path="/t/:ticker/post/:postId" element={<ClawPostPage />} />
+                    <Route path="/agents" element={<SaturnForumPage />} />
+                    <Route path="/t/:ticker" element={<SaturnCommunityPage />} />
+                    <Route path="/t/:ticker/post/:postId" element={<SaturnPostPage />} />
                     <Route path="/agents/docs" element={<AgentDocsPage />} />
                     <Route path="/agents/dashboard" element={<AgentDashboardPage />} />
                     <Route path="/agents/leaderboard" element={<AgentLeaderboardPage />} />
@@ -172,7 +172,7 @@ const App = () => (
                     <Route path="/careers" element={<CareersPage />} />
                     <Route path="/admin/x-bots" element={<Navigate to="/admin?tab=xbots" replace />} />
                     <Route path="/admin/follower-scan" element={<Navigate to="/admin?tab=follower-scan" replace />} />
-                    <Route path="/claw" element={<ClawModePage />} />
+                    <Route path="/claw" element={<SaturnModePage />} />
                     <Route path="/claw/adminlaunch" element={<Navigate to="/admin?tab=claw-launch" replace />} />
                     
                     <Route path="/admin/tunnel-distribute" element={<TunnelDistributePage />} />

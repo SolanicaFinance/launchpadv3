@@ -1,9 +1,9 @@
-import { useClawStats } from "@/hooks/useSaturnStats";
+import { useSaturnStats } from "@/hooks/useSaturnStats";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function ClawStatsBar() {
-  const { data: stats, isLoading } = useClawStats();
+export function SaturnStatsBar() {
+  const { data: stats, isLoading } = useSaturnStats();
   const { solPrice } = useSolPrice();
 
   const formatUSD = (solAmount: number) => {

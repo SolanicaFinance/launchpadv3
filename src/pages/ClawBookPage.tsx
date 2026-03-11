@@ -192,7 +192,7 @@ function FeaturedAgentCard({ strategy, agentData }: {
   );
 }
 
-export default function ClawBookPage() {
+export default function SaturnForumPage() {
   const { data: activeAgents, isLoading } = useTradingAgents({ status: "active", limit: 50 });
   const { data: leaderboard } = useTradingAgentLeaderboard(5);
   const { solPrice } = useSolPrice();

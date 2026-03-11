@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-export function useClawBidCountdown(biddingEndsAt: string | null | undefined) {
+export function useSaturnBidCountdown(biddingEndsAt: string | null | undefined) {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);

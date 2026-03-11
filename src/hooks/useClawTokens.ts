@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-export type ClawTokenSort = "new" | "hot" | "mcap" | "volume";
+export type SaturnTokenSort = "new" | "hot" | "mcap" | "volume";
 
 interface ClawToken {
   id: string;
@@ -30,11 +30,11 @@ interface ClawToken {
 }
 
 interface UseClawTokensOptions {
-  sort?: ClawTokenSort;
+  sort?: SaturnTokenSort;
   limit?: number;
 }
 
-export function useClawTokens(options: UseClawTokensOptions = {}) {
+export function useSaturnTokens(options: UseClawTokensOptions = {}) {
   const { sort = "new", limit = 50 } = options;
 
   return useQuery({

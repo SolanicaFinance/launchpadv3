@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useAdminReports } from "@/hooks/useSaturnReports";
+import { useSaturnAdminReports } from "@/hooks/useSaturnReports";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { formatDistanceToNow } from "date-fns";
@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import "@/styles/forum-theme.css";
 
-export default function ClawBookAdminPage() {
+export default function SaturnForumAdminPage() {
   const { solanaAddress, isAuthenticated, login } = useAuth();
   const { isAdmin, isLoading: isLoadingAdmin } = useIsAdmin(solanaAddress);
   const {
@@ -40,7 +40,7 @@ export default function ClawBookAdminPage() {
     isTogglingPin,
     toggleLock,
     isTogglingLock,
-  } = useAdminReports();
+  } = useSaturnAdminReports();
 
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [moderatorNotes, setModeratorNotes] = useState("");

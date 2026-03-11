@@ -1,25 +1,25 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Target, Zap, Bot, Wallet, TrendingUp } from "lucide-react";
-import { useClawTradingAgents, useClawTradingAgentLeaderboard } from "@/hooks/useSaturnTradingAgents";
+import { useSaturnTradingAgents, useSaturnTradingAgentLeaderboard } from "@/hooks/useSaturnTradingAgents";
 import { TradingAgentCard, TradingAgentCardSkeleton, FearGreedGauge } from "@/components/trading";
 
-export function ClawTradingSection() {
+export function SaturnTradingSection() {
   const [selectedStrategy, setSelectedStrategy] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState<"active" | "funding" | "top">("active");
 
-  const { data: agents, isLoading } = useClawTradingAgents({
+  const { data: agents, isLoading } = useSaturnTradingAgents({
     status: "active",
     strategy: selectedStrategy,
     limit: 12,
   });
 
-  const { data: pendingAgents, isLoading: pendingLoading } = useClawTradingAgents({
+  const { data: pendingAgents, isLoading: pendingLoading } = useSaturnTradingAgents({
     status: "pending",
     limit: 12,
   });
 
-  const { data: leaderboard } = useClawTradingAgentLeaderboard(5);
+  const { data: leaderboard } = useSaturnTradingAgentLeaderboard(5);
 
   const strategies = [
     {

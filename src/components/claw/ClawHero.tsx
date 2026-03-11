@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Wallet, Zap, Code } from "lucide-react";
 
-export function ClawHero() {
+export function SaturnHero() {
   return (
     <section className="relative py-16 md:py-24 text-center">
       {/* Saturn Logo */}

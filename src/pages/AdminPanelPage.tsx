@@ -21,8 +21,8 @@ const FollowerScanPage = lazy(() => import("./FollowerScanPage"));
 const InfluencerRepliesAdminPage = lazy(() => import("./InfluencerRepliesAdminPage"));
 const PromoMentionsAdminPage = lazy(() => import("./PromoMentionsAdminPage"));
 const DeployerDustAdminPage = lazy(() => import("./DeployerDustAdminPage"));
-const ClawBookAdminPage = lazy(() => import("./ClawBookAdminPage"));
-const ClawAdminLaunchPage = lazy(() => import("./ClawAdminLaunchPage"));
+const SaturnForumAdminPage = lazy(() => import("./SaturnForumAdminPage"));
+const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
@@ -180,13 +180,13 @@ export default function AdminPanelPage() {
 
           <TabsContent value="clawbook" className="mt-6">
             <Suspense fallback={<TabLoader />}>
-              <ClawBookAdminPage />
+              <SaturnForumAdminPage />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="claw-launch" className="mt-6">
             <Suspense fallback={<TabLoader />}>
-              <ClawAdminLaunchPage />
+              <SaturnAdminLaunchPage />
             </Suspense>
           </TabsContent>
 

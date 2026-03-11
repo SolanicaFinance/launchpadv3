@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export const MIN_BID_SOL = 5;
 export const BID_INCREMENT_SOL = 0.5;
 
-export function useClawAgentBid(tradingAgentId?: string) {
+export function useSaturnAgentBid(tradingAgentId?: string) {
   const [isPlacingBid, setIsPlacingBid] = useState(false);
 
   const { data: bidStatus, refetch } = useQuery({

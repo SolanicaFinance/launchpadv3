@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useClawCommunities() {
+export function useSaturnCommunities() {
   return useQuery({
     queryKey: ["claw-communities"],
     queryFn: async () => {
@@ -16,7 +16,7 @@ export function useClawCommunities() {
   });
 }
 
-export function useClawPosts(communityId?: string) {
+export function useSaturnForumPosts(communityId?: string) {
   return useQuery({
     queryKey: ["claw-posts", communityId],
     queryFn: async () => {

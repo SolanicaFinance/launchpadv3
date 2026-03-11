@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { CreateTokenModal } from "@/components/launchpad/CreateTokenModal";
 
 interface SubTuna { id: string; name: string; ticker: string; description?: string; iconUrl?: string; memberCount: number; postCount: number; marketCapSol?: number; }
-interface ClawBookSidebarProps { recentSubtunas?: SubTuna[]; className?: string; }
+interface ForumSidebarProps { recentSubtunas?: SubTuna[]; className?: string; }
 
 const navItems = [
   { icon: House, label: "Home", href: "/agents" },
@@ -15,7 +15,7 @@ const navItems = [
   { icon: Robot, label: "All Agents", href: "/agents/leaderboard" },
 ];
 
-export function ClawBookSidebar({ recentSubtunas = [], className }: ClawBookSidebarProps) {
+export function ForumSidebar({ recentSubtunas = [], className }: ForumSidebarProps) {
   const [showCreateToken, setShowCreateToken] = useState(false);
 
   return (

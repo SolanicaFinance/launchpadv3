@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { MatrixBackground } from "@/components/saturn/MatrixBackground";
-import { ClawHero } from "@/components/saturn/ClawHero";
-import { ClawStatsBar } from "@/components/saturn/ClawStatsBar";
-import { ClawAgentSection } from "@/components/saturn/ClawAgentSection";
-import { ClawTokenGrid } from "@/components/saturn/ClawTokenGrid";
-import { ClawTradingSection } from "@/components/saturn/ClawTradingSection";
-import { ClawBribeSection } from "@/components/saturn/ClawBribeSection";
-import { ClawForumSection } from "@/components/saturn/ClawForumSection";
+import { SaturnHero } from "@/components/saturn/SaturnHero";
+import { SaturnStatsBar } from "@/components/saturn/SaturnStatsBar";
+import { SaturnAgentSection } from "@/components/saturn/SaturnAgentSection";
+import { SaturnTokenGrid } from "@/components/saturn/SaturnTokenGrid";
+import { SaturnTradingSection } from "@/components/saturn/SaturnTradingSection";
+import { SaturnBribeSection } from "@/components/saturn/SaturnBribeSection";
+import { SaturnForumSection } from "@/components/saturn/SaturnForumSection";
 import "@/styles/saturn-theme.css";
 import { MatrixContentCard } from "@/components/layout/MatrixContentCard";
 
-export default function ClawModePage() {
+export default function SaturnModePage() {
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
     const original = link?.getAttribute("href");
@@ -116,28 +116,28 @@ function ClawModeContent() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4">
           <MatrixContentCard>
-          <ClawHero />
-          <ClawStatsBar />
+          <SaturnHero />
+          <SaturnStatsBar />
 
           <div id="agents">
-            <ClawAgentSection />
+            <SaturnAgentSection />
           </div>
 
           <div id="tokens">
-            <ClawTokenGrid />
+            <SaturnTokenGrid />
           </div>
 
           <div id="trading">
             <div id="bidding" />
-            <ClawTradingSection />
+            <SaturnTradingSection />
           </div>
 
           <div id="bribe">
-            <ClawBribeSection />
+            <SaturnBribeSection />
           </div>
 
           <div id="forum">
-            <ClawForumSection />
+            <SaturnForumSection />
           </div>
           </MatrixContentCard>
         </main>

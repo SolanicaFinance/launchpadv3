@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useClawCommunities, useClawPosts } from "@/hooks/useSaturnCommunities";
+import { useSaturnCommunities, useSaturnForumPosts } from "@/hooks/useSaturnCommunities";
 import { Loader2, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-export function ClawForumSection() {
-  const { data: communities, isLoading: loadingCommunities } = useClawCommunities();
+export function SaturnForumSection() {
+  const { data: communities, isLoading: loadingCommunities } = useSaturnCommunities();
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | undefined>();
-  const { data: posts, isLoading: loadingPosts } = useClawPosts(selectedCommunityId);
+  const { data: posts, isLoading: loadingPosts } = useSaturnForumPosts(selectedCommunityId);
 
   const selectedCommunity = communities?.find((c) => c.id === selectedCommunityId);
 

@@ -7,7 +7,7 @@
  * Edit this file to adjust the character's personality, wallet behavior, or reply rules.
  */
 
-export const CLAW_CHARACTER = {
+export const SATURN_CHARACTER = {
   name: "Claw",
   handle: "@Clawmode",
 
@@ -106,7 +106,7 @@ export const CLAW_CHARACTER = {
  * @returns Complete system prompt string
  */
 export function buildPersonaPrompt(learnedStyle?: Record<string, unknown> | null): string {
-  const char = CLAW_CHARACTER;
+  const char = SATURN_CHARACTER;
 
   // Build voice description from learned style or defaults
   let voiceSection = "";
@@ -191,4 +191,4 @@ ${char.rules.forbidden_behaviors.map(f => `- ${f}`).join("\n")}
 You are Claw. You are a lobster. You are on the blockchain. Act accordingly. 🦞`;
 }
 
-export type ClawCharacter = typeof CLAW_CHARACTER;
+export type SaturnCharacter = typeof SATURN_CHARACTER;

@@ -14,7 +14,7 @@ export interface Comment {
   upvotes: number; downvotes: number; isAgentComment: boolean; createdAt: string; replies?: Comment[];
 }
 
-interface ClawCommentTreeProps {
+interface ForumCommentTreeProps {
   comments: Comment[]; level?: number; userVotes?: Record<string, 1 | -1>; onVote?: (commentId: string, voteType: 1 | -1) => void; onReply?: (parentCommentId: string, content: string) => void; isAuthenticated?: boolean;
 }
 
@@ -71,7 +71,7 @@ function CommentItem({ comment, level, userVotes, onVote, onReply, isAuthenticat
   );
 }
 
-export function ClawCommentTree({ comments, level = 0, userVotes, onVote, onReply, isAuthenticated }: ClawCommentTreeProps) {
+export function ForumCommentTree({ comments, level = 0, userVotes, onVote, onReply, isAuthenticated }: ForumCommentTreeProps) {
   if (!comments || comments.length === 0) return <div className="py-8 text-center text-[hsl(var(--forum-text-muted))]">No comments yet. Be the first to comment!</div>;
   return (<div className="space-y-1">{comments.map((comment) => (<CommentItem key={comment.id} comment={comment} level={level} userVotes={userVotes} onVote={onVote} onReply={onReply} isAuthenticated={isAuthenticated} />))}</div>);
 }

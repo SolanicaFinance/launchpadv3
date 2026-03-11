@@ -16,7 +16,7 @@ const DEFAULT_LIMIT = 20;
 // Time window for global feed (7 days)
 const GLOBAL_FEED_DAYS = 7;
 
-export function useSubTunaPosts({
+export function useSaturnPosts({
   subtunaId,
   ticker,
   sort = "new",

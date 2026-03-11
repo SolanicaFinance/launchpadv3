@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Users, Article, TrendUp, Rocket } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
-interface SubClawCardProps {
+interface CommunityCardProps {
   id: string;
   name: string;
   ticker: string;
@@ -15,7 +15,7 @@ interface SubClawCardProps {
   className?: string;
 }
 
-export function SubClawCard({ name, ticker, description, iconUrl, memberCount, postCount, marketCapSol, launchpadType, className }: SubClawCardProps) {
+export function CommunityCard({ name, ticker, description, iconUrl, memberCount, postCount, marketCapSol, launchpadType, className }: CommunityCardProps) {
   const isPumpFun = launchpadType === 'pumpfun';
   return (
     <Link to={`/t/${ticker}`} className={cn("forum-card block p-4 hover:border-[hsl(var(--forum-primary))] transition-colors", className)}>

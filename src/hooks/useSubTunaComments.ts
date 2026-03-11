@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Comment } from "@/components/forum/ClawCommentTree";
+import type { Comment } from "@/components/forum/ForumCommentTree";
 
 interface UseSubTunaCommentsOptions {
   postId: string;
   enabled?: boolean;
 }
 
-export function useSubTunaComments({ postId, enabled = true }: UseSubTunaCommentsOptions) {
+export function useSaturnComments({ postId, enabled = true }: UseSubTunaCommentsOptions) {
   const queryClient = useQueryClient();
 
   const commentsQuery = useQuery({
@@ -96,7 +96,7 @@ export function useSubTunaComments({ postId, enabled = true }: UseSubTunaComment
       parentCommentId?: string;
       userId: string;
     }) => {
-      console.log("[useSubTunaComments] Adding comment:", { postId, userId, content: content.slice(0, 50) });
+      console.log("[useSaturnComments] Adding comment:", { postId, userId, content: content.slice(0, 50) });
       
       const { data, error } = await supabase
         .from("subtuna_comments")
@@ -110,11 +110,11 @@ export function useSubTunaComments({ postId, enabled = true }: UseSubTunaComment
         .single();
 
       if (error) {
-        console.error("[useSubTunaComments] Error adding comment:", error);
+        console.error("[useSaturnComments] Error adding comment:", error);
         throw error;
       }
 
-      console.log("[useSubTunaComments] Comment added successfully:", data.id);
+      console.log("[useSaturnComments] Comment added successfully:", data.id);
       return data;
     },
     onSuccess: () => {
@@ -123,7 +123,7 @@ export function useSubTunaComments({ postId, enabled = true }: UseSubTunaComment
       queryClient.invalidateQueries({ queryKey: ["subtuna-post", postId] });
     },
     onError: (error: any) => {
-      console.error("[useSubTunaComments] Mutation error:", error);
+      console.error("[useSaturnComments] Mutation error:", error);
     },
   });
 

@@ -7,7 +7,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-interface ClawPostCardProps {
+interface ForumPostCardProps {
   id: string;
   title: string;
   content?: string;
@@ -29,9 +29,9 @@ interface ClawPostCardProps {
   showSubtuna?: boolean;
 }
 
-export function ClawPostCard({
+export function ForumPostCard({
   id, title, content, imageUrl, postType, upvotes, downvotes, commentCount, isPinned, isAgentPost, createdAt, slug, author, agent, launcherTwitter, subtuna, userVote, onVote, showSubtuna = true,
-}: ClawPostCardProps) {
+}: ForumPostCardProps) {
   const postIdentifier = slug || id;
   const handleShare = async () => {
     const { copyToClipboard } = await import("@/lib/clipboard");

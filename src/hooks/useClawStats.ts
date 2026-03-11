@@ -24,7 +24,7 @@ const DEFAULT_STATS: ClawStats = {
 
 const CACHE_KEY = "claw_stats";
 
-export function useClawStats() {
+export function useSaturnStats() {
   return useQuery({
     queryKey: ["claw-stats"],
     queryFn: async (): Promise<ClawStats> => {
@@ -49,12 +49,12 @@ export function useClawStats() {
       } catch (err) {
         const cached = getCachedData<ClawStats>(CACHE_KEY);
         if (cached) {
-          console.log("[useClawStats] Returning cached stats due to error");
+          console.log("[useSaturnStats] Returning cached stats due to error");
           return cached;
         }
 
         if (err instanceof TimeoutError) {
-          console.log("[useClawStats] Timeout, returning defaults");
+          console.log("[useSaturnStats] Timeout, returning defaults");
           return DEFAULT_STATS;
         }
 

@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { ClawBookLayout } from "@/components/forum/ClawBookLayout";
-import { ClawBookFeed } from "@/components/forum/ClawBookFeed";
-import { ClawBookSidebar } from "@/components/forum/ClawBookSidebar";
+import { ForumLayout } from "@/components/forum/ForumLayout";
+import { ForumFeed } from "@/components/forum/ForumFeed";
+import { ForumSidebar } from "@/components/forum/ForumSidebar";
 import { AgentBadge } from "@/components/forum/AgentBadge";
 import { PumpBadge } from "@/components/forum/PumpBadge";
 import { NoCommunityFound } from "@/components/forum/NoCommunityFound";
@@ -11,38 +11,38 @@ import { NoCommunityFound } from "@/components/forum/NoCommunityFound";
 import { TokenStatsHeader } from "@/components/forum/TokenStatsHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSubTuna, useRecentSubTunas } from "@/hooks/useSaturnForum";
-import { useSubTunaPosts, SortOption } from "@/hooks/useSaturnPosts";
-import { useSubTunaRealtime } from "@/hooks/useSaturnRealtime";
-import { useSubTunaMembership } from "@/hooks/useSaturnMembership";
+import { useSaturnCommunity, useRecentCommunities } from "@/hooks/useSaturnForum";
+import { useSaturnPosts, SortOption } from "@/hooks/useSaturnPosts";
+import { useSaturnRealtime } from "@/hooks/useSaturnRealtime";
+import { useSaturnMembership } from "@/hooks/useSaturnMembership";
 
 import { usePoolState } from "@/hooks/usePoolState";
 import { useAuth } from "@/hooks/useAuth";
-import { useClawTokenData, CLAW_TOKEN_CA } from "@/hooks/useSaturnTokenData";
+import { useSaturnTokenData, SATURN_TOKEN_CA } from "@/hooks/useSaturnTokenData";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Users, Article, TrendUp, ArrowSquareOut, SignIn } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import "@/styles/forum-theme.css";
 
-export default function SubClawPage() {
+export default function SaturnCommunityPage() {
   const { ticker } = useParams<{ ticker: string }>();
   const [sort, setSort] = useState<SortOption>("new");
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
   
 
   const { user, isAuthenticated, profileId, login } = useAuth();
-  const { data: subtuna, isLoading: isLoadingSubtuna } = useSubTuna(ticker);
-  const { posts, isLoading: isLoadingPosts, vote, guestVote } = useSubTunaPosts({
+  const { data: subtuna, isLoading: isLoadingSubtuna } = useSaturnCommunity(ticker);
+  const { posts, isLoading: isLoadingPosts, vote, guestVote } = useSaturnPosts({
     subtunaId: subtuna?.id,
     ticker,
     sort,
   });
-  const { data: recentSubtunas } = useRecentSubTunas();
+  const { data: recentSubtunas } = useRecentCommunities();
   
   
   // Fetch live CLAW token data for the /t/TUNA community
   const isClawPage = ticker?.toUpperCase() === "CLAW";
-  const { data: clawLiveData } = useClawTokenData({ enabled: isClawPage });
+  const { data: clawLiveData } = useSaturnTokenData({ enabled: isClawPage });
   
   const { data: poolState } = usePoolState({
     mintAddress: subtuna?.funToken?.mintAddress,
@@ -81,12 +81,12 @@ export default function SubClawPage() {
     leave, 
     isJoining, 
     isLeaving 
-  } = useSubTunaMembership({
+  } = useSaturnMembership({
     subtunaId: subtuna?.id,
     userId: profileId || undefined,
   });
 
-  useSubTunaRealtime({ subtunaId: subtuna?.id, enabled: !!subtuna?.id });
+  useSaturnRealtime({ subtunaId: subtuna?.id, enabled: !!subtuna?.id });
 
   const handleVote = useCallback((postId: string, voteType: 1 | -1) => {
     setUserVotes((prev) => {
@@ -135,13 +135,13 @@ export default function SubClawPage() {
     return (
       <div className="forum-theme">
         <LaunchpadLayout showKingOfTheHill={false}>
-          <ClawBookLayout leftSidebar={<ClawBookSidebar />}>
+          <ForumLayout leftSidebar={<ForumSidebar />}>
             <div className="space-y-4">
               <Skeleton className="h-48 w-full" />
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-64 w-full" />
             </div>
-          </ClawBookLayout>
+          </ForumLayout>
         </LaunchpadLayout>
       </div>
     );
@@ -151,9 +151,9 @@ export default function SubClawPage() {
     return (
       <div className="forum-theme">
         <LaunchpadLayout showKingOfTheHill={false}>
-          <ClawBookLayout leftSidebar={<ClawBookSidebar />}>
+          <ForumLayout leftSidebar={<ForumSidebar />}>
             <NoCommunityFound ticker={ticker} />
-          </ClawBookLayout>
+          </ForumLayout>
         </LaunchpadLayout>
       </div>
     );
@@ -310,8 +310,8 @@ export default function SubClawPage() {
   return (
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
-        <ClawBookLayout
-          leftSidebar={<ClawBookSidebar recentSubtunas={recentSubtunas} />}
+        <ForumLayout
+          leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}
           rightSidebar={<RightSidebar />}
         >
           {/* Banner */}
@@ -416,7 +416,7 @@ export default function SubClawPage() {
 
           {/* Feed */}
           <div className="mt-4">
-            <ClawBookFeed
+            <ForumFeed
               posts={posts}
               isLoading={isLoadingPosts}
               showSubtuna={false}
@@ -426,7 +426,7 @@ export default function SubClawPage() {
             />
           </div>
 
-        </ClawBookLayout>
+        </ForumLayout>
       </LaunchpadLayout>
     </div>
   );

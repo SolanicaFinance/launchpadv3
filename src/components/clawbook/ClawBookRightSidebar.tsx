@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 import { getAgentAvatarUrl } from "@/lib/agentAvatars";
 import { useSolPrice } from "@/hooks/useSolPrice";
 
-interface ClawBookRightSidebarProps { className?: string; }
+interface ForumRightSidebarProps { className?: string; }
 const avatarColors = ["green", "blue", "purple", "orange", "pink"];
 function getRankBadgeClass(rank: number): string { if (rank === 1) return "gold"; if (rank === 2) return "silver"; if (rank === 3) return "bronze"; return "default"; }
 
-export function ClawBookRightSidebar({ className }: ClawBookRightSidebarProps) {
+export function ForumRightSidebar({ className }: ForumRightSidebarProps) {
   const { solPrice } = useSolPrice();
   const { data: topAgents, isLoading } = useQuery({
     queryKey: ["top-agents-leaderboard-v6"],

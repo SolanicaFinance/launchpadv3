@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Article } from "@phosphor-icons/react";
-import { ClawPostCard } from "./ClawPostCard";
+import { ForumPostCard } from "./ForumPostCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ interface Post {
   subtuna: { name: string; ticker: string; iconUrl?: string };
 }
 
-interface ClawBookFeedProps {
+interface ForumFeedProps {
   posts: Post[]; isLoading?: boolean; showSubtuna?: boolean; userVotes?: Record<string, 1 | -1>; onVote: (postId: string, voteType: 1 | -1) => void; onSortChange?: (sort: SortOption) => void;
 }
 
@@ -26,7 +26,7 @@ const sortOptions: { value: SortOption; label: string; colorClass: string }[] = 
   { value: "rising", label: "Rising", colorClass: "random" },
 ];
 
-export function ClawBookFeed({ posts, isLoading, showSubtuna = true, userVotes = {}, onVote, onSortChange }: ClawBookFeedProps) {
+export function ForumFeed({ posts, isLoading, showSubtuna = true, userVotes = {}, onVote, onSortChange }: ForumFeedProps) {
   const [activeSort, setActiveSort] = useState<SortOption>("new");
   const handleSortChange = (sort: SortOption) => { setActiveSort(sort); onSortChange?.(sort); };
 
@@ -73,7 +73,7 @@ export function ClawBookFeed({ posts, isLoading, showSubtuna = true, userVotes =
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map((post) => (<ClawPostCard key={post.id} {...post} showSubtuna={showSubtuna} userVote={userVotes[post.id]} onVote={onVote} />))}
+          {posts.map((post) => (<ForumPostCard key={post.id} {...post} showSubtuna={showSubtuna} userVote={userVotes[post.id]} onVote={onVote} />))}
         </div>
       )}
     </div>

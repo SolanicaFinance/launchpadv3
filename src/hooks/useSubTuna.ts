@@ -44,7 +44,7 @@ interface SubTuna {
   };
 }
 
-export function useSubTuna(ticker?: string) {
+export function useSaturnCommunity(ticker?: string) {
   return useQuery({
     queryKey: ["subtuna", ticker],
     queryFn: async (): Promise<SubTuna | null> => {
@@ -109,7 +109,7 @@ export function useSubTuna(ticker?: string) {
             name: "CLAW",
             imageUrl: "/saturn-logo.png",
             mintAddress: "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",
-            // Price/market cap fetched separately via useClawTokenData
+            // Price/market cap fetched separately via useSaturnTokenData
             marketCapSol: undefined,
             priceSol: undefined,
             priceChange24h: undefined,
@@ -195,7 +195,7 @@ export function useSubTuna(ticker?: string) {
   });
 }
 
-export function useRecentSubTunas(limit = 10) {
+export function useRecentCommunities(limit = 10) {
   return useQuery({
     queryKey: ["recent-subtunas-v5", limit],
     queryFn: async () => {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Timer, TrendingUp, Gavel, Copy, Check, ArrowUpRight } from "lucide-react";
-import { useClawBidCountdown } from "@/hooks/useSaturnBidCountdown";
-import { useClawAgentBid, MIN_BID_SOL, BID_INCREMENT_SOL } from "@/hooks/useSaturnAgentBid";
+import { useSaturnBidCountdown } from "@/hooks/useSaturnBidCountdown";
+import { useSaturnAgentBid, MIN_BID_SOL, BID_INCREMENT_SOL } from "@/hooks/useSaturnAgentBid";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 
@@ -19,8 +19,8 @@ export function ClawBidCard({ tradingAgentId, agentName, biddingEndsAt, isOwned,
   const [bidAmount, setBidAmount] = useState("");
   const [txSignature, setTxSignature] = useState("");
   const [copied, setCopied] = useState(false);
-  const { timeLeft, isExpired } = useClawBidCountdown(biddingEndsAt);
-  const { bidStatus, isPlacingBid, placeBid } = useClawAgentBid(tradingAgentId);
+  const { timeLeft, isExpired } = useSaturnBidCountdown(biddingEndsAt);
+  const { bidStatus, isPlacingBid, placeBid } = useSaturnAgentBid(tradingAgentId);
 
   const handleCopyAddress = async () => {
     const addr = bidStatus?.agent?.bidWalletAddress || bidWalletAddress;

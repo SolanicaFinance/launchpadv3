@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetPortal, SheetOverlay, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 
-interface ClawBookLayoutProps {
+interface ForumLayoutProps {
   leftSidebar?: ReactNode;
   rightSidebar?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-export function ClawBookLayout({ leftSidebar, rightSidebar, children, className }: ClawBookLayoutProps) {
+export function ForumLayout({ leftSidebar, rightSidebar, children, className }: ForumLayoutProps) {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
 

@@ -6,7 +6,7 @@ interface UseSubTunaMembershipOptions {
   userId?: string;
 }
 
-export function useSubTunaMembership({ subtunaId, userId }: UseSubTunaMembershipOptions) {
+export function useSaturnMembership({ subtunaId, userId }: UseSubTunaMembershipOptions) {
   const queryClient = useQueryClient();
 
   // Check if user is a member

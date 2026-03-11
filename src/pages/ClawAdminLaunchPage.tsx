@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ClawAdminLaunchPanel } from "@/components/saturn/ClawAdminLaunchPanel";
+import { SaturnAdminLaunchPanel } from "@/components/saturn/SaturnAdminLaunchPanel";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-export default function ClawAdminLaunchPage() {
+export default function SaturnAdminLaunchPage() {
   const [authorized, setAuthorized] = useState(false);
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export default function ClawAdminLaunchPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to Saturn Trade
         </button>
-        <ClawAdminLaunchPanel />
+        <SaturnAdminLaunchPanel />
       </div>
     </div>
   );

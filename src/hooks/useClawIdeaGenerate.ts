@@ -9,7 +9,7 @@ interface ClawIdea {
   theme: string;
 }
 
-export function useClawIdeaGenerate() {
+export function useSaturnIdeaGenerate() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [idea, setIdea] = useState<ClawIdea | null>(null);
   const [error, setError] = useState<string | null>(null);

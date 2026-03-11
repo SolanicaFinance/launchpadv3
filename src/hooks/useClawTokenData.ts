@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 // Official CLAW token CA on Solana
-export const CLAW_TOKEN_CA = "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump";
+export const SATURN_TOKEN_CA = "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump";
 
-export interface ClawTokenData {
+export interface SaturnTokenData {
   price: number;
   change24h: number;
   marketCap: number;
@@ -12,18 +12,18 @@ export interface ClawTokenData {
   timestamp: number;
 }
 
-interface UseClawTokenDataOptions {
+interface UseSaturnTokenDataOptions {
   enabled?: boolean;
 }
 
-export function useClawTokenData(options: UseClawTokenDataOptions = {}) {
+export function useSaturnTokenData(options: UseSaturnTokenDataOptions = {}) {
   const { enabled = true } = options;
 
   return useQuery({
-    queryKey: ["claw-token-data", CLAW_TOKEN_CA],
-    queryFn: async (): Promise<ClawTokenData> => {
+    queryKey: ["claw-token-data", SATURN_TOKEN_CA],
+    queryFn: async (): Promise<SaturnTokenData> => {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dexscreener-proxy?token=${CLAW_TOKEN_CA}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dexscreener-proxy?token=${SATURN_TOKEN_CA}`,
         {
           headers: {
             "Content-Type": "application/json",

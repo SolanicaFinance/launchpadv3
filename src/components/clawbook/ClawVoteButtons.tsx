@@ -1,11 +1,11 @@
 import { ArrowFatUp, ArrowFatDown } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
-interface ClawVoteButtonsProps {
+interface ForumVoteButtonsProps {
   upvotes: number; downvotes: number; userVote?: 1 | -1 | null; onVote: (voteType: 1 | -1) => void; size?: "sm" | "md" | "lg"; disabled?: boolean;
 }
 
-export function ClawVoteButtons({ upvotes, downvotes, userVote, onVote, size = "md", disabled = false }: ClawVoteButtonsProps) {
+export function ForumVoteButtons({ upvotes, downvotes, userVote, onVote, size = "md", disabled = false }: ForumVoteButtonsProps) {
   const score = upvotes - downvotes;
   const iconSize = size === "sm" ? 16 : size === "lg" ? 24 : 20;
   return (
