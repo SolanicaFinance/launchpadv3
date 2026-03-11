@@ -67,14 +67,12 @@ export function WalletTrackerPanel({
     if (!profileId) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("tracked_wallets")
-        .select("*")
-        .eq("user_profile_id", profileId)
-        .order("created_at", { ascending: false });
+      const { data: resp, error: fnError } = await supabase.functions.invoke("wallet-tracker-manage", {
+        body: { action: "list", user_profile_id: profileId },
+      });
 
-      if (error) throw error;
-      const tracked = (data || []) as TrackedWallet[];
+      if (fnError) throw fnError;
+      const tracked = (resp?.data || []) as TrackedWallet[];
 
       // Fetch balances in parallel
       const connection = new Connection(getRpcUrl(), "confirmed");
@@ -105,12 +103,16 @@ export function WalletTrackerPanel({
     if (!profileId || !newAddr.trim()) return;
     setAdding(true);
     try {
-      const { error } = await supabase.from("tracked_wallets").insert({
-        user_profile_id: profileId,
-        wallet_address: newAddr.trim(),
-        wallet_label: newLabel.trim() || null,
+      const { data: resp, error: fnError } = await supabase.functions.invoke("wallet-tracker-manage", {
+        body: {
+          action: "add",
+          user_profile_id: profileId,
+          wallet_address: newAddr.trim(),
+          wallet_label: newLabel.trim() || null,
+        },
       });
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
       setNewAddr("");
       setNewLabel("");
       setShowAddForm(false);
@@ -125,7 +127,9 @@ export function WalletTrackerPanel({
   const handleRemoveAll = async () => {
     if (!profileId) return;
     try {
-      await supabase.from("tracked_wallets").delete().eq("user_profile_id", profileId);
+      await supabase.functions.invoke("wallet-tracker-manage", {
+        body: { action: "clear", user_profile_id: profileId },
+      });
       setWallets([]);
     } catch (err) {
       console.error("Failed to remove wallets:", err);
@@ -134,7 +138,9 @@ export function WalletTrackerPanel({
 
   const handleRemove = async (id: string) => {
     try {
-      await supabase.from("tracked_wallets").delete().eq("id", id);
+      await supabase.functions.invoke("wallet-tracker-manage", {
+        body: { action: "remove", user_profile_id: profileId, wallet_id: id },
+      });
       setWallets((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       console.error("Failed to remove wallet:", err);

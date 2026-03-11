@@ -69,14 +69,13 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
     queryFn: async () => {
       if (!profileId) return [];
       
-      const { data, error } = await supabase
-        .from('tracked_wallets')
-        .select('*')
-        .eq('user_profile_id', profileId)
-        .order('created_at', { ascending: false });
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: { action: 'list', user_profile_id: profileId },
+      });
 
-      if (error) throw error;
-      return data as TrackedWallet[];
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
+      return (resp?.data || []) as TrackedWallet[];
     },
     enabled: !!profileId,
   });
@@ -146,13 +145,17 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
 
     setIsAdding(true);
     try {
-      const { error } = await supabase.from('tracked_wallets').insert({
-        user_profile_id: profileId,
-        wallet_address: newWalletAddress,
-        wallet_label: newWalletLabel || null,
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: {
+          action: 'add',
+          user_profile_id: profileId,
+          wallet_address: newWalletAddress,
+          wallet_label: newWalletLabel || null,
+        },
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
 
       toast({ title: "Wallet added!" });
       setNewWalletAddress('');
@@ -171,13 +174,14 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
   };
 
   const removeWallet = async (id: string) => {
+    if (!profileId) return;
     try {
-      const { error } = await supabase
-        .from('tracked_wallets')
-        .delete()
-        .eq('id', id);
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: { action: 'remove', user_profile_id: profileId, wallet_id: id },
+      });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
       toast({ title: "Wallet removed" });
       queryClient.invalidateQueries({ queryKey: ['tracked-wallets'] });
     } catch (error) {
@@ -186,13 +190,14 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
   };
 
   const toggleNotifications = async (id: string, enabled: boolean) => {
+    if (!profileId) return;
     try {
-      const { error } = await supabase
-        .from('tracked_wallets')
-        .update({ notifications_enabled: enabled })
-        .eq('id', id);
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: { action: 'update', user_profile_id: profileId, wallet_id: id, updates: { notifications_enabled: enabled } },
+      });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
       queryClient.invalidateQueries({ queryKey: ['tracked-wallets'] });
     } catch (error) {
       toast({ title: "Failed to update", variant: "destructive" });
@@ -200,13 +205,14 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
   };
 
   const toggleCopyTrading = async (id: string, enabled: boolean) => {
+    if (!profileId) return;
     try {
-      const { error } = await supabase
-        .from('tracked_wallets')
-        .update({ is_copy_trading_enabled: enabled })
-        .eq('id', id);
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: { action: 'update', user_profile_id: profileId, wallet_id: id, updates: { is_copy_trading_enabled: enabled } },
+      });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
       toast({ title: enabled ? "Copy trading enabled" : "Copy trading disabled" });
       queryClient.invalidateQueries({ queryKey: ['tracked-wallets'] });
     } catch (error) {

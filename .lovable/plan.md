@@ -1,32 +1,45 @@
 
 
-## Fix: `tracked_wallets` RLS Policy Blocking Inserts
+## Two Issues to Fix
 
-### Root Cause
-The `tracked_wallets` table has an RLS policy: `auth.uid() = user_profile_id`. But this app uses **Privy** for authentication — not Supabase Auth. There is no Supabase auth session, so `auth.uid()` is always `null`, and every insert/select/update/delete from the frontend fails with a 401.
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-This same problem likely affects all tables using `auth.uid()` in RLS policies, but tables like `profiles` work because they're accessed via the `sync-privy-user` edge function which uses the **service role key** (bypasses RLS).
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-### Fix Approach
-Since there is no Supabase Auth session and `auth.uid()` will never return a value, the `tracked_wallets` operations need to go through an **edge function** that uses the service role key — matching the pattern already established by `sync-privy-user`.
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**Create edge function: `wallet-tracker-manage`**
-- Accepts actions: `add`, `remove`, `list`, `update`, `clear`
-- Validates the Privy user identity (via `profileId` passed from the frontend, matching the Privy DID → UUID pattern)
-- Uses the service role Supabase client to perform CRUD on `tracked_wallets`
-- All operations scoped to the user's `user_profile_id`
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-**Update frontend files:**
-- `WalletTrackerPanel.tsx` — replace direct `supabase.from('tracked_wallets')` calls with `supabase.functions.invoke('wallet-tracker-manage', ...)`
-- `CopyTrading.tsx` — same replacement for its tracked wallet operations
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### Files to Create
-- `supabase/functions/wallet-tracker-manage/index.ts`
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-### Files to Edit
-- `src/components/layout/WalletTrackerPanel.tsx` — use edge function instead of direct table access
-- `src/components/launchpad/CopyTrading.tsx` — use edge function instead of direct table access
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-### Config
-- Register `wallet-tracker-manage` in `supabase/config.toml` with `verify_jwt = false`
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
