@@ -17,6 +17,7 @@ import { useWalletHoldings } from "@/hooks/useWalletHoldings";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { resolveRpcUrl } from "@/hooks/useSolanaWallet";
 
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();
