@@ -206,6 +206,7 @@ const App = () => (
         </EvmWalletProvider>
       </ChainProvider>
     </PrivyProviderWrapper>
+    </BrandingProvider>
   </QueryClientProvider>
 );
 
