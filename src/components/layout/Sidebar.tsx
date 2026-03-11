@@ -118,7 +118,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
       {/* Create Token CTA */}
       <div className={cn("space-y-2", isMobile ? "pb-14 px-3" : "pb-20 px-1.5 flex flex-col items-center")}>
         <Link
-          to="/?create=1"
+          to="/launchpad?create=1"
           onClick={onLinkClick}
           className={cn(
             "btn-gradient-green flex items-center justify-center rounded-sm font-bold",

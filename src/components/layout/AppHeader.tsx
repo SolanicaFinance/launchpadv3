@@ -113,7 +113,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
         )}
 
         <Link
-          to="/?create=1"
+          to="/launchpad?create=1"
           className="hidden sm:flex items-center gap-1 h-7 px-3 rounded-sm text-[11px] font-bold btn-gradient-green flex-shrink-0"
         >
           <Plus className="h-3 w-3" />
