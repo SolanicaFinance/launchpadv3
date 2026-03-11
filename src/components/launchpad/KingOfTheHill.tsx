@@ -476,8 +476,10 @@ export function KingOfTheHill() {
         </div>
       </div>
 
-      {/* Cards Row */}
-      <div className="flex flex-col md:flex-row gap-4">
+      {/* Cards Row — horizontal scroll on mobile */}
+      <div className="flex flex-row gap-3 md:gap-4 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide [&>*]:snap-start [&>*]:min-w-[280px] [&>*]:flex-shrink-0 md:[&>*]:min-w-0 md:[&>*]:flex-shrink"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {isLoading
           ? [1, 2, 3].map(i => <KingCardSkeleton key={i} />)
           : tokens?.map((t, i) => <KingCard key={t.id} token={t} rank={i + 1} quickBuyAmount={quickBuyAmount} sparklineData={t.mint_address ? sparklines?.[t.mint_address] : undefined} />)

@@ -86,17 +86,17 @@ export default function TradingAgentsShowcase() {
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-lg ${s.iconBg} flex items-center justify-center`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-lg ${s.iconBg} flex items-center justify-center flex-shrink-0`}>
                     <Icon className={`h-4 w-4 ${s.iconColor}`} />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">{s.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${s.badgeColor}`}>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-foreground truncate mb-1">{s.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border whitespace-nowrap ${s.badgeColor}`}>
                         {s.badge}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">Risk: {s.riskLevel}</span>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">Risk: {s.riskLevel}</span>
                     </div>
                   </div>
                 </div>

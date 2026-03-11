@@ -89,8 +89,8 @@ export function JustLaunched() {
 
   return (
     <div className="w-full">
-      {/* Section header */}
-      <div className="flex items-center gap-2 mb-2">
+      {/* Section header - hidden on mobile since parent already shows it */}
+      <div className="hidden sm:flex items-center gap-2 mb-2">
         <Rocket className="w-3.5 h-3.5 text-primary" />
         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           Just Launched

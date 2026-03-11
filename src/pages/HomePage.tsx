@@ -167,7 +167,7 @@ export default function HomePage() {
         {/* ═══ Live Pulse Section ═══ */}
         <section className="max-w-7xl mx-auto px-4 py-6">
           <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <PulseColumn title="⚡ New Pairs" tokens={limitedNewPairs} loading={codexLoading} />
             <PulseColumn title="🔥 Final Stretch" tokens={limitedCompleting} loading={codexLoading} />
             <PulseColumn title="🚀 Migrated" tokens={limitedGraduated} loading={codexLoading} />
