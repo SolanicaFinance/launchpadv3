@@ -7,6 +7,11 @@ import meteoraIcon from "@/assets/meteora-icon.svg";
 import bagsIcon from "@/assets/bags-icon.ico";
 import moonshotIcon from "@/assets/moonshot-icon.ico";
 import raydiumIcon from "@/assets/raydium-icon.ico";
+import orcaIcon from "@/assets/orca-icon.png";
+import jupiterIcon from "@/assets/jupiter-icon.svg";
+import phoenixIcon from "@/assets/phoenix-icon.png";
+import lifinityIcon from "@/assets/lifinity-icon.ico";
+import pumpswapIcon from "@/assets/pumpswap-icon.png";
 
 const LAUNCHPAD_ICONS: Record<string, string> = {
   pumpfun: pumpfunPill,
@@ -22,13 +27,39 @@ const LAUNCHPAD_ICONS: Record<string, string> = {
 
 const PROTOCOL_ICONS: Record<string, string> = {
   "Raydium": raydiumIcon,
-  "Orca": meteoraIcon,
-  "Jupiter": pumpfunPill,
+  "Orca": orcaIcon,
+  "Orca DEX": orcaIcon,
+  "Jupiter": jupiterIcon,
+  "Jupiter Perps": jupiterIcon,
   "Meteora": meteoraIcon,
+  "Meteora DLMM": meteoraIcon,
   "Pump.fun": pumpfunPill,
-  "Phoenix": raydiumIcon,
-  "Lifinity": meteoraIcon,
+  "PumpSwap": pumpswapIcon,
+  "Pumpswap": pumpswapIcon,
+  "Phoenix": phoenixIcon,
+  "Lifinity": lifinityIcon,
+  "Lifinity V2": lifinityIcon,
+  "SolFi": raydiumIcon,
+  "SolFi V2": raydiumIcon,
+  "Raydium AMM": raydiumIcon,
+  "Raydium CLMM": raydiumIcon,
+  "Raydium CPMM": raydiumIcon,
 };
+
+/** Fuzzy-match protocol name to icon */
+function getProtocolIcon(name: string): string {
+  if (PROTOCOL_ICONS[name]) return PROTOCOL_ICONS[name];
+  const lower = name.toLowerCase();
+  if (lower.includes("raydium")) return raydiumIcon;
+  if (lower.includes("orca")) return orcaIcon;
+  if (lower.includes("jupiter") || lower.includes("jup")) return jupiterIcon;
+  if (lower.includes("meteora")) return meteoraIcon;
+  if (lower.includes("pump")) return pumpswapIcon;
+  if (lower.includes("phoenix")) return phoenixIcon;
+  if (lower.includes("lifinity")) return lifinityIcon;
+  if (lower.includes("solfi")) return raydiumIcon;
+  return raydiumIcon;
+}
 
 const TIME_TABS = ["5m", "1h", "6h", "24h"] as const;
 
@@ -215,7 +246,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topProtocols || []).length > 0 ? (
             data!.topProtocols.map((p, i) => (
-              <IconCard key={i} icon={PROTOCOL_ICONS[p.name] || raydiumIcon} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
+              <IconCard key={i} icon={getProtocolIcon(p.name)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
