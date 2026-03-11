@@ -2071,7 +2071,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
 
         {/* Phantom Mode */}
         {generatorMode === "phantom" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {!phantomWallet.isConnected ? (
               <button
                 onClick={phantomWallet.connect}
@@ -2082,9 +2082,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               </button>
             ) : (
               <>
-                <div className="flex items-center justify-between p-3.5 rounded-xl phantom-wallet-pill">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.5)" }} />
+                {/* Wallet Pill */}
+                <div className="flex items-center justify-between p-4 rounded-xl phantom-wallet-pill">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#22c55e", boxShadow: "0 0 10px rgba(34,197,94,0.5)" }} />
                     <span className="text-sm font-mono font-semibold tracking-tight text-white/90">
                       {phantomWallet.address?.slice(0, 4)}...{phantomWallet.address?.slice(-4)}
                     </span>
@@ -2094,17 +2095,18 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                   </div>
                   <button
                     onClick={phantomWallet.disconnect}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer phantom-disconnect-btn"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer phantom-disconnect-btn"
                   >
                     Disconnect
                   </button>
                 </div>
 
-                <div className="space-y-2 phantom-slider">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/40 uppercase tracking-wider font-medium text-[10px]">Trading Fee</span>
+                {/* Trading Fee */}
+                <div className="space-y-3 phantom-slider">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Trading Fee</span>
                     <span
-                      className={`font-bold text-sm ${
+                      className={`font-bold text-base font-mono ${
                         phantomTradingFee >= 900
                           ? "text-interaction-like"
                           : phantomTradingFee >= 600
@@ -2126,7 +2128,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     min={10}
                     max={1000}
                     step={10}
-                    trackClassName="bg-white/[0.06]"
+                    className="phantom-slider-thick"
+                    trackClassName="bg-white/[0.06] h-2.5"
                     rangeClassName={
                       phantomTradingFee >= 900
                         ? "bg-interaction-like"
@@ -2138,7 +2141,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                               ? "bg-warning"
                               : "bg-primary"
                     }
-                    thumbClassName={
+                    thumbClassName={`w-6 h-6 ${
                       phantomTradingFee >= 900
                         ? "border-interaction-like"
                         : phantomTradingFee >= 600
@@ -2148,16 +2151,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                             : phantomTradingFee >= 300
                               ? "border-warning"
                               : "border-primary"
-                    }
+                    }`}
                   />
 
-                  <div className="flex justify-between text-[10px] text-white/20">
+                  <div className="flex justify-between text-[10px] text-white/20 font-mono">
                     <span>0.1%</span>
                     <span>10%</span>
                   </div>
 
                   {phantomTradingFee >= 600 && (
-                    <div className="flex items-start gap-2 rounded-xl px-3 py-2 phantom-warning-card">
+                    <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 phantom-warning-card">
                       <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
                       <p className="text-xs leading-snug text-white/50">
                         <span className="font-semibold text-destructive">Warning:</span>{" "}
@@ -2167,11 +2170,14 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                   )}
                 </div>
 
-                {/* Dev Buy - Atomic with pool creation to prevent frontrunning */}
-                <div className="space-y-3 p-4 rounded-xl phantom-devbuy-card">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/40 uppercase tracking-wider font-medium text-[10px]">Dev Buy (optional)</span>
-                    <span className="font-bold text-sm text-primary">{phantomDevBuySol} SOL</span>
+                {/* Neon divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+                {/* Dev Buy */}
+                <div className="space-y-3 p-5 rounded-xl phantom-devbuy-card">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Dev Buy (optional)</span>
+                    <span className="font-bold text-base font-mono text-primary">{phantomDevBuySol} SOL</span>
                   </div>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -2206,8 +2212,11 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                   </p>
                 </div>
 
+                {/* Neon divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
-                <div className="flex gap-1 p-1 rounded-xl phantom-mode-tabs">
+                {/* Mode Tabs */}
+                <div className="flex gap-1 p-1.5 rounded-xl phantom-mode-tabs">
                   {[
                     { id: "random" as const, label: "Random", icon: Shuffle },
                     { id: "describe" as const, label: "Describe", icon: Sparkles },
@@ -2217,7 +2226,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <button
                       key={subMode.id}
                       onClick={() => setPhantomSubMode(subMode.id)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs rounded-lg cursor-pointer phantom-mode-tab ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs rounded-lg cursor-pointer phantom-mode-tab ${
                         phantomSubMode === subMode.id ? "phantom-mode-tab-active" : "text-white/30"
                       } ${subMode.id === "custom" ? "phantom-mode-tab-custom" : ""}`}
                     >
@@ -2260,7 +2269,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       onChange={(e) => setPhantomDescribePrompt(e.target.value)}
                       placeholder="e.g., A lobster astronaut riding a rocket made of gold coins..."
                       maxLength={500}
-                      className="w-full min-h-[80px] rounded-xl p-4 text-sm resize-none phantom-glass-textarea"
+                      className="w-full min-h-[90px] rounded-xl p-4 text-sm resize-none phantom-glass-textarea"
                     />
                     <button
                       onClick={handlePhantomDescribeGenerate}
@@ -2292,7 +2301,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       onChange={(e) => setPhantomRealisticPrompt(e.target.value)}
                       placeholder="e.g., A golden retriever wearing a tiny top hat in a park..."
                       maxLength={500}
-                      className="w-full min-h-[80px] rounded-xl p-4 text-sm resize-none phantom-glass-textarea"
+                      className="w-full min-h-[90px] rounded-xl p-4 text-sm resize-none phantom-glass-textarea"
                     />
                     <button
                       onClick={handlePhantomRealisticGenerate}
@@ -2316,45 +2325,104 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                 )}
 
 
-                {/* Token Preview & Form (shown for all sub-modes after generation or for custom) */}
+                {/* Token Preview & Form */}
                 {!isPhantomGenerating && (phantomSubMode === "custom" || phantomMeme || phantomToken.name) && (
                   <>
-                    <div className="gate-token-preview">
-                      <div className="gate-token-preview-avatar">
-                        {phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl ? (
-                          <img src={phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl} alt="Token" className="w-full h-full object-cover" />
-                        ) : (
-                          <Bot className="h-8 w-8 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="gate-token-preview-info space-y-2">
+                    {/* Premium Image Upload Area */}
+                    <div className="phantom-image-upload-area">
+                      {phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl ? (
+                        <div className="relative w-full h-full group">
+                          <img
+                            src={phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl}
+                            alt="Token"
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
+                            <label className="cursor-pointer text-white/80 text-xs font-medium flex items-center gap-1.5 hover:text-white transition-colors">
+                              <Image className="h-4 w-4" />
+                              Change
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhantomImageChange}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setPhantomImageFile(null);
+                              setPhantomImagePreview(null);
+                              if (phantomMeme) {
+                                setPhantomMeme({ ...phantomMeme, imageUrl: "" });
+                              }
+                              setPhantomToken({ ...phantomToken, imageUrl: "" });
+                            }}
+                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-destructive/80 transition-all duration-200 hover:scale-110 z-10"
+                          >
+                            <span className="text-xs font-bold">✕</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="w-full h-full flex flex-col items-center justify-center gap-2 cursor-pointer group">
+                          <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-white/[0.08] transition-colors duration-200">
+                            <Image className="h-5 w-5 text-white/25 group-hover:text-primary/60 transition-colors" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[11px] text-white/40 font-medium">Upload PNG/JPG/SVG</p>
+                            <p className="text-[9px] text-white/20 mt-0.5">(max 5MB)</p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhantomImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Token Name + Ticker */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-5 w-5 text-white/30" />
+                        </div>
                         <Input
                           value={phantomToken.name}
                           onChange={(e) => setPhantomToken({ ...phantomToken, name: e.target.value.slice(0, 32) })}
-                          className="phantom-glass-input h-8 rounded-lg"
+                          className="phantom-glass-input h-10 rounded-xl flex-1"
                           placeholder="Token name"
                           maxLength={32}
                         />
-                        <div className="flex items-center gap-1">
-                          <span className="text-primary text-sm">$</span>
-                          <Input
-                            value={phantomToken.ticker}
-                            onChange={(e) => setPhantomToken({ ...phantomToken, ticker: e.target.value.toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 10) })}
-                            className="phantom-glass-input h-7 w-28 font-mono rounded-lg"
-                            placeholder="TICKER"
-                            maxLength={10}
-                          />
-                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 pl-[52px]">
+                        <span className="text-primary text-sm font-bold">$</span>
+                        <Input
+                          value={phantomToken.ticker}
+                          onChange={(e) => setPhantomToken({ ...phantomToken, ticker: e.target.value.toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 10) })}
+                          className="phantom-glass-input h-9 w-32 font-mono rounded-lg"
+                          placeholder="TICKER"
+                          maxLength={10}
+                        />
                       </div>
                     </div>
 
-                    <Textarea
-                      value={phantomToken.description}
-                      onChange={(e) => setPhantomToken({ ...phantomToken, description: e.target.value })}
-                      placeholder="Description (optional)"
-                      className="phantom-glass-textarea rounded-xl"
-                      maxLength={500}
-                    />
+                    {/* Description with char counter */}
+                    <div className="space-y-1">
+                      <Textarea
+                        value={phantomToken.description}
+                        onChange={(e) => setPhantomToken({ ...phantomToken, description: e.target.value })}
+                        placeholder="Description (optional)"
+                        className="phantom-glass-textarea rounded-xl min-h-[80px]"
+                        maxLength={500}
+                      />
+                      {phantomToken.description.length > 0 && (
+                        <p className="text-right text-[9px] text-white/20 font-mono pr-1">
+                          {phantomToken.description.length}/500
+                        </p>
+                      )}
+                    </div>
 
                     {/* Social links - collapsible */}
                     <details className="group phantom-social-details">
@@ -2362,7 +2430,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         <Globe className="h-3 w-3" />
                         <span>Add Social Links (optional)</span>
                       </summary>
-                      <div className="mt-2 space-y-2 pl-5">
+                      <div className="mt-3 space-y-2.5 pl-5">
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4 text-white/20 flex-shrink-0" />
                           <Input
@@ -2393,13 +2461,14 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       </div>
                     </details>
 
-                    <Input type="file" accept="image/*" onChange={handlePhantomImageChange} className="phantom-file-upload text-xs rounded-xl" />
+                    {/* Neon divider */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
-
+                    {/* Launch Button */}
                     <button
                       onClick={() => handlePhantomLaunch()}
                       disabled={isPhantomLaunching || !phantomToken.name.trim() || !phantomToken.ticker.trim() || (!phantomImagePreview && !phantomMeme?.imageUrl && !phantomToken.imageUrl) || (phantomWallet.balance !== null && phantomWallet.balance < 0.02)}
-                      className="w-full h-12 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer phantom-action-btn"
+                      className="w-full h-13 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer phantom-action-btn"
                     >
                       {isPhantomLaunching ? <><Rocket className="h-4 w-4 animate-bounce" /> Launching...</> : <><Rocket className="h-4 w-4" /> Launch (~0.02 SOL)</>}
                     </button>
@@ -2415,25 +2484,28 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               </>
             )}
 
+            {/* Fee Structure Card */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
             <div className="p-5 rounded-2xl phantom-fee-card">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-4">
                 <Coins className="h-4 w-4 text-primary" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Fee Structure</span>
               </div>
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-3 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/25">Launch Fee</span>
-                  <span className="font-bold text-primary">~0.02 SOL</span>
+                  <span className="text-white/30">Launch Fee</span>
+                  <span className="font-bold font-mono text-primary">~0.02 SOL</span>
                 </div>
                 <div className="h-px bg-white/[0.04]" />
                 <div className="flex justify-between items-center">
-                  <span className="text-white/25">Your Fee Share</span>
-                  <span className="font-bold text-success">50%</span>
+                  <span className="text-white/30">Your Fee Share</span>
+                  <span className="font-bold font-mono text-success">50%</span>
                 </div>
                 <div className="h-px bg-white/[0.04]" />
                 <div className="flex justify-between items-center">
-                  <span className="text-white/25">Trading Fee</span>
-                  <span className="font-bold text-primary">{(phantomTradingFee / 100).toFixed(1)}%</span>
+                  <span className="text-white/30">Trading Fee</span>
+                  <span className="font-bold font-mono text-primary">{(phantomTradingFee / 100).toFixed(1)}%</span>
                 </div>
               </div>
             </div>

@@ -1844,15 +1844,30 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
-/* File upload */
-.phantom-file-upload {
-  background: rgba(255,255,255,0.02) !important;
-  border: 1px dashed rgba(255,255,255,0.1) !important;
-  transition: all 0.25s ease !important;
+/* Premium Image Upload Area */
+.phantom-image-upload-area {
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  border: 2px dashed rgba(255,255,255,0.08);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  margin: 0 auto;
 }
-.phantom-file-upload:hover {
-  border-color: hsl(72 100% 50% / 0.25) !important;
-  background: rgba(255,255,255,0.03) !important;
+.phantom-image-upload-area:hover {
+  border-color: hsl(72 100% 50% / 0.25);
+  box-shadow: 0 0 20px hsl(72 100% 50% / 0.06), inset 0 0 20px hsl(72 100% 50% / 0.03);
+}
+.phantom-image-upload-area:has(img) {
+  border-style: solid;
+  border-color: rgba(255,255,255,0.08);
+}
+.phantom-image-upload-area:has(img):hover {
+  border-color: hsl(72 100% 50% / 0.3);
+  box-shadow: 0 0 24px hsl(72 100% 50% / 0.1);
 }
 
 /* Social links section */
@@ -1868,12 +1883,18 @@
 
 /* Slider knob glow */
 .phantom-slider [data-radix-slider-thumb] {
-  box-shadow: 0 0 0 3px hsl(72 100% 50% / 0.15), 0 0 10px hsl(72 100% 50% / 0.2);
-  transition: box-shadow 0.2s ease;
+  box-shadow: 0 0 0 3px hsl(72 100% 50% / 0.15), 0 0 12px hsl(72 100% 50% / 0.25);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 .phantom-slider [data-radix-slider-thumb]:hover,
 .phantom-slider [data-radix-slider-thumb]:focus {
-  box-shadow: 0 0 0 4px hsl(72 100% 50% / 0.2), 0 0 16px hsl(72 100% 50% / 0.3);
+  box-shadow: 0 0 0 5px hsl(72 100% 50% / 0.2), 0 0 20px hsl(72 100% 50% / 0.35);
+  transform: scale(1.1);
+}
+
+/* Thicker slider track */
+.phantom-slider-thick [data-radix-slider-track] {
+  height: 8px;
 }
 
 /* Warning card */
@@ -1881,4 +1902,9 @@
   background: rgba(239,68,68,0.06);
   border: 1px solid rgba(239,68,68,0.15);
   backdrop-filter: blur(8px);
+}
+
+/* Launch button height */
+.h-13 {
+  height: 3.25rem;
 }
