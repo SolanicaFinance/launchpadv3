@@ -1028,6 +1028,135 @@ export type Database = {
           },
         ]
       }
+      branding_config: {
+        Row: {
+          agent_brand_name: string | null
+          app_url: string | null
+          brand_name: string
+          brand_short_name: string
+          color_accent: string | null
+          color_background: string | null
+          color_foreground: string | null
+          color_muted: string | null
+          color_primary: string | null
+          community_prefix: string | null
+          created_at: string
+          description: string | null
+          discord_url: string | null
+          domain: string | null
+          favicon_url: string | null
+          feature_agents_enabled: boolean | null
+          feature_alpha_tracker_enabled: boolean | null
+          feature_forum_enabled: boolean | null
+          feature_governance_enabled: boolean | null
+          feature_leverage_enabled: boolean | null
+          feature_merch_enabled: boolean | null
+          feature_x_tracker_enabled: boolean | null
+          font_family: string | null
+          forum_name: string | null
+          icon_emoji: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          meta_description: string | null
+          og_image_url: string | null
+          page_title: string | null
+          platform_token_mint: string | null
+          platform_token_name: string | null
+          platform_token_ticker: string | null
+          sdk_name: string | null
+          tagline: string | null
+          telegram_url: string | null
+          twitter_handle: string | null
+          twitter_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_brand_name?: string | null
+          app_url?: string | null
+          brand_name?: string
+          brand_short_name?: string
+          color_accent?: string | null
+          color_background?: string | null
+          color_foreground?: string | null
+          color_muted?: string | null
+          color_primary?: string | null
+          community_prefix?: string | null
+          created_at?: string
+          description?: string | null
+          discord_url?: string | null
+          domain?: string | null
+          favicon_url?: string | null
+          feature_agents_enabled?: boolean | null
+          feature_alpha_tracker_enabled?: boolean | null
+          feature_forum_enabled?: boolean | null
+          feature_governance_enabled?: boolean | null
+          feature_leverage_enabled?: boolean | null
+          feature_merch_enabled?: boolean | null
+          feature_x_tracker_enabled?: boolean | null
+          font_family?: string | null
+          forum_name?: string | null
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          page_title?: string | null
+          platform_token_mint?: string | null
+          platform_token_name?: string | null
+          platform_token_ticker?: string | null
+          sdk_name?: string | null
+          tagline?: string | null
+          telegram_url?: string | null
+          twitter_handle?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_brand_name?: string | null
+          app_url?: string | null
+          brand_name?: string
+          brand_short_name?: string
+          color_accent?: string | null
+          color_background?: string | null
+          color_foreground?: string | null
+          color_muted?: string | null
+          color_primary?: string | null
+          community_prefix?: string | null
+          created_at?: string
+          description?: string | null
+          discord_url?: string | null
+          domain?: string | null
+          favicon_url?: string | null
+          feature_agents_enabled?: boolean | null
+          feature_alpha_tracker_enabled?: boolean | null
+          feature_forum_enabled?: boolean | null
+          feature_governance_enabled?: boolean | null
+          feature_leverage_enabled?: boolean | null
+          feature_merch_enabled?: boolean | null
+          feature_x_tracker_enabled?: boolean | null
+          font_family?: string | null
+          forum_name?: string | null
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          page_title?: string | null
+          platform_token_mint?: string | null
+          platform_token_name?: string | null
+          platform_token_ticker?: string | null
+          sdk_name?: string | null
+          tagline?: string | null
+          telegram_url?: string | null
+          twitter_handle?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       claw_agent_bids: {
         Row: {
           bid_amount_sol: number

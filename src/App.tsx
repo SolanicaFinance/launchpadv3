@@ -19,6 +19,7 @@ import { EvmWalletProvider } from "@/providers/EvmWalletProvider";
 import { DomainRouter } from "@/components/DomainRouter";
 import { StickyStatsFooter } from "@/components/layout/StickyStatsFooter";
 import { MatrixModeProvider } from "@/contexts/MatrixModeContext";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 
 // Lazy load FunLauncherPage like all other pages to reduce build memory
 const FunLauncherPage = lazyWithRetry(() => import("./pages/FunLauncherPage"));
@@ -50,6 +51,7 @@ const CompressedDistributePage = lazyWithRetry(() => import("./pages/CompressedD
 const DecompressPage = lazyWithRetry(() => import("./pages/DecompressPage"));
 const FunModePage = lazyWithRetry(() => import("./pages/FunModePage"));
 const AdminPanelPage = lazyWithRetry(() => import("./pages/AdminPanelPage"));
+const BrandingAdminPage = lazyWithRetry(() => import("./pages/BrandingAdminPage"));
 
 const BannerMakerPage = lazyWithRetry(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazyWithRetry(() => import("./pages/AlphaTrackerPage"));
@@ -104,6 +106,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <RuntimeConfigBootstrap />
+    <BrandingProvider>
     <PrivyProviderWrapper>
       <ChainProvider>
         <EvmWalletProvider>
@@ -133,6 +136,7 @@ const App = () => (
                     <Route path="/vanity-admin" element={<VanityAdminPage />} />
                     <Route path="/site" element={<LaunchpadTemplatePage />} />
                     <Route path="/admin" element={<AdminPanelPage />} />
+                    <Route path="/admin/branding" element={<BrandingAdminPage />} />
                     <Route path="/admin/twitter" element={<Navigate to="/admin?tab=xbots" replace />} />
                     <Route path="/admin/treasury" element={<Navigate to="/admin?tab=treasury" replace />} />
                     <Route path="/trade" element={<TradePage />} />
@@ -203,6 +207,7 @@ const App = () => (
         </EvmWalletProvider>
       </ChainProvider>
     </PrivyProviderWrapper>
+    </BrandingProvider>
   </QueryClientProvider>
 );
 
