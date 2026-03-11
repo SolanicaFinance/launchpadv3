@@ -122,7 +122,7 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 export { SectionHeader };
 
 /* ── Content wrapper — fluid on large screens ── */
-const CW = "w-full max-w-7xl xl:max-w-[92vw] 2xl:max-w-[1800px]";
+const CW = "w-full max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw]";
 
 /* ── Section Divider ── */
 function SectionDivider() {
@@ -178,8 +178,8 @@ function LivePulseSection({ newPairs, completing, graduated, loading }: {
     <section className={`${CW} mx-auto px-4 py-6`}>
       <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
       
-      {/* Desktop: 3-column grid */}
-      <div className="hidden md:grid grid-cols-3 gap-5">
+      {/* Desktop: 3-column grid, 4 on XL */}
+      <div className="hidden md:grid md:grid-cols-3 xl:grid-cols-3 gap-4">
         <PulseColumn title="⚡ New Pairs" tokens={newPairs} loading={loading} />
         <PulseColumn title="🔥 Final Stretch" tokens={completing} loading={loading} />
         <PulseColumn title="🚀 Migrated" tokens={graduated} loading={loading} />
@@ -281,7 +281,7 @@ export default function HomePage() {
       <div className="relative z-10">
         {/* ═══ Hero Section — Compact, Immersive, Product-Teasing ═══ */}
         <section
-          className="relative overflow-hidden flex items-center justify-center py-8 sm:py-10 md:py-14 lg:py-16 min-h-[50vh] max-h-[65vh]"
+          className="relative overflow-hidden flex items-center justify-center py-6 sm:py-8 md:py-10 lg:py-12"
           style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, hsl(220 60% 8%) 0%, hsl(220 40% 3%) 60%, hsl(0 0% 0%) 100%)" }}
         >
           {/* Ambient glow orbs */}
@@ -325,32 +325,32 @@ export default function HomePage() {
           {/* ── Flanking Product Screenshots ── */}
           {/* Left: Trading Terminal mockup */}
           <div
-            className="absolute left-[-8%] top-[8%] w-[42%] max-w-[520px] pointer-events-none hidden lg:block"
+            className="absolute left-[-6%] top-[4%] w-[44%] max-w-[580px] pointer-events-none hidden lg:block"
             style={{
-              transform: "perspective(1200px) rotateY(12deg) rotateX(-2deg)",
-              opacity: 0.3,
-              filter: "blur(6px)",
-              maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
+              transform: "perspective(1200px) rotateY(14deg) rotateX(-3deg)",
+              opacity: 0.4,
+              filter: "blur(4px)",
+              maskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 12%, black 65%, transparent 100%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/10 shadow-[0_0_40px_hsl(72_100%_50%/0.06)]">
+            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
               <img src={heroTerminalMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
 
           {/* Right: Token Launch mockup */}
           <div
-            className="absolute right-[-8%] top-[12%] w-[40%] max-w-[500px] pointer-events-none hidden lg:block"
+            className="absolute right-[-6%] top-[6%] w-[42%] max-w-[540px] pointer-events-none hidden lg:block"
             style={{
-              transform: "perspective(1200px) rotateY(-12deg) rotateX(-2deg)",
-              opacity: 0.3,
-              filter: "blur(6px)",
-              maskImage: "linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 15%, black 70%, transparent 100%)",
+              transform: "perspective(1200px) rotateY(-14deg) rotateX(-3deg)",
+              opacity: 0.4,
+              filter: "blur(4px)",
+              maskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 12%, black 65%, transparent 100%)",
             }}
           >
-            <div className="relative rounded-xl overflow-hidden border border-primary/10 shadow-[0_0_40px_hsl(72_100%_50%/0.06)]">
+            <div className="relative rounded-xl overflow-hidden border border-primary/15 shadow-[0_0_60px_hsl(72_100%_50%/0.08)]">
               <img src={heroLaunchMockup} alt="" className="w-full h-auto" loading="eager" />
             </div>
           </div>
@@ -359,9 +359,9 @@ export default function HomePage() {
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
           {/* Hero Content */}
-          <div className="relative z-10 w-full max-w-3xl mx-auto px-4 text-center">
+          <div className="relative z-10 w-full max-w-2xl lg:max-w-3xl mx-auto px-4 text-center">
             {/* Saturn Logo */}
-            <div className="relative mx-auto w-14 h-14 sm:w-16 sm:h-16 mb-4 animate-fade-in">
+            <div className="relative mx-auto w-12 h-12 sm:w-14 sm:h-14 mb-3 animate-fade-in">
               <div className="absolute inset-[-10px] rounded-full pointer-events-none"
                 style={{ background: "radial-gradient(circle, hsl(38 90% 50% / 0.2) 0%, transparent 70%)" }} />
               <img
@@ -373,7 +373,7 @@ export default function HomePage() {
 
             {/* Title */}
             <h1
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-2 animate-fade-in"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mb-1.5 animate-fade-in"
               style={{
                 background: "linear-gradient(135deg, hsl(48 96% 53%) 0%, hsl(84 81% 44%) 100%)",
                 WebkitBackgroundClip: "text",
@@ -388,7 +388,7 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p
-              className="text-sm sm:text-base md:text-lg text-foreground/80 max-w-xl mx-auto mb-1.5 font-medium animate-fade-in"
+              className="text-xs sm:text-sm md:text-base text-foreground/80 max-w-lg mx-auto mb-1 font-medium animate-fade-in"
               style={{ animationDelay: "0.15s", animationFillMode: "both" }}
             >
               The fastest AI-powered trading terminal on Solana
@@ -396,7 +396,7 @@ export default function HomePage() {
 
             {/* Description */}
             <p
-              className="text-[11px] sm:text-xs text-muted-foreground/60 max-w-lg mx-auto mb-5 leading-relaxed animate-fade-in"
+              className="text-[10px] sm:text-[11px] text-muted-foreground/60 max-w-md mx-auto mb-4 leading-relaxed animate-fade-in"
               style={{ animationDelay: "0.2s", animationFillMode: "both" }}
             >
               Lightning-fast execution, built-in launchpad, referral rewards, smart alpha tracking, and AI-powered agents — all in one terminal.
@@ -404,7 +404,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div
-              className="flex items-center justify-center gap-3 flex-wrap mb-5 animate-fade-in"
+              className="flex items-center justify-center gap-3 flex-wrap mb-4 animate-fade-in"
               style={{ animationDelay: "0.25s", animationFillMode: "both" }}
             >
               <Link
@@ -438,7 +438,7 @@ export default function HomePage() {
 
             {/* Feature Badges */}
             <div
-              className="flex items-center justify-center gap-2 flex-wrap mb-4 animate-fade-in"
+              className="flex items-center justify-center gap-2 flex-wrap mb-3 animate-fade-in"
               style={{ animationDelay: "0.35s", animationFillMode: "both" }}
             >
               {[
