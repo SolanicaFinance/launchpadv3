@@ -8,6 +8,7 @@ import { ChevronDown, Server, RefreshCw, Layers, Wallet, Rocket, Users } from "l
 import { MarketLighthouse } from "./MarketLighthouse";
 import { WalletTrackerPanel } from "./WalletTrackerPanel";
 import { NewPairsPanel } from "./NewPairsPanel";
+import { useWalletTradeNotifications } from "@/hooks/useWalletTradeNotifications";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
 import meteoraIcon from "@/assets/meteora-icon.svg";
 import bonkIcon from "@/assets/bonk-icon.jpg";
@@ -77,10 +78,18 @@ export function StickyStatsFooter() {
   const [lpRefreshing, setLpRefreshing] = useState(false);
   const [wtRefreshing, setWtRefreshing] = useState(false);
   const [npRefreshing, setNpRefreshing] = useState(false);
+  const [trackerShaking, setTrackerShaking] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lpDropdownRef = useRef<HTMLDivElement>(null);
   const wtDropdownRef = useRef<HTMLDivElement>(null);
   const npDropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleTradeNotification = useCallback(() => {
+    setTrackerShaking(true);
+    setTimeout(() => setTrackerShaking(false), 1000);
+  }, []);
+
+  useWalletTradeNotifications({ onTrade: handleTradeNotification });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -217,7 +226,11 @@ export function StickyStatsFooter() {
                 transition: "all 0.15s",
               }}
             >
-              <Wallet style={{ width: "11px", height: "11px" }} />
+              <Wallet style={{
+                width: "11px",
+                height: "11px",
+                animation: trackerShaking ? "tracker-shake 0.5s ease-in-out 0s 2" : "none",
+              }} />
               <span>Tracker</span>
             </button>
 
