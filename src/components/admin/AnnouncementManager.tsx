@@ -26,7 +26,7 @@ interface Announcement {
 
 const DEFAULT_PAGES = [
   "/", "/trending", "/trade", "/agents", "/punch", "/panel",
-  "/discover", "/alpha-tracker", "/api", "/sdk", "/whitepaper",
+  "/discover", "/alpha-tracker", "/whitepaper",
 ];
 
 export function AnnouncementManager() {
