@@ -145,13 +145,17 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
 
     setIsAdding(true);
     try {
-      const { error } = await supabase.from('tracked_wallets').insert({
-        user_profile_id: profileId,
-        wallet_address: newWalletAddress,
-        wallet_label: newWalletLabel || null,
+      const { data: resp, error: fnError } = await supabase.functions.invoke('wallet-tracker-manage', {
+        body: {
+          action: 'add',
+          user_profile_id: profileId,
+          wallet_address: newWalletAddress,
+          wallet_label: newWalletLabel || null,
+        },
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (resp?.error) throw new Error(resp.error);
 
       toast({ title: "Wallet added!" });
       setNewWalletAddress('');
