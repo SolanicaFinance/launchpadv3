@@ -1,6 +1,5 @@
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import type { KolTweet } from "@/hooks/useKolTweets";
 import { Link } from "react-router-dom";
 
@@ -35,20 +34,22 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
     : `https://etherscan.io/token/${tweet.contract_address}`;
 
   return (
-    <Card className="p-4 flex flex-col gap-3 hover:border-primary/30 transition-colors">
+    <div className="group flex flex-col gap-3 p-4 rounded-xl transition-all duration-300
+                    bg-card/30 backdrop-blur-sm border border-border/20
+                    hover:border-primary/30 hover:bg-card/50 hover:shadow-[0_0_20px_hsl(var(--primary)/0.06)]">
       {/* Header: KOL info + time */}
       <div className="flex items-center gap-2.5">
         {tweet.kol_profile_image ? (
           <img
             src={tweet.kol_profile_image}
             alt={tweet.kol_username}
-            className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
+            className="w-8 h-8 rounded-full object-cover border border-border/30 flex-shrink-0 group-hover:ring-1 group-hover:ring-primary/20 transition-all"
             loading="lazy"
             width={32}
             height={32}
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
             {tweet.kol_username[0]?.toUpperCase()}
           </div>
         )}
@@ -57,12 +58,12 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
             href={`https://x.com/${tweet.kol_username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-semibold text-foreground hover:text-primary truncate block"
+            className="text-sm font-semibold text-foreground hover:text-primary truncate block transition-colors"
           >
             @{tweet.kol_username}
           </a>
         </div>
-        <span className="text-[11px] text-muted-foreground flex-shrink-0">
+        <span className="text-[11px] text-muted-foreground flex-shrink-0 font-mono">
           {timeAgo(tweet.tweeted_at)}
         </span>
       </div>
@@ -75,7 +76,7 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
       )}
 
       {/* Token info */}
-      <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+      <div className="flex items-center gap-2 bg-background/40 rounded-lg p-2.5 border border-border/10">
         {tweet.token_image_url ? (
           <img
             src={tweet.token_image_url}
@@ -93,17 +94,17 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
               {tweet.token_name || shortenAddress(tweet.contract_address)}
             </span>
             {tweet.token_symbol && (
-              <span className="text-[11px] text-muted-foreground">${tweet.token_symbol}</span>
+              <span className="text-[11px] text-muted-foreground font-mono">${tweet.token_symbol}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             {tweet.token_price_usd !== null && (
-              <span className="text-[11px] text-primary font-medium">
+              <span className="text-[11px] text-primary font-medium font-mono">
                 {formatUsd(tweet.token_price_usd)}
               </span>
             )}
             {tweet.token_market_cap !== null && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground font-mono">
                 MC {formatUsd(tweet.token_market_cap)}
               </span>
             )}
@@ -115,13 +116,13 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
       </div>
 
       {/* Footer: links */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {tweet.tweet_url && (
           <a
             href={tweet.tweet_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+            className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
             <ExternalLink className="w-3 h-3" /> Tweet
           </a>
@@ -129,7 +130,7 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
         {isSolana ? (
           <Link
             to={explorerUrl}
-            className="text-[11px] text-primary hover:text-primary/80 flex items-center gap-1"
+            className="text-[11px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
             <ExternalLink className="w-3 h-3" /> Trade
           </Link>
@@ -138,12 +139,12 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
             href={explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-primary hover:text-primary/80 flex items-center gap-1"
+            className="text-[11px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
             <ExternalLink className="w-3 h-3" /> Explorer
           </a>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

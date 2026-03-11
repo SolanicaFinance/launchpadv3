@@ -24,9 +24,12 @@ function AlphaTradeRow({ trade, position }: { trade: AlphaTrade; position?: Posi
   return (
     <Link
       to={`/trade/${trade.token_mint}`}
-      className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-card/60 border border-border/50 hover:border-primary/30 transition-all group"
+      className="group flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-300
+                 bg-card/30 backdrop-blur-sm border border-border/20
+                 hover:border-primary/30 hover:bg-card/50 hover:shadow-[0_0_20px_hsl(var(--primary)/0.06)] hover:scale-[1.01]"
     >
-      <div className="h-7 w-7 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center shrink-0">
+      <div className="h-8 w-8 rounded-full bg-muted/50 border border-border/30 overflow-hidden flex items-center justify-center shrink-0
+                       group-hover:ring-1 group-hover:ring-primary/20 transition-all">
         {trade.token_image_url ? (
           <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -41,7 +44,7 @@ function AlphaTradeRow({ trade, position }: { trade: AlphaTrade; position?: Posi
             ${trade.token_ticker || trade.token_name || "???"}
           </span>
           <span className={cn(
-            "inline-flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded",
+            "inline-flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-md",
             isBuy ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
           )}>
             {isBuy ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
