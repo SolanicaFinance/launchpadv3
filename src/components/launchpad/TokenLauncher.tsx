@@ -203,8 +203,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || "Generation failed");
       if (data?.meme) {
-        setMeme(data.meme);
-        toast({ title: "Meme Generated! 🎲", description: `${data.meme.name} ($${data.meme.ticker}) is ready!` });
+        setMeme({ ...data.meme, name: "", ticker: "" });
+        toast({ title: "Meme Generated! 🎲", description: "Image ready — enter your token name & ticker!" });
       } else {
         throw new Error("No meme data returned");
       }
