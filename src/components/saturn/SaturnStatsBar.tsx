@@ -2,7 +2,7 @@ import { useSaturnStats } from "@/hooks/useSaturnStats";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function MoonDexoStatsBar() {
+export function SaturnStatsBar() {
   const { data: stats, isLoading } = useSaturnStats();
   const { solPrice } = useSolPrice();
 
