@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 const BOT_USERNAMES = new Set([
-  "clawmode", "moltbook", "openclaw",
+  "saturntrade", "moltbook", "saturntrade",
 ]);
 
 interface Tweet {
@@ -40,7 +40,7 @@ async function fetchWithTimeout(
 async function searchMentions(bearerToken: string): Promise<Tweet[]> {
   const searchUrl = new URL("https://api.x.com/2/tweets/search/recent");
   // Search for mentions of our accounts - no -is:reply so we catch reply mentions too
-  searchUrl.searchParams.set("query", "(@moltbook OR @openclaw OR @clawmode) -is:retweet");
+  searchUrl.searchParams.set("query", "(@moltbook OR @saturntrade OR @saturntrade) -is:retweet");
   searchUrl.searchParams.set("max_results", "20");
   searchUrl.searchParams.set("tweet.fields", "created_at,author_id,conversation_id,in_reply_to_user_id,referenced_tweets");
   searchUrl.searchParams.set("expansions", "author_id");
@@ -91,16 +91,16 @@ async function searchMentions(bearerToken: string): Promise<Tweet[]> {
 
 function determineMentionType(text: string): string {
   const hasMoltbook = text.toLowerCase().includes("@moltbook");
-  const hasOpenclaw = text.toLowerCase().includes("@openclaw");
-  const hasClawmode = text.toLowerCase().includes("@clawmode");
+  const hasOpenclaw = text.toLowerCase().includes("@saturntrade");
+  const hasClawmode = text.toLowerCase().includes("@saturntrade");
   
   const count = [hasMoltbook, hasOpenclaw, hasClawmode].filter(Boolean).length;
   if (count > 2) return "multiple";
   if (hasMoltbook && hasOpenclaw) return "both";
   if (hasMoltbook) return "moltbook";
-  if (hasOpenclaw) return "openclaw";
-  if (hasClawmode) return "clawmode";
-  return "openclaw";
+  if (hasOpenclaw) return "saturntrade";
+  if (hasClawmode) return "saturntrade";
+  return "saturntrade";
 }
 
 // Check if tweet has meaningful text beyond just mentions/URLs/whitespace

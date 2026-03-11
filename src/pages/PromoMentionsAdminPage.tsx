@@ -171,7 +171,7 @@ export default function PromoMentionsAdminPage() {
           <div>
             <h1 className="text-3xl font-bold">Promo Mention Replies</h1>
             <p className="text-muted-foreground mt-1">
-              Automated replies to @moltbook and @openclaw mentions
+              Automated replies to @moltbook and @saturntrade mentions
             </p>
           </div>
           <div className="flex gap-2">
@@ -261,7 +261,7 @@ export default function PromoMentionsAdminPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <div className="text-muted-foreground">Search Query</div>
-                <code className="text-xs">(@moltbook OR @openclaw OR @clawmode)</code>
+                <code className="text-xs">(@moltbook OR @saturntrade OR @saturntrade)</code>
               </div>
               <div>
                 <div className="text-muted-foreground">Max Replies/Hour</div>

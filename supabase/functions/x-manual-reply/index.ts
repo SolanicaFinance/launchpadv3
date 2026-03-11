@@ -1,4 +1,4 @@
-// DISABLED — @clawmode manual reply fully suspended
+// DISABLED — @saturntrade manual reply fully suspended
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 Deno.serve(async (req) => {

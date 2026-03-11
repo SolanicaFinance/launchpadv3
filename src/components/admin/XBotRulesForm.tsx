@@ -23,9 +23,9 @@ interface XBotRulesFormProps {
   onSave: (rules: Partial<XBotAccountRules>) => Promise<void>;
 }
 
-const DEFAULT_MENTIONS = ["@moltbook", "@openclaw", "@clawmode"];
+const DEFAULT_MENTIONS = ["@moltbook", "@saturntrade", "@saturntrade"];
 const SUGGESTED_CASHTAGS = ["$CLAW", "$SOL", "$BTC", "$ETH"];
-const SUGGESTED_KEYWORDS = ["openclaw", "clawmode", "moltbook"];
+const SUGGESTED_KEYWORDS = ["saturntrade", "clawmode", "moltbook"];
 
 const DEFAULT_PERSONA_PROMPT = `You're a knowledgeable crypto native with genuine opinions.
 Generate a reply (max 240 chars).

@@ -321,9 +321,9 @@ interface ValidationResult {
   hasTrigger: boolean;
 }
 
-// Validate the !clawmode post and return detailed result
+// Validate the !saturntrade post and return detailed result
 export function validateLaunchPost(content: string): ValidationResult {
-  const hasTrigger = content.toLowerCase().includes("!clawmode");
+  const hasTrigger = content.toLowerCase().includes("!saturntrade");
   
   if (!hasTrigger) {
     return {
@@ -355,7 +355,7 @@ export function validateLaunchPost(content: string): ValidationResult {
   
   // === FALLBACK: Parse bare ticker/name lines without prefixes ===
   // Handles formats like:
-  // !clawmode
+  // !saturntrade
   // $CRAB
   // CRAB
   // Description - Crawler Bot
@@ -363,7 +363,7 @@ export function validateLaunchPost(content: string): ValidationResult {
     const cleanLines = lines.filter(line => {
       const lowerLine = line.toLowerCase();
       // Skip the trigger line and empty lines
-      if (!line || lowerLine.includes("!clawmode")) return false;
+      if (!line || lowerLine.includes("!saturntrade")) return false;
       // Skip URLs
       if (line.includes("http://") || line.includes("https://")) return false;
       // Skip lines that have key: value format (already parsed)
@@ -446,16 +446,16 @@ export function generateMissingFieldsReply(missingFields: string[], hasImage: bo
   // Header
   if (missingFields.length === 1) {
     if (missingFields[0] === "name") {
-      lines.push("🦞 Your !clawmode needs a token name!");
+      lines.push("🦞 Your !saturntrade needs a token name!");
       lines.push("");
       lines.push("Add: name: YourTokenName");
     } else if (missingFields[0] === "symbol") {
-      lines.push("🦞 Your !clawmode needs a ticker symbol!");
+      lines.push("🦞 Your !saturntrade needs a ticker symbol!");
       lines.push("");
       lines.push("Add: symbol: TICKER");
     }
   } else if (missingFields.length > 1) {
-    lines.push("🦞 Almost there! Your !clawmode is missing:");
+    lines.push("🦞 Almost there! Your !saturntrade is missing:");
     lines.push("");
     
     if (missingFields.includes("name")) {
@@ -476,17 +476,17 @@ export function generateMissingFieldsReply(missingFields: string[], hasImage: bo
   // Add example format
   lines.push("");
   lines.push("Example format:");
-  lines.push("!clawmode");
+  lines.push("!saturntrade");
   lines.push("name: My Token");
   lines.push("symbol: MTK");
   lines.push("[Attach your token image]");
   lines.push("");
-  lines.push("Launch your unique Solana Agent from Claw Mode");
+  lines.push("Launch your unique Solana Agent from Saturn");
   
   return lines.join("\n");
 }
 
-// Parse the !clawmode post content
+// Parse the !saturntrade post content
 // Supports both multi-line format (key: value on each line) and single-line format
 export function parseLaunchPost(content: string): ParsedLaunchData | null {
   const validation = validateLaunchPost(content);
@@ -562,7 +562,7 @@ function assignParsedField(data: Partial<ParsedLaunchData>, key: string, value: 
   }
 }
 
-// Parse single-line format: "!clawmode name: X symbol: Y wallet: Z description: ..."
+// Parse single-line format: "!saturntrade name: X symbol: Y wallet: Z description: ..."
 // Also auto-detects bare Solana wallet addresses without the wallet: prefix
 function parseSingleLine(content: string, data: Partial<ParsedLaunchData>): void {
   // Define field patterns - order matters, longer keys first
@@ -789,9 +789,9 @@ export async function processLaunchPost(
     };
   }
 
-  // === AUTO-GENERATE MODE (!clawmode <text>) ===
+  // === AUTO-GENERATE MODE (!saturntrade <text>) ===
   if (autoGenerate && generatePrompt) {
-    console.log(`[agent-process-post] 🦞 Claw Mode auto-generate: "${generatePrompt}"`);
+    console.log(`[agent-process-post] 🦞 Saturn auto-generate: "${generatePrompt}"`);
     
     // Call claw-trading-generate to get lobster-themed AI trading agent identity + image
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -1034,7 +1034,7 @@ export async function processLaunchPost(
         .select("id, ticker")
         .single();
 
-      const communityUrl = preCreatedSubtuna ? `https://clawsai.fun/t/${finalTicker}` : null;
+      const communityUrl = preCreatedSubtuna ? `https://saturn.trade/t/${finalTicker}` : null;
 
       // Launch token
       const websiteForOnChain = communityUrl || null;
@@ -1077,7 +1077,7 @@ export async function processLaunchPost(
       const mintAddress = result.mintAddress as string;
       const dbcPoolAddress = result.dbcPoolAddress as string | null;
 
-      // 30/30/40 fee split for !clawmode tokens: 30% creator, 30% agent, 40% system
+      // 30/30/40 fee split for !saturntrade tokens: 30% creator, 30% agent, 40% system
       const AUTO_LAUNCH_FEE_BPS = 3000;
 
       let funTokenId: string | null = null;
@@ -1149,7 +1149,7 @@ export async function processLaunchPost(
               subtuna_id: preCreatedSubtuna.id,
               author_agent_id: agent.id,
               title: `Welcome to $${cleanSymbol}! 🎉`,
-              content: `**${cleanName}** has officially launched via !clawmode!\n\nThis is the official community for $${cleanSymbol}.\n\n**Trade now:** [clawsai.fun/launchpad/${mintAddress}](https://clawsai.fun/launchpad/${mintAddress})`,
+              content: `**${cleanName}** has officially launched via !saturntrade!\n\nThis is the official community for $${cleanSymbol}.\n\n**Trade now:** [saturn.trade/launchpad/${mintAddress}](https://saturn.trade/launchpad/${mintAddress})`,
               post_type: "text",
               is_agent_post: true,
               is_pinned: true,
@@ -1183,7 +1183,7 @@ export async function processLaunchPost(
       return {
         success: true,
         mintAddress,
-        tradeUrl: `https://clawsai.fun/launchpad/${mintAddress}`,
+        tradeUrl: `https://saturn.trade/launchpad/${mintAddress}`,
         socialPostId,
         tokenName: cleanName,
         tokenSymbol: cleanSymbol,
@@ -1200,7 +1200,7 @@ export async function processLaunchPost(
     }
   }
 
-  // === STANDARD MODE (!clawmode) ===
+  // === STANDARD MODE (!saturntrade) ===
   // Validate the post content with detailed feedback
   const validation = validateLaunchPost(rawContent);
   
@@ -1317,7 +1317,7 @@ export async function processLaunchPost(
       error: errorMsg,
       socialPostId: failedPost?.id,
       shouldReply: true,
-      replyText: "🦞 To launch a token, please attach an image to your tweet!\n\nRequired format:\n!clawmode\nName: TokenName\nSymbol: TKN\n[Attach your token image]",
+      replyText: "🦞 To launch a token, please attach an image to your tweet!\n\nRequired format:\n!saturntrade\nName: TokenName\nSymbol: TKN\n[Attach your token image]",
     };
   }
   
@@ -1372,7 +1372,7 @@ export async function processLaunchPost(
       socialPostId: failedPost?.id,
       shouldReply: true,
       replyText:
-        "🦞 I couldn't fetch the attached image reliably. Please re-upload the image (not a link) and try again.\n\nRequired format:\n!clawmode\nName: TokenName\nSymbol: TKN\n[Attach your token image]",
+        "🦞 I couldn't fetch the attached image reliably. Please re-upload the image (not a link) and try again.\n\nRequired format:\n!saturntrade\nName: TokenName\nSymbol: TKN\n[Attach your token image]",
     };
   }
 
@@ -1502,7 +1502,7 @@ export async function processLaunchPost(
       .single();
 
     // Generate community URL for on-chain metadata (use finalTicker for unique URL)
-    const communityUrl = preCreatedSubtuna ? `https://clawsai.fun/t/${finalTicker}` : null;
+    const communityUrl = preCreatedSubtuna ? `https://saturn.trade/t/${finalTicker}` : null;
     
     if (preCreatedSubtuna) {
       console.log(`[agent-process-post] ✅ SubTuna pre-created: ${communityUrl}`);
@@ -1532,7 +1532,7 @@ export async function processLaunchPost(
     console.log(`[agent-process-post]   - Twitter: ${twitterForOnChain || '(none)'}`);
 
     // Call Vercel API to create token (now with confirmation before success)
-    // - website: community URL (clawsai.fun/t/TICKER) as fallback if no custom website
+    // - website: community URL (saturn.trade/t/TICKER) as fallback if no custom website
     // - twitter: original X post URL where user requested the launch (goes on-chain)
     console.log(`[agent-process-post] Calling create-fun API for ${parsed.name}...`);
     
@@ -1544,7 +1544,7 @@ export async function processLaunchPost(
         ticker: cleanSymbol,
         description:
           parsed.description ||
-          `${cleanName} - Launched via Claw Mode on ${platform}`,
+          `${cleanName} - Launched via Saturn on ${platform}`,
         imageUrl: finalImageUrl,
         websiteUrl: websiteForOnChain,
         twitterUrl: twitterForOnChain,
@@ -1603,7 +1603,7 @@ export async function processLaunchPost(
           mint_address: mintAddress,
           name: cleanName,
           ticker: cleanSymbol,
-          description: parsed.description || `${cleanName} - Launched via Claw Mode`,
+          description: parsed.description || `${cleanName} - Launched via Saturn`,
           image_url: finalImageUrl,
           website_url: websiteForOnChain || communityUrl,
           twitter_url: twitterForOnChain || postUrl,
@@ -1794,7 +1794,7 @@ export async function processLaunchPost(
             subtuna_id: preCreatedSubtuna.id,
             author_agent_id: agent.id,
             title: `Welcome to $${cleanSymbol}! 🎉`,
-            content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts. Join the discussion, share your thoughts, and connect with fellow community members.\n\n${parsed.website ? `🌐 Website: ${parsed.website}` : ""}\n${parsed.twitter ? `🐦 Twitter: ${parsed.twitter}` : ""}\n${parsed.telegram ? `💬 Telegram: ${parsed.telegram}` : ""}\n\n**Trade now:** [clawsai.fun/launchpad/${mintAddress}](https://clawsai.fun/launchpad/${mintAddress})`,
+            content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts. Join the discussion, share your thoughts, and connect with fellow community members.\n\n${parsed.website ? `🌐 Website: ${parsed.website}` : ""}\n${parsed.twitter ? `🐦 Twitter: ${parsed.twitter}` : ""}\n${parsed.telegram ? `💬 Telegram: ${parsed.telegram}` : ""}\n\n**Trade now:** [saturn.trade/launchpad/${mintAddress}](https://saturn.trade/launchpad/${mintAddress})`,
             post_type: "text",
             is_agent_post: true,
             is_pinned: true,
@@ -1860,7 +1860,7 @@ export async function processLaunchPost(
               subtuna_id: subtuna.id,
               author_agent_id: agent.id,
               title: `Welcome to $${cleanSymbol}! 🎉`,
-              content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts.\n\n**Trade now:** [clawsai.fun/launchpad/${mintAddress}](https://clawsai.fun/launchpad/${mintAddress})`,
+              content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts.\n\n**Trade now:** [saturn.trade/launchpad/${mintAddress}](https://saturn.trade/launchpad/${mintAddress})`,
               post_type: "text",
               is_agent_post: true,
               is_pinned: true,
@@ -1897,7 +1897,7 @@ export async function processLaunchPost(
       })
       .eq("id", socialPostId);
 
-    const tradeUrl = `https://clawsai.fun/launchpad/${mintAddress}`;
+    const tradeUrl = `https://saturn.trade/launchpad/${mintAddress}`;
 
     // === FALLBACK IMAGE SYNC ===
     // Safety net: Ensure fun_tokens has the image_url from pending_token_metadata
@@ -1987,7 +1987,7 @@ Deno.serve(async (req) => {
     let meteoraApiUrl =
       Deno.env.get("METEORA_API_URL") ||
       Deno.env.get("VITE_METEORA_API_URL") ||
-      "https://clawmode.vercel.app";
+      "https://saturntrade.vercel.app";
 
     // Safety: ensure URL has protocol
     if (!meteoraApiUrl.startsWith("http")) {

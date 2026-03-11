@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Claw Agents Telegram webhook is active",
-        command: "!clawmode",
+        command: "!saturntrade",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     const meteoraApiUrl =
       Deno.env.get("METEORA_API_URL") ||
       Deno.env.get("VITE_METEORA_API_URL") ||
-      "https://clawmode.vercel.app";
+      "https://saturntrade.vercel.app";
 
     if (!botToken) {
       console.log("[agent-telegram-webhook] Bot token not configured");
@@ -109,8 +109,8 @@ Deno.serve(async (req) => {
 
     const text = message.text;
 
-    // Check for !clawmode command
-    if (!text.toLowerCase().includes("!clawmode")) {
+    // Check for !saturntrade command
+    if (!text.toLowerCase().includes("!saturntrade")) {
       return new Response(JSON.stringify({ success: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
 ${result.error || "Unknown error"}
 
 <b>Required format:</b>
-<code>!clawmode
+<code>!saturntrade
 name: Token Name
 symbol: TICKER
 wallet: YourSolanaAddress...

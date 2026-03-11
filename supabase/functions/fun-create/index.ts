@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
     // Standard UI launches should NOT get the /t/:ticker URL since they don't have communities
     // The agentId would be passed from agent-launched tokens (currently not passed from fun-create)
     const finalWebsiteUrl = websiteUrl || undefined; // Don't auto-populate community URL
-    const finalTwitterUrl = twitterUrl || 'https://x.com/clawmode';
+    const finalTwitterUrl = twitterUrl || 'https://x.com/saturntrade';
 
     // Build Vercel payload with vanity keypair if available
     const vercelPayload: Record<string, unknown> = {

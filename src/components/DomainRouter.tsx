@@ -16,8 +16,8 @@ export function DomainRouter() {
   useEffect(() => {
     const hostname = window.location.hostname;
 
-    // os.clawsai.fun → /sdk
-    if (hostname === "os.clawsai.fun" && location.pathname === "/") {
+    // os.saturn.trade → /sdk
+    if (hostname === "os.saturn.trade" && location.pathname === "/") {
       navigate("/sdk", { replace: true });
     }
 

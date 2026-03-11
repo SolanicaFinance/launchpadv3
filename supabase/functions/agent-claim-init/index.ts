@@ -9,7 +9,7 @@ const corsHeaders = {
 /**
  * Initialize agent ownership claim for Twitter-launched agents.
  * 
- * Users who launch tokens via Twitter (!clawmode) don't get an API key immediately.
+ * Users who launch tokens via Twitter (!saturntrade) don't get an API key immediately.
  * This endpoint generates a verification challenge that they sign with their wallet
  * to prove ownership and get their API key.
  */
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "No agent found for this wallet. Launch a token first via Twitter @clawmode." 
+          error: "No agent found for this wallet. Launch a token first via Twitter @saturntrade." 
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

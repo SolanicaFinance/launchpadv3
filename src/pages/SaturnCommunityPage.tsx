@@ -37,7 +37,7 @@ export default function SaturnCommunityPage() {
     ticker,
     sort,
   });
-  const { data: recentSubtunas } = useRecentCommunities();
+  const { data: recentCommunities } = useRecentCommunities();
   
   
   // Fetch live CLAW token data for the /t/TUNA community
@@ -311,7 +311,7 @@ export default function SaturnCommunityPage() {
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
         <ForumLayout
-          leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}
+          leftSidebar={<ForumSidebar recentCommunities={recentCommunities} />}
           rightSidebar={<RightSidebar />}
         >
           {/* Banner */}

@@ -8,14 +8,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const VERCEL_API_URL = "https://clawmode.vercel.app";
+const VERCEL_API_URL = "https://saturntrade.vercel.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log("[claw-trading-create] Creating new Claw trading agent...");
+  console.log("[saturn-trading-create] Creating new Claw trading agent...");
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -127,7 +127,7 @@ serve(async (req) => {
     const websiteUrl = `https://claw.fun/t/${finalTicker.toUpperCase()}`;
     const finalTwitterUrl = twitterUrl?.trim() || null;
 
-    console.log(`[claw-trading-create] Launching token for ${finalName}...`);
+    console.log(`[saturn-trading-create] Launching token for ${finalName}...`);
 
     // Launch token on Meteora DBC via Vercel API
     let tokenId: string | null = null;
@@ -154,22 +154,22 @@ serve(async (req) => {
       const contentType = launchResponse.headers.get("content-type");
       if (!contentType?.includes("application/json")) {
         const text = await launchResponse.text();
-        console.error("[claw-trading-create] Token launch returned non-JSON:", text.slice(0, 200));
+        console.error("[saturn-trading-create] Token launch returned non-JSON:", text.slice(0, 200));
       } else {
         const launchResult = await launchResponse.json();
-        console.log("[claw-trading-create] Token launch response:", JSON.stringify(launchResult).slice(0, 500));
+        console.log("[saturn-trading-create] Token launch response:", JSON.stringify(launchResult).slice(0, 500));
 
         if (launchResult.success && launchResult.mintAddress) {
           tokenId = launchResult.tokenId;
           mintAddress = launchResult.mintAddress;
           dbcPoolAddress = launchResult.dbcPoolAddress;
-          console.log(`[claw-trading-create] Token launched: ${mintAddress}`);
+          console.log(`[saturn-trading-create] Token launched: ${mintAddress}`);
         } else {
-          console.error("[claw-trading-create] Token launch failed:", launchResult.error);
+          console.error("[saturn-trading-create] Token launch failed:", launchResult.error);
         }
       }
     } catch (launchError) {
-      console.error("[claw-trading-create] Token launch error:", launchError);
+      console.error("[saturn-trading-create] Token launch error:", launchError);
       await supabase.from("claw_agents").delete().eq("id", agent.id);
       await supabase.from("claw_trading_agents").delete().eq("id", tradingAgent.id);
       throw new Error(`Token launch failed: ${launchError instanceof Error ? launchError.message : "Unknown error"}`);
@@ -205,7 +205,7 @@ serve(async (req) => {
       });
 
     if (tokenError) {
-      console.error("[claw-trading-create] Failed to create claw_tokens record:", tokenError);
+      console.error("[saturn-trading-create] Failed to create claw_tokens record:", tokenError);
     }
 
     // Create claw_agent_tokens link
@@ -238,7 +238,7 @@ serve(async (req) => {
       })
       .eq("id", tradingAgent.id);
 
-    console.log(`[claw-trading-create] ✅ Created Claw trading agent ${finalName} (${tradingAgent.id}) with token ${mintAddress}`);
+    console.log(`[saturn-trading-create] ✅ Created Claw trading agent ${finalName} (${tradingAgent.id}) with token ${mintAddress}`);
 
     return new Response(
       JSON.stringify({
@@ -261,7 +261,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-trading-create] Error:", error);
+    console.error("[saturn-trading-create] Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

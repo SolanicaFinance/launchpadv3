@@ -8,7 +8,7 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 // CLAW-themed meme concepts for random generation
-const CLAW_CONCEPTS = [
+const SATURN_CONCEPTS = [
   { theme: "astronaut", description: "Lobster in a spacesuit floating among stars" },
   { theme: "cyberpunk", description: "Neon-lit lobster with glowing eyes and tech accessories" },
   { theme: "samurai", description: "Lobster wielding a katana in feudal Japan style" },
@@ -51,7 +51,7 @@ serve(async (req) => {
     const { prompt, includeTunaLogo } = await req.json().catch(() => ({}));
     
     // Select random concept or use user prompt
-    const randomConcept = CLAW_CONCEPTS[Math.floor(Math.random() * CLAW_CONCEPTS.length)];
+    const randomConcept = SATURN_CONCEPTS[Math.floor(Math.random() * SATURN_CONCEPTS.length)];
     const randomPalette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
     
     const themeToUse = prompt?.trim() || randomConcept.theme;
@@ -79,7 +79,7 @@ Return ONLY a JSON object (no markdown):
   "ticker": "3-4 letter ticker in CAPS",
   "description": "Catchy description with emoji (max 80 chars)",
   "imagePrompt": "Detailed image generation prompt describing the LOBSTER mascot in the themed style",
-  "tweetText": "Viral tweet announcing this token (include @clawmode mention, emojis, max 280 chars)"
+  "tweetText": "Viral tweet announcing this token (include @saturntrade mention, emojis, max 280 chars)"
 }`;
 
     const conceptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -116,7 +116,7 @@ Return ONLY a JSON object (no markdown):
         ticker: "CMAX",
         description: "The ultimate CLAW experience! 🦞🚀",
         imagePrompt: `Cute cartoon lobster character as a ${themeToUse}`,
-        tweetText: `Introducing $CMAX - The ultimate CLAW experience! 🦞🚀\n\nPowered by @clawmode\n\n#Solana #Memecoins`,
+        tweetText: `Introducing $CMAX - The ultimate CLAW experience! 🦞🚀\n\nPowered by @saturntrade\n\n#Solana #Memecoins`,
       };
     }
 
@@ -182,7 +182,7 @@ Make the character look fun, memorable, and perfect for a crypto meme token!`;
           ticker: concept.ticker?.replace(/[^A-Z]/g, "").slice(0, 5) || "TMAX",
           description: concept.description || "TUNA to the moon! 🍣🚀",
           imageUrl,
-          tweetText: concept.tweetText || `Introducing $${concept.ticker} - ${concept.description}\n\nPowered by @clawmode 🍣`,
+          tweetText: concept.tweetText || `Introducing $${concept.ticker} - ${concept.description}\n\nPowered by @saturntrade 🍣`,
           theme: themeToUse,
           palette: randomPalette,
         },

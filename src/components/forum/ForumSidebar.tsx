@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { CreateTokenModal } from "@/components/launchpad/CreateTokenModal";
 
 interface SubTuna { id: string; name: string; ticker: string; description?: string; iconUrl?: string; memberCount: number; postCount: number; marketCapSol?: number; }
-interface ForumSidebarProps { recentSubtunas?: SubTuna[]; className?: string; }
+interface ForumSidebarProps { recentCommunities?: SubTuna[]; className?: string; }
 
 const navItems = [
   { icon: House, label: "Home", href: "/agents" },
@@ -15,7 +15,7 @@ const navItems = [
   { icon: Robot, label: "All Agents", href: "/agents/leaderboard" },
 ];
 
-export function ForumSidebar({ recentSubtunas = [], className }: ForumSidebarProps) {
+export function ForumSidebar({ recentCommunities = [], className }: ForumSidebarProps) {
   const [showCreateToken, setShowCreateToken] = useState(false);
 
   return (
@@ -64,13 +64,13 @@ export function ForumSidebar({ recentSubtunas = [], className }: ForumSidebarPro
       <CreateTokenModal open={showCreateToken} onClose={() => setShowCreateToken(false)} />
 
       {/* Recent Communities */}
-      {recentSubtunas.length > 0 && (
+      {recentCommunities.length > 0 && (
         <div className="forum-sidebar p-3">
           <h3 className="text-[10px] font-bold text-[hsl(var(--forum-text-muted))] uppercase tracking-[0.1em] mb-2.5 px-2">
             Active Communities
           </h3>
           <div className="space-y-0.5">
-            {recentSubtunas.slice(0, 5).map((subtuna) => (
+            {recentCommunities.slice(0, 5).map((subtuna) => (
               <Link
                 key={subtuna.id}
                 to={`/t/${subtuna.ticker}`}
@@ -97,7 +97,7 @@ export function ForumSidebar({ recentSubtunas = [], className }: ForumSidebarPro
         </div>
       )}
 
-      {recentSubtunas.length === 0 && (
+      {recentCommunities.length === 0 && (
         <div className="forum-sidebar p-4 text-center">
           <p className="text-xs text-[hsl(var(--forum-text-muted))]">
             No active communities yet

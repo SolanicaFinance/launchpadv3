@@ -148,7 +148,7 @@ export function AgentIdeaGenerator() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <img src={clawLogo} alt="Claw Mode" className="w-12 h-12 rounded-full" />
+            <img src={clawLogo} alt="Saturn" className="w-12 h-12 rounded-full" />
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               Agent Idea Generator
             </h2>
@@ -212,7 +212,7 @@ export function AgentIdeaGenerator() {
                     alt={generatedMeme.name}
                     className="w-full h-full object-cover"
                   />
-                  {/* Claw Mode watermark */}
+                  {/* Saturn watermark */}
                   <div className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                     <img src={clawLogo} alt="" className="w-4 h-4 rounded-full" />
                     <span className="text-xs font-medium text-foreground">CLAW</span>
@@ -365,7 +365,7 @@ export function AgentIdeaGenerator() {
                   Post this on X with the command to launch:
                 </p>
                 <code className="block bg-background p-3 rounded text-xs font-mono text-foreground">
-                  <span className="text-[#1DA1F2]">@clawmode</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
+                  <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
                   <span className="text-muted-foreground">+ optionally attach the downloaded image</span>
                 </code>
               </div>

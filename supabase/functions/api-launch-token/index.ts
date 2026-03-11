@@ -111,10 +111,10 @@ serve(async (req) => {
     // === FIX: Only auto-populate SubTuna URL for agent launches ===
     // API-launched tokens don't have agent communities, so don't use /t/:ticker
     const finalWebsiteUrl = body.websiteUrl || undefined;
-    const finalTwitterUrl = body.twitterUrl || 'https://x.com/clawmode';
+    const finalTwitterUrl = body.twitterUrl || 'https://x.com/saturntrade';
 
     // Call Vercel API to create the token
-    let vercelApiUrl = Deno.env.get("VERCEL_API_URL") || "https://clawmode.vercel.app";
+    let vercelApiUrl = Deno.env.get("VERCEL_API_URL") || "https://saturntrade.vercel.app";
     if (!vercelApiUrl.startsWith("http")) {
       vercelApiUrl = `https://${vercelApiUrl}`;
     }
@@ -206,7 +206,7 @@ serve(async (req) => {
         poolAddress: createResult.dbcPoolAddress || createResult.poolAddress,
         solscanUrl: `https://solscan.io/token/${createResult.mintAddress}`,
         tradeUrl: `https://axiom.trade/meme/${createResult.dbcPoolAddress || createResult.mintAddress}`,
-        launchpadUrl: launchpad ? `https://clawsai.fun/fun/${createResult.mintAddress}` : null,
+        launchpadUrl: launchpad ? `https://saturn.trade/fun/${createResult.mintAddress}` : null,
         // Fee info
         feeInfo: {
           tradingFeeBps,

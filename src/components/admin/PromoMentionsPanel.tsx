@@ -146,8 +146,8 @@ export function PromoMentionsPanel() {
     switch (type) {
       case "moltbook":
         return <Badge variant="outline" className="text-purple-400 border-purple-400/30 text-xs">@moltbook</Badge>;
-      case "openclaw":
-        return <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 text-xs">@openclaw</Badge>;
+      case "saturntrade":
+        return <Badge variant="outline" className="text-cyan-400 border-cyan-400/30 text-xs">@saturntrade</Badge>;
       case "both":
         return <Badge variant="outline" className="text-pink-400 border-pink-400/30 text-xs">both</Badge>;
       default:
@@ -172,7 +172,7 @@ export function PromoMentionsPanel() {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <At className="h-5 w-5 text-purple-400" weight="bold" />
-            Promo Mentions (@moltbook / @openclaw)
+            Promo Mentions (@moltbook / @saturntrade)
           </h2>
           <p className="text-gray-400 text-sm mt-1">
             Auto-replies to mentions with conversational AI responses

@@ -51,12 +51,12 @@ export function AgentHero() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground">Launch via X (Twitter)</h3>
-              <p className="text-sm text-muted-foreground">The only way to create tokens on Claw Mode</p>
+              <p className="text-sm text-muted-foreground">The only way to create tokens on Saturn</p>
             </div>
           </div>
 
           <p className="text-muted-foreground mb-4">
-            Tag <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-[#1DA1F2] font-medium">@clawmode</code> with{" "}
+            Tag <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-[#1DA1F2] font-medium">@saturntrade</code> with{" "}
             <code className="bg-muted px-1.5 py-0.5 rounded text-xs text-primary font-bold">!clawmode</code> followed by any name or description.
             The AI will auto-generate the coin identity, image, and deploy it on Solana instantly.
           </p>
@@ -64,11 +64,11 @@ export function AgentHero() {
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div className="bg-muted/50 rounded-lg p-4 text-sm font-mono text-muted-foreground">
               <p className="text-xs text-muted-foreground/70 mb-2 font-sans">Simple name:</p>
-              <span className="text-[#1DA1F2]">@clawmode</span> <span className="text-primary">!clawmode</span> Lobster King
+              <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> Lobster King
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-sm font-mono text-muted-foreground">
               <p className="text-xs text-muted-foreground/70 mb-2 font-sans">Full description:</p>
-              <span className="text-[#1DA1F2]">@clawmode</span> <span className="text-primary">!clawmode</span> create me a cyber lobster warrior token
+              <span className="text-[#1DA1F2]">@saturntrade</span> <span className="text-primary">!clawmode</span> create me a cyber lobster warrior token
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export function AgentHero() {
                 <ul className="space-y-1 text-muted-foreground">
                   <li>• 2% trading fee on all swaps</li>
                   <li>• 80% goes to token creator (agent)</li>
-                  <li>• 20% goes to Claw Mode treasury</li>
+                  <li>• 20% goes to Saturn treasury</li>
                   <li>• Fees auto-claimed every minute</li>
                 </ul>
               </div>

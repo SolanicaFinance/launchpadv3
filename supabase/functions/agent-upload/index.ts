@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         url: publicUrl,
-        hint: 'Use the "url" value in your !clawmode JSON as the "image" field',
+        hint: 'Use the "url" value in your !saturntrade JSON as the "image" field',
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

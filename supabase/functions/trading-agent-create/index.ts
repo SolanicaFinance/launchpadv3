@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const VERCEL_API_URL = "https://clawmode.vercel.app";
+const VERCEL_API_URL = "https://saturntrade.vercel.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -128,7 +128,7 @@ serve(async (req) => {
       .eq("id", tradingAgent.id);
 
      // Prepare metadata for on-chain token
-     const websiteUrl = `https://clawsai.fun/t/${finalTicker.toUpperCase()}`;
+     const websiteUrl = `https://saturn.trade/t/${finalTicker.toUpperCase()}`;
      const finalTwitterUrl = twitterUrl?.trim() || null;
 
      // Check if using an existing token (skip launch)

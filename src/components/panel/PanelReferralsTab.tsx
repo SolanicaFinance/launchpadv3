@@ -191,7 +191,7 @@ export default function PanelReferralsTab() {
         <h3 className="text-xs font-bold text-foreground mb-2">How Referral Rewards Work</h3>
         <ol className="text-[11px] text-muted-foreground space-y-1.5 list-decimal list-inside">
           <li>Share your unique referral link with friends</li>
-          <li>They sign up and start trading on Claw Mode</li>
+          <li>They sign up and start trading on Saturn</li>
           <li>You earn <span className="text-[#F97316] font-semibold">{REWARD_PCT}%</span> of their trading fees automatically</li>
           <li>Rewards are tracked in real-time and shown here</li>
         </ol>

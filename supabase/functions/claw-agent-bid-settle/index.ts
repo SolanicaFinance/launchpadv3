@@ -14,7 +14,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const startTime = Date.now();
-  console.log("[claw-agent-bid-settle] ⏰ Settlement cron started");
+  console.log("[saturn-agent-bid-settle] ⏰ Settlement cron started");
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -42,7 +42,7 @@ serve(async (req) => {
     const results: any[] = [];
 
     if (expiredAgents?.length) {
-      console.log(`[claw-agent-bid-settle] Found ${expiredAgents.length} agents to settle`);
+      console.log(`[saturn-agent-bid-settle] Found ${expiredAgents.length} agents to settle`);
 
       for (const agent of expiredAgents) {
         try {
@@ -56,7 +56,7 @@ serve(async (req) => {
             .maybeSingle();
 
           if (!winningBid) {
-            console.log(`[claw-agent-bid-settle] No bids for ${agent.name}, system owns it`);
+            console.log(`[saturn-agent-bid-settle] No bids for ${agent.name}, system owns it`);
             await supabase.from("claw_trading_agents").update({
               is_owned: true,
               owner_wallet: "CLAW_SYSTEM",
@@ -104,17 +104,17 @@ serve(async (req) => {
                   })
                 );
                 const sig = await sendAndConfirmTransaction(connection, tx, [bidWalletKeypair]);
-                console.log(`[claw-agent-bid-settle] Winner SOL sent to treasury: ${sig}`);
+                console.log(`[saturn-agent-bid-settle] Winner SOL sent to treasury: ${sig}`);
               }
             } catch (transferErr) {
-              console.error(`[claw-agent-bid-settle] Treasury transfer failed for ${agent.name}:`, transferErr);
+              console.error(`[saturn-agent-bid-settle] Treasury transfer failed for ${agent.name}:`, transferErr);
             }
           }
 
-          console.log(`[claw-agent-bid-settle] ✅ ${agent.name} -> owned by ${winningBid.bidder_wallet} for ${winningBid.bid_amount_sol} SOL`);
+          console.log(`[saturn-agent-bid-settle] ✅ ${agent.name} -> owned by ${winningBid.bidder_wallet} for ${winningBid.bid_amount_sol} SOL`);
           results.push({ agentId: agent.id, settled: true, winner: winningBid.bidder_wallet, amount: winningBid.bid_amount_sol });
         } catch (agentError) {
-          console.error(`[claw-agent-bid-settle] Error settling ${agent.name}:`, agentError);
+          console.error(`[saturn-agent-bid-settle] Error settling ${agent.name}:`, agentError);
           results.push({ agentId: agent.id, settled: false, error: String(agentError) });
         }
       }
@@ -132,13 +132,13 @@ serve(async (req) => {
 
     let refundCount = 0;
     if (bidsToRefund?.length) {
-      console.log(`[claw-agent-bid-settle] ${bidsToRefund.length} bids to refund`);
+      console.log(`[saturn-agent-bid-settle] ${bidsToRefund.length} bids to refund`);
 
       for (const bid of bidsToRefund) {
         try {
           const agentData = (bid as any).claw_trading_agents;
           if (!agentData?.bid_wallet_private_key_encrypted) {
-            console.error(`[claw-agent-bid-settle] No bid wallet key for bid ${bid.id}`);
+            console.error(`[saturn-agent-bid-settle] No bid wallet key for bid ${bid.id}`);
             continue;
           }
 
@@ -151,7 +151,7 @@ serve(async (req) => {
           const actualRefund = Math.min(refundLamports, balance - 5000);
 
           if (actualRefund <= 0) {
-            console.warn(`[claw-agent-bid-settle] Insufficient balance to refund bid ${bid.id}`);
+            console.warn(`[saturn-agent-bid-settle] Insufficient balance to refund bid ${bid.id}`);
             continue;
           }
 
@@ -169,26 +169,26 @@ serve(async (req) => {
             refund_signature: sig,
           }).eq("id", bid.id);
 
-          console.log(`[claw-agent-bid-settle] 🔄 Refunded ${bid.bid_amount_sol} SOL to ${bid.bidder_wallet} (tx: ${sig})`);
+          console.log(`[saturn-agent-bid-settle] 🔄 Refunded ${bid.bid_amount_sol} SOL to ${bid.bidder_wallet} (tx: ${sig})`);
           refundCount++;
 
           // Small delay between refunds
           await new Promise(r => setTimeout(r, 1000));
         } catch (refundErr) {
-          console.error(`[claw-agent-bid-settle] Refund failed for bid ${bid.id}:`, refundErr);
+          console.error(`[saturn-agent-bid-settle] Refund failed for bid ${bid.id}:`, refundErr);
         }
       }
     }
 
     const settledCount = results.filter(r => r.settled).length;
-    console.log(`[claw-agent-bid-settle] ✅ Settled: ${settledCount}, Refunded: ${refundCount}`);
+    console.log(`[saturn-agent-bid-settle] ✅ Settled: ${settledCount}, Refunded: ${refundCount}`);
 
     return new Response(
       JSON.stringify({ success: true, settled: settledCount, refunded: refundCount, duration: Date.now() - startTime, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-agent-bid-settle] ❌ Error:", error);
+    console.error("[saturn-agent-bid-settle] ❌ Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -16,7 +16,7 @@ const PUMPPORTAL_API_URL = "https://pumpportal.fun/api/trade";
 // Minimum SOL to consider claiming (avoid dust)
 const MIN_CLAIMABLE_SOL = 0.001;
 
-// Fee distribution splits for pump.fun tokens (matches Claw agents)
+// Fee distribution splits for pump.fun tokens (matches Saturn agents)
 const CREATOR_FEE_SHARE = 0.8;   // 80% to creator
 const PLATFORM_FEE_SHARE = 0.2; // 20% to platform
 

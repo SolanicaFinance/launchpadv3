@@ -69,7 +69,7 @@ export default function PunchTestPage() {
     link.href = "/punch-favicon.jpg";
     link.type = "image/jpeg";
 
-    return () => { document.title = "Claw Mode"; };
+    return () => { document.title = "Saturn"; };
   }, []);
 
   const [state, setState] = useState<GameState>("tapping");

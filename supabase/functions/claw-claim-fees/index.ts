@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const startTime = Date.now();
-  console.log("[claw-claim-fees] ⏰ Cron job started at", new Date().toISOString());
+  console.log("[saturn-claim-fees] ⏰ Cron job started at", new Date().toISOString());
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -31,7 +31,7 @@ serve(async (req) => {
     if (fetchError) throw new Error(`Failed to fetch tokens: ${fetchError.message}`);
 
     const validTokens = (tokens || []).filter(t => t.dbc_pool_address && t.dbc_pool_address.length >= 32);
-    console.log(`[claw-claim-fees] Found ${validTokens.length} tokens to process`);
+    console.log(`[saturn-claim-fees] Found ${validTokens.length} tokens to process`);
 
     if (validTokens.length === 0) {
       return new Response(
@@ -47,7 +47,7 @@ serve(async (req) => {
 
     for (const token of validTokens) {
       try {
-        console.log(`[claw-claim-fees] Processing ${token.name} ($${token.ticker}) - Pool: ${token.dbc_pool_address}`);
+        console.log(`[saturn-claim-fees] Processing ${token.name} ($${token.ticker}) - Pool: ${token.dbc_pool_address}`);
 
         const checkResponse = await fetch(`${meteoraApiUrl}/api/fees/claim-from-pool?poolAddress=${token.dbc_pool_address}`, {
           method: "GET",
@@ -114,7 +114,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-claim-fees] ❌ Error:", error);
+    console.error("[saturn-claim-fees] ❌ Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error", duration: Date.now() - startTime }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

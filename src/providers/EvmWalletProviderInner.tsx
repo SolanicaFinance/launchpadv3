@@ -7,7 +7,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 // Configure wagmi with Base and Ethereum mainnet
 const config = getDefaultConfig({
-  appName: 'Claw Mode',
+  appName: 'Saturn',
   projectId: 'claw-launchpad-base', // WalletConnect project ID (can be updated)
   chains: [base, mainnet, bsc],
   transports: {

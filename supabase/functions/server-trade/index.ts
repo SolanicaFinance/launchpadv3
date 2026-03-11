@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     console.log(`[server-trade] ${isBuy ? "BUY" : "SELL"} ${amount} on ${mintAddress}`);
 
     // ── 2. Build swap transaction ──────────────────────────────────────
-    let meteoraApiUrl = Deno.env.get("METEORA_API_URL") || "https://clawmode.vercel.app";
+    let meteoraApiUrl = Deno.env.get("METEORA_API_URL") || "https://saturntrade.vercel.app";
     if (!meteoraApiUrl.startsWith("http")) meteoraApiUrl = `https://${meteoraApiUrl}`;
 
     const swapPayload = {

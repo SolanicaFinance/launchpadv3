@@ -18,7 +18,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const startTime = Date.now();
-  console.log("[claw-distribute] ⏰ Starting Claw fee distribution...");
+  console.log("[saturn-distribute] ⏰ Starting Claw fee distribution...");
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -43,7 +43,7 @@ serve(async (req) => {
     const connection = new Connection(heliusRpcUrl, "confirmed");
     const treasuryBalance = await connection.getBalance(treasuryKeypair.publicKey);
     const treasuryBalanceSol = treasuryBalance / 1e9;
-    console.log(`[claw-distribute] Claw Treasury balance: ${treasuryBalanceSol.toFixed(4)} SOL`);
+    console.log(`[saturn-distribute] Claw Treasury balance: ${treasuryBalanceSol.toFixed(4)} SOL`);
 
     if (treasuryBalanceSol < 0.01) {
       return new Response(
@@ -67,7 +67,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[claw-distribute] Found ${undistributedClaims.length} undistributed Claw claims`);
+    console.log(`[saturn-distribute] Found ${undistributedClaims.length} undistributed Claw claims`);
 
     // Group by recipient
     const groups = new Map<string, { token: any; recipientWallet: string; claims: any[]; claimedSol: number; isTradingAgent: boolean }>();
@@ -125,7 +125,7 @@ serve(async (req) => {
 
         const signature = await sendAndConfirmTransaction(connection, transaction, [treasuryKeypair], { commitment: "confirmed", maxRetries: 3 });
 
-        console.log(`[claw-distribute] ✅ Sent ${recipientAmount.toFixed(6)} SOL to ${group.recipientWallet}, sig: ${signature}`);
+        console.log(`[saturn-distribute] ✅ Sent ${recipientAmount.toFixed(6)} SOL to ${group.recipientWallet}, sig: ${signature}`);
 
         // Record in claw_agent_fee_distributions
         await supabase.from("claw_agent_fee_distributions").insert({
@@ -144,7 +144,7 @@ serve(async (req) => {
         totalDistributed += recipientAmount;
         successCount++;
       } catch (txError) {
-        console.error(`[claw-distribute] ❌ Failed to send to ${group.recipientWallet}:`, txError);
+        console.error(`[saturn-distribute] ❌ Failed to send to ${group.recipientWallet}:`, txError);
       }
 
       await new Promise(r => setTimeout(r, 500));
@@ -155,7 +155,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-distribute] ❌ Error:", error);
+    console.error("[saturn-distribute] ❌ Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

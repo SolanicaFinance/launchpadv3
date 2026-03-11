@@ -6,7 +6,7 @@ import { Twitter, Sparkles, Coins, ArrowRight } from "lucide-react";
 const steps = [
   {
     icon: Twitter,
-    title: "Tweet @clawmode",
+    title: "Tweet @saturntrade",
     description: "Post on X with !clawmode followed by any name or description. That's it.",
   },
   {

@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const VERCEL_API_URL = "https://clawmode.vercel.app";
+const VERCEL_API_URL = "https://saturntrade.vercel.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -75,7 +75,7 @@ serve(async (req) => {
       .eq("id", bribeId);
 
     const parentAgent = bribe.claw_agents;
-    console.log(`[claw-bribe-confirm] Bribe ${bribeId} paid. Parent: ${parentAgent?.name}. Generating child...`);
+    console.log(`[saturn-bribe-confirm] Bribe ${bribeId} paid. Parent: ${parentAgent?.name}. Generating child...`);
 
     // Generate child agent identity using AI, seeded by parent personality
     const childIdentity = await generateChildAgent(LOVABLE_API_KEY, {
@@ -88,7 +88,7 @@ serve(async (req) => {
     try {
       avatarUrl = await generateAvatar(LOVABLE_API_KEY, childIdentity.name, childIdentity.description);
     } catch (e) {
-      console.error("[claw-bribe-confirm] Avatar generation failed:", e);
+      console.error("[saturn-bribe-confirm] Avatar generation failed:", e);
     }
 
     // Call claw-trading-create to launch the full agent + token + community
@@ -130,7 +130,7 @@ serve(async (req) => {
       })
       .eq("id", bribeId);
 
-    console.log(`[claw-bribe-confirm] ✅ Bribe ${bribeId} completed. Child: ${childIdentity.name} ($${childIdentity.ticker})`);
+    console.log(`[saturn-bribe-confirm] ✅ Bribe ${bribeId} completed. Child: ${childIdentity.name} ($${childIdentity.ticker})`);
 
     return new Response(
       JSON.stringify({
@@ -150,7 +150,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-bribe-confirm] Error:", error);
+    console.error("[saturn-bribe-confirm] Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

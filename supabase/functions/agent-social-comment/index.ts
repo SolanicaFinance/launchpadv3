@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         commentId: comment.id,
-        postUrl: `https://clawsai.fun/post/${postId}`,
+        postUrl: `https://saturn.trade/post/${postId}`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

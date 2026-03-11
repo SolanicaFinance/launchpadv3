@@ -119,7 +119,7 @@ async function calculateClaimable(
 
   // Safety cap
   if (claimable > MAX_SINGLE_CLAIM_SOL) {
-    console.log(`[claw-creator-claim] ⚠️ Capping claim from ${claimable.toFixed(6)} to ${MAX_SINGLE_CLAIM_SOL} SOL`);
+    console.log(`[saturn-creator-claim] ⚠️ Capping claim from ${claimable.toFixed(6)} to ${MAX_SINGLE_CLAIM_SOL} SOL`);
     claimable = MAX_SINGLE_CLAIM_SOL;
   }
 
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
     // Calculate claimable
     const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds);
 
-    console.log(`[claw-creator-claim] @${normalizedUsername}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
+    console.log(`[saturn-creator-claim] @${normalizedUsername}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
 
     if (checkOnly) {
       return new Response(JSON.stringify({
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
       const verifiedCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds);
       
       if (verifiedCalc.claimable < MIN_CLAIM_SOL) {
-        console.log(`[claw-creator-claim] ⚠️ Post-lock: claimable=${verifiedCalc.claimable.toFixed(6)} < ${MIN_CLAIM_SOL}`);
+        console.log(`[saturn-creator-claim] ⚠️ Post-lock: claimable=${verifiedCalc.claimable.toFixed(6)} < ${MIN_CLAIM_SOL}`);
         return new Response(JSON.stringify({ success: false, error: `Nothing left to claim. Another claim may have just completed.`, pendingAmount: verifiedCalc.claimable }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
           }).select("id").single();
 
           if (insertError || !inserted) {
-            console.error(`[claw-creator-claim] ❌ Failed to insert pending distribution:`, insertError);
+            console.error(`[saturn-creator-claim] ❌ Failed to insert pending distribution:`, insertError);
             // Clean up any already-inserted pending distributions
             if (distributionIds.length > 0) {
               await supabase.from("claw_distributions").delete().in("id", distributionIds);
@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
             throw new Error("Failed to record distribution - claim aborted for safety");
           }
           distributionIds.push(inserted.id);
-          console.log(`[claw-creator-claim] 📝 Recorded pending distribution ${inserted.id}: ${tokenClaimable.toFixed(6)} SOL`);
+          console.log(`[saturn-creator-claim] 📝 Recorded pending distribution ${inserted.id}: ${tokenClaimable.toFixed(6)} SOL`);
         }
       }
 
@@ -312,7 +312,7 @@ Deno.serve(async (req) => {
         throw new Error("No distributions to record - claim aborted");
       }
 
-      console.log(`[claw-creator-claim] ✅ ${distributionIds.length} pending distributions recorded. Now sending SOL...`);
+      console.log(`[saturn-creator-claim] ✅ ${distributionIds.length} pending distributions recorded. Now sending SOL...`);
 
       // ===== STEP 2: Send SOL on-chain =====
       let treasuryKeypair: Keypair;
@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
       const treasuryBalance = await connection.getBalance(treasuryKeypair.publicKey);
       const treasuryBalanceSol = treasuryBalance / 1e9;
 
-      console.log(`[claw-creator-claim] Treasury: ${treasuryBalanceSol.toFixed(6)} SOL, claiming: ${claimable.toFixed(6)} SOL`);
+      console.log(`[saturn-creator-claim] Treasury: ${treasuryBalanceSol.toFixed(6)} SOL, claiming: ${claimable.toFixed(6)} SOL`);
 
       if (treasuryBalanceSol < claimable + TREASURY_RESERVE_SOL) {
         // Mark distributions as failed
@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
         throw txError;
       }
 
-      console.log(`[claw-creator-claim] ✅ Sent ${claimable.toFixed(6)} SOL to ${payoutWallet}, sig: ${signature}`);
+      console.log(`[saturn-creator-claim] ✅ Sent ${claimable.toFixed(6)} SOL to ${payoutWallet}, sig: ${signature}`);
 
       // ===== STEP 3: Mark distributions as completed with signature =====
       const { error: updateError } = await supabase
@@ -361,7 +361,7 @@ Deno.serve(async (req) => {
         .in("id", distributionIds);
 
       if (updateError) {
-        console.error(`[claw-creator-claim] ⚠️ Failed to mark distributions as completed (SOL was sent!):`, updateError);
+        console.error(`[saturn-creator-claim] ⚠️ Failed to mark distributions as completed (SOL was sent!):`, updateError);
         // SOL was sent but we couldn't update status - this is logged but not fatal
       }
 
@@ -375,7 +375,7 @@ Deno.serve(async (req) => {
       await supabase.rpc("release_claw_creator_claim_lock", { p_twitter_username: normalizedUsername });
     }
   } catch (error) {
-    console.error("[claw-creator-claim] Error:", error);
+    console.error("[saturn-creator-claim] Error:", error);
     return new Response(JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

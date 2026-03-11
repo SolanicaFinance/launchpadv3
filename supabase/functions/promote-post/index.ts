@@ -272,7 +272,7 @@ This is a paid promotion. DYOR.
         JSON.stringify({
           success: true,
           tweetId,
-          tweetUrl: `https://twitter.com/clawmode/status/${tweetId}`,
+          tweetUrl: `https://twitter.com/saturntrade/status/${tweetId}`,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

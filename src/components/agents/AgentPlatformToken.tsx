@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 
 const CLAW_TOKEN = {
   name: "$CLAW",
-  description: "The Claw Mode platform token. Earn fees from all agent-launched tokens.",
+  description: "The Saturn platform token. Earn fees from all agent-launched tokens.",
   mintAddress: "GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",
   dexScreenerUrl: "https://dexscreener.com/solana/GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",
   solscanUrl: "https://solscan.io/token/GfLD9EQn7A1UjopYVJ8aUUjHQhX14dwFf8oBWKW8pump",

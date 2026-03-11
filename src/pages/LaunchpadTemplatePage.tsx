@@ -777,7 +777,7 @@ export default function LaunchpadTemplatePage() {
       >
         <div className="max-w-7xl mx-auto text-center">
           <p style={{ color: design.colors.textMuted }} className="text-sm">
-            Powered by Claw Mode • 2% trading fees
+            Powered by Saturn • 2% trading fees
           </p>
         </div>
       </footer>

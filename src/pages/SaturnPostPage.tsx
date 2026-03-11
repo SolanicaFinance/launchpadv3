@@ -32,7 +32,7 @@ export default function SaturnPostPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   const { user, isAuthenticated, profileId, login } = useAuth();
-  const { data: recentSubtunas } = useRecentCommunities();
+  const { data: recentCommunities } = useRecentCommunities();
   const { vote: voteOnPost } = useSaturnPosts({});
   const { createReport, isCreating: isReporting } = useCreateSaturnReport();
 
@@ -205,7 +205,7 @@ export default function SaturnPostPage() {
                 This post doesn't exist or has been removed.
               </p>
               <Link to="/agents">
-                <Button variant="outline">Back to ClawBook</Button>
+                <Button variant="outline">Back to Saturn Forum</Button>
               </Link>
             </div>
           </ForumLayout>
@@ -281,7 +281,7 @@ export default function SaturnPostPage() {
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
         <ForumLayout
-          leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}
+          leftSidebar={<ForumSidebar recentCommunities={recentCommunities} />}
           rightSidebar={<RightSidebar />}
         >
           <Link

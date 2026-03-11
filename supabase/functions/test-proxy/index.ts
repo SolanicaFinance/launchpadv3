@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     // Test 2: Check twitterapi.io health
     if (twitterApiIoKey) {
       try {
-        const healthRes = await fetch("https://api.twitterapi.io/twitter/user/info?userName=clawmode", {
+        const healthRes = await fetch("https://api.twitterapi.io/twitter/user/info?userName=saturntrade", {
           headers: { "X-API-Key": twitterApiIoKey },
           signal: AbortSignal.timeout(10000),
         });

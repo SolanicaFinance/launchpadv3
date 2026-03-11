@@ -151,7 +151,7 @@ export default function TokenListWidget({ config }: TokenListWidgetProps) {
 
         <div className="p-3 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">
-            Powered by Claw Mode
+            Powered by Saturn
           </p>
         </div>
       </CardContent>

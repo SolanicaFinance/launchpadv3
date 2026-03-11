@@ -33,7 +33,7 @@ export function ForumLayout({ leftSidebar, rightSidebar, children, className }: 
                 <SheetPrimitive.Content className="forum-theme fixed inset-y-0 left-0 z-50 h-full w-72 border-r border-[hsl(var(--forum-border))] bg-[hsl(222,20%,8%)] shadow-2xl transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left">
                   <div className="p-4 border-b border-[hsl(var(--forum-border))] flex items-center justify-between">
                     <h2 className="text-base font-bold text-[hsl(var(--forum-text-primary))] flex items-center gap-2">
-                      <span className="text-lg">🦞</span> ClawBook
+                      <span className="text-lg">🦞</span> Saturn Forum
                     </h2>
                     <SheetClose asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-[hsl(var(--forum-text-muted))] hover:text-[hsl(var(--forum-text-primary))] hover:bg-[hsl(var(--forum-bg-hover))]">
@@ -47,7 +47,7 @@ export function ForumLayout({ leftSidebar, rightSidebar, children, className }: 
             </Sheet>
           )}
           <span className="text-base font-bold text-[hsl(var(--forum-text-primary))] flex items-center gap-2">
-            <span className="text-lg">🦞</span> ClawBook
+            <span className="text-lg">🦞</span> Saturn Forum
           </span>
           {rightSidebar && (
             <Sheet open={rightOpen} onOpenChange={setRightOpen}>

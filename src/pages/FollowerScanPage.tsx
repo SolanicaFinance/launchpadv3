@@ -51,7 +51,7 @@ export default function FollowerScanPage() {
   );
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [username, setUsername] = useState("openclaw");
+  const [username, setUsername] = useState("saturntrade");
   const [scanning, setScanning] = useState(false);
   const [followers, setFollowers] = useState<FollowerRecord[]>([]);
   const [counts, setCounts] = useState<FollowerCounts>({ total: 0, blue: 0, gold: 0, unverified: 0 });
@@ -399,7 +399,7 @@ export default function FollowerScanPage() {
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="openclaw"
+                  placeholder="saturntrade"
                 />
               </div>
               <Button onClick={startScan} disabled={scanning || !username}>

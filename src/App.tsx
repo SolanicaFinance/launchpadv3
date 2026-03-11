@@ -156,7 +156,7 @@ const App = () => (
                     <Route path="/agents/trading" element={<Navigate to="/agents?tab=trading" replace />} />
                     <Route path="/trading-agents" element={<Navigate to="/agents?tab=trading" replace />} />
                     <Route path="/agents/trading/:id" element={<TradingAgentProfilePage />} />
-                    <Route path="/admin/clawbook" element={<Navigate to="/admin?tab=clawbook" replace />} />
+                    <Route path="/admin/clawbook" element={<Navigate to="/admin?tab=forum" replace />} />
                     <Route path="/admin/agent-logs" element={<Navigate to="/admin?tab=agent-logs" replace />} />
                     <Route path="/admin/influencer-replies" element={<Navigate to="/admin?tab=promo" replace />} />
                     <Route path="/admin/promo-mentions" element={<Navigate to="/admin?tab=promo" replace />} />
@@ -173,7 +173,7 @@ const App = () => (
                     <Route path="/admin/x-bots" element={<Navigate to="/admin?tab=xbots" replace />} />
                     <Route path="/admin/follower-scan" element={<Navigate to="/admin?tab=follower-scan" replace />} />
                     <Route path="/claw" element={<SaturnModePage />} />
-                    <Route path="/claw/adminlaunch" element={<Navigate to="/admin?tab=claw-launch" replace />} />
+                    <Route path="/claw/adminlaunch" element={<Navigate to="/admin?tab=saturn-launch" replace />} />
                     
                     <Route path="/admin/tunnel-distribute" element={<TunnelDistributePage />} />
                     <Route path="/admin/compressed-distribute" element={<CompressedDistributePage />} />

@@ -52,13 +52,13 @@ export const BRAND = {
     "saturn-theme": "saturn-theme",
     "forum-theme": "forum-theme",
     "ClawMode": "Saturn",
-    "ClawBook": "Saturn Forum",
+    "Saturn Forum": "Saturn Forum",
     "SubClaw": "Saturn Community",
     "SubTuna": "Saturn Community",
     "OpenTuna": "Saturn SDK",
-    "OpenClaw": "Saturn Trade",
-    "clawsai.fun": "saturn.trade",
-    "@clawmode": "@saturntrade",
+    "Saturn Trade": "Saturn Trade",
+    "saturn.trade": "saturn.trade",
+    "@saturntrade": "@saturntrade",
   },
 } as const;
 

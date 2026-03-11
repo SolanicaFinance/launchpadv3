@@ -24,7 +24,7 @@ async function fetchTweets(username: string, apiKey: string, count = 100): Promi
     let url = `${TWITTERAPI_IO_BASE}/user/last_tweets?userName=${encodeURIComponent(cleanUsername)}&count=20`;
     if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
 
-    console.log(`[claw-learn-voice] Fetching page ${pages + 1} for @${cleanUsername}...`);
+    console.log(`[saturn-learn-voice] Fetching page ${pages + 1} for @${cleanUsername}...`);
 
     try {
       const response = await fetch(url, {
@@ -32,7 +32,7 @@ async function fetchTweets(username: string, apiKey: string, count = 100): Promi
       });
 
       if (!response.ok) {
-        console.error(`[claw-learn-voice] twitterapi.io error: ${response.status}`);
+        console.error(`[saturn-learn-voice] twitterapi.io error: ${response.status}`);
         const errorText = await response.text();
         console.error("Error body:", errorText);
         break;
@@ -72,12 +72,12 @@ async function fetchTweets(username: string, apiKey: string, count = 100): Promi
       
       pages++;
     } catch (error) {
-      console.error("[claw-learn-voice] Error fetching tweets:", error);
+      console.error("[saturn-learn-voice] Error fetching tweets:", error);
       break;
     }
   }
 
-  console.log(`[claw-learn-voice] Fetched ${allTweets.length} tweets total from @${cleanUsername}`);
+  console.log(`[saturn-learn-voice] Fetched ${allTweets.length} tweets total from @${cleanUsername}`);
   return allTweets.slice(0, count);
 }
 
@@ -86,7 +86,7 @@ async function fetchTweets(username: string, apiKey: string, count = 100): Promi
  */
 async function analyzeStyle(tweets: string[], lovableApiKey: string): Promise<Record<string, unknown> | null> {
   if (tweets.length < 5) {
-    console.log("[claw-learn-voice] Not enough tweets to analyze");
+    console.log("[saturn-learn-voice] Not enough tweets to analyze");
     return null;
   }
 
@@ -140,7 +140,7 @@ Return JSON with these fields:
     });
 
     if (!response.ok) {
-      console.error(`[claw-learn-voice] AI API error: ${response.status}`);
+      console.error(`[saturn-learn-voice] AI API error: ${response.status}`);
       const errText = await response.text();
       console.error(errText);
       return null;
@@ -150,7 +150,7 @@ Return JSON with these fields:
     const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
-      console.error("[claw-learn-voice] No content from AI");
+      console.error("[saturn-learn-voice] No content from AI");
       return null;
     }
 
@@ -163,10 +163,10 @@ Return JSON with these fields:
     }
 
     const result = JSON.parse(jsonStr);
-    console.log("[claw-learn-voice] ✅ Style analysis complete");
+    console.log("[saturn-learn-voice] ✅ Style analysis complete");
     return result;
   } catch (error) {
-    console.error("[claw-learn-voice] Error analyzing style:", error);
+    console.error("[saturn-learn-voice] Error analyzing style:", error);
     return null;
   }
 }
@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`[claw-learn-voice] Starting voice learning for @${targetUsername} (${tweetCount} tweets)`);
+    console.log(`[saturn-learn-voice] Starting voice learning for @${targetUsername} (${tweetCount} tweets)`);
 
     // Step 1: Fetch tweets
     const tweets = await fetchTweets(targetUsername, twitterApiKey, tweetCount);
@@ -233,9 +233,9 @@ Deno.serve(async (req) => {
       );
 
     if (upsertError) {
-      console.error("[claw-learn-voice] Cache error:", upsertError);
+      console.error("[saturn-learn-voice] Cache error:", upsertError);
     } else {
-      console.log(`[claw-learn-voice] ✅ Cached style for @${targetUsername}`);
+      console.log(`[saturn-learn-voice] ✅ Cached style for @${targetUsername}`);
     }
 
     return new Response(
@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-learn-voice] Error:", error);
+    console.error("[saturn-learn-voice] Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

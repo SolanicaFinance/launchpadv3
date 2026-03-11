@@ -105,7 +105,7 @@ async function getAuthenticatedUserId(
   return data.data?.id || null;
 }
 
-// Fetch mentions of @clawmode using official X.com API
+// Fetch mentions of @saturntrade using official X.com API
 async function fetchMentions(
   userId: string,
   consumerKey: string,
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
 
             const tokenName = tokenData.name || post.parsed_name || "Token";
             const tokenTicker = tokenData.ticker || post.parsed_symbol || "TOKEN";
-            const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${tokenData.mint_address}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on clawsai.fun`;
+            const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${tokenData.mint_address}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
 
             const catchUpResult = await replyToTweet(
               post.post_id,
@@ -411,7 +411,7 @@ Deno.serve(async (req) => {
         const authorId = mention.author_id;
         
         // Layer 2: Expanded bot username blocklist
-        const botUsernames = ["buildtuna", "tunalaunch", "tunabot", "tuna_launch", "build_tuna", "tunaagent", "clawmode", "buildclaw", "openclaw", "clawmode_bot"];
+        const botUsernames = ["buildtuna", "tunalaunch", "tunabot", "tuna_launch", "build_tuna", "tunaagent", "saturntrade", "buildclaw", "saturntrade", "saturntrade_bot"];
         if (username && botUsernames.includes(username.toLowerCase())) {
           console.log(`[agent-scan-mentions] ⏭️ Skipping ${tweetId} - from bot account @${username}`);
           continue;
@@ -425,7 +425,7 @@ Deno.serve(async (req) => {
           "🐟 To launch your token",
           "Powered by Claw Agents",
           "Powered by TUNA Agents",
-          "is now live on Claw Mode!",
+          "is now live on Saturn!",
           "is now live on TUNA!",
           "80% of fees go to you",
         ];
@@ -434,11 +434,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Check if contains launch command (!clawmode only)
-        const hasLaunchCommand = tweetText.toLowerCase().includes("!clawmode");
-        const clawmodeMatch = tweetText.match(/!clawmode\s+(.+?)(?:\n|$)/i);
-        const isAutoLaunch = !!clawmodeMatch;
-        const autoLaunchPrompt = isAutoLaunch ? clawmodeMatch[1].trim() : null;
+        // Check if contains launch command (!saturntrade only)
+        const hasLaunchCommand = tweetText.toLowerCase().includes("!saturntrade");
+        const saturntradeMatch = tweetText.match(/!saturntrade\s+(.+?)(?:\n|$)/i);
+        const isAutoLaunch = !!saturntradeMatch;
+        const autoLaunchPrompt = isAutoLaunch ? saturntradeMatch[1].trim() : null;
         
         if (!hasLaunchCommand) {
           continue;
@@ -541,7 +541,7 @@ Deno.serve(async (req) => {
                 if (mintAddress) {
                   const tokenName = tokenData?.name || postData?.parsed_name || "Token";
                   const tokenTicker = tokenData?.ticker || postData?.parsed_symbol || "TOKEN";
-                  const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on clawsai.fun`;
+                  const catchUpReplyText = `🦞 Token launched on $SOL!\n\n$${tokenTicker} - ${tokenName}\nCA: ${mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
 
                   const catchUpReply = await replyToTweet(
                     tweetId,
@@ -621,7 +621,7 @@ Deno.serve(async (req) => {
             console.log(`[agent-scan-mentions] ⏭️ Skipping reply to ${tweetId} - already replied`);
           } else {
             // New format: full CA, no links, token name/symbol
-            const replyText = `🦞 Token launched on $SOL!\n\n$${processResult.tokenSymbol || "TOKEN"} - ${processResult.tokenName || "Token"}\nCA: ${processResult.mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on clawsai.fun`;
+            const replyText = `🦞 Token launched on $SOL!\n\n$${processResult.tokenSymbol || "TOKEN"} - ${processResult.tokenName || "Token"}\nCA: ${processResult.mintAddress}\n\nPowered by Claw Agents - 80% of fees go to you! Launch your token on saturn.trade`;
 
             const replyResult = await replyToTweet(
               tweetId,
@@ -705,7 +705,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: true,
           mentionsFound: mentions.length,
-          clawmodeMentions: results.length,
+          saturntradeMentions: results.length,
           backupLaunches: launchCount,
           results,
           durationMs: Date.now() - startTime,

@@ -88,7 +88,7 @@ export default function AgentProfilePage() {
   const [comments, setComments] = useState<AgentComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
-  const { data: recentSubtunas } = useRecentCommunities();
+  const { data: recentCommunities } = useRecentCommunities();
   useEffect(() => {
     if (agentId) {
       fetchAgentProfile();
@@ -320,7 +320,7 @@ export default function AgentProfilePage() {
               to="/agents"
               className="text-[hsl(var(--forum-primary))] hover:underline mt-2 inline-block"
             >
-              ← Back to ClawBook
+              ← Back to Saturn Forum
             </Link>
           </div>
         </LaunchpadLayout>
@@ -331,7 +331,7 @@ export default function AgentProfilePage() {
   return (
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
-        <ForumLayout leftSidebar={<ForumSidebar recentSubtunas={recentSubtunas} />}>
+        <ForumLayout leftSidebar={<ForumSidebar recentCommunities={recentCommunities} />}>
           <div className="space-y-4">
             {/* Back link */}
             <Link
@@ -339,7 +339,7 @@ export default function AgentProfilePage() {
               className="inline-flex items-center gap-1 text-sm text-[hsl(var(--forum-text-secondary))] hover:text-[hsl(var(--forum-primary))]"
             >
               <ArrowLeft size={16} />
-              Back to ClawBook
+              Back to Saturn Forum
             </Link>
 
             {/* Agent Profile Header */}

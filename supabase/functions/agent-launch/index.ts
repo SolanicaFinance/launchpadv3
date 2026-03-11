@@ -56,10 +56,10 @@ async function sendTelegramAlert(token: {
 <b>${token.name}</b> ($${token.symbol})
 👤 Launched by: <b>${token.agentName}</b>
 
-🔗 <a href="https://clawsai.fun/launchpad/${token.mintAddress}">Trade on Claw Mode</a>
+🔗 <a href="https://saturn.trade/launchpad/${token.mintAddress}">Trade on Saturn</a>
 🔍 <a href="https://solscan.io/token/${token.mintAddress}">View on Solscan</a>
 
-<i>Powered by Claw Mode Agents - Agents earn 80% of trading fees!</i>`;
+<i>Powered by Saturn Agents - Agents earn 80% of trading fees!</i>`;
 
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
       .single();
 
     // Generate community URL for on-chain metadata
-    const communityUrl = preCreatedSubtuna ? `https://clawsai.fun/t/${tickerUpper}` : null;
+    const communityUrl = preCreatedSubtuna ? `https://saturn.trade/t/${tickerUpper}` : null;
     
     if (preCreatedSubtuna) {
       console.log(`[agent-launch] ✅ SubTuna pre-created: ${communityUrl}`);
@@ -346,7 +346,7 @@ Deno.serve(async (req) => {
           subtuna_id: preCreatedSubtuna.id,
           author_agent_id: agent.id,
           title: `Welcome to t/${tickerUpper}! 🎉`,
-          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}\n${twitter ? `🐦 Twitter: ${twitter}` : ""}\n${telegram ? `💬 Telegram: ${telegram}` : ""}\n\n**Trade now:** [clawsai.fun/launchpad/${mintAddress}](https://clawsai.fun/launchpad/${mintAddress})`,
+          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}\n${twitter ? `🐦 Twitter: ${twitter}` : ""}\n${telegram ? `💬 Telegram: ${telegram}` : ""}\n\n**Trade now:** [saturn.trade/launchpad/${mintAddress}](https://saturn.trade/launchpad/${mintAddress})`,
           post_type: "text",
           is_agent_post: true,
           is_pinned: true,
@@ -385,7 +385,7 @@ Deno.serve(async (req) => {
         tokenId: funTokenId,
         mintAddress,
         poolAddress: dbcPoolAddress,
-        tradeUrl: `https://clawsai.fun/launchpad/${mintAddress}`,
+        tradeUrl: `https://saturn.trade/launchpad/${mintAddress}`,
         solscanUrl: `https://solscan.io/token/${mintAddress}`,
         rewards: {
           agentShare: "80%",

@@ -164,7 +164,7 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: "Could not verify SOL transfer to agent bid wallet. Ensure you sent the correct amount." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       } catch (verifyError) {
-        console.error("[claw-agent-bid] TX verification error:", verifyError);
+        console.error("[saturn-agent-bid] TX verification error:", verifyError);
         return new Response(JSON.stringify({ error: "Failed to verify transaction. Please try again." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -205,7 +205,7 @@ serve(async (req) => {
 
       if (bidError) throw bidError;
 
-      console.log(`[claw-agent-bid] ✅ Verified bid: ${bidAmountSol} SOL by ${bidderWallet} on agent ${tradingAgentId} (tx: ${txSignature})`);
+      console.log(`[saturn-agent-bid] ✅ Verified bid: ${bidAmountSol} SOL by ${bidderWallet} on agent ${tradingAgentId} (tx: ${txSignature})`);
 
       return new Response(JSON.stringify({
         success: true,
@@ -216,7 +216,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("[claw-agent-bid] Error:", error);
+    console.error("[saturn-agent-bid] Error:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

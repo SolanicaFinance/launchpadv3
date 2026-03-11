@@ -94,9 +94,9 @@ Return ONLY valid JSON: {"explicit_name": "..." or null, "explicit_ticker": "...
           explicitTicker = extracted.explicit_ticker.trim().toUpperCase();
         }
       }
-      console.log(`[claw-trading-generate] AI extraction: name="${explicitName}", ticker="${explicitTicker}" from "${userIdea}"`);
+      console.log(`[saturn-trading-generate] AI extraction: name="${explicitName}", ticker="${explicitTicker}" from "${userIdea}"`);
     } catch (e) {
-      console.error("[claw-trading-generate] AI extraction failed, falling back to regex:", e);
+      console.error("[saturn-trading-generate] AI extraction failed, falling back to regex:", e);
       // Fallback: simple regex for obvious patterns
       const nameRegex = userIdea.match(/(?:name|called|named)\s+(?:it\s+|is\s+|as\s+|to\s+)?([A-Za-z0-9.]+)/i);
       const tickerRegex = userIdea.match(/ticker\s+(?:is\s+)?\$?([A-Z0-9.]{2,10})/i) || userIdea.match(/\$([A-Z0-9.]{2,10})/i);

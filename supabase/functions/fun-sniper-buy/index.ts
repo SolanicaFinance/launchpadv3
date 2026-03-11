@@ -132,7 +132,7 @@ serve(async (req) => {
     }
 
     // Build swap transaction using Meteora API
-    let meteoraApiUrl = Deno.env.get('METEORA_API_URL') || 'https://clawmode.vercel.app';
+    let meteoraApiUrl = Deno.env.get('METEORA_API_URL') || 'https://saturntrade.vercel.app';
     if (!meteoraApiUrl.startsWith('http')) {
       meteoraApiUrl = `https://${meteoraApiUrl}`;
     }

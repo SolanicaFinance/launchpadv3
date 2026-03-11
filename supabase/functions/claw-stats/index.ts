@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-stats] Error:", error);
+    console.error("[saturn-stats] Error:", error);
 
     if (cachedStats) {
       return new Response(

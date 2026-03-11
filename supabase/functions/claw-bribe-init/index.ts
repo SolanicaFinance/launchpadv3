@@ -58,7 +58,7 @@ serve(async (req) => {
 
     if (bError) throw bError;
 
-    console.log(`[claw-bribe-init] Created bribe ${bribe.id} for agent ${parentAgent.name}`);
+    console.log(`[saturn-bribe-init] Created bribe ${bribe.id} for agent ${parentAgent.name}`);
 
     return new Response(
       JSON.stringify({
@@ -71,7 +71,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[claw-bribe-init] Error:", error);
+    console.error("[saturn-bribe-init] Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

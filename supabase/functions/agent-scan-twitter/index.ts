@@ -729,9 +729,9 @@ Deno.serve(async (req) => {
       }
 
       // Try Official X API first (Bearer Token), fallback to twitterapi.io
-      const officialSearchQuery = "\"!clawmode\" -is:retweet";
-      const twitterApiIoMentionQuery = "\"!clawmode\" -is:retweet";
-      const twitterApiIoLaunchQuery = "\"!clawmode\" -is:retweet -is:reply";
+      const officialSearchQuery = "\"!saturntrade\" -is:retweet";
+      const twitterApiIoMentionQuery = "\"!saturntrade\" -is:retweet";
+      const twitterApiIoLaunchQuery = "\"!saturntrade\" -is:retweet -is:reply";
       let tweets: TweetResult[] = [];
       let rateLimited = false;
       let searchMethod = "none";
@@ -795,11 +795,11 @@ Deno.serve(async (req) => {
           console.log(`[agent-scan-twitter] Found ${tweets.length} tweets via twitterapi.io mention query`);
           tweets.forEach((t, i) => console.log(`  [${i}] @${t.author_username}: ${t.text.substring(0, 80)}`));
 
-          // Secondary search: if mention query found few results, also search for "!clawmode" keyword
+          // Secondary search: if mention query found few results, also search for "!saturntrade" keyword
           if (tweets.length < 5) {
-            console.log("[agent-scan-twitter] Few mention results, running secondary !clawmode keyword search...");
+            console.log("[agent-scan-twitter] Few mention results, running secondary !saturntrade keyword search...");
             const launchTweets = await searchMentionsViaTwitterApiIo(twitterApiIoLaunchQuery, twitterApiIoKey);
-            console.log(`[agent-scan-twitter] Found ${launchTweets.length} tweets via !clawmode keyword search`);
+            console.log(`[agent-scan-twitter] Found ${launchTweets.length} tweets via !saturntrade keyword search`);
             launchTweets.forEach((t, i) => console.log(`  [kw-${i}] @${t.author_username}: ${t.text.substring(0, 80)}`));
             const existingIds = new Set(tweets.map(t => t.id));
             for (const t of launchTweets) {
@@ -869,7 +869,7 @@ Deno.serve(async (req) => {
       // Generate Claw's viral take on a launched token
       async function generateClawViralTake(tokenName: string, tokenSymbol: string, tweetText: string): Promise<string> {
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        if (!LOVABLE_API_KEY) return "🦞 Snip snip. Trade it on clawmode.com";
+        if (!LOVABLE_API_KEY) return "🦞 Snip snip. Trade it on saturntrade.com";
 
         try {
           const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -905,12 +905,12 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
 
           if (!response.ok) {
             console.error("[agent-scan-twitter] AI viral take error:", response.status);
-            return "🦞 Snip snip. Trade it on clawmode.com";
+            return "🦞 Snip snip. Trade it on saturntrade.com";
           }
 
           const data = await response.json();
           let take = data.choices?.[0]?.message?.content?.trim();
-          if (!take) return "🦞 Snip snip. Trade it on clawmode.com";
+          if (!take) return "🦞 Snip snip. Trade it on saturntrade.com";
 
           // Ensure it starts with 🦞 and trim to 140 chars
           if (!take.startsWith("🦞")) take = "🦞 " + take;
@@ -918,7 +918,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           return take;
         } catch (e) {
           console.error("[agent-scan-twitter] AI viral take exception:", e);
-          return "🦞 Snip snip. Trade it on clawmode.com";
+          return "🦞 Snip snip. Trade it on saturntrade.com";
         }
       }
 
@@ -932,10 +932,10 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
         const tweetText = tweet.text;
         const normalizedText = tweetText;
         
-        // Detect !clawmode <text> command (replaces !launch)
-        const clawmodeMatch = tweetText.match(/!clawmode\s+(.+?)(?:\n|$)/i);
-        const isAutoLaunch = !!clawmodeMatch;
-        const autoLaunchPrompt = isAutoLaunch ? clawmodeMatch[1].trim() : null;
+        // Detect !saturntrade <text> command (replaces !launch)
+        const saturntradeMatch = tweetText.match(/!saturntrade\s+(.+?)(?:\n|$)/i);
+        const isAutoLaunch = !!saturntradeMatch;
+        const autoLaunchPrompt = isAutoLaunch ? saturntradeMatch[1].trim() : null;
         const username = tweet.author_username;
         const authorId = tweet.author_id;
         
@@ -958,7 +958,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
         }
 
         // Layer 2: Expanded bot username blocklist
-        const botUsernames = ["buildtuna", "tunalaunch", "tunabot", "tuna_launch", "build_tuna", "tunaagent", "clawmode", "buildclaw", "openclaw", "clawmode_bot"];
+        const botUsernames = ["buildtuna", "tunalaunch", "tunabot", "tuna_launch", "build_tuna", "tunaagent", "saturntrade", "buildclaw", "saturntrade", "saturntrade_bot"];
         if (username && botUsernames.includes(username.toLowerCase())) {
           console.log(`[agent-scan-twitter] ⏭️ Skipping ${tweetId} - from bot account @${username}`);
           results.push({ tweetId, status: "skipped_bot_account" });
@@ -974,11 +974,11 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           "🦞 Hey @",
           "🦞 Token launched!",
           "🦞 Trading Agent launched",
-          "Powered by Claw Mode",
+          "Powered by Saturn",
           "Trading-Fees goes to your Panel",
           "is now live on TUNA!",
           "claim them any time",
-          "Trade it on clawmode.com",
+          "Trade it on saturntrade.com",
           "Snip snip",
         ];
         if (botReplySignatures.some(sig => tweetText.includes(sig))) {
@@ -987,8 +987,8 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           continue;
         }
 
-        // Validate command presence - accept !clawmode or auto-launch
-        if (!normalizedText.toLowerCase().includes("!clawmode") && !isAutoLaunch) {
+        // Validate command presence - accept !saturntrade or auto-launch
+        if (!normalizedText.toLowerCase().includes("!saturntrade") && !isAutoLaunch) {
           console.log(`[agent-scan-twitter] Skipping ${tweetId} - no launch command`);
           results.push({ tweetId, status: "skipped_no_command" });
           continue;
@@ -1151,7 +1151,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
             if (processResult.shouldReply && processResult.replyText) {
               errorReplyText = processResult.replyText;
             } else if (processResult.error?.includes("parse")) {
-              errorReplyText = `🦞 Hey @${username}! To launch your token, please use this format:\n\n!clawmode\nName: YourTokenName\nSymbol: $TICKER\n\nDon't forget to attach an image!`;
+              errorReplyText = `🦞 Hey @${username}! To launch your token, please use this format:\n\n!saturntrade\nName: YourTokenName\nSymbol: $TICKER\n\nDon't forget to attach an image!`;
             }
 
             if (errorReplyText) {
@@ -1208,14 +1208,14 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
 
               if (!tokenData?.mint_address) continue;
 
-              const catchupViralTake = await generateClawViralTake(tokenData.name || launch.parsed_name || "Token", tokenData.ticker || launch.parsed_symbol || "TOKEN", "!clawmode catch-up launch");
+              const catchupViralTake = await generateClawViralTake(tokenData.name || launch.parsed_name || "Token", tokenData.ticker || launch.parsed_symbol || "TOKEN", "!saturntrade catch-up launch");
               const replyText = `🦞 Token launched on $SOL!\n\n$${tokenData.ticker || launch.parsed_symbol || "TOKEN"} - ${tokenData.name || launch.parsed_name || "Token"}\nCA: ${tokenData.mint_address}\n\n${catchupViralTake}`;
 
               // PRE-CLAIM: Insert pending record first
               const { error: claimError } = await supabase.from("twitter_bot_replies").insert({
                 tweet_id: launch.post_id,
                 tweet_author: launch.post_author || "",
-                tweet_text: `!clawmode (catch-up)`,
+                tweet_text: `!saturntrade (catch-up)`,
                 reply_text: replyText.slice(0, 500),
                 reply_id: `pending-catchup-${Date.now()}`,
               });

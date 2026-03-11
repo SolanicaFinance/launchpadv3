@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const DUNE_API_BASE = 'https://api.dune.com/api/v1/uploads';
 const DUNE_QUERY_API = 'https://api.dune.com/api/v1/query';
-const DUNE_NAMESPACE = 'clawmode';
+const DUNE_NAMESPACE = 'saturntrade';
 
 // Dashboard query IDs that need refreshing after data sync
 // Get these from your Dune dashboard URLs (e.g., dune.com/queries/QUERY_ID)

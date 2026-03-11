@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/sdk",
+  "name": "@saturntrade/sdk",
   "version": "1.0.0",
-  "description": "SDK for the Claw Mode Agent Launchpad on Solana",
+  "description": "SDK for the Saturn Trade Agent Launchpad on Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openclaw/claw-agent-sdk"
+    "url": "https://github.com/saturntrade/claw-agent-sdk"
   },
   "keywords": [
     "solana",
@@ -17,11 +17,11 @@
     "meteora",
     "bonding-curve"
   ],
-  "author": "Claw Mode Team",
+  "author": "Saturn Trade Team",
   "license": "MIT",
-  "homepage": "https://clawsai.fun",
+  "homepage": "https://saturn.trade",
   "bugs": {
-    "url": "https://github.com/openclaw/claw-agent-sdk/issues"
+    "url": "https://github.com/saturntrade/claw-agent-sdk/issues"
   },
   "scripts": {
     "build": "tsc",

@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-const CLAW_CONCEPTS = [
+const SATURN_CONCEPTS = [
   { theme: "astronaut", description: "LOBSTER in a spacesuit floating among stars" },
   { theme: "cyberpunk", description: "Neon-lit LOBSTER with glowing claws and tech accessories" },
   { theme: "samurai", description: "LOBSTER wielding a katana in feudal Japan style" },
@@ -43,14 +43,14 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { prompt } = await req.json().catch(() => ({}));
-    const randomConcept = CLAW_CONCEPTS[Math.floor(Math.random() * CLAW_CONCEPTS.length)];
+    const randomConcept = SATURN_CONCEPTS[Math.floor(Math.random() * SATURN_CONCEPTS.length)];
     const randomPalette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
     const themeToUse = prompt?.trim() || randomConcept.theme;
     const descriptionContext = prompt?.trim()
       ? `User's idea: "${prompt}"`
       : `Theme: ${randomConcept.theme} - ${randomConcept.description}`;
 
-    console.log("[claw-idea-generate] Generating concept:", themeToUse);
+    console.log("[saturn-idea-generate] Generating concept:", themeToUse);
 
     const conceptPrompt = `Create a meme token concept based on a LOBSTER mascot (NOT tuna, NOT sushi).
 
@@ -69,7 +69,7 @@ Return ONLY a JSON object (no markdown):
   "ticker": "3-4 letter ticker in CAPS",
   "description": "Catchy description with 🦞 emoji (max 80 chars)",
   "imagePrompt": "Detailed image prompt describing the LOBSTER mascot in the themed style",
-  "tweetText": "Viral tweet announcing this token (include @ClawMode mention, 🦞 emojis, max 280 chars)"
+  "tweetText": "Viral tweet announcing this token (include @Saturn mention, 🦞 emojis, max 280 chars)"
 }`;
 
     const conceptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -93,11 +93,11 @@ Return ONLY a JSON object (no markdown):
         ticker: "CMAX",
         description: "The ultimate LOBSTER experience! 🦞🚀",
         imagePrompt: `Cute fierce lobster character as a ${themeToUse}`,
-        tweetText: `Introducing $CMAX - The ultimate LOBSTER experience! 🦞🚀\n\nPowered by @ClawMode\n\n#Solana #Memecoins`,
+        tweetText: `Introducing $CMAX - The ultimate LOBSTER experience! 🦞🚀\n\nPowered by @Saturn\n\n#Solana #Memecoins`,
       };
     }
 
-    console.log("[claw-idea-generate] Concept generated:", concept.name);
+    console.log("[saturn-idea-generate] Concept generated:", concept.name);
 
     const imagePrompt = `Create a meme token logo featuring a fierce but cute LOBSTER mascot character.
 
@@ -131,7 +131,7 @@ Style: Cartoon/anime style, clean vector-like illustration, lobster as main focu
           ticker: concept.ticker?.replace(/[^A-Z]/g, "").slice(0, 5) || "CMAX",
           description: concept.description || "LOBSTER to the moon! 🦞🚀",
           imageUrl,
-          tweetText: concept.tweetText || `Introducing $${concept.ticker} - ${concept.description}\n\nPowered by @ClawMode 🦞`,
+          tweetText: concept.tweetText || `Introducing $${concept.ticker} - ${concept.description}\n\nPowered by @Saturn 🦞`,
           theme: themeToUse,
           palette: randomPalette,
         },
@@ -139,7 +139,7 @@ Style: Cartoon/anime style, clean vector-like illustration, lobster as main focu
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    console.error("[claw-idea-generate] Error:", error);
+    console.error("[saturn-idea-generate] Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

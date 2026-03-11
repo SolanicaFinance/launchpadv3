@@ -1,5 +1,5 @@
 {
-  "name": "@opentuna/sdk",
+  "name": "@saturntrade/sdk",
   "version": "3.1.0",
   "description": "OpenTuna Autonomous Agent SDK - Full primitives for email, slack, discord, whatsapp, cron, MCP, google workspace, notion, and trading automation on Solana",
   "main": "dist/index.js",
@@ -7,9 +7,9 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/opentuna.mjs",
-      "require": "./dist/opentuna.js",
-      "types": "./dist/opentuna.d.ts"
+      "import": "./dist/saturntrade.mjs",
+      "require": "./dist/saturntrade.js",
+      "types": "./dist/saturntrade.d.ts"
     },
     "./legacy": {
       "import": "./dist/index.mjs",
@@ -69,10 +69,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OpenClawTrade/opentuna-sdk.git"
+    "url": "git+https://github.com/OpenClawTrade/saturntrade-sdk.git"
   },
   "keywords": [
-    "opentuna",
+    "saturntrade",
     "autonomous-agents",
     "solana",
     "ai-agents",
@@ -90,11 +90,11 @@
     "agent-sdk",
     "colosseum-hackathon"
   ],
-  "author": "Claw Mode Team <team@clawsai.fun>",
+  "author": "Saturn Trade Team <team@saturn.trade>",
   "license": "MIT",
-  "homepage": "https://clawsai.fun/opentuna",
+  "homepage": "https://saturn.trade/saturntrade",
   "bugs": {
-    "url": "https://github.com/OpenClawTrade/opentuna-sdk/issues"
+    "url": "https://github.com/OpenClawTrade/saturntrade-sdk/issues"
   },
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",

@@ -74,7 +74,7 @@ export default function PortfolioPage() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src={HEADER_LOGO_SRC} alt="Claw Mode" className="h-8 w-8 rounded-lg object-cover" />
+            <img src={HEADER_LOGO_SRC} alt="Saturn" className="h-8 w-8 rounded-lg object-cover" />
             <span className="text-lg font-bold">CLAW</span>
           </Link>
           <h1 className="text-xl font-bold">Portfolio</h1>
