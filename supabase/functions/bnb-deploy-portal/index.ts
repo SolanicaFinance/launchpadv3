@@ -60,7 +60,7 @@ contract SaturnToken {
     }
 }
 
-contract TunaPortal {
+contract SaturnPortal {
     uint256 public constant TOTAL_SUPPLY = 1_000_000_000 * 1e18;
     uint256 public constant BONDING_TOKENS = 800_000_000 * 1e18;
     uint256 public constant LP_TOKENS = 200_000_000 * 1e18;
