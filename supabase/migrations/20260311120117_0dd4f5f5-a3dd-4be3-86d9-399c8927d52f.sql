@@ -1,0 +1,1 @@
+ALTER TABLE public.wallet_trades ADD COLUMN IF NOT EXISTS token_image_url text;

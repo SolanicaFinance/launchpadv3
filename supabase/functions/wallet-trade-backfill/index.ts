@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch token metadata from Helius DAS for all unique mints
-    const mintMeta: Record<string, { name: string; symbol: string }> = {};
+    const mintMeta: Record<string, { name: string; symbol: string; image: string }> = {};
     const mints = [...mintSet];
     if (mints.length > 0) {
       try {
@@ -195,9 +195,13 @@ Deno.serve(async (req) => {
         const dasData = await dasRes.json();
         for (const asset of dasData?.result || []) {
           if (asset?.id && asset?.content?.metadata) {
+            const imageUrl = asset.content?.links?.image
+              || (asset.content?.files?.[0]?.uri)
+              || null;
             mintMeta[asset.id] = {
               name: asset.content.metadata.name || "",
               symbol: asset.content.metadata.symbol || "",
+              image: imageUrl || "",
             };
           }
         }
@@ -212,6 +216,7 @@ Deno.serve(async (req) => {
       ...insert,
       token_name: mintMeta[insert.token_mint]?.name || null,
       token_ticker: mintMeta[insert.token_mint]?.symbol || null,
+      token_image_url: mintMeta[insert.token_mint]?.image || null,
     }));
 
     let insertedCount = 0;

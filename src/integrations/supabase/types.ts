@@ -8457,6 +8457,7 @@ export type Database = {
           slot: number | null
           sol_amount: number
           token_amount: number
+          token_image_url: string | null
           token_mint: string
           token_name: string | null
           token_ticker: string | null
@@ -8473,6 +8474,7 @@ export type Database = {
           slot?: number | null
           sol_amount: number
           token_amount: number
+          token_image_url?: string | null
           token_mint: string
           token_name?: string | null
           token_ticker?: string | null
@@ -8489,6 +8491,7 @@ export type Database = {
           slot?: number | null
           sol_amount?: number
           token_amount?: number
+          token_image_url?: string | null
           token_mint?: string
           token_name?: string | null
           token_ticker?: string | null

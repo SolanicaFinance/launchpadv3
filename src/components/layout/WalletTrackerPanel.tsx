@@ -577,6 +577,7 @@ interface WalletTrade {
   token_mint: string;
   token_name: string | null;
   token_ticker: string | null;
+  token_image_url: string | null;
   trade_type: string;
   sol_amount: number;
   token_amount: number;
@@ -649,8 +650,8 @@ function PanelTradesTab({ wallets, sz, f, navigate }: { wallets: any[]; sz: any;
         >
           {/* Token icon */}
           <OptimizedTokenImage
-            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
-            fallbackSrc={`https://cdn.jsdelivr.net/gh/niclas555/solana-token-list@main/assets/${t.token_mint}/logo.png`}
+            src={t.token_image_url || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
+            fallbackSrc={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
             fallbackText={t.token_ticker || "?"}
             size={40}
             loading="eager"

@@ -303,12 +303,16 @@ Deno.serve(async (req) => {
           }),
         });
         const dasData = await dasRes.json();
-        const meta: Record<string, { name: string; symbol: string }> = {};
+        const meta: Record<string, { name: string; symbol: string; image: string }> = {};
         for (const asset of dasData?.result || []) {
           if (asset?.id && asset?.content?.metadata) {
+            const imageUrl = asset.content?.links?.image
+              || (asset.content?.files?.[0]?.uri)
+              || null;
             meta[asset.id] = {
               name: asset.content.metadata.name || "",
               symbol: asset.content.metadata.symbol || "",
+              image: imageUrl || "",
             };
           }
         }
@@ -317,6 +321,7 @@ Deno.serve(async (req) => {
           if (m) {
             ins.token_name = m.name;
             ins.token_ticker = m.symbol;
+            if (m.image) ins.token_image_url = m.image;
           }
         }
       } catch (metaErr) {
