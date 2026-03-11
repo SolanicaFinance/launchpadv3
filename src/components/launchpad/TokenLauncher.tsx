@@ -2071,17 +2071,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
 
         {/* Phantom Mode */}
         {generatorMode === "phantom" && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {!phantomWallet.isConnected ? (
               <button
                 onClick={phantomWallet.connect}
                 disabled={phantomWallet.isConnecting}
-                className="w-full h-12 rounded-xl font-semibold text-sm tracking-wide text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                style={{
-                  background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
-                  border: "1px solid rgba(139,92,246,0.3)",
-                  boxShadow: "0 0 20px rgba(139,92,246,0.15)",
-                }}
+                className="w-full h-12 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer phantom-connect-btn"
               >
                 {phantomWallet.isConnecting ? "Connecting..." : <><Wallet className="h-4 w-4" /> Connect Phantom</>}
               </button>
