@@ -24,6 +24,18 @@ export default function UserProfilePage() {
   const { profileId } = useAuth();
   const wallet = profile?.solana_wallet_address ?? (identifier && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier) ? identifier : null);
   const { data: walletHoldings = [], isLoading: holdingsLoading } = useWalletHoldings(wallet);
+  const { data: solBalance } = useQuery({
+    queryKey: ["profile-sol-balance", wallet],
+    queryFn: async () => {
+      if (!wallet) return null;
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl, "confirmed");
+      const lamports = await connection.getBalance(new PublicKey(wallet));
+      return lamports / LAMPORTS_PER_SOL;
+    },
+    enabled: !!wallet,
+    staleTime: 30_000,
+  });
   const [copied, setCopied] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
