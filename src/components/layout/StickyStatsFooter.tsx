@@ -8,6 +8,7 @@ import { ChevronDown, Server, RefreshCw, Layers, Wallet, Rocket, Users } from "l
 import { MarketLighthouse } from "./MarketLighthouse";
 import { WalletTrackerPanel } from "./WalletTrackerPanel";
 import { NewPairsPanel } from "./NewPairsPanel";
+import { useWalletTradeNotifications } from "@/hooks/useWalletTradeNotifications";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
 import meteoraIcon from "@/assets/meteora-icon.svg";
 import bonkIcon from "@/assets/bonk-icon.jpg";

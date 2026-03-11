@@ -72,42 +72,7 @@ export function WalletTrackerPanel({
     );
   });
 
-  // Realtime subscription for trade notifications
-  const walletsRef = useRef(wallets);
-  walletsRef.current = wallets;
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('wallet-tracker-trades-panel')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'wallet_trades' },
-        (payload) => {
-          const trade = payload.new as any;
-          const trackedWallet = walletsRef.current.find(
-            (w) => w.wallet_address === trade.wallet_address && w.notifications_enabled
-          );
-          if (trackedWallet) {
-            if (trade.trade_type === 'buy') {
-              playBuy();
-            } else {
-              playSell();
-            }
-            const label = trackedWallet.wallet_label || shortAddr(trade.wallet_address);
-            const tokenLabel = trade.token_ticker || trade.token_name || shortAddr(trade.token_mint);
-            toast({
-              title: `${trade.trade_type === 'buy' ? '🟢 Buy' : '🔴 Sell'} — ${label}`,
-              description: `${Number(trade.sol_amount).toFixed(3)} SOL → ${tokenLabel}`,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [playBuy, playSell]);
+  // Trade notifications are now handled globally by useWalletTradeNotifications in StickyStatsFooter
 
   const sz = compact
     ? { w: "300px", pad: "8px", fs: { h: "12px", tab: "9px", label: "9px", val: "10px", btn: "9px" }, gap: "4px" }
