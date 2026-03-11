@@ -119,10 +119,13 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 
 export { SectionHeader };
 
+/* ── Content wrapper class — wider on large screens ── */
+const CONTENT_MAX = "max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1800px]";
+
 /* ── Section Divider ── */
 function SectionDivider() {
   return (
-    <div className="max-w-7xl mx-auto px-4">
+    <div className={`${CONTENT_MAX} mx-auto px-4`}>
       <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
     </div>
   );
@@ -170,7 +173,7 @@ function LivePulseSection({ newPairs, completing, graduated, loading }: {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-8">
+    <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
       <SectionHeader icon={Zap} title="Live Pulse" linkTo="/trade" linkLabel="Launch Terminal" />
       
       {/* Desktop: 3-column grid */}
@@ -399,8 +402,8 @@ export default function HomePage() {
         {/* ═══ Trading Agents Showcase ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className="max-w-7xl mx-auto px-4 py-8">
-            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}</div>}>
+          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-3 gap-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}</div>}>
               <TradingAgentsShowcase />
             </Suspense>
           </section>
@@ -408,23 +411,23 @@ export default function HomePage() {
 
         {/* ═══ Just Launched ═══ */}
         <SectionDivider />
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
           <SectionHeader icon={Rocket} title="Just Launched" linkTo="/launchpad" linkLabel="View All" />
           <JustLaunched />
         </section>
 
         {/* ═══ King of the Hill ═══ */}
         <SectionDivider />
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
           <KingOfTheHill />
         </section>
 
         {/* ═══ Alpha Tracker (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className="max-w-7xl mx-auto px-4 py-8">
+          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
             <SectionHeader icon={Crosshair} title="Alpha Trades" linkTo="/alpha-tracker" linkLabel="View All" />
-            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>}>
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>}>
               <AlphaSection />
             </Suspense>
           </section>
@@ -433,9 +436,9 @@ export default function HomePage() {
         {/* ═══ X Tracker (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className="max-w-7xl mx-auto px-4 py-8">
+          <section className={`${CONTENT_MAX} mx-auto px-4 py-8`}>
             <SectionHeader icon={Radar} title="X Tracker" linkTo="/x-tracker" linkLabel="View All" />
-            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>}>
+            <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>}>
               <XTrackerSection />
             </Suspense>
           </section>
@@ -444,9 +447,9 @@ export default function HomePage() {
         {/* ═══ Leverage (lazy) ═══ */}
         <SectionDivider />
         <LazySection>
-          <section className="max-w-7xl mx-auto px-4 py-8 pb-20">
+          <section className={`${CONTENT_MAX} mx-auto px-4 py-8 pb-20`}>
             <SectionHeader icon={CandlestickChart} title="Leverage Trading" linkTo="/leverage" linkLabel="Open Terminal" />
-            <Suspense fallback={<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>}>
+            <Suspense fallback={<div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>}>
               <LeverageSection />
             </Suspense>
           </section>

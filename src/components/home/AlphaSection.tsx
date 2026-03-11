@@ -88,7 +88,7 @@ export default function AlphaSection() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
       {alphaTrades.slice(0, 10).map((t) => (
         <AlphaTradeRow key={t.id} trade={t} position={alphaPositions.get(`${t.wallet_address}::${t.token_mint}`)} />
       ))}
