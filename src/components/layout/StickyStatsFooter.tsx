@@ -289,10 +289,47 @@ export function StickyStatsFooter() {
             )}
           </div>
 
+          {/* Wallet Tracker */}
+          <div ref={wtDropdownRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => { setWalletTrackerOpen(!walletTrackerOpen); setRegionOpen(false); setLaunchpadOpen(false); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 8px",
+                borderRadius: "6px",
+                border: "1px solid hsl(var(--border))",
+                background: walletTrackerOpen ? "hsl(var(--primary) / 0.15)" : "hsl(var(--muted))",
+                cursor: "pointer",
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "hsl(var(--foreground))",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <Wallet style={{ width: "12px", height: "12px" }} />
+            </button>
+
+            {walletTrackerOpen && (
+              <div style={{
+                position: isMobile ? "fixed" : "absolute",
+                bottom: isMobile ? "48px" : "calc(100% + 8px)",
+                right: isMobile ? undefined : 0,
+                left: isMobile ? "50%" : undefined,
+                transform: isMobile ? "translateX(-50%)" : undefined,
+                zIndex: 100000,
+              }}>
+                <WalletTrackerPanel onRefresh={handleWtRefresh} refreshing={wtRefreshing} compact={isMobile} />
+              </div>
+            )}
+          </div>
+
           {/* Region selector */}
           <div ref={dropdownRef} style={{ position: "relative" }}>
             <button
-              onClick={() => { setRegionOpen(!regionOpen); setLaunchpadOpen(false); }}
+              onClick={() => { setRegionOpen(!regionOpen); setLaunchpadOpen(false); setWalletTrackerOpen(false); }}
               style={{
                 display: "flex",
                 alignItems: "center",
