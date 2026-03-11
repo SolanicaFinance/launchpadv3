@@ -2100,11 +2100,11 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                   </button>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Trading Fee</span>
+                <div className="space-y-2 phantom-slider">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/40 uppercase tracking-wider font-medium text-[10px]">Trading Fee</span>
                     <span
-                      className={`font-semibold ${
+                      className={`font-bold text-sm ${
                         phantomTradingFee >= 900
                           ? "text-interaction-like"
                           : phantomTradingFee >= 600
@@ -2126,6 +2126,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     min={10}
                     max={1000}
                     step={10}
+                    trackClassName="bg-white/[0.06]"
                     rangeClassName={
                       phantomTradingFee >= 900
                         ? "bg-interaction-like"
@@ -2150,17 +2151,17 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     }
                   />
 
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <div className="flex justify-between text-[10px] text-white/20">
                     <span>0.1%</span>
                     <span>10%</span>
                   </div>
 
                   {phantomTradingFee >= 600 && (
-                    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+                    <div className="flex items-start gap-2 rounded-xl px-3 py-2 phantom-warning-card">
                       <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
-                      <p className="text-xs leading-snug text-muted-foreground">
+                      <p className="text-xs leading-snug text-white/50">
                         <span className="font-semibold text-destructive">Warning:</span>{" "}
-                        Such fees won’t generate you any volume.
+                        Such fees won't generate you any volume.
                       </p>
                     </div>
                   )}
