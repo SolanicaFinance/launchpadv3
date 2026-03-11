@@ -648,11 +648,12 @@ function PanelTradesTab({ wallets, sz, f, navigate }: { wallets: any[]; sz: any;
           }}
         >
           {/* Token icon */}
-          <img
+          <OptimizedTokenImage
             src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.token_mint}.png`}
-            alt=""
-            style={{ width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, objectFit: "cover", background: "#222" }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            fallbackSrc={`https://raw.githubusercontent.com/niclas555/solana-token-list/main/assets/${t.token_mint}/logo.png`}
+            fallbackText={t.token_ticker || "?"}
+            style={{ width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+            className="bg-[#222]"
           />
           <span
             style={{
