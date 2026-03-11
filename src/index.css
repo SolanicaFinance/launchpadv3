@@ -1544,3 +1544,341 @@
   cursor: not-allowed;
 }
 
+
+/* ===== LAUNCH TOKEN MODAL — Premium 2025 ===== */
+
+/* Container */
+.launch-modal-container {
+  background: linear-gradient(180deg, rgba(10,14,26,0.97) 0%, rgba(5,8,18,0.99) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 0 80px rgba(0,0,0,0.6),
+    0 0 2px rgba(250,204,21,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(40px);
+}
+
+/* Neon border glow */
+.launch-modal-border-glow {
+  background: linear-gradient(135deg, hsl(72 100% 50% / 0.06), transparent 40%, hsl(84 80% 50% / 0.04));
+  border: 1px solid transparent;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Entrance animation */
+.launch-modal-enter {
+  animation: launchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes launchModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Icon badge */
+.launch-modal-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, hsl(72 100% 50%), hsl(84 80% 40%));
+  box-shadow: 0 0 16px hsl(72 100% 50% / 0.25);
+}
+
+/* Floating orbs */
+.launch-modal-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.12;
+  animation: launchOrbFloat 12s ease-in-out infinite;
+}
+
+.launch-modal-orb-1 {
+  width: 200px;
+  height: 200px;
+  background: hsl(72 100% 50%);
+  top: 10%;
+  left: -5%;
+  animation-delay: 0s;
+}
+
+.launch-modal-orb-2 {
+  width: 150px;
+  height: 150px;
+  background: hsl(84 80% 45%);
+  bottom: 15%;
+  right: -5%;
+  animation-delay: -4s;
+}
+
+.launch-modal-orb-3 {
+  width: 120px;
+  height: 120px;
+  background: hsl(160 84% 39%);
+  top: 50%;
+  left: 50%;
+  animation-delay: -8s;
+  opacity: 0.06;
+}
+
+@keyframes launchOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(15px, -20px) scale(1.05); }
+  66% { transform: translate(-10px, 10px) scale(0.95); }
+}
+
+/* Success card */
+.launch-modal-success-card {
+  background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.05) 100%);
+  border: 1px solid rgba(16,185,129,0.2);
+  box-shadow: 0 0 20px rgba(16,185,129,0.06);
+}
+
+/* Scrollable content area */
+.launch-modal-content::-webkit-scrollbar {
+  width: 4px;
+}
+.launch-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.launch-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+}
+
+/* ===== PHANTOM MODE PREMIUM STYLES ===== */
+
+/* Wallet pill */
+.phantom-wallet-pill {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: all 0.2s ease;
+}
+.phantom-wallet-pill:hover {
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Disconnect button */
+.phantom-disconnect-btn {
+  background: rgba(239,68,68,0.06);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,0.15);
+  transition: all 0.25s ease;
+}
+.phantom-disconnect-btn:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.35);
+  box-shadow: 0 0 12px rgba(239,68,68,0.12);
+  transform: scale(1.03);
+}
+
+/* Premium slider track */
+.phantom-slider-wrapper .slider-track-premium {
+  position: relative;
+  overflow: visible;
+}
+
+/* Dev buy card */
+.phantom-devbuy-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s ease;
+}
+.phantom-devbuy-card:hover {
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* Mode tabs container */
+.phantom-mode-tabs {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+}
+
+/* Mode tab button */
+.phantom-mode-tab {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.phantom-mode-tab:hover:not(.phantom-mode-tab-active) {
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.7);
+  transform: scale(1.03);
+}
+.phantom-mode-tab-active {
+  background: linear-gradient(135deg, hsl(72 100% 50% / 0.15), hsl(84 80% 50% / 0.1));
+  color: hsl(72 100% 50%);
+  font-weight: 600;
+  box-shadow: 0 0 12px hsl(72 100% 50% / 0.08), inset 0 1px 0 hsl(72 100% 50% / 0.1);
+}
+.phantom-mode-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: hsl(72 100% 50%);
+  border-radius: 1px;
+  box-shadow: 0 0 8px hsl(72 100% 50% / 0.5);
+}
+
+/* Custom tab special */
+.phantom-mode-tab-custom.phantom-mode-tab-active {
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.1));
+  color: #a78bfa;
+  box-shadow: 0 0 12px rgba(139,92,246,0.1);
+}
+.phantom-mode-tab-custom.phantom-mode-tab-active::after {
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  box-shadow: 0 0 8px rgba(139,92,246,0.4);
+}
+
+/* Premium glass input */
+.phantom-glass-input {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #e2e8f0 !important;
+  transition: all 0.25s ease !important;
+}
+.phantom-glass-input:focus,
+.phantom-glass-input:focus-visible {
+  border-color: hsl(72 100% 50% / 0.3) !important;
+  box-shadow: 0 0 0 2px hsl(72 100% 50% / 0.08), 0 0 12px hsl(72 100% 50% / 0.06) !important;
+  background: rgba(255,255,255,0.04) !important;
+  outline: none !important;
+  ring: none !important;
+}
+.phantom-glass-input::placeholder {
+  color: rgba(255,255,255,0.2) !important;
+}
+
+/* Glass textarea */
+.phantom-glass-textarea {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #e2e8f0 !important;
+  transition: all 0.25s ease !important;
+  resize: none;
+}
+.phantom-glass-textarea:focus {
+  border-color: hsl(72 100% 50% / 0.3) !important;
+  box-shadow: 0 0 0 2px hsl(72 100% 50% / 0.08) !important;
+  outline: none !important;
+}
+
+/* Action button (generate/launch) */
+.phantom-action-btn {
+  background: linear-gradient(135deg, hsl(72 100% 50%), hsl(84 80% 40%));
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 4px 20px hsl(72 100% 50% / 0.2);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.phantom-action-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 6px 28px hsl(72 100% 50% / 0.3);
+}
+.phantom-action-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.phantom-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Secondary action (AI randomize etc) */
+.phantom-secondary-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+.phantom-secondary-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.07);
+  border-color: hsl(72 100% 50% / 0.2);
+  transform: scale(1.02);
+  box-shadow: 0 0 16px hsl(72 100% 50% / 0.06);
+}
+.phantom-secondary-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Connect phantom button */
+.phantom-connect-btn {
+  background: linear-gradient(135deg, hsl(72 100% 50%), hsl(84 80% 40%));
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 20px hsl(72 100% 50% / 0.15);
+  transition: all 0.3s ease;
+}
+.phantom-connect-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px hsl(72 100% 50% / 0.25);
+}
+
+/* Fee structure card */
+.phantom-fee-card {
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+/* File upload */
+.phantom-file-upload {
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px dashed rgba(255,255,255,0.1) !important;
+  transition: all 0.25s ease !important;
+}
+.phantom-file-upload:hover {
+  border-color: hsl(72 100% 50% / 0.25) !important;
+  background: rgba(255,255,255,0.03) !important;
+}
+
+/* Social links section */
+.phantom-social-details summary {
+  transition: color 0.2s ease;
+}
+.phantom-social-details summary:hover {
+  color: hsl(72 100% 50%) !important;
+}
+.phantom-social-details[open] summary {
+  color: hsl(72 100% 50% / 0.8);
+}
+
+/* Slider knob glow */
+.phantom-slider [data-radix-slider-thumb] {
+  box-shadow: 0 0 0 3px hsl(72 100% 50% / 0.15), 0 0 10px hsl(72 100% 50% / 0.2);
+  transition: box-shadow 0.2s ease;
+}
+.phantom-slider [data-radix-slider-thumb]:hover,
+.phantom-slider [data-radix-slider-thumb]:focus {
+  box-shadow: 0 0 0 4px hsl(72 100% 50% / 0.2), 0 0 16px hsl(72 100% 50% / 0.3);
+}
+
+/* Warning card */
+.phantom-warning-card {
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.15);
+  backdrop-filter: blur(8px);
+}
