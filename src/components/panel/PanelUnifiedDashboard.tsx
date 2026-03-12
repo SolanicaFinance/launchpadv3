@@ -22,7 +22,8 @@ import {
   Wallet, Briefcase, DollarSign, Rocket, Users, TrendingUp, Coins,
   ArrowRight, Plus, Copy, Check, CheckCircle, Loader2, Gift, ExternalLink,
   ArrowUpRight, ArrowDownLeft, Repeat, Key, ChevronDown, ChevronUp,
-  Twitter, Sparkles, BarChart3, Download, Shield, Zap, Target
+  Twitter, Sparkles, BarChart3, Download, Shield, Zap, Target,
+  Settings, User, ArrowDownToLine
 } from "lucide-react";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
@@ -34,6 +35,9 @@ import { copyToClipboard } from "@/lib/clipboard";
 const SendTokenModal = lazy(() => import("@/components/wallet/SendTokenModal"));
 const SwapModal = lazy(() => import("@/components/wallet/SwapModal"));
 const ReceiveDialog = lazy(() => import("@/components/wallet/ReceiveDialog"));
+import { SettingsModal } from "@/components/settings/SettingsModal";
+import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
+import { DepositDialog } from "@/components/wallet/DepositDialog";
 import TokenHoldingsList from "@/components/wallet/TokenHoldingsList";
 import WalletTransactionHistory from "@/components/wallet/WalletTransactionHistory";
 
@@ -231,6 +235,21 @@ export default function PanelUnifiedDashboard() {
   const [sendOpen, setSendOpen] = useState(false);
   const [swapOpen, setSwapOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountSecurityOpen, setAccountSecurityOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+
+  // Profile for settings modal
+  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null } | null>(null);
+  useEffect(() => {
+    if (!activeAddress) return;
+    const fetchProfile = async () => {
+      const col = isBnb ? "evm_wallet_address" : "solana_wallet_address";
+      const { data } = await supabase.from("profiles").select("display_name, avatar_url, username").eq(col, activeAddress).maybeSingle();
+      if (data) setProfile(data);
+    };
+    fetchProfile();
+  }, [activeAddress, isBnb, settingsOpen]);
 
   // Export wallet
   let exportWalletFn: any = null;
@@ -241,12 +260,17 @@ export default function PanelUnifiedDashboard() {
 
   // Balance fetch
   useEffect(() => {
-    if (!isWalletReady || !walletAddr) return;
+    if (!walletAddr) return;
     let cancelled = false;
     const fetchBal = async () => {
       try {
         if (isSolana) {
+          if (!isWalletReady) return;
           const bal = await getBalance();
+          if (!cancelled) setBalance(bal);
+        } else if (isBnb && evmAddress) {
+          const { fetchBnbBalance } = await import("@/lib/bscRpc");
+          const bal = await fetchBnbBalance(evmAddress);
           if (!cancelled) setBalance(bal);
         }
       } catch { /* ignore */ }
@@ -254,7 +278,7 @@ export default function PanelUnifiedDashboard() {
     fetchBal();
     const interval = setInterval(fetchBal, 15_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [isWalletReady, walletAddr, isSolana, getBalance]);
+  }, [isWalletReady, walletAddr, isSolana, isBnb, evmAddress, getBalance]);
 
   // Portfolio stats
   const portfolioStats = useMemo(() => {
@@ -378,6 +402,31 @@ export default function PanelUnifiedDashboard() {
             sparkData={earningsSparkline}
             color={EMERALD}
           />
+        </div>
+
+        {/* Quick Actions Row */}
+        <div className="relative z-10 flex flex-wrap gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <button
+            onClick={() => setDepositOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <ArrowDownToLine className="h-3 w-3" /> Deposit
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <Settings className="h-3 w-3" /> Settings
+          </button>
+          <button
+            onClick={() => setAccountSecurityOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <User className="h-3 w-3" /> Account & Security
+          </button>
         </div>
       </GlassCard>
 
@@ -970,6 +1019,21 @@ export default function PanelUnifiedDashboard() {
         {swapOpen && <SwapModal open={swapOpen} onOpenChange={setSwapOpen} />}
         {receiveOpen && <ReceiveDialog open={receiveOpen} onOpenChange={setReceiveOpen} walletAddress={walletAddr || ""} />}
       </Suspense>
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        profile={profile}
+        onProfileUpdate={() => {}}
+      />
+      <AccountSecurityModal open={accountSecurityOpen} onClose={() => setAccountSecurityOpen(false)} />
+      <DepositDialog
+        open={depositOpen}
+        onOpenChange={setDepositOpen}
+        address={activeAddress || ""}
+        chain={isBnb ? "bnb" : "solana"}
+        getBalance={isSolana ? getBalance : undefined}
+      />
     </div>
   );
 }

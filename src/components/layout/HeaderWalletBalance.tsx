@@ -118,8 +118,7 @@ function HeaderWalletBalanceInner() {
 
   const handleProfileClick = () => {
     setMenuOpen(false);
-    const profileIdentifier = profile?.username || (isBnb ? (profile?.evm_wallet_address || evmAddress) : embeddedAddress);
-    navigate(`/profile/${profileIdentifier}`);
+    navigate('/panel');
   };
 
   return (
