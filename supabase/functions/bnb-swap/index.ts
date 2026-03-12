@@ -7,6 +7,7 @@ import {
   parseAbi,
   encodeFunctionData,
   numberToHex,
+  decodeFunctionResult,
 } from "https://esm.sh/viem@2.45.1";
 import { bsc } from "https://esm.sh/viem@2.45.1/chains";
 import {
@@ -24,7 +25,17 @@ const corsHeaders = {
 // ── Contract addresses ──
 const FOURMEME_TOKEN_MANAGER = "0x5c952063c7fc8610FFDB798152D69F0B9550762b";
 const FOURMEME_HELPER3 = "0xF251F83e40a78868FcfA3FA4599Dad6494E46034";
-const DEFAULT_PORTAL_ADDRESS = "0x6e5C231A75562422C41acb55A4b0112a07DfA782"; // Saturn portal fallback
+const DEFAULT_PORTAL_ADDRESS = "0x6e5C231A75562422C41acb55A4b0112a07DfA782";
+
+// ── PancakeSwap V2 ──
+const PANCAKE_ROUTER = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
+const WBNB = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+
+const PANCAKE_ROUTER_ABI = parseAbi([
+  "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)",
+  "function swapExactETHForTokensSupportingFeeOnTransferTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable",
+  "function swapExactTokensForETHSupportingFeeOnTransferTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external",
+]);
 
 // ── Four.meme ABI ──
 const FOURMEME_MANAGER_ABI = parseAbi([
@@ -79,10 +90,9 @@ const ERC20_ABI = parseAbi([
   "function approve(address spender, uint256 amount) external returns (bool)",
   "function allowance(address owner, address spender) external view returns (uint256)",
   "function balanceOf(address owner) external view returns (uint256)",
+  "function decimals() external view returns (uint8)",
 ]);
 
-const OPENOCEAN_API = "https://open-api.openocean.finance/v4/bsc";
-const BNB_NATIVE = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const ALCHEMY_KEY = Deno.env.get("ALCHEMY_BSC_API_KEY");
 const BSC_RPC = ALCHEMY_KEY
   ? `https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -97,7 +107,7 @@ interface SwapRequest {
   slippage?: number;
 }
 
-type SwapRoute = "portal" | "fourmeme" | "openocean";
+type SwapRoute = "portal" | "fourmeme" | "pancakeswap";
 
 // ── Route Resolver ──
 async function resolveTokenRoute(
@@ -119,9 +129,8 @@ async function resolveTokenRoute(
         console.log(`[bnb-swap] Route: SaturnPortal (bonding curve)`);
         return { route: "portal", graduated: false };
       }
-      // Graduated from our portal → use OpenOcean
-      console.log(`[bnb-swap] Route: OpenOcean (graduated from portal)`);
-      return { route: "openocean", graduated: true };
+      console.log(`[bnb-swap] Route: PancakeSwap (graduated from portal)`);
+      return { route: "pancakeswap", graduated: true };
     } catch {
       // Not on our portal, continue checking
     }
@@ -135,14 +144,12 @@ async function resolveTokenRoute(
       functionName: "tryBuy",
       args: [
         tokenAddress as `0x${string}`,
-        parseEther("1"), // try buying 1 token worth
-        parseEther("0.01"), // with 0.01 BNB
+        parseEther("1"),
+        parseEther("0.01"),
       ],
     });
     const [tokenManager] = result;
-    // If tokenManager is non-zero, this token is on Four.meme
     if (tokenManager && tokenManager !== "0x0000000000000000000000000000000000000000") {
-      // Check if liquidity has already been added (migrated to PancakeSwap)
       try {
         const migrated = await publicClient.readContract({
           address: FOURMEME_HELPER3 as `0x${string}`,
@@ -151,8 +158,8 @@ async function resolveTokenRoute(
           args: [tokenAddress as `0x${string}`],
         });
         if (migrated) {
-          console.log(`[bnb-swap] Route: OpenOcean (Four.meme token migrated to PancakeSwap)`);
-          return { route: "openocean", graduated: true };
+          console.log(`[bnb-swap] Route: PancakeSwap (Four.meme token migrated)`);
+          return { route: "pancakeswap", graduated: true };
         }
       } catch (e) {
         console.log(`[bnb-swap] liquidityAdded check failed, assuming not migrated: ${(e as Error).message?.slice(0, 60)}`);
@@ -164,9 +171,129 @@ async function resolveTokenRoute(
     console.log(`[bnb-swap] Token not on Four.meme: ${(e as Error).message?.slice(0, 80)}`);
   }
 
-  // 3) Default to OpenOcean (migrated/DEX token)
-  console.log(`[bnb-swap] Route: OpenOcean (default/DEX)`);
-  return { route: "openocean", graduated: true };
+  // 3) Default to PancakeSwap (graduated/DEX token)
+  console.log(`[bnb-swap] Route: PancakeSwap (default/DEX)`);
+  return { route: "pancakeswap", graduated: true };
+}
+
+// ── PancakeSwap V2 Buy ──
+async function executePancakeSwapBuy(
+  walletId: string,
+  walletAddress: string,
+  tokenAddress: string,
+  bnbAmount: bigint,
+  slippage: number,
+  publicClient: any
+): Promise<{ txHash: string; estimatedOutput: string }> {
+  const path = [WBNB as `0x${string}`, tokenAddress as `0x${string}`];
+
+  // Get quote via getAmountsOut
+  let amountOutMin = 0n;
+  try {
+    const amounts = await publicClient.readContract({
+      address: PANCAKE_ROUTER as `0x${string}`,
+      abi: PANCAKE_ROUTER_ABI,
+      functionName: "getAmountsOut",
+      args: [bnbAmount, path],
+    });
+    const expectedOut = amounts[1];
+    // Apply slippage tolerance
+    amountOutMin = (expectedOut * BigInt(100 - slippage)) / 100n;
+    console.log(`[bnb-swap] PancakeSwap quote: ${expectedOut.toString()} tokens, min after ${slippage}% slippage: ${amountOutMin.toString()}`);
+  } catch (e) {
+    // If getAmountsOut fails, the pair likely doesn't exist on PancakeSwap
+    console.log(`[bnb-swap] PancakeSwap getAmountsOut failed: ${(e as Error).message?.slice(0, 100)}`);
+    throw new NoPancakeSwapLiquidityError();
+  }
+
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + 300); // 5 minutes
+
+  const callData = encodeFunctionData({
+    abi: PANCAKE_ROUTER_ABI,
+    functionName: "swapExactETHForTokensSupportingFeeOnTransferTokens",
+    args: [amountOutMin, path, walletAddress as `0x${string}`, deadline],
+  });
+
+  const txHash = await evmSendTransaction(walletId, {
+    to: PANCAKE_ROUTER,
+    data: callData,
+    value: numberToHex(bnbAmount),
+    gas: numberToHex(350000n),
+  });
+
+  return { txHash, estimatedOutput: amountOutMin.toString() };
+}
+
+// ── PancakeSwap V2 Sell ──
+async function executePancakeSwapSell(
+  walletId: string,
+  walletAddress: string,
+  tokenAddress: string,
+  tokenAmount: bigint,
+  slippage: number,
+  publicClient: any
+): Promise<{ txHash: string; estimatedOutput: string }> {
+  const path = [tokenAddress as `0x${string}`, WBNB as `0x${string}`];
+
+  // Approve router
+  const currentAllowance = await publicClient.readContract({
+    address: tokenAddress as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: [walletAddress as `0x${string}`, PANCAKE_ROUTER as `0x${string}`],
+  });
+
+  if (currentAllowance < tokenAmount) {
+    console.log(`[bnb-swap] Approving PancakeSwap router for ${tokenAddress}`);
+    const approveData = encodeFunctionData({
+      abi: ERC20_ABI,
+      functionName: "approve",
+      args: [PANCAKE_ROUTER as `0x${string}`, tokenAmount * 2n],
+    });
+    const approveHash = await evmSendTransaction(walletId, {
+      to: tokenAddress,
+      data: approveData,
+    });
+    console.log(`[bnb-swap] Approval tx: ${approveHash}`);
+    await publicClient.waitForTransactionReceipt({
+      hash: approveHash as `0x${string}`,
+      confirmations: 1,
+      timeout: 20_000,
+    });
+  }
+
+  // Get quote
+  let amountOutMin = 0n;
+  try {
+    const amounts = await publicClient.readContract({
+      address: PANCAKE_ROUTER as `0x${string}`,
+      abi: PANCAKE_ROUTER_ABI,
+      functionName: "getAmountsOut",
+      args: [tokenAmount, path],
+    });
+    const expectedOut = amounts[1];
+    amountOutMin = (expectedOut * BigInt(100 - slippage)) / 100n;
+    console.log(`[bnb-swap] PancakeSwap sell quote: ${formatEther(expectedOut)} BNB, min: ${formatEther(amountOutMin)} BNB`);
+  } catch (e) {
+    console.log(`[bnb-swap] PancakeSwap sell getAmountsOut failed: ${(e as Error).message?.slice(0, 100)}`);
+    throw new NoPancakeSwapLiquidityError();
+  }
+
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
+
+  const callData = encodeFunctionData({
+    abi: PANCAKE_ROUTER_ABI,
+    functionName: "swapExactTokensForETHSupportingFeeOnTransferTokens",
+    args: [tokenAmount, amountOutMin, path, walletAddress as `0x${string}`, deadline],
+  });
+
+  const txHash = await evmSendTransaction(walletId, {
+    to: PANCAKE_ROUTER,
+    data: callData,
+    gas: numberToHex(350000n),
+  });
+
+  return { txHash, estimatedOutput: formatEther(amountOutMin) };
 }
 
 // ── Four.meme Buy ──
@@ -197,7 +324,6 @@ async function executeFourMemeSell(
   tokenAmount: bigint,
   publicClient: any
 ): Promise<string> {
-  // Check & approve
   const currentAllowance = await publicClient.readContract({
     address: tokenAddress as `0x${string}`,
     abi: ERC20_ABI,
@@ -236,71 +362,6 @@ async function executeFourMemeSell(
   });
 }
 
-// ── OpenOcean Swap ──
-async function executeOpenOceanSwap(
-  walletId: string,
-  walletAddress: string,
-  tokenAddress: string,
-  action: "buy" | "sell",
-  amount: string,
-  slippage: number,
-  publicClient: any
-): Promise<{ txHash: string; estimatedOutput: string }> {
-  const inToken = action === "buy" ? BNB_NATIVE : tokenAddress;
-  const outToken = action === "buy" ? tokenAddress : BNB_NATIVE;
-
-  const swapUrl = `${OPENOCEAN_API}/swap?inTokenAddress=${inToken}&outTokenAddress=${outToken}&amount=${amount}&gasPrice=3&slippage=${slippage}&account=${walletAddress}`;
-  console.log(`[bnb-swap] OpenOcean URL: ${swapUrl}`);
-
-  const swapRes = await fetch(swapUrl);
-  const swapData = await swapRes.json();
-
-  if (swapData.code !== 200 || !swapData.data) {
-    if (isNoLiquidityError(swapData)) {
-      throw new NoLiquidityError("openocean");
-    }
-    throw new Error(`OpenOcean swap failed: ${JSON.stringify(swapData)}`);
-  }
-
-  // For sells, approve the router first
-  if (action === "sell") {
-    const sellAmountRaw = parseEther(amount);
-    const routerAddress = swapData.data.to as string;
-    const currentAllowance = await publicClient.readContract({
-      address: tokenAddress as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: "allowance",
-      args: [walletAddress as `0x${string}`, routerAddress as `0x${string}`],
-    });
-
-    if (currentAllowance < sellAmountRaw) {
-      console.log(`[bnb-swap] Approving OpenOcean router ${routerAddress}`);
-      const approveData = encodeFunctionData({
-        abi: ERC20_ABI,
-        functionName: "approve",
-        args: [routerAddress as `0x${string}`, sellAmountRaw * 2n],
-      });
-      const approveHash = await evmSendTransaction(walletId, {
-        to: tokenAddress,
-        data: approveData,
-      });
-      await publicClient.waitForTransactionReceipt({
-        hash: approveHash as `0x${string}`,
-        confirmations: 1,
-        timeout: 20_000,
-      });
-    }
-  }
-
-  const txHash = await evmSendTransaction(walletId, {
-    to: swapData.data.to,
-    data: swapData.data.data,
-    value: numberToHex(BigInt(swapData.data.value || "0")),
-  });
-
-  return { txHash, estimatedOutput: swapData.data.outAmount || "0" };
-}
-
 // ── Portal Buy/Sell ──
 async function executePortalSwap(
   walletId: string,
@@ -334,17 +395,10 @@ async function executePortalSwap(
 }
 
 // ── Error helpers ──
-class NoLiquidityError extends Error {
-  route: string;
-  constructor(route: string) {
-    super(`No liquidity available via ${route}`);
-    this.route = route;
+class NoPancakeSwapLiquidityError extends Error {
+  constructor() {
+    super("No liquidity on PancakeSwap V2 for this pair");
   }
-}
-
-function isNoLiquidityError(data: any): boolean {
-  const str = JSON.stringify(data).toLowerCase();
-  return str.includes("no avail liquidity") || str.includes("insufficient liquidity");
 }
 
 // ── Wallet Resolution ──
@@ -444,23 +498,18 @@ Deno.serve(async (req) => {
     // Resolve route
     const { route, graduated } = await resolveTokenRoute(body.tokenAddress, publicClient, portalAddress);
 
-    // Balance check for buys — check the frontend-provided wallet too in case resolved address differs
+    // Balance check for buys
     if (body.action === "buy") {
       const resolvedBalance = await publicClient.getBalance({ address: walletAddress as `0x${string}` });
       const frontendAddr = body.userWallet?.toLowerCase();
       const resolvedAddr = walletAddress?.toLowerCase();
-      
-      // If resolved address differs from frontend, use frontend address for balance (it's what has funds)
+
       let balance = resolvedBalance;
-      let effectiveAddress = walletAddress;
       if (frontendAddr && frontendAddr !== resolvedAddr && resolvedBalance === 0n) {
         console.log(`[bnb-swap] Resolved wallet has 0 balance, checking frontend wallet ${body.userWallet}`);
         const frontendBalance = await publicClient.getBalance({ address: body.userWallet as `0x${string}` });
         if (frontendBalance > resolvedBalance) {
           balance = frontendBalance;
-          effectiveAddress = body.userWallet;
-          // The resolved walletId is still correct for signing — the address mismatch likely means
-          // the profile DB is stale. Update it.
           console.log(`[bnb-swap] Frontend wallet has balance: ${formatEther(frontendBalance)} BNB. Updating profile.`);
           await supabase
             .from("profiles")
@@ -480,6 +529,7 @@ Deno.serve(async (req) => {
 
     let txHash: string;
     let estimatedOutput = "0";
+    let executedRoute = route;
 
     // ── Execute based on route ──
     if (route === "portal") {
@@ -495,42 +545,51 @@ Deno.serve(async (req) => {
           txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
         }
       } catch (fourErr) {
-        // Four.meme reverted — token may have migrated, fallback to OpenOcean
-        console.log(`[bnb-swap] Four.meme reverted, falling back to OpenOcean: ${(fourErr as Error).message?.slice(0, 100)}`);
-        const result = await executeOpenOceanSwap(
-          walletId, walletAddress, body.tokenAddress, body.action, body.amount, slippage, publicClient
+        // Four.meme reverted — token may have migrated, fallback to PancakeSwap
+        console.log(`[bnb-swap] Four.meme reverted, falling back to PancakeSwap: ${(fourErr as Error).message?.slice(0, 100)}`);
+        const result = await executePancakeSwapBuy(
+          walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
         );
         txHash = result.txHash;
         estimatedOutput = result.estimatedOutput;
+        executedRoute = "pancakeswap";
       }
 
     } else {
-      // OpenOcean for graduated/DEX tokens
-      console.log(`[bnb-swap] Executing via OpenOcean: ${body.action}`);
+      // PancakeSwap for graduated/DEX tokens
+      console.log(`[bnb-swap] Executing via PancakeSwap V2: ${body.action}`);
       try {
-        const result = await executeOpenOceanSwap(
-          walletId, walletAddress, body.tokenAddress, body.action, body.amount, slippage, publicClient
-        );
-        txHash = result.txHash;
-        estimatedOutput = result.estimatedOutput;
+        if (body.action === "buy") {
+          const result = await executePancakeSwapBuy(
+            walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
+          );
+          txHash = result.txHash;
+          estimatedOutput = result.estimatedOutput;
+        } else {
+          const result = await executePancakeSwapSell(
+            walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
+          );
+          txHash = result.txHash;
+          estimatedOutput = result.estimatedOutput;
+        }
       } catch (e) {
-        if (e instanceof NoLiquidityError) {
-          // OpenOcean failed → try Four.meme as fallback
-          console.log(`[bnb-swap] OpenOcean no liquidity, trying Four.meme fallback...`);
+        if (e instanceof NoPancakeSwapLiquidityError) {
+          // PancakeSwap has no pair → try Four.meme as fallback (token might still be on bonding)
+          console.log(`[bnb-swap] PancakeSwap no liquidity, trying Four.meme fallback...`);
           try {
             if (body.action === "buy") {
               txHash = await executeFourMemeBuy(walletId, body.tokenAddress, parseEther(body.amount));
             } else {
               txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
             }
-            // If we get here, Four.meme worked!
+            executedRoute = "fourmeme";
             console.log(`[bnb-swap] Four.meme fallback succeeded: ${txHash}`);
           } catch (fourMemeErr) {
             console.log(`[bnb-swap] Four.meme fallback also failed: ${(fourMemeErr as Error).message?.slice(0, 100)}`);
             return new Response(
               JSON.stringify({
-                error: "No liquidity on DEXes and token not found on Four.meme bonding curve. The token may not be tradeable yet.",
-                route: "openocean",
+                error: "No liquidity on PancakeSwap and token not found on Four.meme bonding curve. The token may not be tradeable yet.",
+                route: "pancakeswap",
                 reason: "NO_LIQUIDITY",
               }),
               { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -542,7 +601,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[bnb-swap] ${body.action} tx: ${txHash!} via ${route}`);
+    console.log(`[bnb-swap] ${body.action} tx: ${txHash!} via ${executedRoute}`);
 
     // Wait for confirmation
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -573,7 +632,7 @@ Deno.serve(async (req) => {
         action: body.action,
         tokenAddress: body.tokenAddress,
         graduated,
-        route,
+        route: executedRoute,
         estimatedOutput,
         explorerUrl: `https://bscscan.com/tx/${txHash!}`,
       }),
