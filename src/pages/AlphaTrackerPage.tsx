@@ -25,7 +25,7 @@ type HoldingFilter = "all" | "HOLDING" | "PARTIAL" | "SOLD";
 
 export default function AlphaTrackerPage() {
   const { chain, chainConfig } = useChain();
-  const isBnb = chain === 'bnb';
+  
   const { trades, loading, positions } = useAlphaTrades(100);
   const [searchToken, setSearchToken] = useState("");
   const [searchWallet, setSearchWallet] = useState("");
