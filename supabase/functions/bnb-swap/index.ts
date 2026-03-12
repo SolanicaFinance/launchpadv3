@@ -463,10 +463,20 @@ Deno.serve(async (req) => {
 
     } else if (route === "fourmeme") {
       console.log(`[bnb-swap] Executing via Four.meme: ${body.action}`);
-      if (body.action === "buy") {
-        txHash = await executeFourMemeBuy(walletId, body.tokenAddress, parseEther(body.amount));
-      } else {
-        txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
+      try {
+        if (body.action === "buy") {
+          txHash = await executeFourMemeBuy(walletId, body.tokenAddress, parseEther(body.amount));
+        } else {
+          txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
+        }
+      } catch (fourErr) {
+        // Four.meme reverted — token may have migrated, fallback to OpenOcean
+        console.log(`[bnb-swap] Four.meme reverted, falling back to OpenOcean: ${(fourErr as Error).message?.slice(0, 100)}`);
+        const result = await executeOpenOceanSwap(
+          walletId, walletAddress, body.tokenAddress, body.action, body.amount, slippage, publicClient
+        );
+        txHash = result.txHash;
+        estimatedOutput = result.estimatedOutput;
       }
 
     } else {
