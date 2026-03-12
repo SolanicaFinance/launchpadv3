@@ -217,6 +217,9 @@ Deno.serve(async (req) => {
       if (solanaWalletAddress && existingProfile.solana_wallet_address !== solanaWalletAddress) {
         updates.solana_wallet_address = solanaWalletAddress;
       }
+      if (evmWalletAddress && existingProfile.evm_wallet_address !== evmWalletAddress) {
+        updates.evm_wallet_address = evmWalletAddress;
+      }
       if (avatarUrl) updates.avatar_url = avatarUrl;
       if (privyWalletId && existingProfile.privy_wallet_id !== privyWalletId) {
         updates.privy_wallet_id = privyWalletId;
