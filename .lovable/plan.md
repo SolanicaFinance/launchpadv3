@@ -1,45 +1,62 @@
 
 
-## Two Issues to Fix
+# Plan: Replace OpenOcean with Direct PancakeSwap V2 Router
 
-### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
+## Problem
+OpenOcean returns generic `{code: 500, error: "swap error"}` for many BNB tokens — especially newly graduated Four.meme tokens that have just migrated to PancakeSwap. OpenOcean's indexer is slow to pick up new pairs.
 
-The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
+## Root Cause
+OpenOcean is an aggregator that relies on its own indexer to discover token pairs. Newly graduated tokens aren't indexed yet, so it returns 500. This is not fixable on our side.
 
-**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
+## Solution
+Replace OpenOcean with **direct PancakeSwap V2 Router** calls. This is the most reliable approach because:
+- **All** Four.meme graduated tokens migrate to PancakeSwap V2 — it's hardcoded in their contracts
+- PancakeSwap V2 holds ~80% of BSC DEX liquidity
+- No API key needed — it's a direct on-chain smart contract call
+- No indexer delay — works the instant liquidity is added
+- Supports fee-on-transfer tokens (common in BSC memecoins)
 
-Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
+## Changes (single file: `supabase/functions/bnb-swap/index.ts`)
 
-**Changes:**
-- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
+### 1. Add PancakeSwap V2 Router constants
+- Router: `0x10ED43C718714eb63d5aA57B78B54704E256024E`
+- WBNB: `0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c`
+- ABI for `swapExactETHForTokensSupportingFeeOnTransferTokens` (buy) and `swapExactTokensForETHSupportingFeeOnTransferTokens` (sell)
 
-### 2. Alpha Tracker Shows No Trades from the Platform
+### 2. Replace `executeOpenOceanSwap` with `executePancakeSwap`
+- **Buy**: Call `swapExactETHForTokensSupportingFeeOnTransferTokens` with path `[WBNB, tokenAddress]`, `amountOutMin` based on slippage (use `getAmountsOut` to get quote first), deadline 5 min
+- **Sell**: Approve router → call `swapExactTokensForETHSupportingFeeOnTransferTokens` with path `[tokenAddress, WBNB]`
+- Uses the `SupportingFeeOnTransferTokens` variant to handle tokens with transfer taxes
 
-The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+### 3. Update route resolver
+- Change route type from `"openocean"` to `"pancakeswap"` for graduated tokens
+- Keep `"portal"` and `"fourmeme"` routes unchanged
 
-**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+### 4. Update fallback chain
+- Four.meme revert → fallback to PancakeSwap (instead of OpenOcean)
+- PancakeSwap revert on `openocean` route → fallback to Four.meme (same logic, different executor)
 
-**Changes:**
-- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+### 5. Keep OpenOcean as optional last-resort fallback
+- If PancakeSwap also fails (e.g., token is on a different DEX), try OpenOcean as a final attempt
+- This covers edge cases where liquidity is on other BSC DEXes
 
-### Technical Details
+## Execution Flow After Fix
 
-**alpha_trades schema** (from types.ts):
-- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+```text
+User clicks BUY →
+  1. resolveTokenRoute() → portal / fourmeme / pancakeswap
+  2. If "pancakeswap":
+     a. getAmountsOut() for quote
+     b. swapExactETHForTokensSupportingFeeOnTransferTokens()
+     c. On revert → try Four.meme fallback
+     d. On revert → try OpenOcean last resort
+  3. If "fourmeme":
+     a. buyTokenAMAP()
+     b. On revert → try PancakeSwap fallback
+```
 
-**Data available in launchpad-swap:**
-- `userWallet` -> `wallet_address`
-- `token.mint_address` -> `token_mint`  
-- `token.name` -> `token_name`
-- `token.ticker` -> `token_ticker`
-- `isBuy ? "buy" : "sell"` -> `trade_type`
-- `solAmount` -> `amount_sol`
-- `tokenAmount` -> `amount_tokens`
-- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
-- `clientSignature` / generated signature -> `tx_hash`
-- Profile lookup for display name/avatar
-
-**Files to modify:**
-1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
-2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
+## Why This Fixes Everything
+- Four.meme graduated tokens → PancakeSwap V2 has them **immediately** (liquidity is added by the migration contract)
+- Regular BSC tokens → PancakeSwap V2 has them (dominant DEX)
+- No API dependency, no indexer delay, no 500 errors from third-party services
 
