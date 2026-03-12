@@ -535,14 +535,22 @@ export default function FunTokenDetailPage() {
           <p className="text-muted-foreground text-sm md:text-xs font-mono">Wallet backend unavailable right now. Reload in a moment.</p>
         </div>
       )}
-      {privyAvailable && isBonding && <TradePanelWithSwap token={tokenForTradePanel} userBalance={0} />}
-      {privyAvailable && isGraduated && token.mint_address && (
+      {privyAvailable && isBsc && token.mint_address && (
+        <BnbTradePanel
+          tokenAddress={token.mint_address}
+          ticker={token.ticker}
+          name={token.name}
+          imageUrl={token.image_url || undefined}
+        />
+      )}
+      {privyAvailable && !isBsc && isBonding && <TradePanelWithSwap token={tokenForTradePanel} userBalance={0} />}
+      {privyAvailable && !isBsc && isGraduated && token.mint_address && (
         <UniversalTradePanel
           token={{ mint_address: token.mint_address, ticker: token.ticker, name: token.name, decimals: 9, price_sol: token.price_sol || 0, imageUrl: token.image_url || undefined }}
           userTokenBalance={0}
         />
       )}
-      {privyAvailable && !isBonding && !isGraduated && (
+      {privyAvailable && !isBsc && !isBonding && !isGraduated && (
         <div className="trade-glass-panel p-6 md:p-4 text-center">
           <p className="text-muted-foreground text-sm md:text-xs font-mono">Trading not available · Status: {token.status}</p>
         </div>
