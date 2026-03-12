@@ -154,11 +154,14 @@ Deno.serve(async (req) => {
     const tokens = results.map((r: any) => {
       const address = r.token?.info?.address ?? null;
       let imageUrl = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
-      
-      // Universal fallback: DexScreener CDN is the most reliable for all chains
+
+      // Chain-aware fallback: DexScreener works well for Solana, identicon is reliable for BSC
       if (!imageUrl && address) {
-        const dexChain = safeNetworkId === BSC_NETWORK_ID ? "bsc" : "solana";
-        imageUrl = `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${address}.png`;
+        if (safeNetworkId === BSC_NETWORK_ID) {
+          imageUrl = `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(address.toLowerCase())}`;
+        } else {
+          imageUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`;
+        }
       }
 
       return {
