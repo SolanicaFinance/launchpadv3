@@ -3,10 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const REF_STORAGE_KEY = "ref";
+const REF_CODE_CACHE_KEY = "pulse-referral-code";
 
 export function useReferralCode() {
   const { profileId } = useAuth();
-  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Initialize from cache for instant display
+  const [referralCode, setReferralCode] = useState<string | null>(() => {
+    try {
+      const cached = localStorage.getItem(REF_CODE_CACHE_KEY);
+      return cached || null;
+    } catch { return null; }
+  });
   const [referralCount, setReferralCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -17,26 +25,14 @@ export function useReferralCode() {
 
     (async () => {
       try {
-        // Guard: only call referral RPC when the profile row exists.
-        const { data: profileRow, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", profileId)
-          .maybeSingle();
-
-        if (profileError) throw profileError;
-        if (!profileRow) {
-          if (!cancelled) {
-            setReferralCode(null);
-            setReferralCount(0);
-          }
-          return;
-        }
-
+        // Skip profile existence check — go straight to get_or_create
         const { data, error } = await supabase.rpc("get_or_create_referral_code", {
           p_profile_id: profileId,
         });
-        if (!error && data && !cancelled) setReferralCode(data as string);
+        if (!error && data && !cancelled) {
+          setReferralCode(data as string);
+          try { localStorage.setItem(REF_CODE_CACHE_KEY, data as string); } catch {}
+        }
 
         const { count } = await supabase
           .from("referrals")
@@ -83,12 +79,25 @@ export function useReferralDashboard() {
 
     (async () => {
       try {
-        // Get stats
-        const { data: statsData } = await supabase.rpc("get_referral_stats", {
-          p_referrer_id: profileId,
-        });
-        if (statsData && Array.isArray(statsData) && statsData.length > 0) {
-          const s = statsData[0];
+        // Fire all queries in parallel
+        const [statsRes, refsRes, rewardsRes] = await Promise.all([
+          supabase.rpc("get_referral_stats", { p_referrer_id: profileId }),
+          supabase
+            .from("referrals")
+            .select("id, referred_id, referred_wallet, created_at")
+            .eq("referrer_id", profileId)
+            .order("created_at", { ascending: false })
+            .limit(10),
+          supabase
+            .from("referral_rewards")
+            .select("id, trade_sol_amount, reward_sol, reward_pct, created_at")
+            .eq("referrer_id", profileId)
+            .order("created_at", { ascending: false })
+            .limit(20),
+        ]);
+
+        if (statsRes.data && Array.isArray(statsRes.data) && statsRes.data.length > 0) {
+          const s = statsRes.data[0];
           setStats({
             totalReferrals: Number(s.total_referrals) || 0,
             totalRewardsSol: Number(s.total_rewards_sol) || 0,
@@ -96,23 +105,8 @@ export function useReferralDashboard() {
           });
         }
 
-        // Recent referrals
-        const { data: refs } = await supabase
-          .from("referrals")
-          .select("id, referred_id, referred_wallet, created_at")
-          .eq("referrer_id", profileId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        setRecentReferrals(refs ?? []);
-
-        // Recent rewards
-        const { data: rewards } = await supabase
-          .from("referral_rewards")
-          .select("id, trade_sol_amount, reward_sol, reward_pct, created_at")
-          .eq("referrer_id", profileId)
-          .order("created_at", { ascending: false })
-          .limit(20);
-        setRecentRewards(rewards ?? []);
+        setRecentReferrals(refsRes.data ?? []);
+        setRecentRewards(rewardsRes.data ?? []);
       } catch {
         // silent
       } finally {
