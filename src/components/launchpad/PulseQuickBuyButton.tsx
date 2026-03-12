@@ -170,7 +170,7 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
       setBuyingAmount(null);
       setOpen(false);
     }
-  }, [isAuthenticated, evmAddress, mintAddress, ticker, executeBnbSwap]);
+  }, [isAuthenticated, userWallet, mintAddress, ticker, executeBnbSwap]);
 
   const handleTriggerClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
