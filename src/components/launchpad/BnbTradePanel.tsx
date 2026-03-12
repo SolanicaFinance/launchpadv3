@@ -148,7 +148,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
 
       {/* Route info */}
       <p className="text-[9px] font-mono text-muted-foreground/40 text-center">
-        Swaps via OpenOcean DEX aggregator · Best route auto-selected
+        Swaps via PancakeSwap V2 · Best route auto-selected
       </p>
     </div>
   );
