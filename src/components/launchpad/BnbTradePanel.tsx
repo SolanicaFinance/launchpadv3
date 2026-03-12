@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useBnbSwap } from "@/hooks/useBnbSwap";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowDownToLine } from "lucide-react";
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
@@ -15,11 +16,11 @@ interface BnbTradePanelProps {
 }
 
 export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTradePanelProps) {
-  const { executeBnbSwap, isLoading } = useBnbSwap();
-  const { isAuthenticated, solanaAddress, login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
+  const { address: evmAddress } = usePrivyEvmWallet();
   const [isBuy, setIsBuy] = useState(true);
   const [amount, setAmount] = useState("0.05");
-  const userWallet = solanaAddress || "unknown";
+  const userWallet = evmAddress || "unknown";
 
   const handleSwap = useCallback(async () => {
     if (!isAuthenticated) {
@@ -28,6 +29,10 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
     }
 
     const amtNum = parseFloat(amount);
+    if (!evmAddress) {
+      toast.error("BNB wallet not ready yet");
+      return;
+    }
     if (isNaN(amtNum) || amtNum <= 0) {
       toast.error("Enter a valid amount");
       return;
@@ -41,7 +46,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
     });
 
     try {
-      const result = await executeBnbSwap(tokenAddress, action, amtNum, userWallet);
+      const result = await executeBnbSwap(tokenAddress, action, amtNum, userWallet, 3, ticker, name);
       if (result.success) {
         toast.success(`✅ ${isBuy ? 'Buy' : 'Sell'} Executed!`, {
           id: toastId,
@@ -56,7 +61,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
     } catch (err: any) {
       toast.error("❌ Swap Failed", { id: toastId, description: err?.message?.slice(0, 100) });
     }
-  }, [isAuthenticated, isBuy, amount, tokenAddress, ticker, userWallet, executeBnbSwap, login]);
+  }, [isAuthenticated, isBuy, amount, tokenAddress, ticker, name, userWallet, evmAddress, executeBnbSwap, login]);
 
   return (
     <div className="trade-glass-panel p-4 md:p-3 space-y-3">

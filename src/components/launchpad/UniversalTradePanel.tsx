@@ -11,7 +11,7 @@ import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2
 import { useToast } from "@/hooks/use-toast";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
-import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TokenInfo {
   mint_address: string;
@@ -32,7 +32,7 @@ const SLIPPAGE_PRESETS = [0.5, 1, 2, 5, 10];
 const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : "https://mainnet.helius-rpc.com");
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
-  const { isAuthenticated, login, solanaAddress } = useAuth();
+  const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
   const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: swapLoading } = useJupiterSwap();
   const { swap: pumpFunSwap } = usePumpFunSwap();
   const { signAndSendTransaction, isWalletReady, getBalance } = useSolanaWalletWithPrivy();
@@ -198,6 +198,23 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       setLastLatencyMs(latency);
       setShowLatency(true);
       setTimeout(() => setShowLatency(false), 5000);
+
+      if (result.signature) {
+        supabase.functions.invoke('launchpad-swap', {
+          body: {
+            mintAddress: token.mint_address,
+            userWallet: solanaAddress,
+            amount: numericAmount,
+            isBuy,
+            profileId: profileId || undefined,
+            signature: result.signature,
+            outputAmount: result.outputAmount ?? null,
+            tokenName: token.name,
+            tokenTicker: token.ticker,
+            mode: 'alpha_only',
+          },
+        }).catch((err) => console.warn('[UniversalTradePanel] alpha record failed (non-fatal):', err));
+      }
 
       setAmount(''); setQuote(null); setSelectedPreset(null);
 

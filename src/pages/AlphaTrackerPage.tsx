@@ -1,7 +1,7 @@
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useAlphaTrades, PositionSummary } from "@/hooks/useAlphaTrades";
 import { useChain } from "@/contexts/ChainContext";
-import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter, AlertCircle } from "lucide-react";
+import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
@@ -25,7 +25,7 @@ type HoldingFilter = "all" | "HOLDING" | "PARTIAL" | "SOLD";
 
 export default function AlphaTrackerPage() {
   const { chain, chainConfig } = useChain();
-  const isBnb = chain === 'bnb';
+  
   const { trades, loading, positions } = useAlphaTrades(100);
   const [searchToken, setSearchToken] = useState("");
   const [searchWallet, setSearchWallet] = useState("");
@@ -56,8 +56,8 @@ export default function AlphaTrackerPage() {
 
   const clearFilters = () => { setSearchToken(""); setSearchWallet(""); setTradeTypeFilter("all"); setHoldingFilter("all"); };
 
-  const getExplorerTxUrl = (txHash: string) => {
-    if (isBnb) return `https://bscscan.com/tx/${txHash}`;
+  const getExplorerTxUrl = (txHash: string, tradeChain?: string | null) => {
+    if (tradeChain === 'bnb') return `https://bscscan.com/tx/${txHash}`;
     return `https://solscan.io/tx/${txHash}`;
   };
 
@@ -82,15 +82,6 @@ export default function AlphaTrackerPage() {
           </div>
         </div>
 
-        {/* BNB Chain Notice */}
-        {isBnb && (
-          <div className="flex items-center gap-2 px-4 py-3 bg-yellow-500/5 border-b border-yellow-500/20">
-            <AlertCircle className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0" />
-            <span className="text-[11px] text-yellow-400/80 font-mono">
-              Alpha Tracker currently tracks Solana trades. BNB Chain tracking coming soon.
-            </span>
-          </div>
-        )}
 
         {/* Filters */}
         {showFilters && (
@@ -137,7 +128,7 @@ export default function AlphaTrackerPage() {
           <span></span>
           <span>Trader</span>
           <span>Type</span>
-          <span className="text-right">{chainConfig.nativeCurrency.symbol}</span>
+          <span className="text-right">Amount</span>
           <span className="text-right">Tokens</span>
           <span className="text-right">MCap</span>
           <span className="text-center">Status</span>
@@ -165,6 +156,7 @@ export default function AlphaTrackerPage() {
               const posKey = `${trade.wallet_address}::${trade.token_mint}`;
               const position = positions.get(posKey);
               const mcap = trade.price_sol != null ? trade.price_sol * 1_000_000_000 : null;
+              const nativeSymbol = trade.chain === 'bnb' ? 'BNB' : 'SOL';
 
               return (
                 <div
@@ -212,7 +204,7 @@ export default function AlphaTrackerPage() {
 
                   {/* SOL/BNB Amount */}
                   <span className={`text-[10px] font-mono text-right tabular-nums ${isBuy ? "text-green-400/90" : "text-red-400/90"}`}>
-                    {isBuy ? "+" : "-"}{trade.amount_sol?.toFixed(3)}
+                    {isBuy ? "+" : "-"}{trade.amount_sol?.toFixed(3)} {nativeSymbol}
                   </span>
 
                   {/* Token Amount */}
@@ -224,7 +216,7 @@ export default function AlphaTrackerPage() {
                   <div className="text-right">
                     {mcap != null ? (
                       <span className="text-[10px] font-mono text-foreground/50 tabular-nums">
-                        {formatMcap(mcap)} {chainConfig.nativeCurrency.symbol}
+                        {formatMcap(mcap)} {nativeSymbol}
                       </span>
                     ) : (
                       <span className="text-[10px] text-muted-foreground/30">—</span>
@@ -249,7 +241,7 @@ export default function AlphaTrackerPage() {
                   <div className="text-right">
                     {trade.tx_hash ? (
                       <a
-                        href={getExplorerTxUrl(trade.tx_hash)}
+                        href={getExplorerTxUrl(trade.tx_hash, trade.chain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[9px] font-mono text-muted-foreground/40 hover:text-primary transition-colors inline-flex items-center gap-0.5 justify-end"

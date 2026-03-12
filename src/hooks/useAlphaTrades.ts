@@ -19,6 +19,7 @@ export interface AlphaTrade {
   created_at: string;
   trader_display_name: string | null;
   trader_avatar_url: string | null;
+  chain?: string | null;
   token_image_url?: string | null;
 }
 
