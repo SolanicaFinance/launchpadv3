@@ -483,7 +483,7 @@ function RecentClaimsFeed() {
               )}
               <span className="text-muted-foreground">claimed</span>
               <span className="font-mono font-bold text-foreground">
-                {claim.amount_sol?.toFixed(4)} SOL
+                {claim.amount_sol?.toFixed(4)} {currencySymbol}
               </span>
               {claim.token && (
                 <span className="text-muted-foreground truncate">
