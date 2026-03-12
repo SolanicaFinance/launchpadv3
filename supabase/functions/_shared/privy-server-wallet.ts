@@ -295,7 +295,7 @@ export async function evmSendTransaction(
 
   console.log("[privy] eth_sendTransaction URL:", url, "to:", txParams.to);
 
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
 
   const res = await fetch(url, {
     method: "POST",
