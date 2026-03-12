@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
       console.log(`[codex-filter-tokens] Normalized ${outlierCount} outlier change24h values for network ${safeNetworkId} (threshold=${maxAllowedChange}%)`);
     }
 
-    const finalTokens = normalizedTokens
+    let finalTokens = normalizedTokens
       .filter((token: any) => token !== null)
       .filter((token: any) => {
         if (safeNetworkId === BSC_NETWORK_ID && validColumn === "completing") {
@@ -337,6 +337,14 @@ Deno.serve(async (req) => {
         }
         return true;
       });
+
+    if (safeNetworkId === BSC_NETWORK_ID && validColumn === "completing") {
+      finalTokens = finalTokens.sort((a: any, b: any) => {
+        const gradDiff = toFiniteNumber(b.graduationPercent) - toFiniteNumber(a.graduationPercent);
+        if (gradDiff !== 0) return gradDiff;
+        return toFiniteNumber(b.volume24h) - toFiniteNumber(a.volume24h);
+      });
+    }
 
     return new Response(JSON.stringify({ tokens: finalTokens, column: validColumn, networkId: safeNetworkId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
