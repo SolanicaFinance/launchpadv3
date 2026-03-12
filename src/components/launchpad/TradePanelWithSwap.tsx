@@ -116,7 +116,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
       toast({ title: "Invalid amount", description: `Entered: "${amount}", parsed: ${tradeAmount}`, variant: "destructive" });
       return;
     }
-    if (!isBuy && tradeAmount > userBalance) {
+    if (!isBuy && tradeAmount > effectiveTokenBalance) {
       toast({ title: "Insufficient token balance", variant: "destructive" });
       return;
     }
