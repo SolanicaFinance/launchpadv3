@@ -82,9 +82,11 @@ function TokenIcon({ pair, chain }: { pair: CodexPairToken; chain: PanelChain })
   const srcs: string[] = [];
 
   if (isBnb) {
-    // BNB: avoid random third-party logos; use deterministic identicon first.
-    if (identiconUrl) srcs.push(identiconUrl);
-    if (dexUrl && dexUrl !== identiconUrl) srcs.push(dexUrl);
+    // BNB: try upstream Codex/launchpad image first, then DexScreener, then fallback, then identicon
+    if (pair.imageUrl && !pair.imageUrl.includes("dicebear.com")) srcs.push(pair.imageUrl);
+    if (pair.fallbackImageUrl && !srcs.includes(pair.fallbackImageUrl)) srcs.push(pair.fallbackImageUrl);
+    if (dexUrl && !srcs.includes(dexUrl)) srcs.push(dexUrl);
+    if (identiconUrl && !srcs.includes(identiconUrl)) srcs.push(identiconUrl);
   } else {
     // Solana: preserve richer source chain.
     if (dexUrl) srcs.push(dexUrl);

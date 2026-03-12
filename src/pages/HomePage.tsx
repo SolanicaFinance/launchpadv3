@@ -46,6 +46,7 @@ function PulseTokenRow({ token }: { token: CodexPairToken }) {
       </div>
       <OptimizedTokenImage
         src={token.imageUrl}
+        fallbackSrc={token.fallbackImageUrl || undefined}
         alt={token.name}
         className="w-8 h-8 rounded-full shrink-0 relative z-10 ring-1 ring-border/30 group-hover:ring-primary/30 transition-all"
       />
