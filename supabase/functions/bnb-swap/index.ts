@@ -276,6 +276,13 @@ Deno.serve(async (req) => {
         const swapData = await swapRes.json();
 
         if (swapData.code !== 200 || !swapData.data) {
+          const noLiquidity = JSON.stringify(swapData).includes("No avail liquidity");
+          if (noLiquidity) {
+            return new Response(
+              JSON.stringify({ error: "No liquidity available for this token on BNB Chain DEXes. The token may be too new or not yet listed." }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
           throw new Error(`OpenOcean swap failed: ${JSON.stringify(swapData)}`);
         }
 
