@@ -188,16 +188,20 @@ Deno.serve(async (req) => {
 
     const tokens = results.map((r: any) => {
       const address = r.token?.info?.address ?? null;
-      let imageUrl = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
+      const isBsc = safeNetworkId === BSC_NETWORK_ID;
+      const dexChain = isBsc ? "bsc" : "solana";
+      const dexScreenerImage = address
+        ? `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${address}.png`
+        : null;
+      const identiconImage = address
+        ? `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(address.toLowerCase())}`
+        : null;
 
-      // Chain-aware fallback: DexScreener works well for Solana, identicon is reliable for BSC
-      if (!imageUrl && address) {
-        if (safeNetworkId === BSC_NETWORK_ID) {
-          imageUrl = `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(address.toLowerCase())}`;
-        } else {
-          imageUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`;
-        }
-      }
+      // BSC: avoid unreliable upstream token-media image mismatches.
+      // We use deterministic per-address sources only.
+      let imageUrl = isBsc
+        ? (identiconImage || dexScreenerImage)
+        : (r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || dexScreenerImage || identiconImage);
 
       return {
         address,

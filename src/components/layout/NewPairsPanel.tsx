@@ -68,18 +68,29 @@ function toChecksumHex(addr: string): string {
 
 function TokenIcon({ pair, chain }: { pair: CodexPairToken; chain: PanelChain }) {
   const [stage, setStage] = useState(0);
+  const isBnb = chain === "bnb";
 
-  // DexScreener is the most reliable single source for token images
-  const dexChain = chain === "bnb" ? "bsc" : "solana";
+  // Deterministic image sources by address
+  const dexChain = isBnb ? "bsc" : "solana";
   const dexUrl = pair.address
     ? `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${pair.address}.png`
     : null;
+  const identiconUrl = pair.address
+    ? `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(pair.address.toLowerCase())}`
+    : null;
 
   const srcs: string[] = [];
-  // 1. DexScreener first — most reliable for new tokens
-  if (dexUrl) srcs.push(dexUrl);
-  // 2. Codex image as backup
-  if (pair.imageUrl && pair.imageUrl !== dexUrl) srcs.push(pair.imageUrl);
+
+  if (isBnb) {
+    // BNB: avoid random third-party logos; use deterministic identicon first.
+    if (identiconUrl) srcs.push(identiconUrl);
+    if (dexUrl && dexUrl !== identiconUrl) srcs.push(dexUrl);
+  } else {
+    // Solana: preserve richer source chain.
+    if (dexUrl) srcs.push(dexUrl);
+    if (pair.imageUrl && pair.imageUrl !== dexUrl) srcs.push(pair.imageUrl);
+    if (identiconUrl && !srcs.includes(identiconUrl)) srcs.push(identiconUrl);
+  }
 
   if (stage >= srcs.length) {
     return (
