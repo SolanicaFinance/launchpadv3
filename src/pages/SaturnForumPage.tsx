@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useTradingAgents, useTradingAgentLeaderboard } from "@/hooks/useTradingAgents";
 import { useSolPrice } from "@/hooks/useSolPrice";

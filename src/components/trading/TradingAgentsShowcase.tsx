@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useTradingAgents } from "@/hooks/useTradingAgents";
 import { Shield, Target, Zap, Coins, ArrowRight, Lock, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
