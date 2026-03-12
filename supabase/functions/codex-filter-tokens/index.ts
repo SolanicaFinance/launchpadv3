@@ -18,6 +18,24 @@ function toFiniteNumber(value: unknown): number {
   return Number.isFinite(num) ? num : 0;
 }
 
+function normalizeAddress(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function isAddressBoundImageUrl(imageUrl: string | null | undefined, address: string | null | undefined): boolean {
+  const normalizedUrl = imageUrl?.trim().toLowerCase();
+  const normalizedAddress = normalizeAddress(address);
+
+  if (!normalizedUrl || !normalizedAddress) return false;
+
+  if (normalizedUrl.includes(normalizedAddress)) return true;
+
+  const withoutPrefix = normalizedAddress.replace(/^0x/, "");
+  return withoutPrefix.length > 0 && normalizedUrl.includes(withoutPrefix);
+}
+
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
@@ -200,17 +218,19 @@ Deno.serve(async (req) => {
       // Upstream Codex image (the launchpad's own token image, if available)
       const codexImage = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
 
-      // Primary image: deterministic per-address sources for BSC to avoid mismatched third-party media.
-      // Fallback image: next-best source for the UI to try if primary 404s.
+      // Primary image + fallback image for UI retry behavior.
       let imageUrl: string | null;
       let fallbackImageUrl: string | null;
 
       if (isBsc) {
-        // BSC: only deterministic sources.
-        // 1) DexScreener by token address
-        // 2) Dicebear identicon by token address
-        imageUrl = dexScreenerImage || identiconImage;
-        fallbackImageUrl = dexScreenerImage ? identiconImage : null;
+        // BSC: prefer non-Dex launchpad metadata image only when it is address-bound.
+        // This avoids random mismatched images while still supporting very new pairs not yet indexed by DexScreener.
+        const verifiedLaunchpadImage = isAddressBoundImageUrl(codexImage, address) ? codexImage : null;
+
+        imageUrl = verifiedLaunchpadImage || dexScreenerImage || identiconImage;
+        fallbackImageUrl = verifiedLaunchpadImage
+          ? (dexScreenerImage || identiconImage)
+          : (dexScreenerImage ? identiconImage : null);
       } else {
         imageUrl = codexImage || dexScreenerImage || identiconImage;
         fallbackImageUrl = codexImage ? dexScreenerImage : identiconImage;
