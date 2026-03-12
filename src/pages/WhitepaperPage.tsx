@@ -85,7 +85,7 @@ export default function WhitepaperPage() {
                   <li><strong className="text-foreground">Alpha Tracker:</strong> Track smart-money wallets and copy-trade winning positions in real-time</li>
                   <li><strong className="text-foreground">X Tracker:</strong> Monitor KOL mentions and sentiment from Twitter/X for early signals</li>
                   <li><strong className="text-foreground">Leverage Trading:</strong> Amplified exposure via Aster DEX on BNB Chain with built-in risk management</li>
-                  <li><strong className="text-foreground">Merch Store:</strong> Official {BRAND.name} merchandise available directly within the platform</li>
+                  
                 </ul>
               </section>
 
