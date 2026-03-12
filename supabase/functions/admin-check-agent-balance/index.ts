@@ -70,7 +70,7 @@ async function postToX(
       .from("x_bot_accounts")
       .select("id, username, full_cookie_encrypted, socks5_urls, current_socks5_index")
       .eq("subtuna_ticker", ticker)
-      .eq("is_active`, true)
+      .eq("is_active", true)
       .single();
 
     if (!xBotAccount || !xBotAccount.full_cookie_encrypted) {
