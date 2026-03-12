@@ -351,7 +351,7 @@ export default function PanelMyLaunchesTab() {
                     <span>{earned.toFixed(4)} {currencySymbol} earned</span>
                     {token.mint_address && (
                       <a
-                        href={`https://solscan.io/token/${token.mint_address}`}
+                        href={`${explorerUrl}/token/${token.mint_address}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-0.5 hover:text-foreground"
