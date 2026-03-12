@@ -51,13 +51,13 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
       if (result.success) {
         toast.success(`✅ ${isBuy ? 'Buy' : 'Sell'} Executed!`, {
           id: toastId,
-          description: `TX: ${result.txHash?.slice(0, 12)}... · ${result.route === 'openocean' ? 'OpenOcean' : 'Portal'}`,
+          description: `TX: ${result.txHash?.slice(0, 12)}... · ${result.route === 'fourmeme' ? 'Four.meme' : result.route === 'openocean' ? 'OpenOcean' : 'Portal'}`,
           action: result.explorerUrl
             ? { label: "View TX", onClick: () => window.open(result.explorerUrl, "_blank") }
             : undefined,
         });
       } else {
-        toast.error("❌ Swap Failed", { id: toastId, description: result.error?.slice(0, 100) });
+        toast.error("❌ Swap Failed", { id: toastId, description: result.error?.slice(0, 120) });
       }
     } catch (err: any) {
       toast.error("❌ Swap Failed", { id: toastId, description: err?.message?.slice(0, 100) });
