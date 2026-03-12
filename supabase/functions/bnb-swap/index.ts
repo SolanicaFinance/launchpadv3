@@ -568,12 +568,34 @@ Deno.serve(async (req) => {
       } catch (fourErr) {
         // Four.meme reverted — token may have migrated, fallback to PancakeSwap
         console.log(`[bnb-swap] Four.meme reverted, falling back to PancakeSwap: ${(fourErr as Error).message?.slice(0, 100)}`);
-        const result = await executePancakeSwapBuy(
-          walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
-        );
-        txHash = result.txHash;
-        estimatedOutput = result.estimatedOutput;
-        executedRoute = "pancakeswap";
+        try {
+          if (body.action === "buy") {
+            const result = await executePancakeSwapBuy(
+              walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
+            );
+            txHash = result.txHash;
+            estimatedOutput = result.estimatedOutput;
+          } else {
+            const result = await executePancakeSwapSell(
+              walletId, walletAddress, body.tokenAddress, parseEther(body.amount), slippage, publicClient
+            );
+            txHash = result.txHash;
+            estimatedOutput = result.estimatedOutput;
+          }
+          executedRoute = "pancakeswap";
+        } catch (pancakeFallbackErr) {
+          if (isNoPancakeSwapLiquidityError(pancakeFallbackErr)) {
+            return new Response(
+              JSON.stringify({
+                error: "No liquidity on PancakeSwap and Four.meme route failed for this token. The token may not be tradeable yet.",
+                route: "fourmeme",
+                reason: "NO_LIQUIDITY",
+              }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          throw pancakeFallbackErr;
+        }
       }
 
     } else {
