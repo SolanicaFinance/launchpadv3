@@ -255,7 +255,7 @@ export async function signTransaction(
     },
   };
 
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
 
   const res = await fetch(url, {
     method: "POST",
