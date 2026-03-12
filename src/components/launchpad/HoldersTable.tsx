@@ -11,6 +11,7 @@ interface Props {
   isLoading: boolean;
   trades?: TokenTradeEvent[];
   currentPriceUsd?: number;
+  isBsc?: boolean;
 }
 
 interface HolderStats {
