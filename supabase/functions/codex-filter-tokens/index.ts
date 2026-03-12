@@ -100,8 +100,8 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         rankings = `{ attribute: createdAt, direction: DESC }`;
         break;
       case "completing":
-        // "Final Stretch" on BSC = tokens with bonding progress >= 20%, from any BSC launchpad
-        filters = `{ network: [${networkId}], launchpadGraduationPercent: { gte: 20, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false }`;
+        // "Final Stretch" on BSC = tokens with bonding progress >= 20%, with some activity
+        filters = `{ network: [${networkId}], launchpadGraduationPercent: { gte: 20, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false, liquidity: { gte: 1 } }`;
         rankings = `{ attribute: marketCap, direction: DESC }`;
         break;
       case "completed":
