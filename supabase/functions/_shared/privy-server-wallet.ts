@@ -51,9 +51,9 @@ function getAuthorizationSignature(url: string, body: Record<string, unknown>): 
     },
   };
 
-  // JSON-canonicalize the payload and convert to buffer
+  // JSON-canonicalize the payload and convert to Uint8Array
   const serializedPayload = canonicalize(payload) as string;
-  const serializedPayloadBuffer = Buffer.from(serializedPayload);
+  const serializedPayloadBuffer = new TextEncoder().encode(serializedPayload);
 
   console.log("[privy-auth] Payload (first 200 chars):", serializedPayload.substring(0, 200));
 
@@ -69,7 +69,8 @@ function getAuthorizationSignature(url: string, body: Record<string, unknown>): 
 
   // Sign with sha256 (per Privy docs - this returns DER-encoded ECDSA signature)
   const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, privateKey);
-  const signature = signatureBuffer.toString("base64");
+  // Convert to base64 without using Buffer
+  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
 
   console.log("[privy-auth] Signature generated, length:", signature.length);
   return signature;
