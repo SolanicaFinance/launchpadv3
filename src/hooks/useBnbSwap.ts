@@ -8,6 +8,7 @@ interface BnbSwapResult {
   error?: string;
   explorerUrl?: string;
   route?: string;
+  reason?: string;
 }
 
 export function useBnbSwap() {
@@ -44,9 +45,25 @@ export function useBnbSwap() {
         route: data.route,
       };
     } catch (err: any) {
+      // Parse structured error from edge function
+      let errorMsg = err?.message || "Unknown error";
+      let route: string | undefined;
+      let reason: string | undefined;
+
+      try {
+        const parsed = JSON.parse(errorMsg);
+        if (parsed?.error) {
+          errorMsg = parsed.error;
+          route = parsed.route;
+          reason = parsed.reason;
+        }
+      } catch { /* not JSON */ }
+
       return {
         success: false,
-        error: err?.message || "Unknown error",
+        error: errorMsg,
+        route,
+        reason,
       };
     } finally {
       setIsLoading(false);
