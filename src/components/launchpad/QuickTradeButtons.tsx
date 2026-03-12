@@ -107,7 +107,6 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
         setLoadingIndex(null);
         return;
       }
-    try {
       const result = await executeRealSwap(token, tokenAmount, false);
 
       toast({
