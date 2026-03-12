@@ -1,7 +1,7 @@
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useAlphaTrades, PositionSummary } from "@/hooks/useAlphaTrades";
 import { useChain } from "@/contexts/ChainContext";
-import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter, AlertCircle } from "lucide-react";
+import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
