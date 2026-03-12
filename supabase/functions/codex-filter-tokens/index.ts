@@ -100,8 +100,9 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         rankings = `{ attribute: createdAt, direction: DESC }`;
         break;
       case "completing":
-        // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress) with recent activity
-        filters = `{ network: [${networkId}], launchpadName: ${bscLaunchpads}, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false, volume24: { gte: 100 } }`;
+        // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress)
+        // Activity filtering is enforced post-query to avoid Codex filter incompatibilities.
+        filters = `{ network: [${networkId}], launchpadName: ${bscLaunchpads}, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false }`;
         rankings = `{ attribute: launchpadGraduationPercent, direction: DESC }`;
         break;
       case "completed":
