@@ -56,8 +56,8 @@ export default function AlphaTrackerPage() {
 
   const clearFilters = () => { setSearchToken(""); setSearchWallet(""); setTradeTypeFilter("all"); setHoldingFilter("all"); };
 
-  const getExplorerTxUrl = (txHash: string) => {
-    if (isBnb) return `https://bscscan.com/tx/${txHash}`;
+  const getExplorerTxUrl = (txHash: string, tradeChain?: string | null) => {
+    if (tradeChain === 'bnb') return `https://bscscan.com/tx/${txHash}`;
     return `https://solscan.io/tx/${txHash}`;
   };
 
