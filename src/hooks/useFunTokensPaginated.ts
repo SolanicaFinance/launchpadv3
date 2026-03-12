@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { filterHiddenTokens } from "@/lib/hiddenTokens";
 import { useEffect, useCallback } from "react";
+import { useChain } from "@/contexts/ChainContext";
 
 const DEFAULT_LIVE = {
   holder_count: 0,
@@ -50,11 +51,11 @@ interface UseFunTokensPaginatedResult {
 }
 
 // Fetch a specific page of tokens with exact count
-async function fetchTokensPage(page: number, pageSize: number): Promise<{ tokens: FunToken[]; count: number }> {
+async function fetchTokensPage(page: number, pageSize: number, chainFilter: "solana" | "bnb"): Promise<{ tokens: FunToken[]; count: number }> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("fun_tokens")
     .select(`
       id, name, ticker, description, image_url, creator_wallet, twitter_url, website_url,
@@ -66,6 +67,14 @@ async function fetchTokensPage(page: number, pageSize: number): Promise<{ tokens
     .neq("launchpad_type", "punch")
     .order("created_at", { ascending: false })
     .range(from, to);
+
+  if (chainFilter === "bnb") {
+    query = query.eq("chain", "bsc");
+  } else {
+    query = query.or("chain.is.null,chain.eq.solana");
+  }
+
+  const { data, count, error } = await query;
 
   if (error) throw error;
 
@@ -85,11 +94,13 @@ async function fetchTokensPage(page: number, pageSize: number): Promise<{ tokens
 
 export function useFunTokensPaginated(page: number, pageSize: number = 15): UseFunTokensPaginatedResult {
   const queryClient = useQueryClient();
-  const queryKey = ["fun-tokens-page", page, pageSize];
+  const { chain } = useChain();
+  const chainFilter = chain === "bnb" ? "bnb" : "solana";
+  const queryKey = ["fun-tokens-page", page, pageSize, chainFilter];
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey,
-    queryFn: () => fetchTokensPage(page, pageSize),
+    queryFn: () => fetchTokensPage(page, pageSize, chainFilter),
     staleTime: 1000 * 60 * 2, // 2 minutes fresh
     gcTime: 1000 * 60 * 30, // 30 minutes cache
     refetchOnWindowFocus: false,
@@ -99,7 +110,7 @@ export function useFunTokensPaginated(page: number, pageSize: number = 15): UseF
   // Realtime subscription to invalidate cache on changes
   useEffect(() => {
     const channel = supabase
-      .channel(`fun-tokens-page-${page}`)
+      .channel(`fun-tokens-page-${page}-${chainFilter}`)
       .on(
         "postgres_changes",
         {
@@ -110,7 +121,7 @@ export function useFunTokensPaginated(page: number, pageSize: number = 15): UseF
         (payload) => {
           // For INSERT events, invalidate page 1 (new tokens appear first)
           if (payload.eventType === "INSERT") {
-            queryClient.invalidateQueries({ queryKey: ["fun-tokens-page", 1, pageSize] });
+            queryClient.invalidateQueries({ queryKey: ["fun-tokens-page", 1, pageSize, chainFilter] });
           }
           // For UPDATE/DELETE, invalidate current page
           queryClient.invalidateQueries({ queryKey });
@@ -121,7 +132,7 @@ export function useFunTokensPaginated(page: number, pageSize: number = 15): UseF
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [page, pageSize, queryClient, queryKey]);
+  }, [page, pageSize, queryClient, queryKey, chainFilter]);
 
   const handleRefetch = useCallback(async () => {
     await refetch();

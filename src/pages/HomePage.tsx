@@ -266,7 +266,9 @@ export default function HomePage() {
     }
   }, [location.pathname, location.search, navigate]);
 
-  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
+  const { chain } = useChain();
+  const networkId = chain === "bnb" ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
+  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(networkId);
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
   const limitedCompleting = useMemo(() => (codexCompleting || []).slice(0, 5), [codexCompleting]);
