@@ -6006,6 +6006,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           display_name: string
+          evm_wallet_address: string | null
           followers_count: number | null
           following_count: number | null
           id: string
@@ -6026,6 +6027,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           display_name: string
+          evm_wallet_address?: string | null
           followers_count?: number | null
           following_count?: number | null
           id: string
@@ -6046,6 +6048,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           display_name?: string
+          evm_wallet_address?: string | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
