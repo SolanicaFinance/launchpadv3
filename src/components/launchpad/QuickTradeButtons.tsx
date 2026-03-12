@@ -87,13 +87,26 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
       return;
     }
 
-    const tokenAmount = (userBalance * percentage) / 100;
-    if (tokenAmount <= 0) {
-      toast({ title: "No tokens to sell", variant: "destructive" });
-      return;
-    }
-
     setLoadingIndex(index + 10);
+
+    try {
+      // Fetch real on-chain balance instead of using stale DB value
+      let onChainBalance = 0;
+      try {
+        onChainBalance = await getTokenBalance(token.mint_address);
+      } catch (e) {
+        console.warn("[QuickSell] Failed to fetch on-chain balance, falling back to DB:", e);
+      }
+
+      const effectiveBalance = onChainBalance > 0 ? onChainBalance : userBalance;
+      console.log(`[QuickSell] DB balance: ${userBalance}, On-chain balance: ${onChainBalance}, Using: ${effectiveBalance}`);
+
+      const tokenAmount = (effectiveBalance * percentage) / 100;
+      if (tokenAmount <= 0) {
+        toast({ title: "No tokens to sell", variant: "destructive" });
+        setLoadingIndex(null);
+        return;
+      }
     try {
       const result = await executeRealSwap(token, tokenAmount, false);
 
