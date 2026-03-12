@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
         walletAddress: agent.wallet_address,
         apiKey: apiKey, // Only returned once - store securely!
         apiKeyPrefix: agent.api_key_prefix,
-        dashboardUrl: `https://${BRAND.domain}/agents/dashboard",
+        dashboardUrl: `https://${BRAND.domain}/agents/dashboard`,
         message: "Store your API key securely - it cannot be retrieved later!",
       }),
       {
