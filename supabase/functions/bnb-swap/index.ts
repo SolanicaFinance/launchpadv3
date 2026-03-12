@@ -427,6 +427,11 @@ function isNoPancakeSwapLiquidityError(error: unknown): boolean {
 
   return combined.includes("no liquidity on pancakeswap") || combined.includes("insufficient_liquidity");
 }
+// ── Wallet Resolution ──
+async function resolveWallet(
+  body: SwapRequest,
+  supabase: any
+): Promise<{ walletId: string; walletAddress: string }> {
   let walletId: string | null = null;
   let walletAddress: string = body.userWallet;
 
