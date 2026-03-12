@@ -11,7 +11,7 @@ import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2
 import { useToast } from "@/hooks/use-toast";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
-import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TokenInfo {
   mint_address: string;

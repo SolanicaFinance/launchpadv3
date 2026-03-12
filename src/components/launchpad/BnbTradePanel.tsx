@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useBnbSwap } from "@/hooks/useBnbSwap";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowDownToLine } from "lucide-react";
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
