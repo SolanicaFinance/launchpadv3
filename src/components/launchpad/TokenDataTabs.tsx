@@ -11,18 +11,19 @@ interface Props {
   userWallet?: string;
   userWallets?: string[];
   currentPriceUsd?: number;
+  isBsc?: boolean;
 }
 
 type TabKey = "all_trades" | "your_trades" | "holders";
 
-export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userWallets, currentPriceUsd = 0 }: Props) {
+export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userWallets, currentPriceUsd = 0, isBsc = false }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("all_trades");
   const { data, isLoading } = useCodexTokenEvents(tokenAddress);
   const isHoldersTab = activeTab === "holders";
   const { data: allTradesData, isLoading: allTradesLoading } = useAllTokenTrades(tokenAddress, isHoldersTab);
   const { data: holdersData, isLoading: holdersLoading } = useTokenHolders(
     tokenAddress,
-    true // always fetch so trades tab can use holdings data
+    !isBsc // disable Helius fetch for BSC addresses
   );
 
   const liveHolderCount = holdersData?.count ?? holderCount;
