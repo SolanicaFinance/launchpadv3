@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useWallets, useCreateWallet } from "@privy-io/react-auth";
 
 export function usePrivyEvmWallet() {
@@ -8,7 +8,6 @@ export function usePrivyEvmWallet() {
 
   const evmWallet = useMemo(() => {
     if (!wallets || wallets.length === 0) return null;
-    // Find Privy embedded EVM wallet
     return wallets.find(
       (w: any) =>
         w.walletClientType === "privy" &&
@@ -21,16 +20,14 @@ export function usePrivyEvmWallet() {
   // Force create EVM wallet for existing users who don't have one
   useEffect(() => {
     if (!ready || evmWallet || creatingWallet) return;
-    // Only attempt if user has wallets (is logged in) but no EVM one
     const hasSolanaWallet = wallets.some(
       (w: any) => w.walletClientType === "privy" && w.chainType === "solana"
     );
     if (!hasSolanaWallet) return; // not logged in
 
     setCreatingWallet(true);
-    createWallet({ chainType: "ethereum" })
-      .catch((err) => {
-        // Wallet may already exist or creation not supported
+    (createWallet as any)({ chainType: "ethereum" })
+      .catch((err: any) => {
         console.warn("Failed to create embedded EVM wallet:", err);
       })
       .finally(() => setCreatingWallet(false));
