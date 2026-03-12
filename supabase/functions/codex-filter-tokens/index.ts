@@ -101,9 +101,9 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         break;
       case "completing":
         // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress)
-        // Activity filtering is enforced post-query to avoid Codex filter incompatibilities.
+        // Activity filtering and final ordering are enforced post-query.
         filters = `{ network: [${networkId}], launchpadName: ${bscLaunchpads}, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false }`;
-        rankings = `{ attribute: launchpadGraduationPercent, direction: DESC }`;
+        rankings = `{ attribute: marketCap, direction: DESC }`;
         break;
       case "completed":
         // "Migrated" on BSC = graduated tokens with decent liquidity and volume
