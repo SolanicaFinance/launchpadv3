@@ -142,8 +142,8 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
       return;
     }
 
-    if (!evmAddress) {
-      toast.error("No BNB wallet found. Connect your wallet first.");
+    if (!userWallet || userWallet === "unknown") {
+      toast.error("Connect your wallet first.");
       return;
     }
 
