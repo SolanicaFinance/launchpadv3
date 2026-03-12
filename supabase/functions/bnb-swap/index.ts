@@ -19,7 +19,7 @@ import {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // ── Contract addresses ──
@@ -396,8 +396,10 @@ async function executePortalSwap(
 
 // ── Error helpers ──
 class NoPancakeSwapLiquidityError extends Error {
+  code = "NO_PANCAKESWAP_LIQUIDITY";
   constructor() {
     super("No liquidity on PancakeSwap V2 for this pair");
+    this.name = "NoPancakeSwapLiquidityError";
   }
 }
 
@@ -573,7 +575,7 @@ Deno.serve(async (req) => {
           estimatedOutput = result.estimatedOutput;
         }
       } catch (e) {
-        if (e instanceof NoPancakeSwapLiquidityError) {
+        if ((e as any).code === "NO_PANCAKESWAP_LIQUIDITY" || (e as Error).message?.includes("No liquidity on PancakeSwap")) {
           // PancakeSwap has no pair → try Four.meme as fallback (token might still be on bonding)
           console.log(`[bnb-swap] PancakeSwap no liquidity, trying Four.meme fallback...`);
           try {

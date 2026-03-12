@@ -1,18 +1,45 @@
 
 
-## Problem
+## Two Issues to Fix
 
-The `bnb-swap` edge function returns a **500 Internal Server Error** instead of a proper 400 when PancakeSwap V2 has no liquidity. The root cause: the `instanceof NoPancakeSwapLiquidityError` check (line 576) fails in the Deno edge runtime, so the error falls through to the generic catch (line 641) which returns 500.
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-This is a known issue — custom `Error` subclass `instanceof` checks can be unreliable in bundled/compiled Deno edge environments.
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-## Fix
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**File: `supabase/functions/bnb-swap/index.ts`**
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-1. Add a distinguishing property to `NoPancakeSwapLiquidityError` (e.g., `this.code = "NO_PANCAKESWAP_LIQUIDITY"`)
-2. Replace the `instanceof` check at line 576 with a string/property check: `(e as any).code === "NO_PANCAKESWAP_LIQUIDITY"` or `e.message?.includes("No liquidity on PancakeSwap")`
-3. Also update CORS headers to include the full set of Supabase client headers (same fix applied to other functions)
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-This ensures the Four.meme fallback is properly triggered when PancakeSwap has no pair, returning a user-friendly 400 error instead of a raw 500.
+### 2. Alpha Tracker Shows No Trades from the Platform
+
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
+
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
