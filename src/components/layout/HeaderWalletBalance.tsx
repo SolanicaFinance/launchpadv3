@@ -13,6 +13,7 @@ import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal
 import { PortfolioModal } from "@/components/portfolio/PortfolioModal";
 import { useChain } from "@/contexts/ChainContext";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 
 function HeaderWalletBalanceInner() {
   const { isAuthenticated, logout } = useAuth();
