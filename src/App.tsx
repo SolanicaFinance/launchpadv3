@@ -125,6 +125,7 @@ const App = () => (
                    <div className="relative z-[1]">
                    <Routes>
                     <Route path="/" element={<DomainRoot />} />
+                    <Route path="/tokens" element={<AllTokensPage />} />
                     <Route path="/launchpad" element={<CreateTokenPage />} />
                     <Route path="/launchpad/create" element={<CreateTokenPage />} />
                     <Route path="/terminal" element={<FunLauncherPage />} />
