@@ -616,7 +616,7 @@ Deno.serve(async (req) => {
           estimatedOutput = result.estimatedOutput;
         }
       } catch (e) {
-        if ((e as any).code === "NO_PANCAKESWAP_LIQUIDITY" || (e as Error).message?.includes("No liquidity on PancakeSwap")) {
+        if (isNoPancakeSwapLiquidityError(e)) {
           // PancakeSwap has no pair → try Four.meme as fallback (token might still be on bonding)
           console.log(`[bnb-swap] PancakeSwap no liquidity, trying Four.meme fallback...`);
           try {
