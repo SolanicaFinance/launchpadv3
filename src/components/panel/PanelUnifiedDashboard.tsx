@@ -241,12 +241,17 @@ export default function PanelUnifiedDashboard() {
 
   // Balance fetch
   useEffect(() => {
-    if (!isWalletReady || !walletAddr) return;
+    if (!walletAddr) return;
     let cancelled = false;
     const fetchBal = async () => {
       try {
         if (isSolana) {
+          if (!isWalletReady) return;
           const bal = await getBalance();
+          if (!cancelled) setBalance(bal);
+        } else if (isBnb && evmAddress) {
+          const { fetchBnbBalance } = await import("@/lib/bscRpc");
+          const bal = await fetchBnbBalance(evmAddress);
           if (!cancelled) setBalance(bal);
         }
       } catch { /* ignore */ }
@@ -254,7 +259,7 @@ export default function PanelUnifiedDashboard() {
     fetchBal();
     const interval = setInterval(fetchBal, 15_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [isWalletReady, walletAddr, isSolana, getBalance]);
+  }, [isWalletReady, walletAddr, isSolana, isBnb, evmAddress, getBalance]);
 
   // Portfolio stats
   const portfolioStats = useMemo(() => {
