@@ -185,6 +185,7 @@ async function executeFourMemeBuy(
     to: FOURMEME_TOKEN_MANAGER,
     data: callData,
     value: numberToHex(bnbAmount),
+    gas: numberToHex(300000n),
   });
 }
 
