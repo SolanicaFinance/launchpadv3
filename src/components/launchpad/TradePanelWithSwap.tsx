@@ -40,6 +40,8 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
 
   const isBuy = tradeType === 'buy';
   const numericAmount = parseFloat(amount) || 0;
+  // Always prefer on-chain balance over stale DB value
+  const effectiveTokenBalance = (onChainTokenBalance !== null && onChainTokenBalance > 0) ? onChainTokenBalance : userBalance;
 
   // Fetch real SOL balance
   useEffect(() => {
