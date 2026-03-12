@@ -1,55 +1,45 @@
 
 
-## twitterapi.io Usage Audit
+## Two Issues to Fix
 
-### Current API Call Volume
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-Here is the exact breakdown of your twitterapi.io consumption:
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-#### 1. `scan-kol-tweets` (KOL tweet scanner) -- THE MAIN OFFENDER
-- **108 active KOLs**, scanned in batches of 20 per run
-- **209 runs in the last 24 hours** (~1 run every 5 minutes, 24/7)
-- Each run fetches **20 KOLs x 1 API call each = 20 calls/run**
-- **Daily total: 209 x 20 = ~4,180 API calls/day**
-- Full cycle to scan all 108 KOLs = ~6 runs = ~30 minutes
-- This means **each KOL is scanned ~39 times/day** (every ~37 minutes)
-- Endpoint used: `/twitter/user/last_tweets?count=20` (returns 20 tweets per call)
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-#### 2. `twitter-user-info` (Profile lookups from frontend)
-- Only **5 cache misses in 7 days** (24hr cache TTL works well)
-- Negligible cost
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-#### 3. `agent-scan-twitter` (Mention scanner / reply bot)
-- Uses twitterapi.io for search (`/tweet/advanced_search`) and replies (`/tweet/reply`)
-- **0 replies in 7 days** (posting is disabled)
-- Search calls depend on cron frequency -- likely similar ~200+/day
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-#### 4. Other functions (agent-learn-style, claw-learn-voice, cache-kol-avatars, promote-post, etc.)
-- Triggered manually or rarely, negligible
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-### Total Estimated: **~4,500-5,000+ API calls/day** to twitterapi.io
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-### Why It's 100x More Than Needed
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-The core problem: **scan-kol-tweets runs every 5 minutes scanning 20 KOLs each time, but only found 23 total contract tweets ever.** The hit rate is extremely low (~0.03%), meaning 99.97% of API calls return nothing useful.
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-### Reduction Plan
+### Technical Details
 
-| Change | Impact | Saves |
-|--------|--------|-------|
-| **Reduce cron to every 15 min** (from 5 min) | 3x fewer runs | ~2,800 calls/day |
-| **Reduce batch to 10 KOLs** per run (from 20) | 2x fewer per run | ~2,000 calls/day |
-| **Skip KOLs scanned <30 min ago** | Already done via `order(last_scanned_at)` but limit is too high | Combined effect |
-| **Reduce tweet count from 20 to 5** | Same API call cost (1 call) but less data transferred | Bandwidth only |
-| **Tier KOLs: active vs passive** | High-activity KOLs every 15min, low-activity every 2hr | ~3,500 calls/day |
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-**Recommended combo**: Change cron to every 15 min + batch size to 10 = **~70 calls/day instead of ~4,200**. That's a **60x reduction** while still scanning every KOL within ~2.5 hours.
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-### Implementation Steps
-
-1. **Update the cron schedule** for `scan-kol-tweets` from every 5 min to every 15 min (this is configured externally, not in code)
-2. **Reduce `.limit(20)` to `.limit(10)`** in `scan-kol-tweets/index.ts` line 88
-3. **Add a minimum re-scan interval**: Skip KOLs scanned less than 30 minutes ago (add a `WHERE last_scanned_at < now() - interval '30 minutes'` filter)
-4. **Add same optimizations to `agent-scan-twitter`** if it also runs on cron
-5. **Update branding checklist** to note twitterapi.io API key as a cost center
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 
