@@ -80,7 +80,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
       setAmount(value.toString());
       setSelectedPreset(index);
     } else {
-      const tokenAmount = (userBalance * value) / 100;
+      const tokenAmount = (effectiveTokenBalance * value) / 100;
       setAmount(tokenAmount.toString());
       setSelectedPreset(index);
     }
