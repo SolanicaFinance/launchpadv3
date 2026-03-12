@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     for (const kol of kols) {
       runCounters.accountsScanned++;
       try {
-        const url = `https://api.twitterapi.io/twitter/user/last_tweets?userName=${encodeURIComponent(kol.username)}&count=20`;
+        const url = `https://api.twitterapi.io/twitter/user/last_tweets?userName=${encodeURIComponent(kol.username)}&count=5`;
         console.log(`[scan] Fetching tweets for @${kol.username}`);
         
         const resp = await fetch(url, {
