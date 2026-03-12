@@ -67,16 +67,6 @@ serve(async (req) => {
       );
     }
 
-    if (token.status === "graduated") {
-      return new Response(
-        JSON.stringify({ 
-          error: "Token has graduated. Trade on DEX.",
-          jupiterUrl: `https://jup.ag/swap/SOL-${mintAddress}`,
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // ===== RECORD MODE =====
     // When mode === 'record', the client has already executed the on-chain swap.
     // We just record the transaction in the database with the real signature.
@@ -231,6 +221,7 @@ serve(async (req) => {
           tx_hash: clientSignature,
           trader_display_name: traderDisplayName,
           trader_avatar_url: traderAvatarUrl,
+          chain: 'solana',
         });
       } catch (alphaErr) {
         console.warn("[launchpad-swap] alpha_trades insert failed (non-fatal):", alphaErr);
@@ -272,6 +263,17 @@ serve(async (req) => {
           graduated: shouldGraduate,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Block graduated tokens from legacy simulate mode (record mode above still works)
+    if (token.status === "graduated") {
+      return new Response(
+        JSON.stringify({ 
+          error: "Token has graduated. Trade on DEX.",
+          jupiterUrl: `https://jup.ag/swap/SOL-${mintAddress}`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -518,6 +520,7 @@ serve(async (req) => {
         tx_hash: signature,
         trader_display_name: traderDisplayName,
         trader_avatar_url: traderAvatarUrl,
+        chain: 'solana',
       });
     } catch (alphaErr) {
       console.warn("[launchpad-swap] alpha_trades insert failed (non-fatal):", alphaErr);
