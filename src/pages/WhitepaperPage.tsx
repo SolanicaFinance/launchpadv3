@@ -462,7 +462,6 @@ export default function WhitepaperPage() {
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Wallet Security</h3>
                 <ul className="space-y-2 text-muted-foreground">
                   <li><strong className="text-foreground">Trading Agent Wallets:</strong> AES-256-GCM encryption via Web Crypto API</li>
-                  <li><strong className="text-foreground">Deployer Wallets:</strong> Fresh keypair per token, never reused</li>
                   <li><strong className="text-foreground">Treasury:</strong> Private keys isolated in Edge Functions, never client-side</li>
                 </ul>
 
