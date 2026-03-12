@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
-import tunaLogo from "@/assets/tuna-logo.png";
+import tunaLogo from "@/assets/moondexo-logo.png";
 
 interface LaunchpadBadgeProps {
   launchpadName?: string | null;

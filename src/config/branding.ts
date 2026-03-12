@@ -22,10 +22,10 @@ export const BRAND = {
   twitterUrl: "https://x.com/moondexo",
 
   // ── Assets ──
-  logoPath: "/saturn-logo.png",
+  logoPath: "/moondexo-logo.png",
   iconEmoji: "🌙",
-  ogImage: "https://moondexo.com/saturn-og.png",
-  faviconPath: "/favicon.png",
+  ogImage: "https://moondexo.com/moondexo-logo.png",
+  faviconPath: "/moondexo-logo.png",
 
   // ── Feature Names ──
   forumName: "MoonDexo Forum",

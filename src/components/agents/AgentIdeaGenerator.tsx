@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Download, RefreshCw, Copy, Check, Twitter, Lightbulb, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import clawLogo from "@/assets/claw-logo.png";
+import clawLogo from "@/assets/moondexo-logo.png";
 import { BRAND } from "@/config/branding";
 
 interface GeneratedMeme {
