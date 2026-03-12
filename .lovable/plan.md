@@ -1,77 +1,45 @@
 
 
-## Plan: Multi-Chain Profile + Deposit System + Post-Login Navigation
+## Two Issues to Fix
 
-Three issues to solve:
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-### Problem 1: Profile page is Solana-only
-When BNB chain is selected and you click the profile from the dropdown, it navigates using the Solana embedded address. The profile page then fetches SOL balance, Solana trades, and shows Solscan links. None of this is relevant when on BNB.
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-### Problem 2: No Deposit button in the wallet dropdown
-The BnbWalletBar in the Panel has a deposit dialog, but the main header wallet dropdown (where most users interact) has no deposit option at all.
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-### Problem 3: No clear post-login landing for profile/wallet management
-After login, there's no redirect to the Panel or profile. Users have to manually find their way.
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
----
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-### Implementation
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-#### 1. Database: Add `evm_wallet_address` to profiles table
-- Migration: `ALTER TABLE profiles ADD COLUMN evm_wallet_address text;`
-- Store the Privy EVM address alongside `solana_wallet_address` during user sync
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-#### 2. Update `HeaderWalletBalance.tsx` -- Profile navigation + Deposit button
-- **Profile click**: When BNB chain is active, navigate using EVM address or username (not Solana address)
-- **Profile fetch**: Also query by `evm_wallet_address` when on BNB chain
-- **Add Deposit menu item**: New menu item with `ArrowDownToLine` icon that opens a deposit dialog
-- The deposit dialog is chain-aware: shows the correct address (BNB or SOL), correct currency label, QR code, and instant deposit detection via polling
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-#### 3. Create `DepositDialog` component (`src/components/wallet/DepositDialog.tsx`)
-- Shared component used by both HeaderWalletBalance dropdown and PanelWalletBar
-- Props: `address`, `chain` (bnb | solana), `open`, `onOpenChange`
-- Features:
-  - QR code of the deposit address
-  - Copy button
-  - Chain-specific labels (BNB Chain / Solana)
-  - **Instant deposit detection**: polls balance every 3 seconds while open, compares to opening balance, shows success animation when increase detected
-  - For SOL: uses `getBalance` from Privy hook
-  - For BNB: uses BSC RPC `eth_getBalance`
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-#### 4. Update `UserProfilePage.tsx` -- Multi-chain awareness
-- Add `useChain` hook to determine active chain
-- When BNB is active:
-  - Detect EVM addresses (`0x` prefix) in the identifier
-  - Query profiles by `evm_wallet_address` for `0x` addresses
-  - Fetch BNB balance via BSC RPC instead of SOL balance
-  - Show "BNB Balance" instead of "SOL Balance"
-  - Link trades to BscScan instead of Solscan
-  - Filter alpha_trades by `chain = 'bnb'` 
-  - Show BNB-denominated stats
-- `isWalletAddress` function updated to also detect `0x` EVM addresses
+### Technical Details
 
-#### 5. Update `useUserProfile.ts` -- Support EVM lookups
-- `isWalletAddress`: also match `0x` prefixed addresses (42 chars)
-- New `isEvmAddress` helper
-- When identifier is an EVM address, query `profiles.evm_wallet_address` instead of `solana_wallet_address`
-- Alpha trades query: filter by `chain` column when on BNB
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-#### 6. Update `sync-privy-user` edge function
-- Store the EVM wallet address in `profiles.evm_wallet_address` during user creation/sync
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-#### 7. Add "Deposit" to wallet dropdown menu
-- Between "Portfolio" and "Pulse" in the dropdown, add a Deposit item
-- Opens the new `DepositDialog` with chain-aware address
-
-#### 8. Post-login redirect
-- In `HeaderWalletBalance` or the login callback, after successful authentication, navigate to `/panel` if the user hasn't navigated elsewhere
-- This gives users immediate access to their wallet, portfolio, deposit, export, and profile editing
-
-### Files to create/edit:
-- **Create**: `src/components/wallet/DepositDialog.tsx`
-- **Edit**: `src/components/layout/HeaderWalletBalance.tsx`
-- **Edit**: `src/pages/UserProfilePage.tsx`
-- **Edit**: `src/hooks/useUserProfile.ts`
-- **Migration**: Add `evm_wallet_address` column to profiles
-- **Edit**: `supabase/functions/sync-privy-user/index.ts` (store EVM address)
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

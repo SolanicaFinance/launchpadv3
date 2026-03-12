@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User, Zap } from "lucide-react";
+import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User, Zap, ArrowDownToLine } from "lucide-react";
 import defaultAvatar from "@/assets/moondexo-logo.png";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SettingsModal } from "@/components/settings/SettingsModal";
 import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 import { PortfolioModal } from "@/components/portfolio/PortfolioModal";
+import { DepositDialog } from "@/components/wallet/DepositDialog";
 import { useChain } from "@/contexts/ChainContext";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
@@ -29,61 +30,62 @@ function HeaderWalletBalanceInner() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null; evm_wallet_address?: string | null } | null>(null);
+
+  const isBnb = chain === 'bnb';
+  const evmAddress = privyEvm.address || evmWallet.address || '';
+  const displayAddress = isBnb ? evmAddress : (embeddedAddress || '');
+  const currencyLabel = isBnb ? 'BNB' : 'SOL';
 
   useEffect(() => {
-    if (!embeddedAddress) return;
+    if (!embeddedAddress && !evmAddress) return;
     const fetchProfile = async () => {
-      const { data } = await (supabase as any).from("profiles").select("display_name, avatar_url, username").eq("solana_wallet_address", embeddedAddress).maybeSingle();
+      // Try fetching by solana address first, then evm
+      let data = null;
+      if (embeddedAddress) {
+        const res = await (supabase as any).from("profiles").select("display_name, avatar_url, username, evm_wallet_address").eq("solana_wallet_address", embeddedAddress).maybeSingle();
+        data = res.data;
+      }
+      if (!data && evmAddress) {
+        const res = await (supabase as any).from("profiles").select("display_name, avatar_url, username, evm_wallet_address").eq("evm_wallet_address", evmAddress).maybeSingle();
+        data = res.data;
+      }
       if (data) setProfile(data);
     };
     fetchProfile();
-  }, [embeddedAddress, settingsOpen]);
+  }, [embeddedAddress, evmAddress, settingsOpen]);
 
   useEffect(() => {
-    if (chain === 'bnb') {
-      // Fetch BNB balance via BSC RPC for EVM wallet (prefer Privy embedded, fallback to wagmi)
-      const bnbAddress = privyEvm.address || evmWallet.address;
-      if (!bnbAddress) {
-        setBalance(null);
-        return;
-      }
+    if (isBnb) {
+      const bnbAddress = evmAddress;
+      if (!bnbAddress) { setBalance(null); return; }
       let cancelled = false;
       const fetchBnbBal = async () => {
         try {
           const res = await fetch('https://bsc-dataseed.binance.org', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0', method: 'eth_getBalance',
-              params: [bnbAddress, 'latest'], id: 1,
-            }),
+            body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getBalance', params: [bnbAddress, 'latest'], id: 1 }),
           });
           const data = await res.json();
           if (data?.result && !cancelled) {
-            const wei = BigInt(data.result);
-            const bnb = Number(wei) / 1e18;
-            setBalance(bnb);
+            setBalance(Number(BigInt(data.result)) / 1e18);
           }
-        } catch (e) {
-          console.warn("BNB balance fetch failed:", e);
-        }
+        } catch (e) { console.warn("BNB balance fetch failed:", e); }
       };
       fetchBnbBal();
       const interval = setInterval(fetchBnbBal, 30000);
       return () => { cancelled = true; clearInterval(interval); };
     } else {
-      // SOL balance
       if (!embeddedAddress) return;
       let cancelled = false;
       const fetchBal = async () => {
         try {
           const bal = await getBalance();
           if (!cancelled) setBalance(bal);
-        } catch (e) {
-          console.warn("Header balance fetch failed:", e);
-        }
+        } catch (e) { console.warn("Header balance fetch failed:", e); }
       };
       fetchBal();
       const interval = setInterval(fetchBal, 30000);
@@ -94,19 +96,13 @@ function HeaderWalletBalanceInner() {
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
-  if (!isAuthenticated || (!embeddedAddress && !evmWallet.address && !privyEvm.address)) return null;
-
-  const isBnb = chain === 'bnb';
-  const displayAddress = isBnb ? (privyEvm.address || evmWallet.address || '') : (embeddedAddress || '');
-  const currencyLabel = isBnb ? 'BNB' : 'SOL';
+  if (!isAuthenticated || (!embeddedAddress && !evmAddress)) return null;
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(displayAddress);
@@ -122,6 +118,12 @@ function HeaderWalletBalanceInner() {
     setMenuOpen(false);
     try { await logout(); } catch (e) { console.warn("Logout error:", e); }
     window.location.href = "/";
+  };
+
+  const handleProfileClick = () => {
+    setMenuOpen(false);
+    const profileIdentifier = profile?.username || (isBnb ? (profile?.evm_wallet_address || evmAddress) : embeddedAddress);
+    navigate(`/profile/${profileIdentifier}`);
   };
 
   return (
@@ -151,13 +153,9 @@ function HeaderWalletBalanceInner() {
             className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50 border border-border/60 shadow-xl"
             style={{ background: "hsl(var(--background) / 0.97)", backdropFilter: "blur(16px)" }}
           >
-            {/* Profile header — tap to change avatar */}
+            {/* Profile header */}
             <button
-              onClick={() => {
-                setMenuOpen(false);
-                const profileIdentifier = profile?.username || embeddedAddress;
-                navigate(`/profile/${profileIdentifier}`);
-              }}
+              onClick={handleProfileClick}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/40"
             >
               <div className="h-9 w-9 rounded-full bg-muted border border-border overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -192,6 +190,11 @@ function HeaderWalletBalanceInner() {
                 onClick={() => { setMenuOpen(false); setPortfolioOpen(true); }}
               />
               <MenuItem
+                icon={<ArrowDownToLine className="h-4 w-4" />}
+                label="Deposit"
+                onClick={() => { setMenuOpen(false); setDepositOpen(true); }}
+              />
+              <MenuItem
                 icon={<Zap className="h-4 w-4" />}
                 label="Pulse"
                 onClick={() => { setMenuOpen(false); navigate("/trade"); }}
@@ -217,21 +220,15 @@ function HeaderWalletBalanceInner() {
         )}
       </div>
 
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        profile={null}
-        onProfileUpdate={() => {}}
-      />
-
-      <AccountSecurityModal
-        open={accountOpen}
-        onClose={() => setAccountOpen(false)}
-      />
-
-      <PortfolioModal
-        open={portfolioOpen}
-        onClose={() => setPortfolioOpen(false)}
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} profile={null} onProfileUpdate={() => {}} />
+      <AccountSecurityModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+      <PortfolioModal open={portfolioOpen} onClose={() => setPortfolioOpen(false)} />
+      <DepositDialog
+        open={depositOpen}
+        onOpenChange={setDepositOpen}
+        address={displayAddress}
+        chain={isBnb ? "bnb" : "solana"}
+        getBalance={isBnb ? undefined : getBalance}
       />
     </>
   );

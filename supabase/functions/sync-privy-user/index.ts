@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { privyUserId, solanaWalletAddress, email, twitterUsername, displayName, avatarUrl } = await req.json();
+    const { privyUserId, solanaWalletAddress, evmWalletAddress, email, twitterUsername, displayName, avatarUrl } = await req.json();
 
     if (!privyUserId) {
       return new Response(
@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
     // Check if profile exists
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id, solana_wallet_address, privy_wallet_id")
+      .select("id, solana_wallet_address, evm_wallet_address, privy_wallet_id, privy_did")
       .eq("id", profileId)
       .maybeSingle();
 
@@ -216,6 +216,9 @@ Deno.serve(async (req) => {
 
       if (solanaWalletAddress && existingProfile.solana_wallet_address !== solanaWalletAddress) {
         updates.solana_wallet_address = solanaWalletAddress;
+      }
+      if (evmWalletAddress && existingProfile.evm_wallet_address !== evmWalletAddress) {
+        updates.evm_wallet_address = evmWalletAddress;
       }
       if (avatarUrl) updates.avatar_url = avatarUrl;
       if (privyWalletId && existingProfile.privy_wallet_id !== privyWalletId) {
@@ -254,6 +257,7 @@ Deno.serve(async (req) => {
           display_name: name,
           avatar_url: avatarUrl,
           solana_wallet_address: solanaWalletAddress,
+          evm_wallet_address: evmWalletAddress,
           privy_wallet_id: privyWalletId,
           privy_did: privyUserId,
         });
