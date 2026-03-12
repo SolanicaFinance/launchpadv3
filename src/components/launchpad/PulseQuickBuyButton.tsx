@@ -2,6 +2,7 @@ import { memo, useState, useCallback } from "react";
 import { Zap, Loader2, ArrowDownToLine } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFastSwap } from "@/hooks/useFastSwap";
+import { useBnbSwap } from "@/hooks/useBnbSwap";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -13,7 +14,8 @@ import type { FunToken } from "@/hooks/useFunTokensPaginated";
 import type { CodexPairToken } from "@/hooks/useCodexNewPairs";
 import type { SupportedChain } from "@/contexts/ChainContext";
 
-const PRESET_AMOUNTS = [0.1, 0.5, 1, 2];
+const PRESET_AMOUNTS_SOL = [0.1, 0.5, 1, 2];
+const PRESET_AMOUNTS_BNB = [0.01, 0.05, 0.1, 0.5];
 
 interface PulseQuickBuyButtonProps {
   funToken?: FunToken;
@@ -103,25 +105,136 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   const isBnb = chain === 'bnb';
   const mintAddress = funToken?.mint_address ?? codexToken?.address ?? null;
 
-  // For BNB tokens, render a simple PancakeSwap link button
+  // For BNB tokens, use the BNB quick buy flow
   if (isBnb && mintAddress) {
-    const pancakeUrl = `https://pancakeswap.finance/swap?outputCurrency=${mintAddress}&chain=bsc`;
-    return (
-      <a
-        href={pancakeUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
-      >
-        <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
-        <span>PancakeSwap</span>
-      </a>
-    );
+    return <BnbQuickBuy mintAddress={mintAddress} ticker={funToken?.ticker ?? codexToken?.symbol ?? ''} quickBuyAmount={quickBuyAmount} isCompact={isCompact} />;
   }
 
   // Solana swap path
   return <SolanaQuickBuy funToken={funToken} codexToken={codexToken} quickBuyAmount={quickBuyAmount} isCompact={isCompact} mintAddress={mintAddress} />;
+});
+
+/** BNB quick buy — uses bnb-swap edge function with OpenOcean */
+const BnbQuickBuy = memo(function BnbQuickBuy({
+  mintAddress,
+  ticker,
+  quickBuyAmount,
+  isCompact,
+}: {
+  mintAddress: string;
+  ticker: string;
+  quickBuyAmount?: number;
+  isCompact?: boolean;
+}) {
+  const { executeBnbSwap, isLoading } = useBnbSwap();
+  const { isAuthenticated, solanaAddress } = useAuth();
+  const userWallet = solanaAddress || "unknown";
+  const [open, setOpen] = useState(false);
+  const [buyingAmount, setBuyingAmount] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const handleBuy = useCallback(async (amount: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!userWallet || userWallet === "unknown") {
+      toast.error("Connect your wallet first.");
+      return;
+    }
+
+    const toastId = `bnb-buy-${Date.now()}`;
+    toast.loading("⚡ BNB Trade Executing...", { id: toastId, description: `Buying ${amount} BNB of $${ticker}` });
+    setBuyingAmount(amount);
+
+    try {
+      const result = await executeBnbSwap(mintAddress, "buy", amount, userWallet);
+      if (result.success) {
+        toast.success("✅ BNB Trade Executed!", {
+          id: toastId,
+          description: `TX: ${result.txHash?.slice(0, 10)}... · via ${result.route === 'openocean' ? 'OpenOcean' : 'Portal'}`,
+          action: result.explorerUrl
+            ? { label: "View TX", onClick: () => window.open(result.explorerUrl, "_blank") }
+            : undefined,
+        });
+      } else {
+        toast.error("❌ BNB Trade Failed", { id: toastId, description: result.error?.slice(0, 80) });
+      }
+    } catch (err: any) {
+      toast.error("❌ BNB Trade Failed", { id: toastId, description: err?.message?.slice(0, 80) });
+    } finally {
+      setBuyingAmount(null);
+      setOpen(false);
+    }
+  }, [isAuthenticated, userWallet, mintAddress, ticker, executeBnbSwap]);
+
+  const handleTriggerClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (quickBuyAmount && quickBuyAmount > 0) {
+      handleBuy(quickBuyAmount, e);
+      return;
+    }
+    setOpen((prev) => !prev);
+  }, [isAuthenticated, quickBuyAmount, handleBuy]);
+
+  const isBusy = isLoading || buyingAmount !== null;
+
+  return (
+    <>
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            onClick={handleTriggerClick}
+            className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
+            disabled={isBusy}
+          >
+            {isBusy ? (
+              <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
+            ) : (
+              <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
+            )}
+            <span>{isBusy ? "Buying..." : quickBuyAmount ? `${quickBuyAmount} BNB` : "Buy"}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-auto p-2 bg-card border-border"
+          side="top"
+          align="end"
+          sideOffset={6}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        >
+          <div className="flex items-center gap-1.5">
+            {PRESET_AMOUNTS_BNB.map((amt) => (
+              <button
+                key={amt}
+                type="button"
+                disabled={isBusy}
+                onClick={(e) => handleBuy(amt, e)}
+                className="px-3 py-1.5 rounded-md text-[11px] font-mono font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
+                {buyingAmount === amt ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  `${amt} BNB`
+                )}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
 });
 
 /** Solana-only quick buy/sell — uses hooks that must not be conditionally called */
@@ -352,7 +465,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
             }}
           >
             <div className="flex items-center gap-1.5">
-              {PRESET_AMOUNTS.map((amt) => (
+              {PRESET_AMOUNTS_SOL.map((amt) => (
                 <button
                   key={amt}
                   type="button"

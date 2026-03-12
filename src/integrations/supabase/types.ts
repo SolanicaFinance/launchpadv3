@@ -476,6 +476,7 @@ export type Database = {
         Row: {
           amount_sol: number
           amount_tokens: number
+          chain: string
           created_at: string
           id: string
           price_sol: number | null
@@ -492,6 +493,7 @@ export type Database = {
         Insert: {
           amount_sol?: number
           amount_tokens?: number
+          chain?: string
           created_at?: string
           id?: string
           price_sol?: number | null
@@ -508,6 +510,7 @@ export type Database = {
         Update: {
           amount_sol?: number
           amount_tokens?: number
+          chain?: string
           created_at?: string
           id?: string
           price_sol?: number | null
