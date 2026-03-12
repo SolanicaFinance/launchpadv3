@@ -177,8 +177,8 @@ function FeaturedAgentCard({ strategy, agentData }: {
       </div>
 
       {/* CTA */}
-      <Link
-        to={`/agents?strategy=${strategy.id}`}
+      <button
+        onClick={() => toast.info("Launching on 14th March")}
         className={cn(
           "flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-xs transition-all",
           "bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
@@ -187,7 +187,7 @@ function FeaturedAgentCard({ strategy, agentData }: {
         <Coins className="w-3.5 h-3.5" />
         Stake SOL
         <ArrowRight className="w-3 h-3" />
-      </Link>
+      </button>
     </div>
   );
 }

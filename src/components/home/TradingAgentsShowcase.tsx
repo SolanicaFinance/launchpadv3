@@ -138,15 +138,15 @@ export default function TradingAgentsShowcase() {
               </div>
 
               {/* CTA */}
-              <Link
-                to="/agents"
+              <button
+                onClick={() => toast.info("Launching on 14th March")}
                 className="mt-auto flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-bold transition-all duration-300
                            bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40
                            hover:shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
               >
                 <Target className="h-3.5 w-3.5" />
                 Stake SOL →
-              </Link>
+              </button>
             </div>
           );
         })}
