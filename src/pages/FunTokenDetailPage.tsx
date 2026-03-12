@@ -833,7 +833,7 @@ export default function FunTokenDetailPage() {
               <span className="text-xs font-mono text-muted-foreground/60">24h Change</span>
               <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'} text-sm`}>
                 {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {isPriceUp ? '+' : ''}{priceChange.toFixed(2)}%
+                {formatChange24h(priceChange)}
               </span>
             </div>
           )}
