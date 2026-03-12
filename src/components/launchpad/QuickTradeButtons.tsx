@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealSwap } from "@/hooks/useRealSwap";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 
 interface QuickTradeButtonsProps {
   token: Token;
