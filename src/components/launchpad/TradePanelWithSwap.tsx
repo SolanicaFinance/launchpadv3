@@ -338,7 +338,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
             <span className="text-[10px] font-mono text-muted-foreground">
               Bal: {isBuy
                 ? (solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—')
-                : `${formatTokenAmount(userBalance)} ${token.ticker}`}
+                : `${formatTokenAmount(effectiveTokenBalance)} ${token.ticker}`}
             </span>
           </div>
           <div className="relative bg-background/60 border border-border/50 rounded-lg hover:border-border/80 focus-within:border-primary/50 transition-colors">
