@@ -241,7 +241,7 @@ export default function AlphaTrackerPage() {
                   <div className="text-right">
                     {trade.tx_hash ? (
                       <a
-                        href={getExplorerTxUrl(trade.tx_hash)}
+                        href={getExplorerTxUrl(trade.tx_hash, trade.chain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[9px] font-mono text-muted-foreground/40 hover:text-primary transition-colors inline-flex items-center gap-0.5 justify-end"
