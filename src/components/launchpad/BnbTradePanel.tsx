@@ -51,7 +51,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
       if (result.success) {
         toast.success(`✅ ${isBuy ? 'Buy' : 'Sell'} Executed!`, {
           id: toastId,
-          description: `TX: ${result.txHash?.slice(0, 12)}... · ${result.route === 'fourmeme' ? 'Four.meme' : result.route === 'openocean' ? 'OpenOcean' : 'Portal'}`,
+          description: `TX: ${result.txHash?.slice(0, 12)}... · ${result.route === 'fourmeme' ? 'Four.meme' : result.route === 'pancakeswap' ? 'PancakeSwap' : 'Portal'}`,
           action: result.explorerUrl
             ? { label: "View TX", onClick: () => window.open(result.explorerUrl, "_blank") }
             : undefined,
