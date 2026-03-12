@@ -29,6 +29,10 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
     }
 
     const amtNum = parseFloat(amount);
+    if (!evmAddress) {
+      toast.error("BNB wallet not ready yet");
+      return;
+    }
     if (isNaN(amtNum) || amtNum <= 0) {
       toast.error("Enter a valid amount");
       return;
