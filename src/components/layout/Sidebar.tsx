@@ -23,7 +23,7 @@ const NAV_LINKS = [
   { to: "/leverage", label: "Leverage", icon: CandlestickChart },
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
-  { to: "/merch", label: "Merch", icon: ShoppingBag },
+  
   { to: "/panel", label: "Panel", icon: LayoutDashboard },
 ];
 
