@@ -8,7 +8,8 @@ export function TokenTickerBar() {
     return null;
   }
 
-  const displayTokens = [...tokens, ...tokens, ...tokens, ...tokens];
+  const uniqueTokens = tokens.filter((t, i, arr) => arr.findIndex(x => x.ticker === t.ticker) === i);
+  const displayTokens = [...uniqueTokens, ...uniqueTokens, ...uniqueTokens, ...uniqueTokens];
 
   return (
     <div className="gate-ticker-bar w-full">
