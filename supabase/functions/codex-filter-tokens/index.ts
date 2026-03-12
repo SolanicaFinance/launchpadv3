@@ -197,10 +197,9 @@ Deno.serve(async (req) => {
         ? `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(address.toLowerCase())}`
         : null;
 
-      // BSC: avoid unreliable upstream token-media image mismatches.
-      // We use deterministic per-address sources only.
+      // BSC: prefer DexScreener (has real logos), then upstream Codex images, identicon as last resort.
       let imageUrl = isBsc
-        ? (identiconImage || dexScreenerImage)
+        ? (dexScreenerImage || r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || identiconImage)
         : (r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || dexScreenerImage || identiconImage);
 
       return {
