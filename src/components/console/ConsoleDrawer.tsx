@@ -4,7 +4,7 @@ import { Robot } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import clawLogo from "@/assets/claw-logo.png";
+import clawLogo from "@/assets/moondexo-logo.png";
 
 interface Message {
   role: "user" | "assistant";

@@ -10,8 +10,8 @@ import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, Coins, ArrowRight, Plus } from "lucide-react";
 import { useMemo } from "react";
 
-import clawLogo from "@/assets/claw-logo.png";
-const HEADER_LOGO_SRC = clawLogo;
+import moondexoLogo from "@/assets/moondexo-logo.png";
+const HEADER_LOGO_SRC = moondexoLogo;
 
 interface HoldingWithToken {
   id: string;

@@ -10,7 +10,7 @@ import { ChainSwitcher } from "@/components/launchpad/ChainSwitcher";
 import { usePanelNav } from "@/hooks/usePanelNav";
 import { HeaderWalletBalance } from "./HeaderWalletBalance";
 import { useAuth } from "@/hooks/useAuth";
-import saturnLogo from "@/assets/saturn-logo.png";
+import saturnLogo from "@/assets/moondexo-logo.png";
 import { BRAND } from "@/config/branding";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
