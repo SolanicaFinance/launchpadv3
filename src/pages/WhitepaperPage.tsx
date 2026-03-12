@@ -84,7 +84,7 @@ export default function WhitepaperPage() {
                   <li><strong className="text-foreground">AI Trading Agents:</strong> Autonomous agents with Guard, Core, and Alpha strategies that trade on your behalf</li>
                   <li><strong className="text-foreground">Alpha Tracker:</strong> Track smart-money wallets and copy-trade winning positions in real-time</li>
                   <li><strong className="text-foreground">X Tracker:</strong> Monitor KOL mentions and sentiment from Twitter/X for early signals</li>
-                  <li><strong className="text-foreground">Leverage Trading:</strong> Amplified exposure via Aster DEX on BNB Chain with built-in risk management</li>
+                  <li><strong className="text-foreground">Leverage Trading:</strong> Amplified exposure on BNB Chain via our partnership with AsterDEX, backed by deep liquidity pool guarantees</li>
                   
                 </ul>
               </section>
