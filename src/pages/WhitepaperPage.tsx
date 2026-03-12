@@ -159,7 +159,6 @@ export default function WhitepaperPage() {
                 <div className="grid sm:grid-cols-2 gap-4 mt-4">
                   {[
                     { label: "Total Supply", value: "1,000,000,000 tokens" },
-                    { label: "Contract", value: "Flap.sh Portal (0xe2cE…9De0)" },
                     { label: "Graduation Threshold", value: "~16 BNB" },
                     { label: "Post-Graduation DEX", value: "PancakeSwap" },
                     { label: "Token Standard", value: "BEP-20" },
