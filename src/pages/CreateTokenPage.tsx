@@ -3,8 +3,10 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { TokenLauncher } from "@/components/launchpad/TokenLauncher";
+import { BnbLauncher } from "@/components/launchpad/BnbLauncher";
 import { Rocket, ExternalLink, CheckCircle2, ArrowLeft, Shield, Zap, Coins } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { useChain } from "@/contexts/ChainContext";
 
 interface LaunchResult {
   success: boolean;
@@ -24,6 +26,8 @@ export default function CreateTokenPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [lastResult, setLastResult] = useState<LaunchResult | null>(null);
   const navigate = useNavigate();
+  const { chain } = useChain();
+  const isBnb = chain === 'bnb';
 
   const handleReset = () => setLastResult(null);
   const handleLaunchSuccess = useCallback(() => {}, []);
@@ -65,39 +69,70 @@ export default function CreateTokenPage() {
               {/* Title */}
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
                 Launch Your Token on{" "}
-                <span className="launch-hero-gradient-text">MoonDexo</span>
+                <span className="launch-hero-gradient-text">
+                  {isBnb ? "BNB Chain" : "MoonDexo"}
+                </span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                Create fast, fair, AI-powered memecoins — atomic dev buy, zero frontrun, instant trading
+                {isBnb
+                  ? "Create BEP-20 tokens with SaturnPortal bonding curve — fair launch, auto PancakeSwap migration"
+                  : "Create fast, fair, AI-powered memecoins — atomic dev buy, zero frontrun, instant trading"}
               </p>
 
               {/* Trust badges */}
               <div className="flex items-center justify-center gap-2 flex-wrap pt-2">
-                <span className="launch-trust-badge">
-                  <img src="/phantom-icon.png" alt="" className="w-3.5 h-3.5 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  Phantom
-                </span>
-                <span className="launch-trust-badge">
-                  <Coins className="w-3 h-3 text-primary" />
-                  <span className="font-mono">~0.02 SOL</span>
-                </span>
-                <span className="launch-trust-badge">
-                  <Zap className="w-3 h-3 text-primary" />
-                  Bonding Curve
-                </span>
-                <span className="launch-trust-badge">
-                  <Shield className="w-3 h-3 text-success" />
-                  Anti-Snipe
-                </span>
+                {isBnb ? (
+                  <>
+                    <span className="launch-trust-badge">
+                      <span className="text-sm">🟡</span>
+                      BNB Chain
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Coins className="w-3 h-3 text-primary" />
+                      <span className="font-mono">BEP-20</span>
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Zap className="w-3 h-3 text-primary" />
+                      Bonding Curve
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Shield className="w-3 h-3 text-success" />
+                      PancakeSwap
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="launch-trust-badge">
+                      <img src="/phantom-icon.png" alt="" className="w-3.5 h-3.5 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      Phantom
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Coins className="w-3 h-3 text-primary" />
+                      <span className="font-mono">~0.02 SOL</span>
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Zap className="w-3 h-3 text-primary" />
+                      Bonding Curve
+                    </span>
+                    <span className="launch-trust-badge">
+                      <Shield className="w-3 h-3 text-success" />
+                      Anti-Snipe
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
           {/* Main content: form */}
           <div className="relative z-10 max-w-[640px] mx-auto px-4">
-            {lastResult?.success && lastResult.mintAddress ? (
+            {isBnb ? (
+              <div className="launch-page-form-container rounded-2xl p-6 md:p-8">
+                <BnbLauncher />
+              </div>
+            ) : lastResult?.success && lastResult.mintAddress ? (
               <SuccessResult result={lastResult} onReset={handleReset} />
             ) : (
               <div className="launch-page-form-container rounded-2xl p-6 md:p-8">
