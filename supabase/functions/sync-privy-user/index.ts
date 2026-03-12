@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { privyUserId, solanaWalletAddress, email, twitterUsername, displayName, avatarUrl } = await req.json();
+    const { privyUserId, solanaWalletAddress, evmWalletAddress, email, twitterUsername, displayName, avatarUrl } = await req.json();
 
     if (!privyUserId) {
       return new Response(

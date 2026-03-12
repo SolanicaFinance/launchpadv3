@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo } from "react";
 import { computePositions, PositionSummary } from "@/lib/tradeUtils";
+import { useChain } from "@/contexts/ChainContext";
 
 export interface UserProfile {
   id: string;
@@ -17,6 +18,7 @@ export interface UserProfile {
   posts_count: number;
   created_at: string;
   solana_wallet_address: string | null;
+  evm_wallet_address: string | null;
   isRegistered?: boolean;
 }
 
@@ -58,6 +60,7 @@ export interface AlphaTradeRecord {
   trader_display_name: string | null;
   trader_avatar_url: string | null;
   token_image_url?: string | null;
+  chain?: string;
 }
 
 export interface TradingStats {
@@ -71,8 +74,16 @@ export interface TradingStats {
   pnlDistribution: { label: string; count: number; color: string }[];
 }
 
-function isWalletAddress(identifier: string) {
+function isSolanaAddress(identifier: string) {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
+}
+
+function isEvmAddress(identifier: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(identifier);
+}
+
+export function isWalletAddress(identifier: string) {
+  return isSolanaAddress(identifier) || isEvmAddress(identifier);
 }
 
 function computeTradingStats(
@@ -83,22 +94,18 @@ function computeTradingStats(
 ): TradingStats {
   let totalBuys = 0, totalSells = 0, totalBuySol = 0, totalSellSol = 0;
 
-  // Count from alpha trades
   for (const t of alphaTrades) {
     if (t.trade_type === "buy") { totalBuys++; totalBuySol += t.amount_sol; }
     else { totalSells++; totalSellSol += t.amount_sol; }
   }
 
-  // Also count launchpad transactions
   for (const t of launchpadTrades) {
     if (t.transaction_type === "buy") { totalBuys++; totalBuySol += t.sol_amount; }
     else { totalSells++; totalSellSol += t.sol_amount; }
   }
 
-  // Merge positions: start with alpha positions, then add launchpad positions
   const allPositions = new Map<string, PositionSummary>(alphaPositions);
 
-  // Build positions from launchpad_transactions (grouped by token_id)
   if (launchpadTrades.length > 0 && wallet) {
     const lpByToken = new Map<string, { buySol: number; sellSol: number; buyTokens: number; sellTokens: number }>();
     for (const t of launchpadTrades) {
@@ -168,20 +175,33 @@ function computeTradingStats(
 }
 
 export function useUserProfile(identifier: string | undefined) {
+  const { chain } = useChain();
+  const isBnb = chain === 'bnb';
+
   const profileQuery = useQuery({
-    queryKey: ["user-profile", identifier],
+    queryKey: ["user-profile", identifier, chain],
     queryFn: async () => {
       if (!identifier) throw new Error("No identifier");
 
-      let query = supabase.from("profiles").select("*");
+      let data = null;
+      let error = null;
 
-      if (isWalletAddress(identifier)) {
-        query = query.eq("solana_wallet_address", identifier);
+      if (isEvmAddress(identifier)) {
+        // EVM address - query by evm_wallet_address
+        const res = await (supabase as any).from("profiles").select("*").eq("evm_wallet_address", identifier).maybeSingle();
+        data = res.data;
+        error = res.error;
+      } else if (isSolanaAddress(identifier)) {
+        const res = await supabase.from("profiles").select("*").eq("solana_wallet_address", identifier).maybeSingle();
+        data = res.data;
+        error = res.error;
       } else {
-        query = query.eq("username", identifier);
+        // Username lookup
+        const res = await supabase.from("profiles").select("*").eq("username", identifier).maybeSingle();
+        data = res.data;
+        error = res.error;
       }
 
-      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       if (!data && isWalletAddress(identifier)) {
         return {
@@ -197,7 +217,8 @@ export function useUserProfile(identifier: string | undefined) {
           following_count: 0,
           posts_count: 0,
           created_at: new Date().toISOString(),
-          solana_wallet_address: identifier,
+          solana_wallet_address: isSolanaAddress(identifier) ? identifier : null,
+          evm_wallet_address: isEvmAddress(identifier) ? identifier : null,
           isRegistered: false,
         } as UserProfile;
       }
@@ -207,23 +228,28 @@ export function useUserProfile(identifier: string | undefined) {
     enabled: !!identifier,
   });
 
-  const wallet = profileQuery.data?.solana_wallet_address || (identifier && isWalletAddress(identifier) ? identifier : undefined);
+  // Determine wallet based on chain
+  const solWallet = profileQuery.data?.solana_wallet_address || (identifier && isSolanaAddress(identifier) ? identifier : undefined);
+  const evmWallet = profileQuery.data?.evm_wallet_address || (identifier && isEvmAddress(identifier) ? identifier : undefined);
+  const wallet = isBnb ? evmWallet : solWallet;
   const profileId = profileQuery.data?.isRegistered ? profileQuery.data?.id : undefined;
 
   const tokensQuery = useQuery({
-    queryKey: ["user-profile-tokens", wallet],
+    queryKey: ["user-profile-tokens", wallet, solWallet],
     queryFn: async () => {
-      if (!wallet) return [];
+      // Use solana wallet for token creation lookups (tokens are created with solana wallet)
+      const creatorWallet = solWallet || wallet;
+      if (!creatorWallet) return [];
       const { data, error } = await supabase
         .from("fun_tokens")
         .select("id, name, ticker, image_url, mint_address, market_cap_sol, status, created_at")
-        .eq("creator_wallet", wallet)
+        .eq("creator_wallet", creatorWallet)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
       return (data ?? []) as CreatedToken[];
     },
-    enabled: !!wallet,
+    enabled: !!(solWallet || wallet),
   });
 
   const tradesQuery = useQuery({
@@ -231,7 +257,6 @@ export function useUserProfile(identifier: string | undefined) {
     queryFn: async () => {
       if (!wallet && !profileId) return [];
       
-      // Try wallet-based query first (covers both registered and unregistered)
       if (wallet) {
         const { data, error } = await supabase
           .from("launchpad_transactions")
@@ -243,7 +268,6 @@ export function useUserProfile(identifier: string | undefined) {
         if (data && data.length > 0) return data as UserTrade[];
       }
       
-      // Fallback to profile ID
       if (profileId) {
         const { data, error } = await supabase
           .from("launchpad_transactions")
@@ -260,21 +284,27 @@ export function useUserProfile(identifier: string | undefined) {
     enabled: !!wallet || !!profileId,
   });
 
-  // Alpha trades for this wallet
+  // Alpha trades - use the appropriate wallet and filter by chain
   const alphaTradesQuery = useQuery({
-    queryKey: ["user-alpha-trades", wallet],
+    queryKey: ["user-alpha-trades", wallet, chain],
     queryFn: async () => {
       if (!wallet) return [];
-      const { data, error } = await (supabase as any)
+      let query = (supabase as any)
         .from("alpha_trades")
         .select("*")
         .eq("wallet_address", wallet)
         .order("created_at", { ascending: false })
         .limit(100);
+      
+      // Filter by chain if on BNB
+      if (isBnb) {
+        query = query.eq("chain", "bsc");
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       const tradesData = (data ?? []) as AlphaTradeRecord[];
 
-      // Fetch token images
       const mints = [...new Set(tradesData.map((t) => t.token_mint).filter(Boolean))];
       if (mints.length > 0) {
         const { data: tokens } = await supabase
@@ -314,5 +344,6 @@ export function useUserProfile(identifier: string | undefined) {
     alphaTradesLoading: alphaTradesQuery.isLoading,
     alphaPositions,
     tradingStats,
+    isBnb,
   };
 }

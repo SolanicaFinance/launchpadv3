@@ -1,11 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import defaultAvatar from "@/assets/moondexo-logo.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserProfile, isWalletAddress } from "@/hooks/useUserProfile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, ExternalLink, Copy, CheckCircle, BadgeCheck, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, BarChart3, Wallet } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { VerifyAccountModal } from "@/components/launchpad/VerifyAccountModal";
@@ -19,24 +19,48 @@ import { cn } from "@/lib/utils";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 
+async function fetchBnbBalance(address: string): Promise<number> {
+  const res = await fetch("https://bsc-dataseed.binance.org", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [address, "latest"], id: 1 }),
+  });
+  const data = await res.json();
+  if (data?.result) return Number(BigInt(data.result)) / 1e18;
+  return 0;
+}
+
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();
-  const { profile, isLoading, error, tokens, tokensLoading, trades, tradesLoading, alphaTrades, alphaTradesLoading, alphaPositions, tradingStats } = useUserProfile(identifier);
+  const { profile, isLoading, error, tokens, tokensLoading, trades, tradesLoading, alphaTrades, alphaTradesLoading, alphaPositions, tradingStats, isBnb } = useUserProfile(identifier);
   const { profileId } = useAuth();
-  const wallet = profile?.solana_wallet_address ?? (identifier && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier) ? identifier : null);
-  const { data: walletHoldings = [], isLoading: holdingsLoading } = useWalletHoldings(wallet);
-  const { data: solBalance } = useQuery({
-    queryKey: ["profile-sol-balance", wallet],
+
+  const solWallet = profile?.solana_wallet_address ?? (identifier && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier) ? identifier : null);
+  const evmWallet = profile?.evm_wallet_address ?? (identifier && /^0x[a-fA-F0-9]{40}$/.test(identifier) ? identifier : null);
+  const wallet = isBnb ? evmWallet : solWallet;
+  const currencyLabel = isBnb ? "BNB" : "SOL";
+  const explorerBase = isBnb ? "https://bscscan.com" : "https://solscan.io";
+
+  const { data: walletHoldings = [], isLoading: holdingsLoading } = useWalletHoldings(isBnb ? null : solWallet);
+
+  // Balance query - chain aware
+  const { data: nativeBalance } = useQuery({
+    queryKey: ["profile-native-balance", wallet, isBnb],
     queryFn: async () => {
       if (!wallet) return null;
-      const { url: rpcUrl } = getRpcUrl();
-      const connection = new Connection(rpcUrl, "confirmed");
-      const lamports = await connection.getBalance(new PublicKey(wallet));
-      return lamports / LAMPORTS_PER_SOL;
+      if (isBnb) {
+        return fetchBnbBalance(wallet);
+      } else {
+        const { url: rpcUrl } = getRpcUrl();
+        const connection = new Connection(rpcUrl, "confirmed");
+        const lamports = await connection.getBalance(new PublicKey(wallet));
+        return lamports / LAMPORTS_PER_SOL;
+      }
     },
     enabled: !!wallet,
     staleTime: 30_000,
   });
+
   const [copied, setCopied] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -47,8 +71,8 @@ export default function UserProfilePage() {
   const isMobile = useIsMobile();
 
   const copyWallet = () => {
-    if (!profile?.solana_wallet_address) return;
-    navigator.clipboard.writeText(profile.solana_wallet_address);
+    if (!wallet) return;
+    navigator.clipboard.writeText(wallet);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -74,6 +98,7 @@ export default function UserProfilePage() {
     );
   }
 
+  const displayName = profile.display_name || profile.username || truncateWallet(wallet || '');
   const hasAlphaData = alphaTrades.length > 0;
   const hasHoldings = walletHoldings.length > 0;
   const showPositionsTab = hasAlphaData || hasHoldings;
@@ -88,26 +113,22 @@ export default function UserProfilePage() {
           {profile.cover_url && (
             <img src={profile.cover_url} alt="" className="w-full h-full object-cover absolute inset-0" />
           )}
-          {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
 
-        {/* Profile Content */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 pb-20">
           {/* Avatar + Info Row */}
           <div className="relative -mt-14 md:-mt-16 flex items-end gap-4 md:gap-6 mb-6">
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background bg-muted overflow-hidden shrink-0 shadow-lg">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.display_name || ""} className="w-full h-full object-cover" />
+                <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
               ) : (
                 <img src={defaultAvatar} alt="Default avatar" className="w-full h-full object-cover" />
               )}
             </div>
             <div className="flex-1 min-w-0 pb-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">
-                  {profile.display_name || profile.username || truncateWallet(profile.solana_wallet_address)}
-                </h1>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">{displayName}</h1>
                 {profile.verified_type && (
                   <VerifiedBadge type={profile.verified_type === "gold" ? "gold" : "blue"} className="w-5 h-5 shrink-0" />
                 )}
@@ -144,12 +165,12 @@ export default function UserProfilePage() {
 
           {/* Wallet + Bio */}
           <div className="mb-6">
-            {profile.solana_wallet_address && (
+            {wallet && (
               <button
                 onClick={copyWallet}
                 className="inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border/30 mb-3"
               >
-                {truncateWallet(profile.solana_wallet_address)}
+                {truncateWallet(wallet)}
                 {copied ? <CheckCircle className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
               </button>
             )}
@@ -170,7 +191,7 @@ export default function UserProfilePage() {
             Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}
           </p>
 
-          {/* Trading Analytics - 3 column cards */}
+          {/* Trading Analytics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Balance Card */}
             <div className="border border-border/30 rounded-xl bg-card p-5">
@@ -186,20 +207,20 @@ export default function UserProfilePage() {
                     <Wallet className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">SOL Balance</p>
+                    <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">{currencyLabel} Balance</p>
                     <p className="text-lg font-bold font-mono text-foreground">
-                      {solBalance !== null && solBalance !== undefined ? `${solBalance.toFixed(4)} SOL` : "—"}
+                      {nativeBalance !== null && nativeBalance !== undefined ? `${nativeBalance.toFixed(4)} ${currencyLabel}` : "—"}
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">Total Bought</p>
-                    <p className="text-sm font-bold font-mono text-foreground">{tradingStats.totalBuySol.toFixed(4)} SOL</p>
+                    <p className="text-sm font-bold font-mono text-foreground">{tradingStats.totalBuySol.toFixed(4)} {currencyLabel}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">Total Sold</p>
-                    <p className="text-sm font-bold font-mono text-foreground">{tradingStats.totalSellSol.toFixed(4)} SOL</p>
+                    <p className="text-sm font-bold font-mono text-foreground">{tradingStats.totalSellSol.toFixed(4)} {currencyLabel}</p>
                   </div>
                 </div>
               </div>
@@ -217,13 +238,13 @@ export default function UserProfilePage() {
                 <div>
                   <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">Total PnL</p>
                   <p className={cn("text-base font-bold font-mono", pnlPositive ? "text-green-400" : "text-red-400")}>
-                    {pnlPositive ? "+" : ""}{tradingStats.totalPnl.toFixed(4)} SOL
+                    {pnlPositive ? "+" : ""}{tradingStats.totalPnl.toFixed(4)} {currencyLabel}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground/60 font-mono uppercase">Realized PnL</p>
                   <p className={cn("text-base font-bold font-mono", pnlPositive ? "text-green-400" : "text-red-400")}>
-                    {pnlPositive ? "+" : ""}{tradingStats.realizedPnl.toFixed(4)} SOL
+                    {pnlPositive ? "+" : ""}{tradingStats.realizedPnl.toFixed(4)} {currencyLabel}
                   </p>
                 </div>
                 <div>
@@ -323,7 +344,7 @@ export default function UserProfilePage() {
                           <span className="text-[11px] text-muted-foreground font-mono">${t.ticker}</span>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="text-xs font-mono text-foreground">{formatSol(t.market_cap_sol)} SOL</span>
+                          <span className="text-xs font-mono text-foreground">{formatSol(t.market_cap_sol)} {currencyLabel}</span>
                           <span className={cn("block text-[10px] font-mono", t.status === 'active' ? 'text-green-400' : 'text-muted-foreground')}>
                             {t.status?.toUpperCase() || "—"}
                           </span>
@@ -352,7 +373,7 @@ export default function UserProfilePage() {
                           {t.transaction_type}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-mono text-foreground">{formatSol(t.sol_amount)} SOL</span>
+                          <span className="text-sm font-mono text-foreground">{formatSol(t.sol_amount)} {currencyLabel}</span>
                           {t.token_amount > 0 && (
                             <span className="text-[11px] text-muted-foreground font-mono ml-2">
                               ({t.token_amount.toLocaleString()} tokens)
@@ -365,7 +386,7 @@ export default function UserProfilePage() {
                           </span>
                           {t.signature && (
                             <a
-                              href={`https://solscan.io/tx/${t.signature}`}
+                              href={isBnb ? `${explorerBase}/tx/${t.signature}` : `${explorerBase}/tx/${t.signature}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-muted-foreground hover:text-primary transition-colors"
