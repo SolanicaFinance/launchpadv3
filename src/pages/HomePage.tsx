@@ -515,30 +515,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Partner logos */}
-            <div
-              className="flex items-center justify-center gap-4 md:gap-5 mt-4 animate-fade-in"
-              style={{ animationDelay: "0.65s", animationFillMode: "both" }}
-            >
-              <span className="text-[8px] font-mono uppercase tracking-[0.15em] text-muted-foreground/30 mr-1">Powered by</span>
-              {[
-                { name: "Solana", url: partnerSolana },
-                { name: "Alchemy", url: partnerAlchemy },
-                { name: "Helius", url: partnerHelius },
-                { name: "Phantom", url: partnerPhantom },
-                { name: "BNB Chain", url: partnerBnb },
-                { name: "Vercel", url: partnerVercel },
-              ].map((p) => (
-                <div
-                  key={p.name}
-                  className="flex items-center gap-1 opacity-30 hover:opacity-70 transition-opacity duration-300 cursor-default"
-                  title={p.name}
-                >
-                  <img src={p.url} alt={p.name} className="h-3.5 w-3.5 md:h-4 md:w-4 object-contain" loading="lazy" />
-                  <span className="text-[7px] md:text-[8px] font-mono text-muted-foreground/40 hidden sm:inline">{p.name}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
