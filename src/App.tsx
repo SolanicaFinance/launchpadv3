@@ -199,6 +199,7 @@ const App = () => (
                      <Route path="/punch-games" element={<PunchGamesPage />} />
                      <Route path="/link/:code" element={<ReferralRedirectPage />} />
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
+                     <Route path="/rewards" element={<RewardsPage />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                   </div>
