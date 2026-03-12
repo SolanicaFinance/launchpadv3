@@ -1,11 +1,11 @@
-import { useState, ImgHTMLAttributes } from "react";
+import { useEffect, useMemo, useState, ImgHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 interface OptimizedTokenImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string | null | undefined;
   fallbackText?: string;
-  /** Fallback image URL to try before showing text placeholder */
-  fallbackSrc?: string | null;
+  /** Fallback image URL(s) to try before showing text placeholder */
+  fallbackSrc?: string | string[] | null;
   /** Target render size in px — used to request a smaller image */
   size?: number;
 }
@@ -59,12 +59,35 @@ export function OptimizedTokenImage({
   onError,
   ...props
 }: OptimizedTokenImageProps) {
-  const [hasError, setHasError] = useState(false);
-  const [fallbackError, setFallbackError] = useState(false);
+  const sourceCandidates = useMemo(() => {
+    const candidates: string[] = [];
 
-  const showFallbackSrc = hasError && _fallbackSrc && !fallbackError;
+    const pushIfValid = (value: string | null | undefined) => {
+      if (!value || !value.trim()) return;
+      const normalized = normalizeImageUrl(value);
+      if (!candidates.includes(normalized)) {
+        candidates.push(normalized);
+      }
+    };
 
-  if ((!src && !_fallbackSrc) || (hasError && !_fallbackSrc) || (hasError && fallbackError)) {
+    pushIfValid(src);
+
+    if (Array.isArray(_fallbackSrc)) {
+      _fallbackSrc.forEach((candidate) => pushIfValid(candidate));
+    } else {
+      pushIfValid(_fallbackSrc);
+    }
+
+    return candidates;
+  }, [src, _fallbackSrc]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [sourceCandidates.join("|")]);
+
+  if (sourceCandidates.length === 0 || activeIndex >= sourceCandidates.length) {
     return (
       <div
         className={cn(
@@ -78,13 +101,7 @@ export function OptimizedTokenImage({
     );
   }
 
-  const activeSrc = showFallbackSrc
-    ? getOptimizedUrl(_fallbackSrc!, size)
-    : src
-      ? getOptimizedUrl(src, size)
-      : _fallbackSrc
-        ? getOptimizedUrl(_fallbackSrc, size)
-        : "";
+  const activeSrc = getOptimizedUrl(sourceCandidates[activeIndex], size);
 
   return (
     <img
@@ -94,11 +111,7 @@ export function OptimizedTokenImage({
       decoding={props.decoding || "async"}
       className={className}
       onError={(event) => {
-        if (!hasError) {
-          setHasError(true);
-        } else {
-          setFallbackError(true);
-        }
+        setActiveIndex((idx) => idx + 1);
         onError?.(event);
       }}
       {...props}

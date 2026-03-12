@@ -12,6 +12,8 @@ const SOLANA_NETWORK_ID = 1399811149;
 const BSC_NETWORK_ID = 56;
 const MAX_REASONABLE_CHANGE_24H_DEFAULT = 10_000;
 const MAX_REASONABLE_CHANGE_24H_BSC = 1_000;
+const BSC_NEW_LOOKBACK_SECONDS = 3 * 24 * 60 * 60;
+const BSC_COMPLETING_LOOKBACK_SECONDS = 7 * 24 * 60 * 60;
 
 function toFiniteNumber(value: unknown): number {
   const num = typeof value === "number" ? value : Number(value);
@@ -34,6 +36,31 @@ function isAddressBoundImageUrl(imageUrl: string | null | undefined, address: st
 
   const withoutPrefix = normalizedAddress.replace(/^0x/, "");
   return withoutPrefix.length > 0 && normalizedUrl.includes(withoutPrefix);
+}
+
+function isTrustedBscImageUrl(imageUrl: string | null | undefined): boolean {
+  if (!imageUrl) return false;
+
+  try {
+    const hostname = new URL(imageUrl).hostname.toLowerCase();
+    return (
+      hostname === "token-media.defined.fi" ||
+      hostname.endsWith(".defined.fi") ||
+      hostname.includes("pancakeswap.finance") ||
+      hostname.includes("1inch.io")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
+  const out: string[] = [];
+  for (const value of values) {
+    if (!value) continue;
+    if (!out.includes(value)) out.push(value);
+  }
+  return out;
 }
 
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
@@ -68,19 +95,22 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
   let filters: string;
   let rankings: string;
 
-  const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
-  const twoDaysAgo = Math.floor(Date.now() / 1000) - 172800;
+  const now = Math.floor(Date.now() / 1000);
+  const oneDayAgo = now - 86400;
+  const twoDaysAgo = now - 172800;
+  const bscNewCutoff = now - BSC_NEW_LOOKBACK_SECONDS;
+  const bscCompletingCutoff = now - BSC_COMPLETING_LOOKBACK_SECONDS;
 
   if (networkId === BSC_NETWORK_ID) {
-    // BSC: no launchpad graduation concept — use liquidity/volume filters
+    // BSC: broader discovery window so very recent launches are not under-represented.
     switch (column) {
       case "new":
-        filters = `{ network: [${networkId}], createdAt: { gte: ${oneDayAgo} }, liquidity: { gte: 1000 } }`;
+        filters = `{ network: [${networkId}], createdAt: { gte: ${bscNewCutoff} } }`;
         rankings = `{ attribute: createdAt, direction: DESC }`;
         break;
       case "completing":
-        // "Final Stretch" on BSC = high volume new tokens
-        filters = `{ network: [${networkId}], createdAt: { gte: ${twoDaysAgo} }, volume24: { gte: 5000 }, liquidity: { gte: 5000 } }`;
+        // "Final Stretch" on BSC = high-volume tokens from the last week.
+        filters = `{ network: [${networkId}], createdAt: { gte: ${bscCompletingCutoff} }, volume24: { gte: 5000 }, liquidity: { gte: 5000 } }`;
         rankings = `{ attribute: volume24, direction: DESC }`;
         break;
       case "completed":
@@ -208,11 +238,18 @@ Deno.serve(async (req) => {
       const address = r.token?.info?.address ?? null;
       const isBsc = safeNetworkId === BSC_NETWORK_ID;
       const dexChain = isBsc ? "bsc" : "solana";
-      const dexScreenerImage = address
-        ? `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${address}.png`
+      const normalizedAddress = normalizeAddress(address);
+      const dexScreenerImage = normalizedAddress
+        ? `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${normalizedAddress}.png`
         : null;
-      const identiconImage = address
-        ? `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(address.toLowerCase())}`
+      const oneInchImage = isBsc && normalizedAddress
+        ? `https://tokens.1inch.io/56/${normalizedAddress}.png`
+        : null;
+      const pancakeSwapImage = isBsc && normalizedAddress
+        ? `https://tokens.pancakeswap.finance/images/symbol/${normalizedAddress}.png`
+        : null;
+      const identiconImage = normalizedAddress
+        ? `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(normalizedAddress)}`
         : null;
 
       // Upstream Codex image (the launchpad's own token image, if available)
@@ -223,17 +260,26 @@ Deno.serve(async (req) => {
       let fallbackImageUrl: string | null;
 
       if (isBsc) {
-        // BSC: prefer non-Dex launchpad metadata image only when it is address-bound.
-        // This avoids random mismatched images while still supporting very new pairs not yet indexed by DexScreener.
-        const verifiedLaunchpadImage = isAddressBoundImageUrl(codexImage, address) ? codexImage : null;
+        // BSC: prioritize launchpad/Codex media when trusted, then deterministic CDN fallbacks.
+        const launchpadPreferredImage = (
+          isAddressBoundImageUrl(codexImage, normalizedAddress) ||
+          isTrustedBscImageUrl(codexImage)
+        ) ? codexImage : null;
 
-        imageUrl = verifiedLaunchpadImage || dexScreenerImage || identiconImage;
-        fallbackImageUrl = verifiedLaunchpadImage
-          ? (dexScreenerImage || identiconImage)
-          : (dexScreenerImage ? identiconImage : null);
+        const bscImageCandidates = uniqueNonEmpty([
+          launchpadPreferredImage,
+          dexScreenerImage,
+          oneInchImage,
+          pancakeSwapImage,
+          identiconImage,
+        ]);
+
+        imageUrl = bscImageCandidates[0] ?? null;
+        fallbackImageUrl = bscImageCandidates[1] ?? null;
       } else {
-        imageUrl = codexImage || dexScreenerImage || identiconImage;
-        fallbackImageUrl = codexImage ? dexScreenerImage : identiconImage;
+        const solanaImageCandidates = uniqueNonEmpty([codexImage, dexScreenerImage, identiconImage]);
+        imageUrl = solanaImageCandidates[0] ?? null;
+        fallbackImageUrl = solanaImageCandidates[1] ?? null;
       }
 
       return {

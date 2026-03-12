@@ -39,23 +39,28 @@ async function fetchCodexTokens(column: "new" | "completing" | "completed", limi
 }
 
 export function useCodexNewPairs(networkId: number = SOLANA_NETWORK_ID) {
+  const isBsc = networkId === BSC_NETWORK_ID;
+  const newLimit = isBsc ? 100 : 50;
+  const completingLimit = isBsc ? 50 : 30;
+  const completedLimit = isBsc ? 50 : 30;
+
   const newPairsQuery = useQuery({
-    queryKey: ["codex-filter-tokens", "new", networkId],
-    queryFn: () => fetchCodexTokens("new", 50, networkId),
+    queryKey: ["codex-filter-tokens", "new", networkId, newLimit],
+    queryFn: () => fetchCodexTokens("new", newLimit, networkId),
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
 
   const completingQuery = useQuery({
-    queryKey: ["codex-filter-tokens", "completing", networkId],
-    queryFn: () => fetchCodexTokens("completing", 30, networkId),
+    queryKey: ["codex-filter-tokens", "completing", networkId, completingLimit],
+    queryFn: () => fetchCodexTokens("completing", completingLimit, networkId),
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
 
   const completedQuery = useQuery({
-    queryKey: ["codex-filter-tokens", "completed", networkId],
-    queryFn: () => fetchCodexTokens("completed", 30, networkId),
+    queryKey: ["codex-filter-tokens", "completed", networkId, completedLimit],
+    queryFn: () => fetchCodexTokens("completed", completedLimit, networkId),
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
