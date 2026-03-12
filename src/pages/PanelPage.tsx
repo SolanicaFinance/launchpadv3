@@ -1,5 +1,4 @@
 import { useState, lazy, Suspense, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useChain } from "@/contexts/ChainContext";
@@ -8,18 +7,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Wallet, Briefcase, DollarSign, Rocket, Ghost, LogOut, Users, Copy, Check, ExternalLink, Terminal } from "lucide-react";
+import { Wallet, Ghost, LogOut, Copy, Check, ExternalLink, Terminal } from "lucide-react";
 import saturnLogo from "@/assets/moondexo-logo.png";
 import { copyToClipboard } from "@/lib/clipboard";
 import { BRAND } from "@/config/branding";
 
-const PanelWalletBar = lazy(() => import("@/components/panel/PanelWalletBar"));
-const PanelPortfolioTab = lazy(() => import("@/components/panel/PanelPortfolioTab"));
-const PanelEarningsTab = lazy(() => import("@/components/panel/PanelEarningsTab"));
-const PanelMyLaunchesTab = lazy(() => import("@/components/panel/PanelMyLaunchesTab"));
+const PanelUnifiedDashboard = lazy(() => import("@/components/panel/PanelUnifiedDashboard"));
 const PanelPhantomTab = lazy(() => import("@/components/panel/PanelPhantomTab"));
-const PanelReferralsTab = lazy(() => import("@/components/panel/PanelReferralsTab"));
-const PanelWalletTab = lazy(() => import("@/components/wallet/PanelWalletTab"));
 const ServerSendPanel = lazy(() => import("@/components/panel/ServerSendPanel"));
 
 function TabLoader() {
@@ -36,16 +30,13 @@ export default function PanelPage() {
   const { chain, chainConfig } = useChain();
   const evmWallet = useEvmWallet();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "portfolio";
   const [copied, setCopied] = useState(false);
+  const [adminTab, setAdminTab] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.classList.add("matrix-hidden");
     return () => document.body.classList.remove("matrix-hidden");
   }, []);
-
-  const setTab = (tab: string) => setSearchParams({ tab });
 
   const isBnb = chain === 'bnb';
   const displayAddress = isBnb ? evmWallet.address : solanaAddress;
@@ -67,15 +58,17 @@ export default function PanelPage() {
           <AppHeader onMobileMenuOpen={() => setMobileMenuOpen(true)} />
           <div className="flex-1 flex flex-col items-center justify-center px-6 pb-16">
             <div
-              className="w-full max-w-sm rounded-md p-8 text-center border border-border/40"
+              className="w-full max-w-sm rounded-2xl p-8 text-center backdrop-blur-xl"
               style={{
-                background: "hsl(var(--card))",
+                background: "rgba(0, 8, 20, 0.6)",
+                border: "1px solid rgba(132, 204, 22, 0.15)",
+                boxShadow: "0 0 40px rgba(132, 204, 22, 0.05)",
               }}
             >
               <img
                 src={saturnLogo}
                 alt={BRAND.name}
-                className="w-16 h-16 mx-auto mb-5 drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
+                className="w-16 h-16 mx-auto mb-5 drop-shadow-[0_0_24px_rgba(132,204,22,0.3)]"
               />
               <h1 className="text-xl font-black text-foreground mb-1 tracking-tight font-mono uppercase">
                 MoonDexo Panel
@@ -85,7 +78,11 @@ export default function PanelPage() {
               </p>
               <Button
                 onClick={() => login()}
-                className="w-full gap-2 h-11 rounded-md text-sm font-bold font-mono uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full gap-2 h-11 rounded-xl text-sm font-bold font-mono uppercase tracking-wider"
+                style={{
+                  background: "linear-gradient(135deg, #84cc16, #22c55e)",
+                  color: "#000",
+                }}
               >
                 <Wallet className="h-4 w-4" />
                 Connect Wallet
@@ -110,7 +107,7 @@ export default function PanelPage() {
             <img
               src={saturnLogo}
               alt={BRAND.name}
-              className="w-9 h-9 drop-shadow-[0_0_16px_hsl(var(--primary)/0.3)] flex-shrink-0"
+              className="w-9 h-9 drop-shadow-[0_0_16px_rgba(132,204,22,0.3)] flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
               <h1 className="text-sm font-black text-foreground tracking-wider font-mono uppercase">
@@ -150,59 +147,54 @@ export default function PanelPage() {
             </Button>
           </div>
 
-          {/* Wallet Bar */}
-          <Suspense fallback={null}>
-            <PanelWalletBar />
-          </Suspense>
+          {/* Main Unified Dashboard */}
+          <div className="mt-1 flex-1">
+            <Suspense fallback={<TabLoader />}>
+              {adminTab ? (
+                <div>
+                  <button
+                    onClick={() => setAdminTab(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground font-mono mb-4 flex items-center gap-1"
+                  >
+                    ← Back to Dashboard
+                  </button>
+                  {adminTab === "phantom" && <PanelPhantomTab />}
+                  {adminTab === "server-send" && <ServerSendPanel walletAddress={solanaAddress ?? null} />}
+                </div>
+              ) : (
+                <>
+                  <PanelUnifiedDashboard />
 
-          {/* Tabs */}
-          <div className="mt-3 flex-1">
-            <Tabs value={activeTab} onValueChange={setTab}>
-              <TabsList
-                className="w-full mb-5 p-1 rounded-md h-auto flex gap-0.5 bg-card border border-border/40"
-              >
-                <PanelTab value="portfolio" icon={<Briefcase className="h-3.5 w-3.5" />} label="Portfolio" active={activeTab === "portfolio"} />
-                <PanelTab value="earnings" icon={<DollarSign className="h-3.5 w-3.5" />} label="Earnings" active={activeTab === "earnings"} />
-                <PanelTab value="launches" icon={<Rocket className="h-3.5 w-3.5" />} label="Launches" active={activeTab === "launches"} />
-                <PanelTab value="wallets" icon={<Wallet className="h-3.5 w-3.5" />} label="Wallet" active={activeTab === "wallets"} />
-                <PanelTab value="referrals" icon={<Users className="h-3.5 w-3.5" />} label="Referrals" active={activeTab === "referrals"} />
-                {isAdmin && <PanelTab value="phantom" icon={<Ghost className="h-3.5 w-3.5" />} label="Phantom" active={activeTab === "phantom"} />}
-                {isAdmin && <PanelTab value="server-send" icon={<Terminal className="h-3.5 w-3.5" />} label="Send" active={activeTab === "server-send"} />}
-              </TabsList>
-
-              <Suspense fallback={<TabLoader />}>
-                <TabsContent value="portfolio"><PanelPortfolioTab /></TabsContent>
-                <TabsContent value="earnings"><PanelEarningsTab /></TabsContent>
-                <TabsContent value="launches"><PanelMyLaunchesTab /></TabsContent>
-                <TabsContent value="wallets"><PanelWalletTab /></TabsContent>
-                <TabsContent value="referrals"><PanelReferralsTab /></TabsContent>
-                <TabsContent value="phantom"><PanelPhantomTab /></TabsContent>
-                <TabsContent value="server-send"><ServerSendPanel walletAddress={solanaAddress ?? null} /></TabsContent>
-              </Suspense>
-            </Tabs>
+                  {/* Admin tools at bottom */}
+                  {isAdmin && (
+                    <div className="mt-6 flex items-center gap-2 pb-4">
+                      <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Admin:</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAdminTab("phantom")}
+                        className="gap-1 text-[10px] font-mono text-muted-foreground h-7"
+                      >
+                        <Ghost className="h-3 w-3" /> Phantom
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAdminTab("server-send")}
+                        className="gap-1 text-[10px] font-mono text-muted-foreground h-7"
+                      >
+                        <Terminal className="h-3 w-3" /> Send
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </Suspense>
           </div>
 
           <div className="pb-28 sm:pb-32" style={{ paddingBottom: "max(7rem, calc(60px + env(safe-area-inset-bottom, 0px) + 2rem))" }} />
         </div>
       </div>
     </div>
-  );
-}
-
-function PanelTab({ value, icon, label, active }: { value: string; icon: React.ReactNode; label: string; active: boolean }) {
-  return (
-    <TabsTrigger
-      value={value}
-      className={`flex-1 gap-1.5 text-[11px] md:text-xs rounded-sm py-2 font-mono uppercase tracking-wider transition-all
-        ${active
-          ? "bg-primary/10 text-primary shadow-[inset_0_-2px_0_hsl(var(--primary))]"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-        }
-        data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[inset_0_-2px_0_hsl(var(--primary))]
-      `}
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </TabsTrigger>
   );
 }
