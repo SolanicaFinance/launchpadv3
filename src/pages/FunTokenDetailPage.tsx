@@ -329,7 +329,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             <span className="text-[10px] font-mono text-muted-foreground truncate">{formatUsdCompact(token.priceUsd)}</span>
             {token.change24h !== 0 && (
               <span className={`text-[10px] font-mono font-bold ${isPriceUp ? 'text-green-400' : 'text-destructive'}`}>
-                {isPriceUp ? '+' : ''}{token.change24h.toFixed(1)}%
+                {formatChange24h(token.change24h)}
               </span>
             )}
           </div>
