@@ -6653,6 +6653,92 @@ export type Database = {
           },
         ]
       }
+      social_reward_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          points: number
+          post_id: string
+          post_url: string | null
+          reward_type: string
+          social_reward_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points?: number
+          post_id: string
+          post_url?: string | null
+          reward_type: string
+          social_reward_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points?: number
+          post_id?: string
+          post_url?: string | null
+          reward_type?: string
+          social_reward_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_reward_events_social_reward_id_fkey"
+            columns: ["social_reward_id"]
+            isOneToOne: false
+            referencedRelation: "social_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          joined_at: string
+          last_checked_at: string | null
+          last_checked_post_id: string | null
+          points: number | null
+          privy_did: string
+          profile_id: string
+          twitter_avatar_url: string | null
+          twitter_followers: number | null
+          twitter_name: string | null
+          twitter_username: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          joined_at?: string
+          last_checked_at?: string | null
+          last_checked_post_id?: string | null
+          points?: number | null
+          privy_did: string
+          profile_id: string
+          twitter_avatar_url?: string | null
+          twitter_followers?: number | null
+          twitter_name?: string | null
+          twitter_username: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          joined_at?: string
+          last_checked_at?: string | null
+          last_checked_post_id?: string | null
+          points?: number | null
+          privy_did?: string
+          profile_id?: string
+          twitter_avatar_url?: string | null
+          twitter_followers?: number | null
+          twitter_name?: string | null
+          twitter_username?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subtuna: {
         Row: {
           agent_id: string | null
