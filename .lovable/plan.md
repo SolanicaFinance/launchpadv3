@@ -1,51 +1,45 @@
 
 
-## Plan: Cap Unrealistic change24h Percentages Across the Site
+## Two Issues to Fix
 
-### Problem
-When BNB Chain is selected, `change24h` values from Codex/DexScreener return astronomically large numbers (e.g., `+2764299117320.0%`, `+13486652452.2%`). These are mathematically "correct" for micro-cap tokens that went from near-zero to some value, but they are meaningless to users and clutter the UI. This affects the homepage trending ticker, Pulse terminal, King of the Hill, token detail pages, and the new pairs panel.
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-### Solution
-Create a single utility function `formatChange24h(value: number): string` that caps the displayed percentage and formats it readably. All components displaying `change24h` will use this function.
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-**Capping logic:**
-- If `|change24h| > 999_999` (1M%), display as `>999999%` or a compact form like `>1M%`
-- If `|change24h| > 9999`, display compact like `+12.5K%` or `+1.2B%`
-- Otherwise, display normally with 1 decimal: `+58.5%`
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-### Files to Change
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-#### 1. `src/lib/formatters.ts` (create or add to existing)
-- Add `formatChange24h(value: number): string` utility
-- Compact formatting: values > 9999 get K/M/B suffix, capped display
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-#### 2. Components to update (replace raw `.toFixed()` calls):
-- `src/components/launchpad/CodexPairRow.tsx` — line 192
-- `src/components/launchpad/KingOfTheHill.tsx` — line 291
-- `src/components/launchpad/PriceChart.tsx` — line 217
-- `src/components/layout/NewPairsPanel.tsx` — line 288
-- `src/pages/FunTokenDetailPage.tsx` — lines 152, 331, 755, 835, 1000
-- `src/components/agents/AgentTokenCard.tsx` — line 92
-- `src/components/agents/AgentTopTokens.tsx` — where priceChange is displayed
-- `src/components/punch/PunchTokenCard.tsx` — where change is displayed
-- `src/pages/SaturnCommunityPage.tsx` — line 236
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-Each location replaces patterns like `{change24h.toFixed(1)}%` with `{formatChange24h(change24h)}`.
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-### Technical Detail
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-```typescript
-// src/lib/formatters.ts
-export function formatChange24h(value: number): string {
-  const abs = Math.abs(value);
-  const sign = value >= 0 ? "+" : "-";
-  if (abs >= 1_000_000_000) return `${sign}${(abs / 1e9).toFixed(1)}B%`;
-  if (abs >= 1_000_000) return `${sign}${(abs / 1e6).toFixed(1)}M%`;
-  if (abs >= 10_000) return `${sign}${(abs / 1e3).toFixed(1)}K%`;
-  if (abs >= 100) return `${sign}${abs.toFixed(0)}%`;
-  return `${sign}${abs.toFixed(1)}%`;
-}
-```
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-This keeps numbers readable across all chains while preserving directional accuracy.
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

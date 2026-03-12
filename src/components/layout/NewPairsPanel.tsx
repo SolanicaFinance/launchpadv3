@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatChange24h } from "@/lib/formatters";
 import { useCodexNewPairs, type CodexPairToken, SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 import { RefreshCw, Rocket, ExternalLink, ChevronDown } from "lucide-react";
@@ -285,7 +286,7 @@ export function NewPairsPanel({ onRefresh, refreshing, compact }: NewPairsPanelP
                         fontWeight: 500,
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}>
-                        {pair.change24h >= 0 ? "+" : ""}{pair.change24h.toFixed(1)}%
+                        {formatChange24h(pair.change24h)}
                       </div>
                     </div>
                   </div>

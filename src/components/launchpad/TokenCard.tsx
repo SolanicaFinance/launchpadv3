@@ -11,6 +11,7 @@ import { PulseQuickBuyButton } from "@/components/launchpad/PulseQuickBuyButton"
 import { SparklineCanvas } from "@/components/launchpad/SparklineCanvas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatChange24h } from "@/lib/formatters";
 
 interface TokenCardProps {
   token: FunToken;
@@ -203,7 +204,7 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
               <span className={`flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isPositive ? 'lt-price-up' : 'lt-price-down'}`}
                 style={{ background: isPositive ? "hsl(160 84% 39% / 0.15)" : "hsl(0 72% 55% / 0.15)" }}>
                 {isPositive ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                {Math.abs(priceChange).toFixed(1)}%
+                {formatChange24h(priceChange)}
               </span>
             )}
           </div>

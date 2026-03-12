@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { formatChange24h } from "@/lib/formatters";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { ForumLayout } from "@/components/forum/ForumLayout";
@@ -232,8 +233,7 @@ export default function SaturnCommunityPage() {
                     : "text-[hsl(0_84%_60%)]"
                 }
               >
-                {(effectiveTokenData.priceChange24h || 0) >= 0 ? "+" : ""}
-                {effectiveTokenData.priceChange24h?.toFixed(1) || "0"}%
+                {formatChange24h(effectiveTokenData.priceChange24h || 0)}
               </span>
             </div>
           </div>

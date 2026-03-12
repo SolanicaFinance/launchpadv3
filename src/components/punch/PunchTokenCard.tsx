@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import type { PunchToken } from "@/hooks/usePunchTokenFeed";
 import type { VoteCounts } from "@/hooks/usePunchVotes";
 import type { TokenMarketData } from "@/hooks/usePunchMarketData";
+import { formatChange24h } from "@/lib/formatters";
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -29,11 +30,7 @@ function formatHolders(n: number): string {
   return n.toString();
 }
 
-function formatChange(pct: number): string {
-  const abs = Math.abs(pct);
-  if (abs >= 100) return `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`;
-  return `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
-}
+// Use centralized formatChange24h
 
 interface PunchTokenCardProps {
   token: PunchToken;
@@ -150,7 +147,7 @@ export function PunchTokenCard({ token, voteCounts, onVote, marketData, solPrice
               isNegative ? "text-red-400" : "text-green-400"
             }`}
           >
-            {formatChange(displayChange)}
+            {formatChange24h(displayChange)}
           </span>
         )}
 

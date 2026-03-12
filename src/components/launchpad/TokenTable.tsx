@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatChange24h } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -152,7 +153,7 @@ export function TokenTable({ solPrice, promotedTokenIds, onPromote }: TokenTable
             <span className={`text-[9px] font-mono font-semibold ${
               priceChange > 0 ? "text-emerald-400" : priceChange < 0 ? "text-red-400" : "text-muted-foreground"
             }`}>
-              {priceChange === 0 ? "0%" : `${priceChange > 0 ? "+" : ""}${priceChange.toFixed(1)}%`}
+              {formatChange24h(priceChange)}
             </span>
           ) : (
             <span className="text-[9px] text-muted-foreground">0%</span>

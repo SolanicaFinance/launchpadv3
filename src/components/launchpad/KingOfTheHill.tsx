@@ -4,6 +4,7 @@ import { useSolPrice } from "@/hooks/useSolPrice";
 import { useKingOfTheHill, type KingToken } from "@/hooks/useKingOfTheHill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatChange24h } from "@/lib/formatters";
 import { PumpBadge } from "@/components/forum/PumpBadge";
 import { BagsBadge } from "@/components/forum/BagsBadge";
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
@@ -288,7 +289,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
                   "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md",
                   change24h > 0 ? "text-emerald-300 bg-emerald-500/15" : "text-red-400 bg-red-500/15"
                 )}>
-                  {change24h > 0 ? "+" : ""}{change24h.toFixed(1)}%
+                  {formatChange24h(change24h)}
                 </span>
               )}
             </div>

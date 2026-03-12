@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAgentTokens } from "@/hooks/useAgentTokens";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Trophy, TrendingUp, TrendingDown } from "lucide-react";
+import { formatChange24h } from "@/lib/formatters";
 
 export function AgentTopTokens() {
   const { data: tokens, isLoading } = useAgentTokens({ sort: "mcap", limit: 5 });
@@ -84,7 +85,7 @@ export function AgentTopTokens() {
                     </Badge>
                     <div className={`flex items-center gap-0.5 text-xs font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}>
                       {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {Math.abs(priceChange).toFixed(1)}%
+                      {formatChange24h(priceChange)}
                     </div>
                   </div>
 

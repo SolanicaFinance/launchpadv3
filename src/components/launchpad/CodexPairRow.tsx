@@ -9,6 +9,7 @@ import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 import { SparklineCanvas } from "./SparklineCanvas";
 import { toast } from "sonner";
 import type { SupportedChain } from "@/contexts/ChainContext";
+import { formatChange24h } from "@/lib/formatters";
 
 function formatUsdCompact(usd: number): string {
   if (!isFinite(usd) || usd > 1e15) return "$?";
@@ -189,7 +190,7 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
                   <ArrowDownRight className="h-2.5 w-2.5 text-destructive" />
                 )}
                 <span className={`text-[9px] font-mono font-bold ${token.change24h > 0 ? "text-success" : "text-destructive"}`}>
-                  {token.change24h > 0 ? "+" : ""}{token.change24h.toFixed(0)}%
+                  {formatChange24h(token.change24h)}
                 </span>
               </>
             )}

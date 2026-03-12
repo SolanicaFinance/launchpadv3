@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { formatChange24h } from "@/lib/formatters";
 import pancakeswapBunny from "@/assets/pancakeswap-bunny.png";
 import { useParams, Link } from "react-router-dom";
 import { useFunToken } from "@/hooks/useFunToken";
@@ -149,7 +150,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                 {token.change24h !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {isPriceUp ? '+' : ''}{Math.abs(token.change24h).toFixed(1)}%
+                    {formatChange24h(token.change24h)}
                   </span>
                 )}
               </div>
@@ -328,7 +329,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             <span className="text-[10px] font-mono text-muted-foreground truncate">{formatUsdCompact(token.priceUsd)}</span>
             {token.change24h !== 0 && (
               <span className={`text-[10px] font-mono font-bold ${isPriceUp ? 'text-green-400' : 'text-destructive'}`}>
-                {isPriceUp ? '+' : ''}{token.change24h.toFixed(1)}%
+                {formatChange24h(token.change24h)}
               </span>
             )}
           </div>
@@ -752,7 +753,7 @@ export default function FunTokenDetailPage() {
                 {priceChange !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {isPriceUp ? '+' : ''}{Math.abs(priceChange).toFixed(1)}%
+                    {formatChange24h(priceChange)}
                   </span>
                 )}
               </div>
@@ -832,7 +833,7 @@ export default function FunTokenDetailPage() {
               <span className="text-xs font-mono text-muted-foreground/60">24h Change</span>
               <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'} text-sm`}>
                 {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {isPriceUp ? '+' : ''}{priceChange.toFixed(2)}%
+                {formatChange24h(priceChange)}
               </span>
             </div>
           )}
@@ -997,7 +998,7 @@ export default function FunTokenDetailPage() {
               </span>
               {priceChange !== 0 && (
                 <span className={`text-[10px] font-mono font-bold ${isPriceUp ? 'text-green-400' : 'text-destructive'}`}>
-                  {isPriceUp ? '+' : ''}{priceChange.toFixed(1)}%
+                  {formatChange24h(priceChange)}
                 </span>
               )}
             </div>
