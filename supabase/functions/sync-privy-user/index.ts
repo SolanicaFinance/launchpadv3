@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
     // Check if profile exists
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id, solana_wallet_address, privy_wallet_id")
+      .select("id, solana_wallet_address, evm_wallet_address, privy_wallet_id, privy_did")
       .eq("id", profileId)
       .maybeSingle();
 
