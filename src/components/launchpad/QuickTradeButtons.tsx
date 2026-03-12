@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealSwap } from "@/hooks/useRealSwap";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 
 interface QuickTradeButtonsProps {
   token: Token;
@@ -19,6 +20,7 @@ const QUICK_SELL_PERCENTAGES = [25, 50, 75, 100];
 export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: QuickTradeButtonsProps) {
   const { isAuthenticated, login, solanaAddress } = useAuth();
   const { executeRealSwap } = useRealSwap();
+  const { getTokenBalance } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
@@ -85,14 +87,26 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
       return;
     }
 
-    const tokenAmount = (userBalance * percentage) / 100;
-    if (tokenAmount <= 0) {
-      toast({ title: "No tokens to sell", variant: "destructive" });
-      return;
-    }
-
     setLoadingIndex(index + 10);
+
     try {
+      // Fetch real on-chain balance instead of using stale DB value
+      let onChainBalance = 0;
+      try {
+        onChainBalance = await getTokenBalance(token.mint_address);
+      } catch (e) {
+        console.warn("[QuickSell] Failed to fetch on-chain balance, falling back to DB:", e);
+      }
+
+      const effectiveBalance = onChainBalance > 0 ? onChainBalance : userBalance;
+      console.log(`[QuickSell] DB balance: ${userBalance}, On-chain balance: ${onChainBalance}, Using: ${effectiveBalance}`);
+
+      const tokenAmount = (effectiveBalance * percentage) / 100;
+      if (tokenAmount <= 0) {
+        toast({ title: "No tokens to sell", variant: "destructive" });
+        setLoadingIndex(null);
+        return;
+      }
       const result = await executeRealSwap(token, tokenAmount, false);
 
       toast({

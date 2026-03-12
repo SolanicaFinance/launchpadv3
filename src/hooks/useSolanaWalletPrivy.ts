@@ -171,10 +171,28 @@ export function useSolanaWalletWithPrivy() {
     [rpcUrl, rpcSource, ready, authenticated, walletAddress, wallets, user]
   );
 
-  const getTokenBalance = useCallback(async (_mintAddress: string): Promise<number> => {
-    // Token balances are tracked in the database for bonding curve tokens
-    return 0;
-  }, []);
+  const getTokenBalance = useCallback(async (mintAddress: string): Promise<number> => {
+    if (!walletAddress || !mintAddress) return 0;
+    try {
+      const connection = getConnection();
+      const owner = new PublicKey(walletAddress);
+      const mint = new PublicKey(mintAddress);
+      const accounts = await connection.getTokenAccountsByOwner(owner, { mint });
+      if (accounts.value.length === 0) return 0;
+      // SPL token account data: amount is at offset 64, 8 bytes LE uint64
+      const data = accounts.value[0].account.data;
+      const raw = data.subarray(64, 72);
+      const amount = Number(raw.readBigUInt64LE(0));
+      // Default 6 decimals for SPL tokens
+      const decimals = 6;
+      const balance = amount / (10 ** decimals);
+      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… on-chain: ${balance}`);
+      return balance;
+    } catch (err) {
+      console.error("[getTokenBalance] Error:", err);
+      return 0;
+    }
+  }, [walletAddress, getConnection]);
 
   return {
     walletAddress,
