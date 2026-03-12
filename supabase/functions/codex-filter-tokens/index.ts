@@ -218,17 +218,19 @@ Deno.serve(async (req) => {
       // Upstream Codex image (the launchpad's own token image, if available)
       const codexImage = r.token?.info?.imageSmallUrl || r.token?.info?.imageThumbUrl || r.token?.info?.imageLargeUrl || null;
 
-      // Primary image: deterministic per-address sources for BSC to avoid mismatched third-party media.
-      // Fallback image: next-best source for the UI to try if primary 404s.
+      // Primary image + fallback image for UI retry behavior.
       let imageUrl: string | null;
       let fallbackImageUrl: string | null;
 
       if (isBsc) {
-        // BSC: only deterministic sources.
-        // 1) DexScreener by token address
-        // 2) Dicebear identicon by token address
-        imageUrl = dexScreenerImage || identiconImage;
-        fallbackImageUrl = dexScreenerImage ? identiconImage : null;
+        // BSC: prefer non-Dex launchpad metadata image only when it is address-bound.
+        // This avoids random mismatched images while still supporting very new pairs not yet indexed by DexScreener.
+        const verifiedLaunchpadImage = isAddressBoundImageUrl(codexImage, address) ? codexImage : null;
+
+        imageUrl = verifiedLaunchpadImage || dexScreenerImage || identiconImage;
+        fallbackImageUrl = verifiedLaunchpadImage
+          ? (dexScreenerImage || identiconImage)
+          : (dexScreenerImage ? identiconImage : null);
       } else {
         imageUrl = codexImage || dexScreenerImage || identiconImage;
         fallbackImageUrl = codexImage ? dexScreenerImage : identiconImage;
