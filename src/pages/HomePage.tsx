@@ -17,6 +17,12 @@ import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } fro
 import heroTerminalMockup from "@/assets/hero-terminal-mockup.png";
 import heroLaunchMockup from "@/assets/hero-launch-mockup.png";
 import { BRAND } from "@/config/branding";
+import partnerSolana from "@/assets/partners/solana.png";
+import partnerAlchemy from "@/assets/partners/alchemy.png";
+import partnerHelius from "@/assets/partners/helius.png";
+import partnerPhantom from "@/assets/partners/phantom.png";
+import partnerBnb from "@/assets/partners/bnbchain.png";
+import partnerVercel from "@/assets/partners/vercel.png";
 import { useChain } from "@/contexts/ChainContext";
 
 // Lazy load heavy below-fold section components
