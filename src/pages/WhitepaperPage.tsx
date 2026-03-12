@@ -72,9 +72,9 @@ export default function WhitepaperPage() {
                 <p className="text-muted-foreground leading-relaxed mb-4">
                   {BRAND.name} is a multi-chain AI trading terminal operating on <strong className="text-foreground">Solana</strong> and <strong className="text-foreground">BNB Chain</strong>. It combines real-time market data, autonomous AI trading agents, a dual-chain token launchpad, smart-money tracking, and KOL monitoring into a single high-performance interface built for speed and precision.
                 </p>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  The platform token is <strong className="text-success">$MOON</strong> ({BRAND.platformTokenMint ? `${BRAND.platformTokenMint.slice(0, 6)}…${BRAND.platformTokenMint.slice(-4)}` : "—"}), which powers governance, fee distribution, and ecosystem incentives across both chains.
-                </p>
+                 <p className="text-muted-foreground leading-relaxed mb-4">
+                   The platform token is <strong className="text-success">$MOON</strong>, which powers governance, fee distribution, and ecosystem incentives.
+                 </p>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Core Features</h3>
                 <ul className="space-y-2 text-muted-foreground">
