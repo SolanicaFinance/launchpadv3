@@ -44,6 +44,15 @@ export const BRAND = {
   themeClass: "saturn-theme",
   forumThemeClass: "forum-theme",
 
+  // ── Rebranding Checklist ──
+  // When rebranding, update ALL of the following:
+  // 1. src/config/branding.ts (this file) — all string values above
+  // 2. supabase/functions/_shared/branding.ts — edge function branding
+  // 3. src/assets/moondexo-logo.png — logo used in Privy wallet connect dialog & app header
+  // 4. public/moondexo-logo.png — logo used for favicon, OG image, and direct URL references
+  // 5. Privy Dashboard — update app name & logo at https://dashboard.privy.io
+  // 6. Database branding_config table — if using DB-driven white-labeling via /admin/branding
+
   // ── Legacy Name Mappings (for reference) ──
   legacy: {
     "saturn-theme": "saturn-theme",
