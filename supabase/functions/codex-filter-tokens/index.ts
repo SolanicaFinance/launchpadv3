@@ -191,6 +191,8 @@ Deno.serve(async (req) => {
     }).filter((t: any) => {
       // Filter out tokens with overflow/invalid market caps (2^63 sentinel values)
       if (t.marketCap > 1e15) return false;
+      // Clamp absurd change24h values (overflow/sentinel from Codex)
+      if (Math.abs(t.change24h) > 100000) t.change24h = 0;
       return true;
     });
 
