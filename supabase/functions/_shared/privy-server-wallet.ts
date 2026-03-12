@@ -1,14 +1,12 @@
 /**
  * Privy Server Wallet Helper
  * 
- * Uses node:crypto (Deno's Node compat) to match the Privy docs
- * signing example exactly.
+ * Uses Web Crypto API (native Deno support) for ECDSA P-256 signing.
  * 
  * Docs: https://docs.privy.io/controls/authorization-keys/using-owners/sign/direct-implementation
  */
 
 import canonicalize from "npm:canonicalize@2.0.0";
-import crypto from "node:crypto";
 
 const PRIVY_API_BASE = "https://auth.privy.io";
 
@@ -27,9 +25,9 @@ interface PrivyUser {
   linked_accounts: PrivyWalletAccount[];
 }
 
-// --- Authorization Signature (matching Privy docs exactly) ---
+// --- Authorization Signature using Web Crypto API ---
 
-function getAuthorizationSignature(url: string, body: Record<string, unknown>): string {
+async function getAuthorizationSignature(url: string, body: Record<string, unknown>): Promise<string> {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
   if (!authKeyRaw) {
     throw new Error("PRIVY_AUTHORIZATION_KEY must be configured for wallet RPC calls");
@@ -60,20 +58,68 @@ function getAuthorizationSignature(url: string, body: Record<string, unknown>): 
   // Strip wallet-auth: prefix (per Privy docs)
   const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
 
-  // Convert to PEM format (per Privy docs)
-  const privateKeyAsPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyAsString}\n-----END PRIVATE KEY-----`;
-  const privateKey = crypto.createPrivateKey({
-    key: privateKeyAsPem,
-    format: "pem",
-  });
+  // Decode the base64 PKCS8 DER key
+  const binaryString = atob(privateKeyAsString);
+  const keyBytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    keyBytes[i] = binaryString.charCodeAt(i);
+  }
 
-  // Sign with sha256 (per Privy docs - this returns DER-encoded ECDSA signature)
-  const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, privateKey);
-  // Convert to base64 without using Buffer
-  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+  // Import as ECDSA P-256 private key using Web Crypto API
+  const privateKey = await crypto.subtle.importKey(
+    "pkcs8",
+    keyBytes,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
+
+  // Sign with SHA-256 (Web Crypto returns raw IEEE P1363 format)
+  const signatureBuffer = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    privateKey,
+    serializedPayloadBuffer
+  );
+
+  // Convert P1363 (r||s) to DER format as Privy expects DER-encoded signature
+  const derSignature = p1363ToDer(new Uint8Array(signatureBuffer));
+
+  // Convert to base64
+  const signature = btoa(String.fromCharCode(...derSignature));
 
   console.log("[privy-auth] Signature generated, length:", signature.length);
   return signature;
+}
+
+/** Convert IEEE P1363 signature (r||s) to DER encoding */
+function p1363ToDer(p1363: Uint8Array): Uint8Array {
+  const half = p1363.length / 2;
+  const r = p1363.slice(0, half);
+  const s = p1363.slice(half);
+
+  function encodeInteger(bytes: Uint8Array): Uint8Array {
+    // Strip leading zeros but keep one if high bit set
+    let start = 0;
+    while (start < bytes.length - 1 && bytes[start] === 0) start++;
+    const trimmed = bytes.slice(start);
+    // Add leading zero if high bit is set (to keep positive)
+    const needsPad = trimmed[0] & 0x80;
+    const result = new Uint8Array((needsPad ? 1 : 0) + trimmed.length + 2);
+    result[0] = 0x02; // INTEGER tag
+    result[1] = trimmed.length + (needsPad ? 1 : 0);
+    if (needsPad) result[2] = 0x00;
+    result.set(trimmed, 2 + (needsPad ? 1 : 0));
+    return result;
+  }
+
+  const rDer = encodeInteger(r);
+  const sDer = encodeInteger(s);
+  const seq = new Uint8Array(2 + rDer.length + sDer.length);
+  seq[0] = 0x30; // SEQUENCE tag
+  seq[1] = rDer.length + sDer.length;
+  seq.set(rDer, 2);
+  seq.set(sDer, 2 + rDer.length);
+  return seq;
 }
 
 // --- Auth Headers ---
@@ -171,8 +217,8 @@ export async function signAndSendTransaction(
 
   console.log("[privy] signAndSendTransaction URL:", url);
 
-  // Generate authorization signature using node:crypto (matching Privy docs exactly)
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  // Generate authorization signature using Web Crypto API
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
 
   const res = await fetch(url, {
     method: "POST",
@@ -209,7 +255,7 @@ export async function signTransaction(
     },
   };
 
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
 
   const res = await fetch(url, {
     method: "POST",
@@ -249,7 +295,7 @@ export async function evmSendTransaction(
 
   console.log("[privy] eth_sendTransaction URL:", url, "to:", txParams.to);
 
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  const authSignature = await getAuthorizationSignature(url, bodyObj);
 
   const res = await fetch(url, {
     method: "POST",
