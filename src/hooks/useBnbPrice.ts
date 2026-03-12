@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const CACHE_KEY = 'bnb_price_cache';
 const CACHE_TTL = 30000;
@@ -28,12 +29,10 @@ export function useBnbPrice() {
     const fetchPrice = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd');
-        const data = await res.json();
-        const price = data?.binancecoin?.usd;
-        if (price && typeof price === 'number') {
-          setBnbPrice(price);
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ price, timestamp: Date.now() }));
+        const { data, error } = await supabase.functions.invoke('bnb-price');
+        if (!error && data?.price) {
+          setBnbPrice(data.price);
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ price: data.price, timestamp: Date.now() }));
         }
       } catch {
         console.debug('[useBnbPrice] Error fetching price');
