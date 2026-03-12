@@ -9,6 +9,7 @@ import { Loader2, Wallet, AlertTriangle, ChevronDown, CheckCircle2, XCircle, Ext
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { useToast } from "@/hooks/use-toast";
 import { useRealSwap } from "@/hooks/useRealSwap";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 
 interface TradePanelWithSwapProps {
