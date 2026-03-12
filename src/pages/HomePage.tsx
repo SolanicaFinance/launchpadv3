@@ -3,7 +3,7 @@ import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { KingOfTheHill } from "@/components/launchpad/KingOfTheHill";
 import { JustLaunched } from "@/components/launchpad/JustLaunched";
 import { LazySection } from "@/components/ui/LazySection";
-import { useCodexNewPairs, SOLANA_NETWORK_ID, type CodexPairToken } from "@/hooks/useCodexNewPairs";
+import { useCodexNewPairs, SOLANA_NETWORK_ID, BSC_NETWORK_ID, type CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { SparklineCanvas } from "@/components/launchpad/SparklineCanvas";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +17,7 @@ import { useMemo, useRef, useState, useCallback, useEffect, lazy, Suspense } fro
 import heroTerminalMockup from "@/assets/hero-terminal-mockup.png";
 import heroLaunchMockup from "@/assets/hero-launch-mockup.png";
 import { BRAND } from "@/config/branding";
+import { useChain } from "@/contexts/ChainContext";
 
 // Lazy load heavy below-fold section components
 const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
@@ -265,7 +266,9 @@ export default function HomePage() {
     }
   }, [location.pathname, location.search, navigate]);
 
-  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(SOLANA_NETWORK_ID);
+  const { chain } = useChain();
+  const networkId = chain === "bnb" ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
+  const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated, isLoading: codexLoading } = useCodexNewPairs(networkId);
 
   const limitedNewPairs = useMemo(() => (codexNewPairs || []).slice(0, 5), [codexNewPairs]);
   const limitedCompleting = useMemo(() => (codexCompleting || []).slice(0, 5), [codexCompleting]);

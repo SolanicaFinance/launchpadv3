@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterHiddenTokens } from "@/lib/hiddenTokens";
 import { useEffect } from "react";
 import { useBackgroundPoolRefresh } from "@/hooks/useBackgroundPoolRefresh";
+import { useChain } from "@/contexts/ChainContext";
 
 export interface JustLaunchedToken {
   id: string;
@@ -27,12 +28,20 @@ interface UseJustLaunchedResult {
 }
 
 // Fetch tokens from last 48 hours (with 24h as primary, fallback to 48h if empty)
-async function fetchJustLaunched(): Promise<JustLaunchedToken[]> {
+async function fetchJustLaunched(chainFilter: "solana" | "bnb"): Promise<JustLaunchedToken[]> {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
+  const applyChainFilter = (query: any) => {
+    if (chainFilter === "bnb") {
+      return query.eq("chain", "bsc");
+    }
+    // Solana: chain is null or 'solana'
+    return query.or("chain.is.null,chain.eq.solana");
+  };
+
   // Try 24h first
-  const { data: data24h, error } = await supabase
+  let query24 = supabase
     .from("fun_tokens")
     .select(`
       id, name, ticker, image_url, mint_address, market_cap_sol,
@@ -44,13 +53,16 @@ async function fetchJustLaunched(): Promise<JustLaunchedToken[]> {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  query24 = applyChainFilter(query24);
+  const { data: data24h, error } = await query24;
+
   if (error) throw error;
 
   const filtered24h = filterHiddenTokens(data24h || []) as JustLaunchedToken[];
   if (filtered24h.length > 0) return filtered24h;
 
   // Fallback to 48h if no 24h results
-  const { data: data48h, error: error48h } = await supabase
+  let query48 = supabase
     .from("fun_tokens")
     .select(`
       id, name, ticker, image_url, mint_address, market_cap_sol,
@@ -62,32 +74,36 @@ async function fetchJustLaunched(): Promise<JustLaunchedToken[]> {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  query48 = applyChainFilter(query48);
+  const { data: data48h, error: error48h } = await query48;
+
   if (error48h) throw error48h;
 
   return filterHiddenTokens(data48h || []) as JustLaunchedToken[];
 }
 
-const QUERY_KEY = ["just-launched"];
-
 export function useJustLaunched(): UseJustLaunchedResult {
   const queryClient = useQueryClient();
+  const { chain } = useChain();
+  const chainFilter = chain === "bnb" ? "bnb" : "solana";
+  const QUERY_KEY = ["just-launched", chainFilter];
 
   const { data, isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
-    queryFn: fetchJustLaunched,
-    staleTime: 1000 * 60 * 2, // 2 minutes fresh
-    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    queryFn: () => fetchJustLaunched(chainFilter),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
-    refetchInterval: 1000 * 60, // Refresh every 60s
+    refetchInterval: 1000 * 60,
   });
 
-  // Proactively refresh pool state for visible tokens
-  useBackgroundPoolRefresh(data ?? []);
+  // Proactively refresh pool state for visible tokens (Solana only)
+  useBackgroundPoolRefresh(chainFilter === "solana" ? (data ?? []) : []);
 
   // Realtime subscription for new tokens
   useEffect(() => {
     const channel = supabase
-      .channel("just-launched-realtime")
+      .channel(`just-launched-realtime-${chainFilter}`)
       .on(
         "postgres_changes",
         {
@@ -96,7 +112,6 @@ export function useJustLaunched(): UseJustLaunchedResult {
           table: "fun_tokens",
         },
         () => {
-          // New token added, invalidate
           queryClient.invalidateQueries({ queryKey: QUERY_KEY });
         }
       )
@@ -105,7 +120,7 @@ export function useJustLaunched(): UseJustLaunchedResult {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, chainFilter]);
 
   return {
     tokens: data ?? [],

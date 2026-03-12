@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterHiddenTokens } from "@/lib/hiddenTokens";
 import { useEffect } from "react";
 import { useBackgroundPoolRefresh } from "@/hooks/useBackgroundPoolRefresh";
+import { useChain } from "@/contexts/ChainContext";
 
 const DEFAULT_LIVE = {
   holder_count: 0,
@@ -51,18 +52,25 @@ interface UseKingOfTheHillResult {
   error: string | null;
 }
 
-// Fetch top tokens by bonding progress + newest trading agent token
-async function fetchKingOfTheHill(): Promise<KingToken[]> {
-  const selectFields = `
-    id, name, ticker, image_url, mint_address, dbc_pool_address, status,
-    bonding_progress, market_cap_sol, holder_count, trading_fee_bps, fee_mode,
-    agent_id, launchpad_type, trading_agent_id, is_trading_agent_token, created_at,
-    creator_wallet, twitter_url, twitter_avatar_url, twitter_verified, twitter_verified_type,
-    telegram_url, website_url, discord_url
-  `;
+const selectFields = `
+  id, name, ticker, image_url, mint_address, dbc_pool_address, status,
+  bonding_progress, market_cap_sol, holder_count, trading_fee_bps, fee_mode,
+  agent_id, launchpad_type, trading_agent_id, is_trading_agent_token, created_at,
+  creator_wallet, twitter_url, twitter_avatar_url, twitter_verified, twitter_verified_type,
+  telegram_url, website_url, discord_url
+`;
 
+function applyChainFilter(query: any, chainFilter: "solana" | "bnb") {
+  if (chainFilter === "bnb") {
+    return query.eq("chain", "bsc");
+  }
+  return query.or("chain.is.null,chain.eq.solana");
+}
+
+// Fetch top tokens by bonding progress + newest trading agent token
+async function fetchKingOfTheHill(chainFilter: "solana" | "bnb"): Promise<KingToken[]> {
   // Fetch top 3 by bonding progress
-  const { data: topTokens, error: topError } = await supabase
+  let topQuery = supabase
     .from("fun_tokens")
     .select(selectFields)
     .eq("status", "active")
@@ -70,11 +78,14 @@ async function fetchKingOfTheHill(): Promise<KingToken[]> {
     .order("bonding_progress", { ascending: false })
     .limit(3);
 
+  topQuery = applyChainFilter(topQuery, chainFilter);
+  const { data: topTokens, error: topError } = await topQuery;
+
   if (topError) throw topError;
 
   // Fetch newest trading agent token (last 24 hours) for guaranteed visibility
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: newestTradingAgent } = await supabase
+  let agentQuery = supabase
     .from("fun_tokens")
     .select(selectFields)
     .eq("status", "active")
@@ -83,6 +94,9 @@ async function fetchKingOfTheHill(): Promise<KingToken[]> {
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false })
     .limit(1);
+
+  agentQuery = applyChainFilter(agentQuery, chainFilter);
+  const { data: newestTradingAgent } = await agentQuery;
 
   // Merge: top tokens + newest trading agent (deduplicated)
   const merged = [...(topTokens || [])];
@@ -124,23 +138,25 @@ async function fetchCodexLiveData(addresses: string[]): Promise<Record<string, a
   }
 }
 
-const QUERY_KEY = ["king-of-the-hill"];
-const CODEX_QUERY_KEY = ["king-of-the-hill-codex"];
-
 export function useKingOfTheHill(): UseKingOfTheHillResult {
   const queryClient = useQueryClient();
+  const { chain } = useChain();
+  const chainFilter = chain === "bnb" ? "bnb" : "solana";
+
+  const QUERY_KEY = ["king-of-the-hill", chainFilter];
+  const CODEX_QUERY_KEY = ["king-of-the-hill-codex", chainFilter];
 
   const { data, isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
-    queryFn: fetchKingOfTheHill,
+    queryFn: () => fetchKingOfTheHill(chainFilter),
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
     refetchInterval: 1000 * 30,
   });
 
-  // Proactively refresh pool state for visible king tokens
-  useBackgroundPoolRefresh(data ?? []);
+  // Proactively refresh pool state for visible king tokens (Solana only)
+  useBackgroundPoolRefresh(chainFilter === "solana" ? (data ?? []) : []);
 
   // Fetch live Codex data for the king tokens (separate query to avoid blocking)
   const mintAddresses = (data ?? [])
@@ -150,9 +166,9 @@ export function useKingOfTheHill(): UseKingOfTheHillResult {
   const { data: codexData } = useQuery({
     queryKey: [...CODEX_QUERY_KEY, ...mintAddresses],
     queryFn: () => fetchCodexLiveData(mintAddresses),
-    enabled: mintAddresses.length > 0,
-    staleTime: 1000 * 15, // 15s fresh — important data
-    refetchInterval: 1000 * 20, // Refresh every 20s
+    enabled: mintAddresses.length > 0 && chainFilter === "solana", // Codex only for Solana
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 20,
     refetchOnWindowFocus: false,
   });
 
@@ -177,7 +193,7 @@ export function useKingOfTheHill(): UseKingOfTheHillResult {
   // Realtime subscription to invalidate on token changes
   useEffect(() => {
     const channel = supabase
-      .channel("king-of-hill-realtime")
+      .channel(`king-of-hill-realtime-${chainFilter}`)
       .on(
         "postgres_changes",
         {
@@ -194,7 +210,7 @@ export function useKingOfTheHill(): UseKingOfTheHillResult {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, chainFilter]);
 
   return {
     tokens: enrichedTokens,
