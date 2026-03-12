@@ -34,6 +34,7 @@ const FOURMEME_MANAGER_ABI = parseAbi([
 
 const FOURMEME_HELPER_ABI = parseAbi([
   "function tryBuy(address token, uint256 amount, uint256 funds) external view returns (address tokenManager, address quote, uint256 estimatedAmount, uint256 estimatedCost, uint256 estimatedFee, uint256 fundRequirement, uint256 fundAsParameter)",
+  "function liquidityAdded(address token) external view returns (bool)",
 ]);
 
 // ── SaturnPortal bonding curve ABI ──
