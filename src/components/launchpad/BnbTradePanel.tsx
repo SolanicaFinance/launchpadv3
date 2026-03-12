@@ -16,11 +16,11 @@ interface BnbTradePanelProps {
 }
 
 export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTradePanelProps) {
-  const { executeBnbSwap, isLoading } = useBnbSwap();
-  const { isAuthenticated, solanaAddress, login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
+  const { address: evmAddress } = usePrivyEvmWallet();
   const [isBuy, setIsBuy] = useState(true);
   const [amount, setAmount] = useState("0.05");
-  const userWallet = solanaAddress || "unknown";
+  const userWallet = evmAddress || "unknown";
 
   const handleSwap = useCallback(async () => {
     if (!isAuthenticated) {
