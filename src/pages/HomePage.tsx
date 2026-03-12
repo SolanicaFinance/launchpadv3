@@ -274,7 +274,15 @@ export default function HomePage() {
   // Hot pairs for above-fold teaser — top 6 by absolute change
   const hotPairs = useMemo(() => {
     const all = [...(codexNewPairs || []), ...(codexCompleting || []), ...(codexGraduated || [])];
-    return all.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h)).slice(0, 6);
+    const sorted = all.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+    // Deduplicate by symbol — keep the highest-change entry per ticker
+    const seen = new Set<string>();
+    return sorted.filter(t => {
+      const key = (t.symbol || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 6);
   }, [codexNewPairs, codexCompleting, codexGraduated]);
 
   return (
