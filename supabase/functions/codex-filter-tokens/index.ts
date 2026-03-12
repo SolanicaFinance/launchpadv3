@@ -14,6 +14,7 @@ const MAX_REASONABLE_CHANGE_24H_DEFAULT = 10_000;
 const MAX_REASONABLE_CHANGE_24H_BSC = 1_000;
 const BSC_NEW_LOOKBACK_SECONDS = 3 * 24 * 60 * 60;
 const BSC_COMPLETING_LOOKBACK_SECONDS = 7 * 24 * 60 * 60;
+const BSC_COMPLETING_MIN_VOLUME_24H = 100;
 
 function toFiniteNumber(value: unknown): number {
   const num = typeof value === "number" ? value : Number(value);
