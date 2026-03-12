@@ -18,6 +18,24 @@ function toFiniteNumber(value: unknown): number {
   return Number.isFinite(num) ? num : 0;
 }
 
+function normalizeAddress(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function isAddressBoundImageUrl(imageUrl: string | null | undefined, address: string | null | undefined): boolean {
+  const normalizedUrl = imageUrl?.trim().toLowerCase();
+  const normalizedAddress = normalizeAddress(address);
+
+  if (!normalizedUrl || !normalizedAddress) return false;
+
+  if (normalizedUrl.includes(normalizedAddress)) return true;
+
+  const withoutPrefix = normalizedAddress.replace(/^0x/, "");
+  return withoutPrefix.length > 0 && normalizedUrl.includes(withoutPrefix);
+}
+
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
