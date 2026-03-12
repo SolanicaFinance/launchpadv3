@@ -688,6 +688,19 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[bnb-swap] Error:", error);
+
+    // Catch-all: if a no-liquidity error leaked through inner catches, return 400 not 500
+    if (isNoPancakeSwapLiquidityError(error)) {
+      return new Response(
+        JSON.stringify({
+          error: "No liquidity found for this token on PancakeSwap or Four.meme. It may not be tradeable yet.",
+          route: "unknown",
+          reason: "NO_LIQUIDITY",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Swap failed",
