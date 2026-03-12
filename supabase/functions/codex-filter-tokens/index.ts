@@ -14,6 +14,7 @@ const MAX_REASONABLE_CHANGE_24H_DEFAULT = 10_000;
 const MAX_REASONABLE_CHANGE_24H_BSC = 1_000;
 const BSC_NEW_LOOKBACK_SECONDS = 3 * 24 * 60 * 60;
 const BSC_COMPLETING_LOOKBACK_SECONDS = 7 * 24 * 60 * 60;
+const BSC_COMPLETING_MIN_VOLUME_24H = 100;
 
 function toFiniteNumber(value: unknown): number {
   const num = typeof value === "number" ? value : Number(value);
@@ -99,9 +100,10 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         rankings = `{ attribute: createdAt, direction: DESC }`;
         break;
       case "completing":
-        // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress) with recent activity
-        filters = `{ network: [${networkId}], launchpadName: ${bscLaunchpads}, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false, volume24: { gte: 100 } }`;
-        rankings = `{ attribute: launchpadGraduationPercent, direction: DESC }`;
+        // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress)
+        // Activity filtering and final ordering are enforced post-query.
+        filters = `{ network: [${networkId}], launchpadName: ${bscLaunchpads}, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false }`;
+        rankings = `{ attribute: marketCap, direction: DESC }`;
         break;
       case "completed":
         // "Migrated" on BSC = graduated tokens with decent liquidity and volume
@@ -327,7 +329,22 @@ Deno.serve(async (req) => {
       console.log(`[codex-filter-tokens] Normalized ${outlierCount} outlier change24h values for network ${safeNetworkId} (threshold=${maxAllowedChange}%)`);
     }
 
-    const finalTokens = normalizedTokens.filter((token: any) => token !== null);
+    let finalTokens = normalizedTokens
+      .filter((token: any) => token !== null)
+      .filter((token: any) => {
+        if (safeNetworkId === BSC_NETWORK_ID && validColumn === "completing") {
+          return token.volume24h >= BSC_COMPLETING_MIN_VOLUME_24H;
+        }
+        return true;
+      });
+
+    if (safeNetworkId === BSC_NETWORK_ID && validColumn === "completing") {
+      finalTokens = finalTokens.sort((a: any, b: any) => {
+        const gradDiff = toFiniteNumber(b.graduationPercent) - toFiniteNumber(a.graduationPercent);
+        if (gradDiff !== 0) return gradDiff;
+        return toFiniteNumber(b.volume24h) - toFiniteNumber(a.volume24h);
+      });
+    }
 
     return new Response(JSON.stringify({ tokens: finalTokens, column: validColumn, networkId: safeNetworkId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
