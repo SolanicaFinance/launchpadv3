@@ -234,7 +234,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
       {/* Balance Info */}
       {tradeType === 'sell' && (
         <p className="text-xs text-center text-muted-foreground">
-          Balance: {formatTokenAmount(userBalance)} {token.ticker}
+          Balance: {formatTokenAmount(displayBalance)} {token.ticker}
         </p>
       )}
     </div>
