@@ -91,7 +91,7 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
 
   if (networkId === BSC_NETWORK_ID) {
     // BSC launchpads: Four.meme (main BSC launchpad), Four.meme Fair, Moonit, TokenMill V2
-    const bscLaunchpads = `["Four.meme", "Four.meme Fair", "Moonit", "TokenMill V2"]`;
+    const bscLaunchpads = `["Four.meme", "Moonit"]`;
 
     switch (column) {
       case "new":
