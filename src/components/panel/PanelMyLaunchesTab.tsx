@@ -184,7 +184,7 @@ export default function PanelMyLaunchesTab() {
 
       toast({
         title: "✅ Fees claimed!",
-        description: `${result.claimedAmount?.toFixed(4)} SOL sent to your embedded wallet`,
+        description: `${result.claimedAmount?.toFixed(4)} ${currencySymbol} sent to your embedded wallet`,
       });
 
       // Refetch data
