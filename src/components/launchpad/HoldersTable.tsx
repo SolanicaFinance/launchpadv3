@@ -189,7 +189,7 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                     <div className="flex items-center gap-1.5">
                       <Filter className="h-3 w-3 text-muted-foreground/30 shrink-0 cursor-pointer hover:text-muted-foreground/60 transition-colors" />
                       <a
-                        href={`https://solscan.io/account/${holder.address}`}
+                        href={`${explorerBase}/${holder.address}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0"
