@@ -242,7 +242,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             {mobileTab === 'chart' && (
               <>
                 <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
-                  <CodexChart tokenAddress={mintAddress} height={340} />
+                  <CodexChart tokenAddress={mintAddress} networkId={networkId} height={340} />
                 </div>
                 <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
               </>
@@ -253,7 +253,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           <div className="hidden md:grid lg:hidden grid-cols-12 gap-2">
             <div className="col-span-7 flex flex-col gap-2">
               <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
-                <CodexChart tokenAddress={mintAddress} height={420} />
+                <CodexChart tokenAddress={mintAddress} networkId={networkId} height={420} />
               </div>
               <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
               <div className="trade-glass-panel p-3 space-y-1.5">
@@ -278,7 +278,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           <div className="hidden lg:grid grid-cols-12 gap-2 flex-1">
             <div className="col-span-9 flex flex-col gap-2">
               <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
-                <CodexChart tokenAddress={mintAddress} height={380} />
+                <CodexChart tokenAddress={mintAddress} networkId={networkId} height={380} />
               </div>
               <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} />
             </div>
@@ -560,7 +560,7 @@ export default function FunTokenDetailPage() {
 
   const ChartSection = ({ chartHeight = 460 }: { chartHeight?: number }) => (
     <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
-      <CodexChart tokenAddress={token.mint_address || mintAddress || ''} height={chartHeight} />
+      <CodexChart tokenAddress={token.mint_address || mintAddress || ''} networkId={networkId} height={chartHeight} />
     </div>
   );
 
