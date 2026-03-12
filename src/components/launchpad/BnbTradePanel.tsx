@@ -46,7 +46,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
     });
 
     try {
-      const result = await executeBnbSwap(tokenAddress, action, amtNum, userWallet);
+      const result = await executeBnbSwap(tokenAddress, action, amtNum, userWallet, 3, ticker, name);
       if (result.success) {
         toast.success(`✅ ${isBuy ? 'Buy' : 'Sell'} Executed!`, {
           id: toastId,
