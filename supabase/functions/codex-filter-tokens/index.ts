@@ -10,7 +10,8 @@ type Column = "new" | "completing" | "completed";
 
 const SOLANA_NETWORK_ID = 1399811149;
 const BSC_NETWORK_ID = 56;
-const MAX_REASONABLE_CHANGE_24H = 10_000;
+const MAX_REASONABLE_CHANGE_24H_DEFAULT = 10_000;
+const MAX_REASONABLE_CHANGE_24H_BSC = 1_000;
 
 function toFiniteNumber(value: unknown): number {
   const num = typeof value === "number" ? value : Number(value);
