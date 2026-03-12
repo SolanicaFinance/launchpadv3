@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { mintAddress, userWallet, amount, isBuy, privyUserId, profileId, signature: clientSignature, mode, onChainVirtualSol, onChainVirtualToken } = await req.json();
+    const { mintAddress, userWallet, amount, isBuy, privyUserId, profileId, signature: clientSignature, mode, onChainVirtualSol, onChainVirtualToken, tokenName, tokenTicker, outputAmount } = await req.json();
     
     const launchpadId = req.headers.get("x-launchpad-id");
     const apiKey = req.headers.get("x-api-key");
