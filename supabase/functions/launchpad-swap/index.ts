@@ -52,6 +52,52 @@ serve(async (req) => {
       }
     }
 
+    // ===== ALPHA_ONLY MODE (before token lookup — works for external tokens too) =====
+    if (mode === 'alpha_only' && clientSignature) {
+      console.log("[launchpad-swap] Alpha-only mode - recording trade for Alpha Tracker:", { signature: clientSignature, isBuy, amount });
+
+      try {
+        let traderDisplayName: string | null = null;
+        let traderAvatarUrl: string | null = null;
+        if (profileId) {
+          const { data: profile } = await supabase.from("profiles").select("display_name, avatar_url").eq("id", profileId).single();
+          if (profile) {
+            traderDisplayName = profile.display_name;
+            traderAvatarUrl = profile.avatar_url;
+          }
+        }
+
+        // For buy: amount is SOL spent, outputAmount is tokens received
+        // For sell: amount is tokens sold, outputAmount is SOL received
+        const solAmount = isBuy ? amount : (outputAmount || 0);
+        const tokensAmount = isBuy ? (outputAmount || 0) : amount;
+
+        await supabase.from("alpha_trades").insert({
+          wallet_address: userWallet,
+          token_mint: mintAddress,
+          token_name: tokenName || null,
+          token_ticker: tokenTicker || null,
+          trade_type: isBuy ? "buy" : "sell",
+          amount_sol: solAmount,
+          amount_tokens: tokensAmount,
+          price_usd: null,
+          price_sol: null,
+          tx_hash: clientSignature,
+          trader_display_name: traderDisplayName,
+          trader_avatar_url: traderAvatarUrl,
+          chain: 'solana',
+        });
+        console.log("[launchpad-swap] Alpha-only trade recorded successfully");
+      } catch (alphaErr) {
+        console.warn("[launchpad-swap] alpha_trades insert failed:", alphaErr);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, signature: clientSignature }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get token
     const { data: token, error: tokenError } = await supabase
       .from("tokens")
