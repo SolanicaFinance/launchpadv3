@@ -396,8 +396,10 @@ async function executePortalSwap(
 
 // ── Error helpers ──
 class NoPancakeSwapLiquidityError extends Error {
+  code = "NO_PANCAKESWAP_LIQUIDITY";
   constructor() {
     super("No liquidity on PancakeSwap V2 for this pair");
+    this.name = "NoPancakeSwapLiquidityError";
   }
 }
 
