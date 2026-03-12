@@ -66,7 +66,7 @@ function PulseTokenRow({ token }: { token: CodexPairToken }) {
             : "text-red-400 bg-red-500/10"
         )}>
           {isPositive ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-          {isPositive ? "+" : ""}{change.toFixed(1)}%
+          {formatChange24h(change)}
         </div>
       </div>
     </Link>
