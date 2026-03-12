@@ -75,10 +75,10 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
       {/* Tab content */}
       <div>
         {activeTab === "all_trades" && (
-          <CodexTokenTrades events={data?.events || []} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} />
+          <CodexTokenTrades events={data?.events || []} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} isBsc={isBsc} />
         )}
         {activeTab === "your_trades" && (
-          <CodexTokenTrades events={userTrades} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} />
+          <CodexTokenTrades events={userTrades} isLoading={isLoading} holders={holdersData?.holders || []} currentPriceUsd={currentPriceUsd} isBsc={isBsc} />
         )}
         {activeTab === "holders" && (
           <HoldersTable
@@ -87,6 +87,7 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
             isLoading={holdersLoading || allTradesLoading}
             trades={allTradesData ?? []}
             currentPriceUsd={currentPriceUsd}
+            isBsc={isBsc}
           />
         )}
       </div>

@@ -205,7 +205,7 @@ export function HoldersTable({ holders, totalCount, isLoading, trades = [], curr
                           <span className="text-[11px] text-blue-400 font-bold">{label} ◆</span>
                         ) : (
                           <a
-                            href={`https://solscan.io/account/${holder.address}`}
+                            href={`${explorerBase}/${holder.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-foreground/70 text-[11px] hover:text-foreground transition-colors"
