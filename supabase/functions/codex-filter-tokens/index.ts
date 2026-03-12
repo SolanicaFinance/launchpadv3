@@ -248,11 +248,9 @@ Deno.serve(async (req) => {
       let fallbackImageUrl: string | null;
 
       if (isBsc) {
-        // BSC: prioritize launchpad/Codex media when trusted, then deterministic CDN fallbacks.
-        const launchpadPreferredImage = (
-          isAddressBoundImageUrl(codexImage, normalizedAddress) ||
-          isTrustedBscImageUrl(codexImage)
-        ) ? codexImage : null;
+        // BSC: only use Codex image when it contains the token's contract address in its URL.
+        const launchpadPreferredImage = isAddressBoundImageUrl(codexImage, normalizedAddress)
+          ? codexImage : null;
 
         const bscImageCandidates = uniqueNonEmpty([
           launchpadPreferredImage,
