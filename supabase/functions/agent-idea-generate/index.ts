@@ -80,7 +80,7 @@ Return ONLY a JSON object (no markdown):
   "ticker": "3-4 letter ticker in CAPS",
   "description": "Catchy description with emoji (max 80 chars)",
   "imagePrompt": "Detailed image generation prompt describing the LOBSTER mascot in the themed style",
-  "tweetText": "Viral tweet announcing this token (include ${BRAND.twitterHandle} mention, emojis, max 280 chars)`
+  "tweetText": "Viral tweet announcing this token (include @${BRAND.twitterHandle} mention, emojis, max 280 chars)"
 }`;
 
     const conceptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
