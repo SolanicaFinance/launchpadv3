@@ -90,6 +90,9 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
   const bscCompletingCutoff = now - BSC_COMPLETING_LOOKBACK_SECONDS;
 
   if (networkId === BSC_NETWORK_ID) {
+    // BSC launchpads known to Codex
+    const bscLaunchpads = `["Four.meme", "Four.meme Fair"]`;
+
     // BSC: broader discovery window so very recent launches are not under-represented.
     switch (column) {
       case "new":
@@ -97,8 +100,8 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         rankings = `{ attribute: createdAt, direction: DESC }`;
         break;
       case "completing":
-        // "Final Stretch" on BSC = tokens near graduation (50-99% bonding progress)
-        filters = `{ network: [${networkId}], createdAt: { gte: ${bscCompletingCutoff} }, launchpadGraduationPercent: { gte: 50, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false }`;
+        // "Final Stretch" on BSC = tokens with bonding progress >= 20%, with some activity
+        filters = `{ network: [${networkId}], launchpadGraduationPercent: { gte: 20, lte: 99 }, launchpadCompleted: false, launchpadMigrated: false, liquidity: { gte: 1 } }`;
         rankings = `{ attribute: marketCap, direction: DESC }`;
         break;
       case "completed":
