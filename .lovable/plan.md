@@ -1,40 +1,45 @@
 
 
-## Plan: Fix Referral Link, Fee %, Missing Settings, and Token Holdings
+## Two Issues to Fix
 
-### Issues Identified
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-1. **Referral link uses `window.location.origin`** (e.g., `lovableproject.com/link/96c119`) instead of `moondexo.com/link/96c119`
-2. **Referral fee shows "5%"** but should be **"50%"**
-3. **Admin section** — already correctly gated by `isAdmin` check in PanelPage.tsx (line 169). Only users in `user_roles` table with admin role see it. No change needed.
-4. **Token holdings inaccurate/slow** — `TokenHoldingsList` uses the `fetch-wallet-holdings` edge function which goes through Helius. Need to add Alchemy Solana as a faster alternative or parallel provider.
-5. **Profile edit settings missing from panel** — The `EditProfileModal` (used on UserProfilePage) has username, bio, location, website, cover photo, and verify account. The panel's `SettingsModal` only has display name, avatar, sounds, quick buy, and slippage. Need to add the missing fields.
-6. **Profile link → Panel** — Already working (`handleProfileClick` navigates to `/panel` in HeaderWalletBalance.tsx line 121).
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-### Changes
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**1. Fix referral link domain** — `src/hooks/useReferral.ts`
-- Line 59-60: Change `${window.location.origin}/link/${referralCode}` to `https://${BRAND.domain}/link/${referralCode}` using the branding config.
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-**2. Fix referral fee percentage** — `src/components/panel/PanelUnifiedDashboard.tsx`
-- Line 909: Change `5%` to `50%`
-- Line 998: Change `5%` to `50%`
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-**3. Add missing profile settings to SettingsModal** — `src/components/settings/SettingsModal.tsx`
-- Add username field (with `@` prefix, 30-day change restriction)
-- Add bio textarea (160 char limit)
-- Add location field
-- Add website field
-- Fetch full profile data (username, bio, location, website, username_changed_at) on mount
-- Save all fields via the existing `update-profile` edge function (same as EditProfileModal uses)
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-**4. Improve token holdings speed** — `supabase/functions/fetch-wallet-holdings/index.ts`
-- Add Alchemy Solana RPC as primary provider (`ALCHEMY_SOLANA_RPC_URL` secret), falling back to Helius if unavailable
-- This mirrors the BSC pattern where Alchemy is primary with public fallback
-- Will need to add the `ALCHEMY_SOLANA_RPC_URL` secret
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-**5. Add "Edit Profile" and "Verify" buttons to panel hero** — `src/components/panel/PanelUnifiedDashboard.tsx`
-- Add an "Edit Profile" quick action button that opens the full `EditProfileModal`
-- Import and wire up `EditProfileModal` and `VerifyAccountModal`
-- Fetch full profile data (bio, location, website, username, cover_url, username_changed_at) for the edit modal
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
+
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
+
+### Technical Details
+
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
+
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
+
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

@@ -56,6 +56,21 @@ async function getTokenAccounts(
     .filter(Boolean) as TokenAccount[];
 }
 
+async function fetchHoldingsFromRpc(
+  rpcUrl: string,
+  walletAddress: string
+): Promise<TokenAccount[]> {
+  const SPL_TOKEN = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+  const TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+
+  const [splTokens, token2022Tokens] = await Promise.all([
+    getTokenAccounts(rpcUrl, walletAddress, SPL_TOKEN),
+    getTokenAccounts(rpcUrl, walletAddress, TOKEN_2022),
+  ]);
+
+  return [...splTokens, ...token2022Tokens];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -70,23 +85,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    const rpcUrl = (Deno.env.get("HELIUS_RPC_URL") ?? "").trim();
-    if (!rpcUrl) {
-      return new Response(JSON.stringify({ error: "RPC not configured" }), {
+    // Try Alchemy first (faster, more reliable), fall back to Helius
+    const alchemyUrl = (Deno.env.get("ALCHEMY_SOLANA_RPC_URL") ?? "").trim();
+    const heliusUrl = (Deno.env.get("HELIUS_RPC_URL") ?? "").trim();
+
+    let holdings: TokenAccount[] = [];
+    let usedProvider = "none";
+
+    if (alchemyUrl) {
+      try {
+        holdings = await fetchHoldingsFromRpc(alchemyUrl, walletAddress);
+        usedProvider = "alchemy";
+      } catch (e) {
+        console.error("Alchemy RPC failed, falling back to Helius:", e);
+      }
+    }
+
+    if (usedProvider === "none" && heliusUrl) {
+      try {
+        holdings = await fetchHoldingsFromRpc(heliusUrl, walletAddress);
+        usedProvider = "helius";
+      } catch (e) {
+        console.error("Helius RPC also failed:", e);
+      }
+    }
+
+    if (usedProvider === "none") {
+      return new Response(JSON.stringify({ error: "No RPC configured or all providers failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const SPL_TOKEN = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-    const TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
-
-    const [splTokens, token2022Tokens] = await Promise.all([
-      getTokenAccounts(rpcUrl, walletAddress, SPL_TOKEN),
-      getTokenAccounts(rpcUrl, walletAddress, TOKEN_2022),
-    ]);
-
-    const holdings = [...splTokens, ...token2022Tokens];
 
     return new Response(JSON.stringify({ holdings }), {
       status: 200,

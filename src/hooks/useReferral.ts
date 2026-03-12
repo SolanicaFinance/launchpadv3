@@ -57,7 +57,7 @@ export function useReferralCode() {
   }, [profileId]);
 
   const referralLink = referralCode
-    ? `${window.location.origin}/link/${referralCode}`
+    ? `https://moondexo.com/link/${referralCode}`
     : null;
 
   return { referralCode, referralLink, referralCount, loading };

@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { X, Camera, Volume2, VolumeX } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, Camera, Volume2, VolumeX, AtSign, MapPin, Globe, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -13,10 +13,17 @@ interface SettingsModalProps {
 
 export function SettingsModal({ open, onClose, profile, onProfileUpdate }: SettingsModalProps) {
   const { toast } = useToast();
+  const { user, profileId } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name || "");
+  const [username, setUsername] = useState(profile?.username || "");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [website, setWebsite] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || "");
+  const [usernameChangedAt, setUsernameChangedAt] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Sound preferences
@@ -28,7 +35,37 @@ export function SettingsModal({ open, onClose, profile, onProfileUpdate }: Setti
     try { return localStorage.getItem("pulse-slippage") || "1"; } catch { return "1"; }
   });
 
+  // Fetch full profile data on open
+  useEffect(() => {
+    if (!open || !profileId || loaded) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, username, bio, location, website, username_changed_at")
+        .eq("id", profileId)
+        .maybeSingle();
+      if (data) {
+        setDisplayName(data.display_name || "");
+        setAvatarPreview(data.avatar_url || "");
+        setUsername(data.username || "");
+        setBio(data.bio || "");
+        setLocation(data.location || "");
+        setWebsite(data.website || "");
+        setUsernameChangedAt(data.username_changed_at || null);
+        setLoaded(true);
+      }
+    })();
+  }, [open, profileId, loaded]);
+
+  // Reset loaded flag when modal closes
+  useEffect(() => {
+    if (!open) setLoaded(false);
+  }, [open]);
+
   if (!open) return null;
+
+  const canChangeUsername = !usernameChangedAt || 
+    (Date.now() - new Date(usernameChangedAt).getTime()) > 30 * 24 * 60 * 60 * 1000;
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,7 +84,6 @@ export function SettingsModal({ open, onClose, profile, onProfileUpdate }: Setti
       if (uploadErr) throw uploadErr;
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       setAvatarPreview(publicUrl);
-      // Update profile
       await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
       toast({ title: "Avatar updated" });
       onProfileUpdate?.();
@@ -61,9 +97,31 @@ export function SettingsModal({ open, onClose, profile, onProfileUpdate }: Setti
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      await supabase.from("profiles").update({ display_name: displayName }).eq("id", user.id);
+      // Get privy user ID for edge function
+      const privyUserId = user?.id;
+      if (!privyUserId) throw new Error("Not authenticated");
+
+      const updates: Record<string, unknown> = {
+        privyUserId,
+        display_name: displayName,
+        bio,
+        location,
+        website,
+      };
+
+      // Only send username if changed and allowed
+      if (canChangeUsername && username && username !== profile?.username) {
+        updates.username = username;
+        updates.username_changed_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase.functions.invoke("update-profile", {
+        body: updates,
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       // Save local prefs
       localStorage.setItem("pulse-sounds-enabled", soundEnabled ? "true" : "false");
       localStorage.setItem("pulse-quick-buy-amount", quickBuyDefault);
@@ -93,7 +151,7 @@ export function SettingsModal({ open, onClose, profile, onProfileUpdate }: Setti
         </div>
 
         <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-          {/* Avatar */}
+          {/* Avatar + Display Name */}
           <div className="flex items-center gap-4">
             <div className="relative group cursor-pointer" onClick={() => fileRef.current?.click()}>
               <div className="h-16 w-16 rounded-full bg-muted border-2 border-border overflow-hidden flex items-center justify-center">
@@ -119,6 +177,69 @@ export function SettingsModal({ open, onClose, profile, onProfileUpdate }: Setti
               />
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          </div>
+
+          {/* Username */}
+          <div>
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <AtSign className="h-3 w-3" /> Username
+            </label>
+            <input
+              value={username}
+              onChange={(e) => {
+                if (canChangeUsername) {
+                  const val = e.target.value.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20);
+                  setUsername(val);
+                }
+              }}
+              disabled={!canChangeUsername}
+              className="w-full mt-1 h-8 px-3 text-[12px] rounded-lg bg-muted/40 border border-border/40 text-foreground outline-none focus:border-primary/50 font-mono disabled:opacity-50"
+              placeholder="username"
+            />
+            {!canChangeUsername && (
+              <p className="text-[10px] text-muted-foreground mt-1">Username can be changed once every 30 days</p>
+            )}
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <FileText className="h-3 w-3" /> Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value.slice(0, 160))}
+              className="w-full mt-1 h-16 px-3 py-2 text-[12px] rounded-lg bg-muted/40 border border-border/40 text-foreground outline-none focus:border-primary/50 font-mono resize-none"
+              placeholder="Tell us about yourself..."
+              maxLength={160}
+            />
+            <p className="text-[10px] text-muted-foreground text-right">{bio.length}/160</p>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> Location
+            </label>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value.slice(0, 50))}
+              className="w-full mt-1 h-8 px-3 text-[12px] rounded-lg bg-muted/40 border border-border/40 text-foreground outline-none focus:border-primary/50 font-mono"
+              placeholder="e.g. New York, USA"
+            />
+          </div>
+
+          {/* Website */}
+          <div>
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <Globe className="h-3 w-3" /> Website
+            </label>
+            <input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value.slice(0, 100))}
+              className="w-full mt-1 h-8 px-3 text-[12px] rounded-lg bg-muted/40 border border-border/40 text-foreground outline-none focus:border-primary/50 font-mono"
+              placeholder="https://example.com"
+            />
           </div>
 
           {/* Sound */}
