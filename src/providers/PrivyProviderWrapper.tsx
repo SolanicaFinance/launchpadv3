@@ -179,20 +179,44 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
                 },
               },
             },
+            supportedChains: [
+              {
+                id: 56,
+                name: "BNB Smart Chain",
+                nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+                rpcUrls: {
+                  default: { http: ["https://bsc-dataseed.binance.org"] },
+                },
+                blockExplorers: {
+                  default: { name: "BscScan", url: "https://bscscan.com" },
+                },
+              } as any,
+            ],
+            defaultChain: {
+              id: 56,
+              name: "BNB Smart Chain",
+              nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+              rpcUrls: {
+                default: { http: ["https://bsc-dataseed.binance.org"] },
+              },
+              blockExplorers: {
+                default: { name: "BscScan", url: "https://bscscan.com" },
+              },
+            } as any,
             appearance: {
               theme: "dark",
-              accentColor: "#22c55e", // RIFT green
+              accentColor: "#22c55e",
               logo: saturnLogo,
               showWalletLoginFirst: true,
-              walletChainType: "solana-only",
-              walletList: ["phantom", "solflare", "backpack", "detected_wallets"],
+              walletChainType: "ethereum-and-solana",
+              walletList: ["metamask", "phantom", "solflare", "backpack", "detected_wallets"],
             },
             embeddedWallets: {
               solana: {
                 createOnLogin: "all-users",
               },
               ethereum: {
-                createOnLogin: "off",
+                createOnLogin: "all-users",
               },
             },
             legal: {
