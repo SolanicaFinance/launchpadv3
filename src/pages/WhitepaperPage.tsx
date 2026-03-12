@@ -26,12 +26,12 @@ export default function WhitepaperPage() {
                 Technical Documentation
               </div>
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
-                ${BRAND.name} Documentation
+                {BRAND.name} Documentation
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground max-w-[90%] mx-auto">
-                The Fastest AI-Powered Trading Terminal on Solana
+                Multi-Chain AI Trading Terminal — Solana &amp; BNB Chain
               </p>
-              <p className="text-sm text-muted-foreground mt-2">Version 2.0 | March 2026</p>
+              <p className="text-sm text-muted-foreground mt-2">Token: <strong className="text-success">$MOON</strong> · Version 2.0 · March 2026</p>
             </div>
 
             {/* Table of Contents */}
@@ -40,15 +40,15 @@ export default function WhitepaperPage() {
               <nav className="grid sm:grid-cols-2 gap-2">
                 {[
                   { id: "overview", title: "1. Platform Overview" },
-                  { id: "trading-terminal", title: "2. Trading Terminal" },
+                  { id: "trading-terminal", title: "2. Pulse Trading Terminal" },
                   { id: "token-launchpad", title: "3. Token Launchpad" },
-                  { id: "fee-architecture", title: "4. Fee Architecture" },
+                  { id: "tokens-discover", title: "4. Tokens & Discover" },
                   { id: "ai-agents", title: "5. AI Trading Agents" },
                   { id: "alpha-tracker", title: "6. Alpha Tracker" },
                   { id: "x-tracker", title: "7. X Tracker" },
                   { id: "leverage", title: "8. Leverage Trading" },
-                  { id: "infrastructure", title: "9. Technical Infrastructure" },
-                  { id: "security", title: "10. Security" },
+                  { id: "fee-architecture", title: "9. Fee Architecture" },
+                  { id: "infrastructure", title: "10. Infrastructure & Security" },
                 ].map((item) => (
                   <a
                     key={item.id}
@@ -64,43 +64,47 @@ export default function WhitepaperPage() {
             {/* Content Sections */}
             <div className="prose prose-invert max-w-none space-y-12">
 
-              {/* Section 1 */}
+              {/* Section 1 — Platform Overview */}
               <section id="overview">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   1. Platform Overview
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  {BRAND.name} is a high-performance trading terminal built for Solana. It combines <strong className="text-foreground">real-time market data</strong>, <strong className="text-foreground">AI-powered trading agents</strong>, and a <strong className="text-foreground">token launchpad</strong> into a single unified platform designed for speed and precision.
+                  {BRAND.name} is a multi-chain AI trading terminal operating on <strong className="text-foreground">Solana</strong> and <strong className="text-foreground">BNB Chain</strong>. It combines real-time market data, autonomous AI trading agents, a dual-chain token launchpad, smart-money tracking, and KOL monitoring into a single high-performance interface built for speed and precision.
+                </p>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  The platform token is <strong className="text-success">$MOON</strong> ({BRAND.platformTokenMint ? `${BRAND.platformTokenMint.slice(0, 6)}…${BRAND.platformTokenMint.slice(-4)}` : "—"}), which powers governance, fee distribution, and ecosystem incentives across both chains.
                 </p>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Core Features</h3>
                 <ul className="space-y-2 text-muted-foreground">
-                  <li><strong className="text-foreground">Pulse Trading Terminal:</strong> Real-time token discovery with new pairs, final stretch, and migrated tokens in a unified view</li>
-                  <li><strong className="text-foreground">Token Launchpad:</strong> Launch tokens on Meteora DBC with multiple modes — Random, Describe, Custom, and Phantom</li>
+                  <li><strong className="text-foreground">Pulse Trading Terminal:</strong> Real-time token discovery across Solana and BNB Chain with new pairs, final stretch, and migrated token views</li>
+                  <li><strong className="text-foreground">Token Launchpad:</strong> Launch tokens on Solana (Meteora DBC) or BNB Chain (SaturnPortal bonding curve) with multiple creation modes</li>
+                  <li><strong className="text-foreground">Tokens &amp; Discover:</strong> Browse, search, and discover trending tokens via DexScreener integration across both chains</li>
                   <li><strong className="text-foreground">AI Trading Agents:</strong> Autonomous agents with Guard, Core, and Alpha strategies that trade on your behalf</li>
-                  <li><strong className="text-foreground">Alpha Tracker:</strong> Track smart money wallets and copy-trade winning positions in real-time</li>
+                  <li><strong className="text-foreground">Alpha Tracker:</strong> Track smart-money wallets and copy-trade winning positions in real-time</li>
                   <li><strong className="text-foreground">X Tracker:</strong> Monitor KOL mentions and sentiment from Twitter/X for early signals</li>
-                  <li><strong className="text-foreground">Leverage Trading:</strong> Amplified exposure on agent tokens with built-in risk management</li>
-                  <li><strong className="text-foreground">Profile Analytics:</strong> Per-wallet PnL tracking, position summaries, and on-chain balance detection</li>
+                  <li><strong className="text-foreground">Leverage Trading:</strong> Amplified exposure via Aster DEX on BNB Chain with built-in risk management</li>
+                  <li><strong className="text-foreground">Merch Store:</strong> Official {BRAND.name} merchandise available directly within the platform</li>
                 </ul>
               </section>
 
-              {/* Section 2 */}
+              {/* Section 2 — Pulse Trading Terminal */}
               <section id="trading-terminal">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
-                  2. Trading Terminal
+                  2. Pulse Trading Terminal
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  The MoonDexo Pulse terminal provides a 3-column real-time grid showing token lifecycle stages — from initial launch to migration.
+                  The {BRAND.name} Pulse terminal provides a 3-column real-time grid showing token lifecycle stages across Solana and BNB Chain. Users can toggle between chains to view chain-specific markets.
                 </p>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Terminal Columns</h3>
                 <div className="space-y-4">
                   {[
-                    { mode: "New Pairs", desc: "Freshly launched tokens on Meteora DBC — catch tokens at their earliest stage with bonding curve pricing." },
-                    { mode: "Final Stretch", desc: "Tokens approaching graduation threshold (85 SOL) — high momentum plays ready to migrate to full AMM." },
-                    { mode: "Migrated", desc: "Graduated tokens now trading on Meteora CP-AMM with permanent locked liquidity and ongoing fee generation." },
+                    { mode: "New Pairs", desc: "Freshly launched tokens — catch tokens at their earliest stage with bonding curve pricing on either chain." },
+                    { mode: "Final Stretch", desc: "Tokens approaching graduation threshold — high momentum plays ready to migrate to full AMM liquidity." },
+                    { mode: "Migrated", desc: "Graduated tokens trading on Meteora CP-AMM (Solana) or PancakeSwap (BNB) with permanent locked liquidity." },
                   ].map((item) => (
                     <Card key={item.mode} className="p-4 bg-card/50">
                       <h4 className="font-semibold text-foreground">{item.mode}</h4>
@@ -109,27 +113,56 @@ export default function WhitepaperPage() {
                   ))}
                 </div>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Trade Execution</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    { label: "Swap Engine", value: "Jupiter V6 API" },
-                    { label: "MEV Protection", value: "Jito Block Engine" },
-                    { label: "Default Slippage", value: "5% (configurable)" },
-                    { label: "Wallet", value: "Privy embedded + Phantom" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex justify-between text-sm p-3 bg-card/30 rounded">
-                      <span className="text-muted-foreground">{item.label}</span>
-                      <span className="text-foreground font-medium">{item.value}</span>
-                    </div>
-                  ))}
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Trade Execution by Chain</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 text-foreground">Component</th>
+                        <th className="text-left py-2 px-2 text-foreground">Solana</th>
+                        <th className="text-left py-2 px-2 text-foreground">BNB Chain</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Swap Router</td>
+                        <td className="py-2 px-2">Jupiter V6 API</td>
+                        <td className="py-2 px-2">OpenOcean Aggregator</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">MEV Protection</td>
+                        <td className="py-2 px-2">Jito Block Engine</td>
+                        <td className="py-2 px-2">—</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Data Feed</td>
+                        <td className="py-2 px-2">Codex + DexScreener</td>
+                        <td className="py-2 px-2">DexScreener (BSC)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Default Slippage</td>
+                        <td className="py-2 px-2">5% (configurable)</td>
+                        <td className="py-2 px-2">5% (configurable)</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 px-2">Wallet</td>
+                        <td className="py-2 px-2">Privy Embedded + Phantom</td>
+                        <td className="py-2 px-2">Privy Embedded + MetaMask</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </section>
 
-              {/* Section 3 */}
+              {/* Section 3 — Token Launchpad */}
               <section id="token-launchpad">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   3. Token Launchpad
                 </h2>
+
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  {BRAND.name} supports token launches on both Solana and BNB Chain. Each chain uses its own bonding curve infrastructure, with shared creation modes across the UI.
+                </p>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Launch Modes</h3>
                 <div className="space-y-4">
@@ -137,8 +170,7 @@ export default function WhitepaperPage() {
                     { mode: "Random Mode", desc: "AI-generated narrative-driven token concepts with procedurally generated meme images." },
                     { mode: "Describe Mode", desc: "Prompt-to-asset generation — describe your concept and AI generates the complete token package." },
                     { mode: "Custom Mode", desc: "Manual metadata entry with custom image upload (name, ticker, description, image, social links)." },
-                    { mode: "Phantom Mode", desc: "User-paid launches via connected Phantom wallet with configurable trading fees (0.1% to 10%)." },
-                    { mode: "Holders Mode", desc: "50% of trading fees distributed to top 100 token holders (min 0.3% of supply)." },
+                    { mode: "Phantom Mode", desc: "User-paid launches via connected wallet with configurable trading fees (0.1% to 10%)." },
                   ].map((item) => (
                     <Card key={item.mode} className="p-4 bg-card/50">
                       <h4 className="font-semibold text-foreground">{item.mode}</h4>
@@ -147,16 +179,7 @@ export default function WhitepaperPage() {
                   ))}
                 </div>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Bonding Curve (Meteora DBC)</h3>
-                <Card className="p-4 bg-card/50 mt-4">
-                  <pre className="text-xs text-success overflow-x-auto font-mono">
-{`Price Discovery Formula:
-price = virtualSolReserves / virtualTokenReserves
-
-Constant Product Invariant:
-x * y = k`}
-                  </pre>
-                </Card>
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Solana — Meteora Dynamic Bonding Curve</h3>
                 <div className="grid sm:grid-cols-2 gap-4 mt-4">
                   {[
                     { label: "Total Supply", value: "1,000,000,000 tokens" },
@@ -164,7 +187,7 @@ x * y = k`}
                     { label: "LP Reserve", value: "200M tokens (20%)" },
                     { label: "Initial Virtual SOL", value: "30 SOL" },
                     { label: "Graduation Threshold", value: "85 SOL" },
-                    { label: "Curve Type", value: "Constant Product" },
+                    { label: "Post-Graduation DEX", value: "Meteora CP-AMM (DAMM V2)" },
                   ].map((item) => (
                     <div key={item.label} className="flex justify-between text-sm p-2 bg-card/30 rounded">
                       <span className="text-muted-foreground">{item.label}</span>
@@ -172,77 +195,64 @@ x * y = k`}
                     </div>
                   ))}
                 </div>
+                <p className="text-muted-foreground leading-relaxed mt-4 text-sm">
+                  When a Solana token reaches 85 SOL, it graduates to Meteora CP-AMM. 100% of LP tokens are permanently locked, and trading fees continue via Position NFT.
+                </p>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Graduation & Migration</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  When a token reaches 85 SOL market cap, it graduates to Meteora CP-AMM (DAMM V2). 100% of LP tokens are permanently locked to the treasury, and the trading fee continues via Position NFT.
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">BNB Chain — SaturnPortal Bonding Curve</h3>
+                <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                  {[
+                    { label: "Total Supply", value: "1,000,000,000 tokens" },
+                    { label: "Contract", value: "Flap.sh Portal (0xe2cE…9De0)" },
+                    { label: "Graduation Threshold", value: "~16 BNB" },
+                    { label: "Post-Graduation DEX", value: "PancakeSwap" },
+                    { label: "Token Standard", value: "BEP-20" },
+                    { label: "Address Format", value: "CREATE2 salt (ends 7777)" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex justify-between text-sm p-2 bg-card/30 rounded">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-muted-foreground leading-relaxed mt-4 text-sm">
+                  BNB Chain tokens use the SaturnPortal bonding curve with a Split Vault mechanism for automatic fee distribution. Metadata is uploaded to IPFS. Token addresses are salt-ground to end in <code className="text-success">7777</code> for tax compliance.
                 </p>
               </section>
 
-              {/* Section 4 */}
-              <section id="fee-architecture">
+              {/* Section 4 — Tokens & Discover */}
+              <section id="tokens-discover">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
-                  4. Fee Architecture
+                  4. Tokens &amp; Discover
                 </h2>
 
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  {BRAND.name} implements a transparent fee model where trading fees route through the platform treasury for controlled redistribution.
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  The Tokens page provides a comprehensive browser for all tokens launched through {BRAND.name}, with real-time price data, market cap, holder counts, and bonding progress. The Discover page surfaces trending tokens from DexScreener across both Solana and BNB Chain.
                 </p>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-3 px-2 text-foreground">Token Type</th>
-                        <th className="text-left py-3 px-2 text-foreground">Fee</th>
-                        <th className="text-left py-3 px-2 text-foreground">Creator Share</th>
-                        <th className="text-left py-3 px-2 text-foreground">Platform Share</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-muted-foreground">
-                      <tr className="border-b border-border/50">
-                        <td className="py-3 px-2">Standard Launch</td>
-                        <td className="py-3 px-2">2%</td>
-                        <td className="py-3 px-2 text-green-400">50%</td>
-                        <td className="py-3 px-2">50%</td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="py-3 px-2">Phantom Mode</td>
-                        <td className="py-3 px-2">0.1-10%</td>
-                        <td className="py-3 px-2 text-green-400">50%</td>
-                        <td className="py-3 px-2">50%</td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="py-3 px-2">Holder Rewards</td>
-                        <td className="py-3 px-2">2%</td>
-                        <td className="py-3 px-2 text-green-400">50% (to holders)</td>
-                        <td className="py-3 px-2">50%</td>
-                      </tr>
-                      <tr className="border-b border-border/50">
-                        <td className="py-3 px-2">Agent Token</td>
-                        <td className="py-3 px-2">2%</td>
-                        <td className="py-3 px-2 text-green-400">30% Creator / 30% Agent</td>
-                        <td className="py-3 px-2">40%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-2">Trading Agent</td>
-                        <td className="py-3 px-2">2%</td>
-                        <td className="py-3 px-2 text-green-400">50%</td>
-                        <td className="py-3 px-2">50%</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { feature: "Token Browser", desc: "Search, filter, and sort all platform-launched tokens with live pricing and bonding curve progress" },
+                    { feature: "Trending Tokens", desc: "DexScreener-powered trending feed for Solana and BNB Chain with volume, price change, and liquidity metrics" },
+                    { feature: "Chain Toggle", desc: "Seamlessly switch between Solana and BSC networks to view chain-specific trending data" },
+                    { feature: "Quick Trade", desc: "One-click navigation to trade any discovered token directly from the browser" },
+                  ].map((item) => (
+                    <Card key={item.feature} className="p-4 bg-card/50">
+                      <h4 className="font-semibold text-foreground text-sm">{item.feature}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                    </Card>
+                  ))}
                 </div>
               </section>
 
-              {/* Section 5 */}
+              {/* Section 5 — AI Trading Agents */}
               <section id="ai-agents">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   5. AI Trading Agents
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  MoonDexo features autonomous AI trading agents that trade Solana tokens on your behalf. Each agent manages an encrypted wallet (AES-256-GCM), launches its own token, and funds operations through accumulated fees.
+                  {BRAND.name} features autonomous AI trading agents that trade Solana tokens on your behalf. Each agent manages an encrypted wallet (AES-256-GCM), launches its own token, and funds operations through accumulated fees.
                 </p>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Trading Strategies</h3>
@@ -258,19 +268,19 @@ x * y = k`}
                     </thead>
                     <tbody className="text-muted-foreground">
                       <tr className="border-b border-border/50">
-                        <td className="py-2 px-2 text-green-400">Guard (Conservative)</td>
+                        <td className="py-2 px-2 text-success">Guard (Conservative)</td>
                         <td className="py-2 px-2">-10%</td>
                         <td className="py-2 px-2">+25%</td>
                         <td className="py-2 px-2">2</td>
                       </tr>
                       <tr className="border-b border-border/50">
-                        <td className="py-2 px-2 text-yellow-400">Core (Balanced)</td>
+                        <td className="py-2 px-2 text-warning">Core (Balanced)</td>
                         <td className="py-2 px-2">-20%</td>
                         <td className="py-2 px-2">+50%</td>
                         <td className="py-2 px-2">3</td>
                       </tr>
                       <tr>
-                        <td className="py-2 px-2 text-red-400">Alpha (Aggressive)</td>
+                        <td className="py-2 px-2 text-destructive">Alpha (Aggressive)</td>
                         <td className="py-2 px-2">-30%</td>
                         <td className="py-2 px-2">+100%</td>
                         <td className="py-2 px-2">5</td>
@@ -302,44 +312,28 @@ x * y = k`}
                   ))}
                 </div>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Execution Infrastructure</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    { label: "DEX", value: "Jupiter V6 API" },
-                    { label: "MEV Protection", value: "Jito Block Engine" },
-                    { label: "Monitoring", value: "15-second polling" },
-                    { label: "Slippage", value: "5% (500 bps)" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex justify-between text-sm p-3 bg-card/30 rounded">
-                      <span className="text-muted-foreground">{item.label}</span>
-                      <span className="text-foreground font-medium">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Voice Fingerprinting</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Agents learn their creator's communication style by analyzing recent tweets. The system extracts tone, vocabulary, emoji usage, and sentence structure to generate a unique personality profile for autonomous social posting.
                 </p>
               </section>
 
-              {/* Section 6 */}
+              {/* Section 6 — Alpha Tracker */}
               <section id="alpha-tracker">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   6. Alpha Tracker
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  The Alpha Tracker monitors smart money wallets across Solana in real-time, surfacing profitable trades and allowing users to follow high-performing traders.
+                  The Alpha Tracker monitors smart-money wallets across Solana and BNB Chain in real-time, surfacing profitable trades and allowing users to follow high-performing traders. Chain-specific block explorer links (Solscan / BscScan) are provided for full transparency.
                 </p>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Features</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
-                    { feature: "Real-Time Trades", desc: "Live feed of buy/sell transactions from tracked wallets with SOL amounts and token details" },
+                    { feature: "Real-Time Trades", desc: "Live feed of buy/sell transactions from tracked wallets with SOL/BNB amounts and token details" },
                     { feature: "PnL Tracking", desc: "Per-wallet and per-position realized PnL calculation with distribution charts" },
                     { feature: "Position Summary", desc: "Active, partial, and closed positions with cost basis and return metrics" },
-                    { feature: "On-Chain Verification", desc: "All trades verified via Helius RPC with transaction signature links to Solscan" },
+                    { feature: "On-Chain Verification", desc: "All trades verified via Helius (Solana) and Alchemy (BNB) with transaction signature links" },
                   ].map((item) => (
                     <Card key={item.feature} className="p-4 bg-card/50">
                       <h4 className="font-semibold text-foreground text-sm">{item.feature}</h4>
@@ -349,7 +343,7 @@ x * y = k`}
                 </div>
               </section>
 
-              {/* Section 7 */}
+              {/* Section 7 — X Tracker */}
               <section id="x-tracker">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   7. X Tracker
@@ -361,8 +355,8 @@ x * y = k`}
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
-                    { feature: "KOL Monitoring", desc: "Tracks mentions from verified crypto influencers and analysts" },
-                    { feature: "Sentiment Analysis", desc: "AI-powered sentiment scoring to gauge market mood" },
+                    { feature: "KOL Monitoring", desc: "Tracks mentions from verified crypto influencers and analysts across both ecosystems" },
+                    { feature: "Sentiment Analysis", desc: "AI-powered sentiment scoring to gauge market mood around specific tokens" },
                     { feature: "Token Extraction", desc: "Automatic detection of token tickers and contract addresses from tweets" },
                     { feature: "Alert System", desc: "Real-time notifications when tracked KOLs mention new tokens" },
                   ].map((item) => (
@@ -374,48 +368,153 @@ x * y = k`}
                 </div>
               </section>
 
-              {/* Section 8 */}
+              {/* Section 8 — Leverage Trading */}
               <section id="leverage">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
                   8. Leverage Trading
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  MoonDexo offers leverage trading on agent tokens, enabling amplified exposure with built-in risk management.
+                  {BRAND.name} provides leverage trading via <strong className="text-foreground">Aster DEX</strong> on BNB Chain, enabling amplified exposure with built-in risk management for perpetual contract trading.
                 </p>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
-                    { trait: "Per-Agent Markets", desc: "Every agent token has its own isolated leverage market" },
-                    { trait: "Amplified Exposure", desc: "Trade with leverage to maximize gains on high-conviction positions" },
-                    { trait: "On-Chain Execution", desc: "All leveraged positions settled on Solana with full transparency" },
-                    { trait: "Risk Management", desc: "Built-in liquidation engine with configurable margin requirements" },
+                    { label: "Protocol", value: "Aster DEX (BNB Chain)" },
+                    { label: "Type", value: "Perpetual Contracts" },
+                    { label: "Collateral", value: "BNB / USDT" },
+                    { label: "Risk Management", value: "Built-in liquidation engine" },
                   ].map((item) => (
-                    <Card key={item.trait} className="p-4 bg-card/50">
-                      <h4 className="font-semibold text-foreground text-sm">{item.trait}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
-                    </Card>
+                    <div key={item.label} className="flex justify-between text-sm p-3 bg-card/30 rounded">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.value}</span>
+                    </div>
                   ))}
                 </div>
               </section>
 
-              {/* Section 9 */}
-              <section id="infrastructure">
+              {/* Section 9 — Fee Architecture */}
+              <section id="fee-architecture">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
-                  9. Technical Infrastructure
+                  9. Fee Architecture
                 </h2>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Stack</h3>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  {BRAND.name} implements transparent fee models on both chains, with trading fees routed through platform infrastructure for controlled redistribution to creators.
+                </p>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Solana Fee Structure</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-2 text-foreground">Token Type</th>
+                        <th className="text-left py-3 px-2 text-foreground">Fee</th>
+                        <th className="text-left py-3 px-2 text-foreground">Creator Share</th>
+                        <th className="text-left py-3 px-2 text-foreground">Platform Share</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-2">Standard Launch</td>
+                        <td className="py-3 px-2">2%</td>
+                        <td className="py-3 px-2 text-success">50%</td>
+                        <td className="py-3 px-2">50%</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-2">Phantom Mode</td>
+                        <td className="py-3 px-2">0.1–10%</td>
+                        <td className="py-3 px-2 text-success">50%</td>
+                        <td className="py-3 px-2">50%</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-2">Agent Token</td>
+                        <td className="py-3 px-2">2%</td>
+                        <td className="py-3 px-2 text-success">30% Creator / 30% Agent</td>
+                        <td className="py-3 px-2">40%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">BNB Chain Fee Structure — Split Vault</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  BNB Chain uses a <strong className="text-foreground">Split Vault</strong> mechanism (factory <code className="text-success">0xfab7…345F</code>) that automatically distributes fees on each trade:
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { label: "Platform Fee", value: "1% (to treasury)" },
+                    { label: "Creator Fee", value: "Up to 8% (configurable)" },
+                    { label: "Treasury Wallet", value: "0xf621…1E37" },
+                    { label: "Distribution", value: "Automatic per-trade" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex justify-between text-sm p-3 bg-card/30 rounded">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section 10 — Infrastructure & Security */}
+              <section id="infrastructure">
+                <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
+                  10. Infrastructure &amp; Security
+                </h2>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Dual-Chain Tech Stack</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 text-foreground">Component</th>
+                        <th className="text-left py-2 px-2 text-foreground">Solana</th>
+                        <th className="text-left py-2 px-2 text-foreground">BNB Chain</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">RPC Provider</td>
+                        <td className="py-2 px-2">Helius (dedicated)</td>
+                        <td className="py-2 px-2">Alchemy (primary)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Token Standard</td>
+                        <td className="py-2 px-2">SPL Token + Metaplex</td>
+                        <td className="py-2 px-2">BEP-20</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">DEX</td>
+                        <td className="py-2 px-2">Meteora DBC → CP-AMM</td>
+                        <td className="py-2 px-2">SaturnPortal → PancakeSwap</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Swap Aggregator</td>
+                        <td className="py-2 px-2">Jupiter V6</td>
+                        <td className="py-2 px-2">OpenOcean</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 px-2">Explorer</td>
+                        <td className="py-2 px-2">Solscan</td>
+                        <td className="py-2 px-2">BscScan</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 px-2">Metadata Storage</td>
+                        <td className="py-2 px-2">Metaplex / Arweave</td>
+                        <td className="py-2 px-2">IPFS</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Shared Infrastructure</h3>
                 <div className="space-y-3 mt-4">
                   {[
-                    { label: "Network", value: "Solana Mainnet-Beta" },
-                    { label: "Token Standard", value: "SPL Token + Metaplex" },
-                    { label: "RPC Provider", value: "Helius (dedicated)" },
-                    { label: "DEX", value: "Meteora DBC + CP-AMM" },
                     { label: "Frontend", value: "React + Vite + Tailwind CSS" },
-                    { label: "Backend", value: "Supabase Edge Functions" },
-                    { label: "Auth", value: "Privy (embedded wallets)" },
-                    { label: "Real-Time", value: "Supabase Realtime + WebSockets" },
+                    { label: "Backend", value: "Edge Functions (serverless)" },
+                    { label: "Auth", value: "Privy (embedded wallets + social login)" },
+                    { label: "Real-Time", value: "WebSockets + Realtime subscriptions" },
+                    { label: "Database", value: "PostgreSQL with Row-Level Security" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between p-3 bg-card/30 rounded-lg">
                       <span className="text-muted-foreground">{item.label}</span>
@@ -424,52 +523,11 @@ x * y = k`}
                   ))}
                 </div>
 
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Platform Automation</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  All background jobs run via PostgreSQL <code className="text-success">pg_cron</code>:
-                </p>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-2 px-2 text-foreground">Job</th>
-                        <th className="text-left py-2 px-2 text-foreground">Schedule</th>
-                        <th className="text-left py-2 px-2 text-foreground">Function</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-muted-foreground text-xs">
-                      {[
-                        { job: "trending-sync", schedule: "*/5 * * * *", func: "Sync trending data" },
-                        { job: "fee-claim", schedule: "* * * * *", func: "Claim pool fees" },
-                        { job: "fee-distribute", schedule: "5,35 * * * *", func: "Distribute to creators" },
-                        { job: "holder-distribute", schedule: "*/5 * * * *", func: "Holder rewards" },
-                        { job: "agent-engage", schedule: "*/5 * * * *", func: "Agent social posts" },
-                        { job: "trading-execute", schedule: "*/5 * * * *", func: "Execute trades" },
-                        { job: "trading-monitor", schedule: "* * * * *", func: "SL/TP monitoring" },
-                      ].map((item) => (
-                        <tr key={item.job} className="border-b border-border/50">
-                          <td className="py-2 px-2 font-mono text-success">{item.job}</td>
-                          <td className="py-2 px-2">{item.schedule}</td>
-                          <td className="py-2 px-2">{item.func}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              {/* Section 10 */}
-              <section id="security">
-                <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
-                  10. Security
-                </h2>
-
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Wallet Security</h3>
                 <ul className="space-y-2 text-muted-foreground">
                   <li><strong className="text-foreground">Trading Agent Wallets:</strong> AES-256-GCM encryption via Web Crypto API</li>
                   <li><strong className="text-foreground">Deployer Wallets:</strong> Fresh keypair per token, never reused</li>
-                  <li><strong className="text-foreground">Treasury:</strong> Private key isolated in Edge Functions, never client-side</li>
+                  <li><strong className="text-foreground">Treasury:</strong> Private keys isolated in Edge Functions, never client-side</li>
                 </ul>
 
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Authentication</h3>
@@ -486,7 +544,7 @@ x * y = k`}
                       <tr className="border-b border-border/50">
                         <td className="py-2 px-2">User Auth</td>
                         <td className="py-2 px-2">Privy</td>
-                        <td className="py-2 px-2">Wallet connection, sessions</td>
+                        <td className="py-2 px-2">Wallet connection, sessions, social login</td>
                       </tr>
                       <tr className="border-b border-border/50">
                         <td className="py-2 px-2">Creator Verification</td>
@@ -501,32 +559,19 @@ x * y = k`}
                     </tbody>
                   </table>
                 </div>
-
-                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Claim Safeguards</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    { protection: "Claim Lock", impl: "Atomic RPC with claim locks" },
-                    { protection: "Cooldown", impl: "1 hour per user" },
-                    { protection: "Verification", impl: "X OAuth required" },
-                    { protection: "Minimum", impl: "0.05 SOL threshold" },
-                  ].map((item) => (
-                    <div key={item.protection} className="flex justify-between text-sm p-3 bg-card/30 rounded">
-                      <span className="text-muted-foreground">{item.protection}</span>
-                      <span className="text-foreground">{item.impl}</span>
-                    </div>
-                  ))}
-                </div>
               </section>
 
-              {/* Appendix */}
+              {/* Appendix — Links */}
               <section className="border-t border-border pt-8 mt-12">
                 <h2 className="text-2xl font-bold text-foreground mb-6">Links</h2>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {[
-                    { label: "Platform", url: "https://saturntrade.lovable.app" },
-                    { label: "Launchpad", url: "https://saturntrade.lovable.app/launchpad" },
-                    { label: "Agents", url: "https://saturntrade.lovable.app/agents" },
-                    { label: "Twitter", url: "https://x.com/saturntrade" },
+                    { label: "Platform", url: `https://${BRAND.domain}` },
+                    { label: "Launchpad", url: `https://${BRAND.domain}/launchpad` },
+                    { label: "Agents", url: `https://${BRAND.domain}/agents` },
+                    { label: "Tokens", url: `https://${BRAND.domain}/tokens` },
+                    { label: "Discover", url: `https://${BRAND.domain}/discover` },
+                    { label: "Twitter / X", url: BRAND.twitterUrl },
                   ].map((item) => (
                     <a
                       key={item.label}
@@ -545,7 +590,7 @@ x * y = k`}
               {/* Document Footer */}
               <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border">
                 <p>This documentation is a living document and will be updated as {BRAND.name} evolves.</p>
-                <p className="mt-2">© 2026 ${BRAND.name}. All rights reserved.</p>
+                <p className="mt-2">© 2026 {BRAND.name}. All rights reserved.</p>
               </div>
             </div>
           </MatrixContentCard>
