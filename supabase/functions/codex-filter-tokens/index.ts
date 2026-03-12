@@ -31,9 +31,9 @@ function buildQuery(column: Column, limit: number, networkId: number): string {
         rankings = `{ attribute: volume24, direction: DESC }`;
         break;
       case "completed":
-        // "Migrated" on BSC = established tokens with high liquidity
-        filters = `{ network: [${networkId}], liquidity: { gte: 50000 } }`;
-        rankings = `{ attribute: marketCap, direction: DESC }`;
+        // "Migrated" on BSC = established tokens with decent liquidity and volume
+        filters = `{ network: [${networkId}], liquidity: { gte: 10000 }, volume24: { gte: 1000 } }`;
+        rankings = `{ attribute: volume24, direction: DESC }`;
         break;
     }
   } else {
