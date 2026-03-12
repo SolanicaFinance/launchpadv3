@@ -128,6 +128,27 @@ export function findSolanaEmbeddedWallet(
 }
 
 /**
+ * Find the Ethereum/EVM embedded wallet from a Privy user's linked accounts.
+ */
+export function findEvmEmbeddedWallet(
+  user: PrivyUser
+): { address: string; walletId: string } | null {
+  const wallet = user.linked_accounts.find(
+    (a) =>
+      a.type === "wallet" &&
+      a.chain_type === "ethereum" &&
+      (a.wallet_client_type === "privy" || a.connector_type === "embedded")
+  );
+
+  if (!wallet || !wallet.id) return null;
+
+  return {
+    address: wallet.address,
+    walletId: wallet.id,
+  };
+}
+
+/**
  * Sign and send a Solana transaction using Privy's server-side wallet RPC.
  * Uses the exact URL format from Privy API docs: https://api.privy.io/v1/wallets/{id}/rpc
  */
