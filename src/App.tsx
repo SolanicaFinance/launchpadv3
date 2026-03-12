@@ -69,6 +69,7 @@ const PunchTokenDetailPage = lazyWithRetry(() => import("./pages/PunchTokenDetai
 const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
 const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"));
 const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
+const AllTokensPage = lazyWithRetry(() => import("./pages/AllTokensPage"));
 
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
