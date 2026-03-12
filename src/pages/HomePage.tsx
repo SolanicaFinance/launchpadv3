@@ -533,7 +533,7 @@ export default function HomePage() {
         {/* ═══ Just Launched ═══ */}
         <SectionDivider />
         <section className={`${CW} mx-auto px-4 py-6`}>
-          <SectionHeader icon={Rocket} title="Just Launched" linkTo="/launchpad" linkLabel="View All" />
+          <SectionHeader icon={Rocket} title="Just Launched" linkTo="/tokens" linkLabel="View All" />
           <JustLaunched />
         </section>
 
