@@ -57,7 +57,7 @@ function HeaderWalletBalanceInner() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               jsonrpc: '2.0', method: 'eth_getBalance',
-              params: [evmWallet.address, 'latest'], id: 1,
+              params: [bnbAddress, 'latest'], id: 1,
             }),
           });
           const data = await res.json();
