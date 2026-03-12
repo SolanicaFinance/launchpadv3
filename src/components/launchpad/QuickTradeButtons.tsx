@@ -214,7 +214,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
               size="sm"
               className="h-12 flex-col gap-0.5 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500"
               onClick={() => handleQuickSell(percentage, index)}
-              disabled={loadingIndex !== null || userBalance <= 0}
+              disabled={loadingIndex !== null || displayBalance <= 0}
             >
               {loadingIndex === index + 10 ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
