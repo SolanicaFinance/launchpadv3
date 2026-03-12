@@ -128,7 +128,7 @@ export default function AlphaTrackerPage() {
           <span></span>
           <span>Trader</span>
           <span>Type</span>
-          <span className="text-right">{chainConfig.nativeCurrency.symbol}</span>
+          <span className="text-right">Amount</span>
           <span className="text-right">Tokens</span>
           <span className="text-right">MCap</span>
           <span className="text-center">Status</span>
