@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Token, formatTokenAmount, formatSolAmount } from "@/hooks/useLaunchpad";
 import { useAuth } from "@/hooks/useAuth";
