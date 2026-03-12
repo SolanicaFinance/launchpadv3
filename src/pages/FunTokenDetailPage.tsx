@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { formatChange24h } from "@/lib/formatters";
 import pancakeswapBunny from "@/assets/pancakeswap-bunny.png";
 import { useParams, Link } from "react-router-dom";
 import { useFunToken } from "@/hooks/useFunToken";
