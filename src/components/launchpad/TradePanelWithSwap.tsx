@@ -48,6 +48,18 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
     }
   }, [isAuthenticated, solanaAddress, getBalance, isLoading]);
 
+  // Fetch real on-chain token balance for sells
+  useEffect(() => {
+    if (isAuthenticated && solanaAddress && token.mint_address) {
+      getTokenBalance(token.mint_address)
+        .then(bal => {
+          console.log(`[TradePanelWithSwap] On-chain token balance: ${bal}`);
+          setOnChainTokenBalance(bal);
+        })
+        .catch(() => setOnChainTokenBalance(null));
+    }
+  }, [isAuthenticated, solanaAddress, token.mint_address, getTokenBalance, isLoading]);
+
   const virtualSol = (token.virtual_sol_reserves || 30) + (token.real_sol_reserves || 0);
   const virtualToken = (token.virtual_token_reserves || 1_000_000_000) - (token.real_token_reserves || 0);
 
