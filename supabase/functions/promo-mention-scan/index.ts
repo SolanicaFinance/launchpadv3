@@ -174,7 +174,7 @@ serve(async (req) => {
     }, { onConflict: "lock_name" });
 
     // Cleanup old queue entries
-    await supabase.from("promo_mention_queue").delete().lt("created_at`, new Date(Date.now() - 3600000).toISOString());
+    await supabase.from("promo_mention_queue").delete().lt("created_at", new Date(Date.now() - 3600000).toISOString());
 
     // Search for mentions using Official X API
     const tweets = await searchMentions(X_BEARER_TOKEN);
