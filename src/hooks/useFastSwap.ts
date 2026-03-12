@@ -196,6 +196,19 @@ export function useFastSwap() {
 
       if (token.status === 'graduated') {
         result = await swapGraduated(token, amount, isBuy, slippageBps);
+
+        // Record graduated/Jupiter swap in DB (non-blocking) — same pattern as bonding curve
+        supabase.functions.invoke('launchpad-swap', {
+          body: {
+            mintAddress: token.mint_address,
+            userWallet: walletAddress,
+            amount,
+            isBuy,
+            profileId: profileId || undefined,
+            signature: result.signature,
+            mode: 'record',
+          },
+        }).catch(err => console.warn('[FastSwap] DB record for graduated swap failed (non-fatal):', err));
       } else {
         result = await swapBondingCurve(token, amount, isBuy, slippageBps);
       }

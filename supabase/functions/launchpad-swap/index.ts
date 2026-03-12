@@ -520,6 +520,7 @@ serve(async (req) => {
         tx_hash: signature,
         trader_display_name: traderDisplayName,
         trader_avatar_url: traderAvatarUrl,
+        chain: 'solana',
       });
     } catch (alphaErr) {
       console.warn("[launchpad-swap] alpha_trades insert failed (non-fatal):", alphaErr);
