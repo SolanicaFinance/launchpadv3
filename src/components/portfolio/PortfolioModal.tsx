@@ -97,33 +97,13 @@ export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
       try {
         // Fetch real on-chain balance instead of stale DB value
         let sellAmount = holding.balance;
-        try {
-          const { getTokenBalance } = await import("@/hooks/useSolanaWalletPrivy").then(() => {
-            // Can't call hooks here, use direct RPC instead
-            throw new Error("use-inline");
-          });
-        } catch {
-          // Use inline RPC call for on-chain balance
-          const { Connection, PublicKey } = await import("@solana/web3.js");
-          const { getRpcUrl } = await import("@/hooks/useSolanaWallet");
-          if (walletAddress && token.mint_address) {
-            try {
-              const conn = new Connection(getRpcUrl().url, { commitment: "confirmed" });
-              const accounts = await conn.getTokenAccountsByOwner(
-                new PublicKey(walletAddress),
-                { mint: new PublicKey(token.mint_address) }
-              );
-              if (accounts.value.length > 0) {
-                const data = accounts.value[0].account.data;
-                const raw = data.subarray(64, 72);
-                const amount = Number(raw.readBigUInt64LE(0));
-                const onChain = amount / (10 ** 6);
-                console.log(`[Portfolio] DB: ${holding.balance}, On-chain: ${onChain}`);
-                if (onChain > 0) sellAmount = onChain;
-              }
-            } catch (e) {
-              console.warn("[Portfolio] On-chain balance fetch failed:", e);
-            }
+        if (token.mint_address) {
+          try {
+            const onChain = await getTokenBalance(token.mint_address);
+            console.log(`[Portfolio] DB: ${holding.balance}, On-chain: ${onChain}`);
+            if (onChain > 0) sellAmount = onChain;
+          } catch (e) {
+            console.warn("[Portfolio] On-chain balance fetch failed:", e);
           }
         }
 
@@ -136,7 +116,7 @@ export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
         toast({ title: `Failed to sell ${token.ticker}`, description: e?.message?.slice(0, 80) || "Unknown error", variant: "destructive" });
       }
     },
-    [executeFastSwap, toast, walletAddress],
+    [executeFastSwap, toast, getTokenBalance],
   );
 
   const sellAll = useCallback(async () => {
