@@ -35,6 +35,17 @@ interface FastSwapResult {
   graduated?: boolean;
 }
 
+// Module-level cached DBC client singleton
+let cachedDbcClient: DynamicBondingCurveClient | null = null;
+let cachedDbcRpcUrl: string | null = null;
+
+function getOrCreateDbcClient(connection: Connection, rpcUrl: string): DynamicBondingCurveClient {
+  if (cachedDbcClient && cachedDbcRpcUrl === rpcUrl) return cachedDbcClient;
+  cachedDbcClient = DynamicBondingCurveClient.create(connection, 'confirmed');
+  cachedDbcRpcUrl = rpcUrl;
+  return cachedDbcClient;
+}
+
 export function useFastSwap() {
   const { signAndSendTransaction, walletAddress, getConnection } = useSolanaWalletWithPrivy();
   const { buyToken, sellToken } = useJupiterSwap();
@@ -50,7 +61,7 @@ export function useFastSwap() {
 
   /**
    * Fast bonding curve swap via Meteora DBC SDK
-   * Eagerly imported, cached blockhash, optimistic result
+   * Uses cached DBC client singleton + step-level timing
    */
   const swapBondingCurve = useCallback(async (
     token: Token,
@@ -61,8 +72,11 @@ export function useFastSwap() {
     if (!walletAddress) throw new Error('Wallet not connected');
     if (!token.dbc_pool_address) throw new Error('Token has no DBC pool address');
 
+    const t1 = performance.now();
     const connection = getConnection();
-    const client = DynamicBondingCurveClient.create(connection, 'confirmed');
+    const rpcUrl = getRpcUrl().url;
+    const client = getOrCreateDbcClient(connection, rpcUrl);
+    console.log(`[FastSwap] DBC client ready: ${Math.round(performance.now() - t1)}ms`);
 
     const poolAddress = new PublicKey(token.dbc_pool_address);
     const ownerPubkey = new PublicKey(walletAddress);
@@ -73,18 +87,20 @@ export function useFastSwap() {
 
     const minimumAmountOut = new BN(0);
 
-    // Fetch on-chain pool state for accurate reserve data
+    // Fetch on-chain pool state
+    const t2 = performance.now();
     let virtualSolReserves: number | undefined;
     let virtualTokenReserves: number | undefined;
     let poolInvalid = false;
     try {
       const poolState = await client.state.getPool(poolAddress);
+      console.log(`[FastSwap] Pool fetch: ${Math.round(performance.now() - t2)}ms`);
       if (poolState) {
-        // DBC SDK uses quoteReserve (SOL) and baseReserve (token)
         virtualSolReserves = Number(poolState.quoteReserve) / 10 ** SOL_DECIMALS;
         virtualTokenReserves = Number(poolState.baseReserve) / 10 ** TOKEN_DECIMALS;
       }
     } catch (e) {
+      console.log(`[FastSwap] Pool fetch failed: ${Math.round(performance.now() - t2)}ms`);
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes('Invalid account discriminator') || msg.includes('Account does not exist')) {
         console.warn('[FastSwap] Pool invalid/closed, falling back to Jupiter:', msg);
@@ -94,11 +110,11 @@ export function useFastSwap() {
       }
     }
 
-    // If pool is invalid (graduated/migrated), fall back to Jupiter
     if (poolInvalid) {
       return swapGraduated(token, amount, isBuy, slippageBps);
     }
 
+    const t3 = performance.now();
     const swapTx = await client.pool.swap({
       owner: ownerPubkey,
       pool: poolAddress,
@@ -107,13 +123,13 @@ export function useFastSwap() {
       swapBaseForQuote: !isBuy,
       referralTokenAccount: null,
     });
+    console.log(`[FastSwap] Build tx: ${Math.round(performance.now() - t3)}ms`);
 
-    // Sign and send — Privy handles signing + RPC send
-    // Jito dual-submit happens inside useSolanaWalletPrivy automatically
+    const t4 = performance.now();
     const { signature } = await signAndSendTransaction(swapTx);
+    console.log(`[FastSwap] Sign+send: ${Math.round(performance.now() - t4)}ms`);
 
-    // Record in DB (non-blocking, fire-and-forget)
-    // Pass current on-chain reserves so the edge function uses accurate data
+    // Record in DB (non-blocking)
     supabase.functions.invoke('launchpad-swap', {
       body: {
         mintAddress: token.mint_address,

@@ -1,5 +1,7 @@
 import { useLaunchpad, formatTokenAmount, formatSolAmount, Token } from "@/hooks/useLaunchpad";
 import { useAuth } from "@/hooks/useAuth";
+import { useChain } from "@/contexts/ChainContext";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,11 +30,16 @@ interface HoldingWithToken {
 
 export default function PanelPortfolioTab() {
   const { solanaAddress } = useAuth();
+  const { chain, chainConfig } = useChain();
+  const { address: evmAddress } = usePrivyEvmWallet();
   const { useUserHoldings, useUserTokens, useUserEarnings } = useLaunchpad();
 
-  const { data: holdings = [], isLoading: isLoadingHoldings } = useUserHoldings(solanaAddress);
-  const { data: createdTokens = [], isLoading: isLoadingCreated } = useUserTokens(solanaAddress);
-  const { data: earnings } = useUserEarnings(solanaAddress, undefined);
+  const activeAddress = chain === 'solana' ? solanaAddress : evmAddress;
+  const currencySymbol = chainConfig.nativeCurrency.symbol;
+
+  const { data: holdings = [], isLoading: isLoadingHoldings } = useUserHoldings(activeAddress);
+  const { data: createdTokens = [], isLoading: isLoadingCreated } = useUserTokens(activeAddress);
+  const { data: earnings } = useUserEarnings(activeAddress, undefined);
 
   const portfolioStats = useMemo(() => {
     const typedHoldings = holdings as HoldingWithToken[];
@@ -54,7 +61,7 @@ export default function PanelPortfolioTab() {
       <div className="grid grid-cols-3 gap-2">
         <Card className="p-3 text-center bg-white/5 border-white/10">
           <p className="text-[10px] text-muted-foreground mb-0.5">Total Value</p>
-          <p className="text-sm font-bold" style={{ color: "#4ade80" }}>{formatSolAmount(portfolioStats.totalValue)} SOL</p>
+          <p className="text-sm font-bold" style={{ color: "#4ade80" }}>{formatSolAmount(portfolioStats.totalValue)} {currencySymbol}</p>
         </Card>
         <Card className="p-3 text-center bg-white/5 border-white/10">
           <p className="text-[10px] text-muted-foreground mb-0.5">Holdings</p>
@@ -62,7 +69,7 @@ export default function PanelPortfolioTab() {
         </Card>
         <Card className="p-3 text-center bg-white/5 border-white/10">
           <p className="text-[10px] text-muted-foreground mb-0.5">Unclaimed</p>
-          <p className="text-sm font-bold text-green-500">{formatSolAmount(portfolioStats.unclaimedEarnings)} SOL</p>
+          <p className="text-sm font-bold text-green-500">{formatSolAmount(portfolioStats.unclaimedEarnings)} {currencySymbol}</p>
         </Card>
       </div>
 
@@ -102,7 +109,7 @@ export default function PanelPortfolioTab() {
                         <p className="text-sm text-muted-foreground">{formatTokenAmount(holding.balance)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatSolAmount(value)} SOL</p>
+                        <p className="font-medium">{formatSolAmount(value)} {currencySymbol}</p>
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </Card>
@@ -133,7 +140,7 @@ export default function PanelPortfolioTab() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{token.name}</p>
-                      <p className="text-sm text-muted-foreground">MC: {formatSolAmount(token.market_cap_sol)} SOL</p>
+                      <p className="text-sm text-muted-foreground">MC: {formatSolAmount(token.market_cap_sol)} {currencySymbol}</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </Card>

@@ -1,68 +1,45 @@
 
 
-## Plan: Chain-Aware Panel + Diagnose Quick Buy Speed
+## Two Issues to Fix
 
-### Issue 1: Panel shows only SOL, not chain-aware
+### 1. Trade Success Toast -- Use the Same Radix Toast Style as Announcements
 
-The Panel page header and wallet bar already switch between SOL/BNB chains. However, the **inner tabs** (Portfolio, Earnings, Launches, Wallet) are hardcoded to Solana:
+The trade success toast (line 133 in `TradePanelWithSwap.tsx`) already uses the Radix `useToast` system which renders through the styled `toast.tsx` component. The announcements, however, use **Sonner** (`toast()` from `sonner`), which has a completely different, simpler appearance.
 
-- **PanelPortfolioTab** — queries `useUserHoldings(solanaAddress)`, shows "SOL" values only
-- **PanelEarningsTab** — queries `useUserEarnings(solanaAddress)`, shows "SOL" labels, Solscan links
-- **PanelMyLaunchesTab** — shows Solscan links, SOL amounts, hardcoded to Solana
-- **PanelWalletTab** — uses `useSolanaWalletWithPrivy()` only, shows SOL balance, Solana token holdings
+**Plan:** Migrate the announcement toasts in `useAnnouncements.ts` to use the Radix `useToast` system (from `@/hooks/use-toast`) so both announcements and trade success notifications share the same professional dark glass style. Since `useAnnouncements` is a hook, it can import the `toast` function from `use-toast.ts` directly.
 
-**Changes needed:**
+Alternatively (and more practically): the trade success toast already looks professional. The user likely wants both to look the same. The simplest approach is to ensure the trade toasts use the `variant: "success"` for the green styled variant already defined in `toast.tsx`.
 
-1. **PanelPortfolioTab** — Add `useChain` hook. When BNB selected: use EVM address for queries, show "BNB" instead of "SOL", link to BscScan instead of Solscan. Stats cards should display the correct currency symbol.
+**Changes:**
+- `src/components/launchpad/TradePanelWithSwap.tsx`: Add `variant: "success"` to the trade success toast call (line 133).
 
-2. **PanelEarningsTab** — Add chain awareness. When BNB: show "BNB" labels, use BscScan links for claim tx hashes, use EVM address for earnings queries.
+### 2. Alpha Tracker Shows No Trades from the Platform
 
-3. **PanelMyLaunchesTab** — When BNB: show BscScan links for token addresses and claim signatures instead of Solscan. Show "BNB" in amounts.
+The `alpha_trades` table is never populated by any code path. The `launchpad-swap` edge function records trades into `launchpad_transactions` but never inserts into `alpha_trades`. The Alpha Tracker feed reads exclusively from `alpha_trades`.
 
-4. **PanelWalletTab** — When BNB selected: show BNB balance from `useEvmWallet()`, EVM address, BscScan links. Hide Solana-specific features (export key via Privy Solana SDK). Show EVM token holdings if available.
+**Plan:** Add an insert into `alpha_trades` inside the `launchpad-swap` edge function after every successful trade recording (both in "record" mode and in the standard swap flow). This will populate the Alpha Tracker with platform trades in real-time.
 
-5. **PanelWalletBar** — Already chain-aware (confirmed in code). No changes needed.
+**Changes:**
+- `supabase/functions/launchpad-swap/index.ts`: After recording a transaction in `launchpad_transactions`, also insert a row into `alpha_trades` with the relevant fields (wallet_address, token_mint, token_name, token_ticker, trade_type, amount_sol, amount_tokens, price_usd, tx_hash, trader_display_name, trader_avatar_url). This needs to happen in both the "record" mode block (~line 161) and the standard swap block.
 
-### Issue 2: Quick Buy taking 11+ seconds instead of <2s
+### Technical Details
 
-The console log shows `[FastSwap] Done in 11356ms`. The execution path is:
+**alpha_trades schema** (from types.ts):
+- `wallet_address`, `token_mint`, `token_name`, `token_ticker`, `trade_type`, `amount_sol`, `amount_tokens`, `price_usd`, `tx_hash`, `created_at`, `trader_display_name`, `trader_avatar_url`
 
-```text
-executeFastSwap()
-  → swapBondingCurve()
-    → DynamicBondingCurveClient.create(connection)  // new instance every call
-    → client.state.getPool(poolAddress)              // RPC call ~2-4s
-    → client.pool.swap({...})                        // builds tx ~1-2s
-    → signAndSendTransaction()                       // Privy sign ~3-5s
-      → getCachedBlockhash()                         // should be 0ms if cached
-      → privySolana.signAndSendTransaction()         // actual signing
-      → sendRawToAllEndpoints()                      // fire-and-forget Jito
-```
+**Data available in launchpad-swap:**
+- `userWallet` -> `wallet_address`
+- `token.mint_address` -> `token_mint`  
+- `token.name` -> `token_name`
+- `token.ticker` -> `token_ticker`
+- `isBuy ? "buy" : "sell"` -> `trade_type`
+- `solAmount` -> `amount_sol`
+- `tokenAmount` -> `amount_tokens`
+- `newPrice` -> can derive `price_usd` (if SOL price available, otherwise null)
+- `clientSignature` / generated signature -> `tx_hash`
+- Profile lookup for display name/avatar
 
-**Root causes and fixes:**
-
-1. **DBC Client re-created every swap** — Cache the `DynamicBondingCurveClient` instance at module level instead of creating a new one per call. This saves connection setup overhead.
-
-2. **Pool state fetch is sequential** — `client.state.getPool()` is a full RPC deserialization call. For tokens we've already fetched pool state for (e.g., from background refresh), we could skip this or run it in parallel with blockhash fetch. However, the pool state IS needed for the swap instruction. We can at minimum pre-warm the connection.
-
-3. **Privy `signAndSendTransaction` overhead** — The Privy SDK's `signAndSendTransaction` bundles signing + sending. With `showWalletUIs: false`, it should be auto-approved, but there may be iframe communication latency. This is harder to optimize but we should ensure `showWalletUIs: false` is consistently set.
-
-4. **Serialization before signing** — Line 80 calls `transaction.serialize({ requireAllSignatures: false })` BEFORE signing, then passes bytes to Privy. This is correct for Privy's API but the serialization itself shouldn't be slow.
-
-**Optimizations to implement:**
-
-- Cache `DynamicBondingCurveClient` singleton (avoid re-creation)
-- Pre-fetch pool state in parallel with blockhash if cache is stale
-- Add timing logs at each step to identify the actual bottleneck (instrumentation)
-- Ensure the Privy wallet is pre-warmed (connection established before first trade)
-
-### Implementation Summary
-
-| File | Change |
-|------|--------|
-| `PanelPortfolioTab.tsx` | Add chain context, switch currency/explorer per chain |
-| `PanelEarningsTab.tsx` | Add chain context, dynamic currency labels and explorer links |
-| `PanelMyLaunchesTab.tsx` | Chain-aware explorer links and currency display |
-| `PanelWalletTab.tsx` | Dual-mode: SOL wallet vs BNB wallet based on chain |
-| `useFastSwap.ts` | Cache DBC client singleton, add step-level timing logs |
+**Files to modify:**
+1. `src/components/launchpad/TradePanelWithSwap.tsx` -- add `variant: "success"` to trade success toast
+2. `supabase/functions/launchpad-swap/index.ts` -- insert into `alpha_trades` after each successful trade
 

@@ -1,7 +1,9 @@
 import { useState, lazy, Suspense, useEffect } from "react";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
+import { useChain } from "@/contexts/ChainContext";
 import { useExportWallet } from "@privy-io/react-auth/solana";
-import { ArrowUpRight, ArrowDownLeft, Repeat, Key, Copy, QrCode, Wallet } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Repeat, Key, Copy, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import TokenHoldingsList from "./TokenHoldingsList";
@@ -12,9 +14,25 @@ const SwapModal = lazy(() => import("./SwapModal"));
 const ReceiveDialog = lazy(() => import("./ReceiveDialog"));
 
 export default function PanelWalletTab() {
-  const { walletAddress, isWalletReady, getBalance } = useSolanaWalletWithPrivy();
-  const { exportWallet } = useExportWallet();
-  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const { chain, chainConfig } = useChain();
+  const isSolana = chain === 'solana';
+  const currencySymbol = chainConfig.nativeCurrency.symbol;
+
+  // Solana wallet
+  const { walletAddress: solWalletAddress, isWalletReady: isSolReady, getBalance: getSolBalance } = useSolanaWalletWithPrivy();
+  // EVM wallet
+  const { address: evmAddress, isReady: isEvmReady } = usePrivyEvmWallet();
+
+  let exportWalletFn: any = null;
+  try {
+    const { exportWallet } = useExportWallet();
+    exportWalletFn = exportWallet;
+  } catch { /* not available */ }
+
+  const walletAddress = isSolana ? solWalletAddress : evmAddress;
+  const isWalletReady = isSolana ? isSolReady : isEvmReady;
+
+  const [balance, setBalance] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"tokens" | "activity">("tokens");
 
   // Modals
@@ -27,18 +45,40 @@ export default function PanelWalletTab() {
 
   // Fetch balance
   useEffect(() => {
-    if (!isWalletReady) return;
+    if (!isWalletReady || !walletAddress) return;
     let cancelled = false;
+
     const fetchBal = async () => {
       try {
-        const bal = await getBalance();
-        if (!cancelled) setSolBalance(bal);
+        if (isSolana) {
+          const bal = await getSolBalance();
+          if (!cancelled) setBalance(bal);
+        } else {
+          // Fetch BNB balance via RPC
+          const rpcUrl = chainConfig.rpcUrl;
+          if (!rpcUrl) return;
+          const res = await fetch(rpcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1, method: 'eth_getBalance',
+              params: [walletAddress, 'latest'],
+            }),
+          });
+          const data = await res.json();
+          if (!cancelled && data.result) {
+            setBalance(parseInt(data.result, 16) / 1e18);
+          }
+        }
       } catch { /* ignore */ }
     };
     fetchBal();
     const interval = setInterval(fetchBal, 15_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [isWalletReady, getBalance]);
+  }, [isWalletReady, walletAddress, isSolana, getSolBalance, chainConfig.rpcUrl]);
+
+  // Reset balance on chain switch
+  useEffect(() => { setBalance(null); }, [chain]);
 
   const copyAddress = () => {
     if (!walletAddress) return;
@@ -46,14 +86,15 @@ export default function PanelWalletTab() {
     toast({ title: "Copied", description: "Wallet address copied" });
   };
 
-  const handleSendToken = (mint: string, symbol: string, balance: number, decimals: number) => {
-    setSendPreset({ mint, symbol, balance, decimals });
+  const handleSendToken = (mint: string, symbol: string, bal: number, decimals: number) => {
+    setSendPreset({ mint, symbol, balance: bal, decimals });
     setSendOpen(true);
   };
 
   const handleExportKey = async () => {
+    if (!exportWalletFn) return;
     try {
-      await exportWallet({ address: walletAddress || undefined });
+      await exportWalletFn({ address: solWalletAddress || undefined });
     } catch (e: any) {
       toast({ title: "Export failed", description: e?.message, variant: "destructive" });
     }
@@ -68,6 +109,12 @@ export default function PanelWalletTab() {
     );
   }
 
+  const displayAddress = walletAddress
+    ? isSolana
+      ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`
+      : `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`
+    : '';
+
   return (
     <div className="space-y-5 pb-8">
       {/* Hero Balance Card */}
@@ -78,7 +125,6 @@ export default function PanelWalletTab() {
           border: "1px solid hsl(var(--border) / 0.4)",
         }}
       >
-        {/* Background accent glow */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.04]"
           style={{ background: "radial-gradient(ellipse at 50% 0%, hsl(var(--primary)), transparent 70%)" }}
@@ -86,26 +132,30 @@ export default function PanelWalletTab() {
 
         <p className="text-[11px] text-muted-foreground font-medium mb-1 relative z-10">TOTAL BALANCE</p>
         <h2 className="text-4xl font-bold text-foreground font-mono relative z-10 tracking-tight">
-          {solBalance !== null ? solBalance.toFixed(4) : "—"}
-          <span className="text-lg text-muted-foreground ml-2">SOL</span>
+          {balance !== null ? balance.toFixed(4) : "—"}
+          <span className="text-lg text-muted-foreground ml-2">{currencySymbol}</span>
         </h2>
 
-        {/* Address pill */}
         <button
           onClick={copyAddress}
           className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 hover:bg-muted transition-colors text-[11px] font-mono text-muted-foreground hover:text-foreground relative z-10"
         >
-          {walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}
+          {displayAddress}
           <Copy className="h-3 w-3" />
         </button>
       </div>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-4 gap-2">
-        <ActionButton icon={<ArrowUpRight className="h-4 w-4" />} label="Send" onClick={() => { setSendPreset({ mint: "SOL", symbol: "SOL", balance: solBalance || 0, decimals: 9 }); setSendOpen(true); }} />
+      <div className={`grid ${isSolana ? 'grid-cols-4' : 'grid-cols-3'} gap-2`}>
+        <ActionButton icon={<ArrowUpRight className="h-4 w-4" />} label="Send" onClick={() => {
+          setSendPreset({ mint: isSolana ? "SOL" : "BNB", symbol: currencySymbol, balance: balance || 0, decimals: isSolana ? 9 : 18 });
+          setSendOpen(true);
+        }} />
         <ActionButton icon={<ArrowDownLeft className="h-4 w-4" />} label="Receive" onClick={() => setReceiveOpen(true)} />
         <ActionButton icon={<Repeat className="h-4 w-4" />} label="Swap" onClick={() => setSwapOpen(true)} />
-        <ActionButton icon={<Key className="h-4 w-4" />} label="Export" onClick={handleExportKey} />
+        {isSolana && exportWalletFn && (
+          <ActionButton icon={<Key className="h-4 w-4" />} label="Export" onClick={handleExportKey} />
+        )}
       </div>
 
       {/* Tokens / Activity tabs */}
@@ -125,7 +175,7 @@ export default function PanelWalletTab() {
       </div>
 
       {activeTab === "tokens" ? (
-        <TokenHoldingsList walletAddress={walletAddress} solBalance={solBalance} onSendToken={handleSendToken} />
+        <TokenHoldingsList walletAddress={walletAddress} solBalance={isSolana ? balance : null} onSendToken={handleSendToken} />
       ) : (
         <WalletTransactionHistory walletAddress={walletAddress} />
       )}

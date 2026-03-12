@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useChain } from "@/contexts/ChainContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,9 @@ const CREATOR_SHARE = 0.3;
 
 export default function PanelMyLaunchesTab() {
   const { user, solanaAddress } = useAuth();
+  const { chainConfig } = useChain();
+  const currencySymbol = chainConfig.nativeCurrency.symbol;
+  const explorerUrl = chainConfig.explorerUrl;
   const twitterUsername = user?.twitter?.username;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -180,7 +184,7 @@ export default function PanelMyLaunchesTab() {
 
       toast({
         title: "✅ Fees claimed!",
-        description: `${result.claimedAmount?.toFixed(4)} SOL sent to your embedded wallet`,
+        description: `${result.claimedAmount?.toFixed(4)} ${currencySymbol} sent to your embedded wallet`,
       });
 
       // Refetch data
@@ -248,19 +252,19 @@ export default function PanelMyLaunchesTab() {
             <p className="text-lg font-bold font-mono" style={{ color: "#4ade80" }}>
               {totalEarned.toFixed(4)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Your Share (SOL)</p>
+            <p className="text-[10px] text-muted-foreground">Your Share ({currencySymbol})</p>
           </Card>
           <Card className="p-3 bg-white/5 border-white/10 text-center">
             <p className="text-lg font-bold font-mono" style={{ color: "#4ade80" }}>
               {totalClaimed.toFixed(4)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Total Claimed (SOL)</p>
+            <p className="text-[10px] text-muted-foreground">Total Claimed ({currencySymbol})</p>
           </Card>
           <Card className="p-3 bg-white/5 border-white/10 text-center">
             <p className="text-lg font-bold font-mono text-yellow-400">
               {totalUnclaimed.toFixed(4)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Unclaimed (SOL)</p>
+            <p className="text-[10px] text-muted-foreground">Unclaimed ({currencySymbol})</p>
           </Card>
         </div>
       )}
@@ -278,7 +282,7 @@ export default function PanelMyLaunchesTab() {
 
       {totalUnclaimed > 0 && totalUnclaimed < MIN_CLAIM_SOL && (
         <p className="text-xs text-muted-foreground text-center font-mono">
-          Minimum claim: {MIN_CLAIM_SOL} SOL. Current unclaimed: {totalUnclaimed.toFixed(4)} SOL
+          Minimum claim: {MIN_CLAIM_SOL} {currencySymbol}. Current unclaimed: {totalUnclaimed.toFixed(4)} {currencySymbol}
         </p>
       )}
 
@@ -344,10 +348,10 @@ export default function PanelMyLaunchesTab() {
                     {token.name} <span className="text-muted-foreground">${token.ticker}</span>
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{earned.toFixed(4)} SOL earned</span>
+                    <span>{earned.toFixed(4)} {currencySymbol} earned</span>
                     {token.mint_address && (
                       <a
-                        href={`https://solscan.io/token/${token.mint_address}`}
+                        href={`${explorerUrl}/token/${token.mint_address}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-0.5 hover:text-foreground"
@@ -379,6 +383,9 @@ export default function PanelMyLaunchesTab() {
 }
 
 function RecentClaimsFeed() {
+  const { chainConfig } = useChain();
+  const currencySymbol = chainConfig.nativeCurrency.symbol;
+  const explorerUrl = chainConfig.explorerUrl;
   const { data: claims = [], isLoading } = useQuery({
     queryKey: ["recent-creator-claims"],
     queryFn: async () => {
@@ -479,7 +486,7 @@ function RecentClaimsFeed() {
               )}
               <span className="text-muted-foreground">claimed</span>
               <span className="font-mono font-bold text-foreground">
-                {claim.amount_sol?.toFixed(4)} SOL
+                {claim.amount_sol?.toFixed(4)} {currencySymbol}
               </span>
               {claim.token && (
                 <span className="text-muted-foreground truncate">
@@ -493,7 +500,7 @@ function RecentClaimsFeed() {
               </span>
               {claim.signature && (
                 <a
-                  href={`https://solscan.io/tx/${claim.signature}`}
+                  href={`${explorerUrl}/tx/${claim.signature}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-foreground"
