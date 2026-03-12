@@ -150,7 +150,8 @@ Deno.serve(async (req) => {
       (deployerKey.startsWith("0x") ? deployerKey : `0x${deployerKey}`) as `0x${string}`
     );
 
-    const BSC_RPC = "https://bsc-dataseed.binance.org";
+    const ALCHEMY_KEY = Deno.env.get("ALCHEMY_BSC_API_KEY");
+    const BSC_RPC = ALCHEMY_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "https://bsc-dataseed.binance.org";
     const publicClient = createPublicClient({ chain: bsc, transport: http(BSC_RPC) });
     const walletClient = createWalletClient({ account, chain: bsc, transport: http(BSC_RPC) });
 

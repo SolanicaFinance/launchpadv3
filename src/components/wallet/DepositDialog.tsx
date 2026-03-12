@@ -13,23 +13,7 @@ interface DepositDialogProps {
   getBalance?: () => Promise<number>;
 }
 
-async function fetchBnbBalance(address: string): Promise<number> {
-  const res = await fetch("https://bsc-dataseed.binance.org", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      method: "eth_getBalance",
-      params: [address, "latest"],
-      id: 1,
-    }),
-  });
-  const data = await res.json();
-  if (data?.result) {
-    return Number(BigInt(data.result)) / 1e18;
-  }
-  return 0;
-}
+import { fetchBnbBalance } from "@/lib/bscRpc";
 
 export function DepositDialog({ open, onOpenChange, address, chain, getBalance }: DepositDialogProps) {
   const { toast } = useToast();

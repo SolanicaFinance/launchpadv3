@@ -54,7 +54,7 @@ export const CHAIN_CONFIGS: Record<SupportedChain, ChainConfig> = {
     explorerUrl: 'https://bscscan.com',
     chainId: 56,
     isEnabled: true,
-    rpcUrl: 'https://bsc-dataseed.binance.org',
+    rpcUrl: `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`,
   },
 };
 

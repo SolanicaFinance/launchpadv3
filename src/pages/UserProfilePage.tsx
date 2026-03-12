@@ -19,16 +19,7 @@ import { cn } from "@/lib/utils";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 
-async function fetchBnbBalance(address: string): Promise<number> {
-  const res = await fetch("https://bsc-dataseed.binance.org", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [address, "latest"], id: 1 }),
-  });
-  const data = await res.json();
-  if (data?.result) return Number(BigInt(data.result)) / 1e18;
-  return 0;
-}
+import { fetchBnbBalance } from "@/lib/bscRpc";
 
 export default function UserProfilePage() {
   const { identifier } = useParams<{ identifier: string }>();

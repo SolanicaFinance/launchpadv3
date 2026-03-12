@@ -63,7 +63,8 @@ const ERC20_ABI = parseAbi([
 
 const OPENOCEAN_API = "https://open-api.openocean.finance/v4/bsc";
 const BNB_NATIVE = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-const BSC_RPC = "https://bsc-dataseed.binance.org";
+const ALCHEMY_KEY = Deno.env.get("ALCHEMY_BSC_API_KEY");
+const BSC_RPC = ALCHEMY_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "https://bsc-dataseed.binance.org";
 
 interface SwapRequest {
   tokenAddress: string;

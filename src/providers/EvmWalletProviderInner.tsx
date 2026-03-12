@@ -13,7 +13,7 @@ const config = getDefaultConfig({
   transports: {
     [base.id]: http('https://mainnet.base.org'),
     [mainnet.id]: http('https://eth.llamarpc.com'),
-    [bsc.id]: http('https://bsc-dataseed.binance.org'),
+    [bsc.id]: http(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`),
   },
   ssr: false,
 });
