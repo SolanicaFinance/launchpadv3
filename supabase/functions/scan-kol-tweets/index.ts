@@ -80,12 +80,15 @@ Deno.serve(async (req) => {
     if (!apiKey) throw new Error("TWITTERAPI_IO_KEY not configured");
 
     // Fetch active KOLs
+    // Only fetch KOLs not scanned in the last 30 minutes (reduces redundant calls)
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: kols, error: kolErr } = await supabase
       .from("kol_accounts")
       .select("*")
       .eq("is_active", true)
+      .or(`last_scanned_at.is.null,last_scanned_at.lt.${thirtyMinAgo}`)
       .order("last_scanned_at", { ascending: true, nullsFirst: true })
-      .limit(20);
+      .limit(10);
 
     if (kolErr) throw kolErr;
     if (!kols || kols.length === 0) {
