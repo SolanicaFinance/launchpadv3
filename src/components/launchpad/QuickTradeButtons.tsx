@@ -20,6 +20,7 @@ const QUICK_SELL_PERCENTAGES = [25, 50, 75, 100];
 export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: QuickTradeButtonsProps) {
   const { isAuthenticated, login, solanaAddress } = useAuth();
   const { executeRealSwap } = useRealSwap();
+  const { getTokenBalance } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
