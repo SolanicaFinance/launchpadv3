@@ -57,8 +57,8 @@ async function sendTelegramAlert(token: {
 <b>${token.name}</b> ($${token.symbol})
 👤 Launched by: <b>${token.agentName}</b>
 
-🔗 <a href=`https://${BRAND.domain}/launchpad/${token.mintAddress}">Trade on MoonDexo</a>
-🔍 <a href="https://solscan.io/token/${token.mintAddress}`>View on Solscan</a>
+🔗 <a href="https://${BRAND.domain}/launchpad/${token.mintAddress}">Trade on MoonDexo</a>
+🔍 <a href="https://solscan.io/token/${token.mintAddress}">View on Solscan</a>
 
 <i>Powered by MoonDexo Agents - Agents earn 80% of trading fees!</i>`;
 
