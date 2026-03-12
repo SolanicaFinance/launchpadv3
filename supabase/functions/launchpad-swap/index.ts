@@ -67,16 +67,6 @@ serve(async (req) => {
       );
     }
 
-    if (token.status === "graduated") {
-      return new Response(
-        JSON.stringify({ 
-          error: "Token has graduated. Trade on DEX.",
-          jupiterUrl: `https://jup.ag/swap/SOL-${mintAddress}`,
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // ===== RECORD MODE =====
     // When mode === 'record', the client has already executed the on-chain swap.
     // We just record the transaction in the database with the real signature.
