@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { formatChange24h } from "@/lib/formatters";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { KingOfTheHill } from "@/components/launchpad/KingOfTheHill";
 import { JustLaunched } from "@/components/launchpad/JustLaunched";
