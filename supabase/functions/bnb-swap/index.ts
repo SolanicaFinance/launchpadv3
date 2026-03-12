@@ -435,6 +435,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log(`[bnb-swap] Resolved wallet: ${walletAddress} (id: ${walletId}), frontend wallet: ${body.userWallet}`);
+
     const publicClient = createPublicClient({ chain: bsc, transport: http(BSC_RPC) });
     const slippage = body.slippage ?? 3;
     const portalAddress = Deno.env.get("BNB_PORTAL_ADDRESS") || DEFAULT_PORTAL_ADDRESS;
@@ -442,13 +444,35 @@ Deno.serve(async (req) => {
     // Resolve route
     const { route, graduated } = await resolveTokenRoute(body.tokenAddress, publicClient, portalAddress);
 
-    // Balance check for buys
+    // Balance check for buys — check the frontend-provided wallet too in case resolved address differs
     if (body.action === "buy") {
-      const balance = await publicClient.getBalance({ address: walletAddress as `0x${string}` });
+      const resolvedBalance = await publicClient.getBalance({ address: walletAddress as `0x${string}` });
+      const frontendAddr = body.userWallet?.toLowerCase();
+      const resolvedAddr = walletAddress?.toLowerCase();
+      
+      // If resolved address differs from frontend, use frontend address for balance (it's what has funds)
+      let balance = resolvedBalance;
+      let effectiveAddress = walletAddress;
+      if (frontendAddr && frontendAddr !== resolvedAddr && resolvedBalance === 0n) {
+        console.log(`[bnb-swap] Resolved wallet has 0 balance, checking frontend wallet ${body.userWallet}`);
+        const frontendBalance = await publicClient.getBalance({ address: body.userWallet as `0x${string}` });
+        if (frontendBalance > resolvedBalance) {
+          balance = frontendBalance;
+          effectiveAddress = body.userWallet;
+          // The resolved walletId is still correct for signing — the address mismatch likely means
+          // the profile DB is stale. Update it.
+          console.log(`[bnb-swap] Frontend wallet has balance: ${formatEther(frontendBalance)} BNB. Updating profile.`);
+          await supabase
+            .from("profiles")
+            .update({ evm_wallet_address: body.userWallet })
+            .eq("evm_wallet_address", walletAddress);
+        }
+      }
+
       const bnbAmount = parseEther(body.amount);
       if (balance < bnbAmount + parseEther("0.002")) {
         return new Response(
-          JSON.stringify({ error: `Insufficient BNB. Balance: ${formatEther(balance)}` }),
+          JSON.stringify({ error: `Insufficient BNB. Balance: ${formatEther(balance)}`, resolvedWallet: walletAddress, frontendWallet: body.userWallet }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
