@@ -37,8 +37,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/lightweight-charts')) return 'vendor-lwcharts';
           if (id.includes('node_modules/bn.js') || id.includes('node_modules/buffer') || id.includes('node_modules/bs58')) return 'vendor-crypto-utils';
           // @phosphor-icons kept in main bundle — used across 37+ files
-          // viem + wagmi + rainbowkit share circular deps — MUST stay in same chunk
-          if (id.includes('node_modules/viem') || id.includes('node_modules/@rainbow-me') || id.includes('node_modules/wagmi')) return 'vendor-evm';
+          // viem + wagmi share circular deps — MUST stay in same chunk
+          if (id.includes('node_modules/viem') || id.includes('node_modules/wagmi')) return 'vendor-evm';
         },
       },
     },

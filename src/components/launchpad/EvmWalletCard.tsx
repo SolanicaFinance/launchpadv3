@@ -1,7 +1,6 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet, ExternalLink, AlertCircle, Copy, Check } from 'lucide-react';
+import { Wallet, ExternalLink, AlertCircle, Copy, Check, LogOut } from 'lucide-react';
 import { useEvmWallet } from '@/hooks/useEvmWallet';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +14,7 @@ export function EvmWalletCard() {
     isOnBase, 
     switchToBase,
     connect,
+    disconnect,
     isBalanceLoading 
   } = useEvmWallet();
   
@@ -42,17 +42,13 @@ export function EvmWalletCard() {
             <p className="text-sm text-muted-foreground">
               Connect your wallet to launch tokens on Base
             </p>
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <Button 
-                  onClick={openConnectModal}
-                  className="w-full bg-blue-500 hover:bg-blue-600"
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  Connect Wallet
-                </Button>
-              )}
-            </ConnectButton.Custom>
+            <Button 
+              onClick={connect}
+              className="w-full bg-blue-500 hover:bg-blue-600"
+            >
+              <Wallet className="mr-2 h-4 w-4" />
+              Connect Wallet
+            </Button>
           </div>
         ) : (
           <>
@@ -116,19 +112,15 @@ export function EvmWalletCard() {
               </div>
             </div>
 
-            {/* RainbowKit Account Button for disconnect/switch */}
-            <ConnectButton.Custom>
-              {({ openAccountModal }) => (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={openAccountModal}
-                  className="w-full"
-                >
-                  Manage Wallet
-                </Button>
-              )}
-            </ConnectButton.Custom>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => disconnect()}
+              className="w-full"
+            >
+              <LogOut className="mr-2 h-3.5 w-3.5" />
+              Disconnect Wallet
+            </Button>
           </>
         )}
       </CardContent>

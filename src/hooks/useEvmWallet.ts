@@ -1,7 +1,7 @@
 import { useAccount, useBalance, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
 import { base, bsc } from 'wagmi/chains';
 import { formatEther } from 'viem';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { usePrivy } from '@privy-io/react-auth';
 
 export interface EvmWalletState {
   address: string | undefined;
@@ -18,7 +18,7 @@ export function useEvmWallet() {
   const chainId = useChainId();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
-  const { openConnectModal } = useConnectModal();
+  const { login, logout } = usePrivy();
 
   const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
     address,
@@ -45,9 +45,7 @@ export function useEvmWallet() {
   };
 
   const connect = () => {
-    if (openConnectModal) {
-      openConnectModal();
-    }
+    login();
   };
 
   const shortAddress = address 
@@ -67,6 +65,7 @@ export function useEvmWallet() {
     isOnBnb,
     connect,
     disconnect,
+    logout,
     switchToBase,
     switchToBnb,
   };
