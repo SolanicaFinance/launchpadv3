@@ -54,10 +54,12 @@ async function getAuthorizationSignature(url: string, body: Record<string, unkno
   const serializedPayload = canonicalize(payload) as string;
   const serializedPayloadBuffer = new TextEncoder().encode(serializedPayload);
 
-  console.log("[privy-auth] Payload (first 200 chars):", serializedPayload.substring(0, 200));
+  console.log("[privy-auth] Payload length:", serializedPayload.length, "URL:", url);
 
   // Strip wallet-auth: prefix (per Privy docs)
   const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
+
+  console.log("[privy-auth] Key prefix (first 20 chars):", privateKeyAsString.substring(0, 20) + "...");
 
   let privateKey: ReturnType<typeof createPrivateKey>;
   try {
@@ -67,7 +69,9 @@ async function getAuthorizationSignature(url: string, body: Record<string, unkno
       : `-----BEGIN PRIVATE KEY-----\n${privateKeyAsString}\n-----END PRIVATE KEY-----`;
 
     privateKey = createPrivateKey({ key: privateKeyPem, format: "pem" });
-  } catch {
+    console.log("[privy-auth] Key loaded via PEM, type:", privateKey.type, "asymmetricKeyType:", privateKey.asymmetricKeyType);
+  } catch (pemErr) {
+    console.log("[privy-auth] PEM parse failed, trying DER:", (pemErr as Error).message);
     // Fallback: some environments store the key as raw base64 PKCS8 DER bytes.
     const normalized = privateKeyAsString.replace(/-/g, "+").replace(/_/g, "/");
     const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
@@ -80,12 +84,17 @@ async function getAuthorizationSignature(url: string, body: Record<string, unkno
       format: "der",
       type: "pkcs8",
     });
+    console.log("[privy-auth] Key loaded via DER, type:", privateKey.type, "asymmetricKeyType:", privateKey.asymmetricKeyType);
   }
 
-  const signatureBuffer = nodeSign("sha256", serializedPayloadBuffer, privateKey);
+  // Explicitly request DER-encoded ECDSA signature (Privy expects DER format)
+  const signatureBuffer = nodeSign("sha256", serializedPayloadBuffer, {
+    key: privateKey,
+    dsaEncoding: "der",
+  });
   const signature = signatureBuffer.toString("base64");
 
-  console.log("[privy-auth] Signature generated, length:", signature.length);
+  console.log("[privy-auth] Signature generated, length:", signature.length, "first 20:", signature.substring(0, 20));
   return signature;
 }
 
