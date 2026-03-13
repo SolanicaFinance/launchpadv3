@@ -58,33 +58,59 @@ function HeaderWalletBalanceInner() {
     fetchProfile();
   }, [embeddedAddress, evmAddress, settingsOpen]);
 
+  const [balanceLoading, setBalanceLoading] = useState(true);
+
   useEffect(() => {
     if (isBnb) {
       const bnbAddress = evmAddress;
-      if (!bnbAddress) { setBalance(null); return; }
+      if (!bnbAddress) { setBalance(null); setBalanceLoading(false); return; }
       let cancelled = false;
+      setBalanceLoading(true);
       const fetchBnbBal = async () => {
         try {
           const bal = await fetchBnbBalanceRpc(bnbAddress);
           if (!cancelled) {
             setBalance(bal);
+            setBalanceLoading(false);
           }
-        } catch (e) { console.warn("BNB balance fetch failed:", e); }
+        } catch (e) { console.warn("BNB balance fetch failed:", e); if (!cancelled) setBalanceLoading(false); }
       };
       fetchBnbBal();
-      const interval = setInterval(fetchBnbBal, 30000);
+      const interval = setInterval(fetchBnbBal, 15000);
       return () => { cancelled = true; clearInterval(interval); };
     } else {
-      if (!embeddedAddress) return;
+      if (!embeddedAddress) { setBalanceLoading(false); return; }
       let cancelled = false;
-      const fetchBal = async () => {
+      setBalanceLoading(true);
+
+      // Fast path: use edge function for quick server-side balance
+      const fetchViaEdge = async () => {
+        try {
+          const { data } = await supabase.functions.invoke("fetch-sol-balances", {
+            body: { wallets: [embeddedAddress] },
+          });
+          if (!cancelled && data?.balances?.[embeddedAddress] !== undefined) {
+            setBalance(data.balances[embeddedAddress]);
+            setBalanceLoading(false);
+          }
+        } catch (e) {
+          console.warn("Edge balance fetch failed, falling back to RPC:", e);
+        }
+      };
+
+      // Also fetch via RPC as backup / refresh
+      const fetchViaRpc = async () => {
         try {
           const bal = await getBalance();
-          if (!cancelled) setBalance(bal);
-        } catch (e) { console.warn("Header balance fetch failed:", e); }
+          if (!cancelled) { setBalance(bal); setBalanceLoading(false); }
+        } catch (e) { console.warn("Header RPC balance fetch failed:", e); if (!cancelled) setBalanceLoading(false); }
       };
-      fetchBal();
-      const interval = setInterval(fetchBal, 30000);
+
+      // Race: edge function (fast) + RPC (accurate)
+      fetchViaEdge();
+      fetchViaRpc();
+
+      const interval = setInterval(fetchViaRpc, 15000);
       return () => { cancelled = true; clearInterval(interval); };
     }
   }, [embeddedAddress, getBalance, chain, evmWallet.isConnected, evmWallet.address, privyEvm.address]);
