@@ -48,11 +48,11 @@ async function fetchUserTweets(
   return tweets;
 }
 
-function checkPostContent(text: string): { hasMoon: boolean; hasMoondexo: boolean } {
+function checkPostContent(text: string): { hasMoon: boolean; hasSaturn: boolean } {
   const lower = text.toLowerCase();
   const hasMoon = lower.includes("$moon");
-  const hasMoondexo = lower.includes("@moondexo");
-  return { hasMoon, hasMoondexo };
+  const hasSaturn = lower.includes("@saturntrade");
+  return { hasMoon, hasSaturn };
 }
 
 serve(async (req) => {

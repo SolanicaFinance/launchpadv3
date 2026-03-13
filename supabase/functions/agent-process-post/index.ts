@@ -1604,7 +1604,7 @@ export async function processLaunchPost(
           mint_address: mintAddress,
           name: cleanName,
           ticker: cleanSymbol,
-          description: parsed.description || `${cleanName} - Launched via MoonDexo`,
+          description: parsed.description || `${cleanName} - Launched via Saturn`,
           image_url: finalImageUrl,
           website_url: websiteForOnChain || communityUrl,
           twitter_url: twitterForOnChain || postUrl,
