@@ -399,7 +399,7 @@ export default function FollowerScanPage() {
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="moondexo"
+                  placeholder="saturntrade"
                 />
               </div>
               <Button onClick={startScan} disabled={scanning || !username}>
