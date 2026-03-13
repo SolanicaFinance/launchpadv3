@@ -309,7 +309,9 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
               });
               // Optimistic balance set to flip button to "Sell 100%" instantly
               queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
-              queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+              setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+              }, 8000);
             }
           })
           .catch((err: any) => {
@@ -357,7 +359,9 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           });
           // Optimistic balance set to flip button to "Sell 100%" instantly
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
-          queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+          }, 8000);
         }
       } catch (err: any) {
         console.error("[PulseQuickBuy] swap failed:", err);
@@ -408,7 +412,9 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           });
           // Optimistic: set balance to 0 so button flips back to Buy
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 0);
-          queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
+          }, 8000);
         }
       } catch (err: any) {
         console.error("[PulseQuickSell] sell failed:", err);
