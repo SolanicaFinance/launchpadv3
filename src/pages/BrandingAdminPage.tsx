@@ -176,7 +176,7 @@ export default function BrandingAdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="forumName">Forum Name</Label>
-                  <Input id="forumName" value={form.forumName || ""} onChange={(e) => set("forumName", e.target.value)} placeholder="e.g. MoonDexo Forum" />
+                  <Input id="forumName" value={form.forumName || ""} onChange={(e) => set("forumName", e.target.value)} placeholder="e.g. Saturn Forum" />
                 </div>
                 <div>
                   <Label htmlFor="agentBrandName">Agent Brand Name</Label>
