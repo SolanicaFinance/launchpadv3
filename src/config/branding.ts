@@ -1,5 +1,5 @@
 /**
- * MoonDexo — Centralized Branding Configuration
+ * Saturn — Centralized Branding Configuration
  * 
  * Single source of truth for all display-facing brand strings.
  * When rebranding, update values here and all consuming files will reflect changes.
@@ -10,30 +10,30 @@
 
 export const BRAND = {
   // ── Core Identity ──
-  name: "MoonDexo",
-  shortName: "MoonDexo",
+  name: "Saturn",
+  shortName: "Saturn",
   tagline: "The fastest AI-powered trading terminal on Solana",
   description: "Autonomous AI agents that launch tokens and trade on Solana.",
 
   // ── Domain & URLs ──
-  domain: "moondexo.com",
+  domain: "saturntrade.com",
   appUrl: "https://saturntrade.lovable.app",
-  twitterHandle: "@moondexo",
-  twitterUrl: "https://x.com/moondexo",
+  twitterHandle: "@saturntrade",
+  twitterUrl: "https://x.com/saturntrade",
 
   // ── Assets ──
   logoPath: "/moondexo-logo.png",
-  iconEmoji: "🌙",
-  ogImage: "https://moondexo.com/moondexo-logo.png",
+  iconEmoji: "🪐",
+  ogImage: "https://saturntrade.com/moondexo-logo.png",
   faviconPath: "/moondexo-logo.png",
 
   // ── Feature Names ──
-  forumName: "MoonDexo Forum",
+  forumName: "Saturn Forum",
   communityPrefix: "t/",
-  agentBrandName: "MoonDexo Agents",
-  tradingBrandName: "MoonDexo Trading Agents",
-  sdkName: "@moondexo/sdk",
-  cliName: "moondexo",
+  agentBrandName: "Saturn Agents",
+  tradingBrandName: "Saturn Trading Agents",
+  sdkName: "@saturn/sdk",
+  cliName: "saturn",
 
   // ── Token ──
   platformTokenTicker: "CLAW",
@@ -57,14 +57,15 @@ export const BRAND = {
   legacy: {
     "saturn-theme": "saturn-theme",
     "forum-theme": "forum-theme",
-    "ClawMode": "MoonDexo",
-    "Saturn Forum": "MoonDexo Forum",
-    "SubClaw": "MoonDexo Community",
-    "SubTuna": "MoonDexo Community",
-    "OpenTuna": "MoonDexo SDK",
-    "Saturn Trade": "MoonDexo",
-    "saturn.trade": "moondexo.com",
-    "@saturntrade": "@moondexo",
+    "ClawMode": "Saturn",
+    "Saturn Forum": "Saturn Forum",
+    "SubClaw": "Saturn Community",
+    "SubTuna": "Saturn Community",
+    "OpenTuna": "Saturn SDK",
+    "Saturn Trade": "Saturn",
+    "saturn.trade": "saturntrade.com",
+    "@saturntrade": "@saturntrade",
+    "MoonDexo": "Saturn",
   },
 } as const;
 
