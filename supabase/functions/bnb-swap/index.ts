@@ -218,7 +218,7 @@ async function executePancakeSwapBuy(
     to: PANCAKE_ROUTER,
     data: callData,
     value: numberToHex(bnbAmount),
-    gas: numberToHex(350000n),
+    gas_limit: numberToHex(350000n),
   });
 
   return { txHash, estimatedOutput: amountOutMin.toString() };
@@ -290,7 +290,7 @@ async function executePancakeSwapSell(
   const txHash = await evmSendTransaction(walletId, {
     to: PANCAKE_ROUTER,
     data: callData,
-    gas: numberToHex(350000n),
+    gas_limit: numberToHex(350000n),
   });
 
   return { txHash, estimatedOutput: formatEther(amountOutMin) };
@@ -312,7 +312,7 @@ async function executeFourMemeBuy(
     to: FOURMEME_TOKEN_MANAGER,
     data: callData,
     value: numberToHex(bnbAmount),
-    gas: numberToHex(300000n),
+    gas_limit: numberToHex(300000n),
   });
 }
 

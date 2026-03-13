@@ -281,7 +281,7 @@ export async function signTransaction(
  */
 export async function evmSendTransaction(
   walletId: string,
-  txParams: { to: string; data?: string; value?: string; gas?: string },
+  txParams: { to: string; data?: string; value?: string; gas_limit?: string },
   caip2 = "eip155:56"
 ): Promise<string> {
   const url = `https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
