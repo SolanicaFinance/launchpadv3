@@ -177,16 +177,16 @@ export function useSolanaWalletWithPrivy() {
       const connection = getConnection();
       const owner = new PublicKey(walletAddress);
       const mint = new PublicKey(mintAddress);
-      const accounts = await connection.getTokenAccountsByOwner(owner, { mint });
+      const accounts = await connection.getParsedTokenAccountsByOwner(owner, { mint });
       if (accounts.value.length === 0) return 0;
-      // SPL token account data: amount is at offset 64, 8 bytes LE uint64
-      const data = accounts.value[0].account.data;
-      const raw = data.subarray(64, 72);
-      const amount = Number(raw.readBigUInt64LE(0));
-      // Default 6 decimals for SPL tokens
-      const decimals = 6;
-      const balance = amount / (10 ** decimals);
-      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… on-chain: ${balance}`);
+
+      // Sum all token accounts for this mint (ATA + auxiliary accounts)
+      const balance = accounts.value.reduce((sum, account) => {
+        const uiAmount = (account.account.data as any)?.parsed?.info?.tokenAmount?.uiAmount;
+        return sum + (typeof uiAmount === "number" ? uiAmount : 0);
+      }, 0);
+
+      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… on-chain (summed): ${balance}`);
       return balance;
     } catch (err) {
       console.error("[getTokenBalance] Error:", err);

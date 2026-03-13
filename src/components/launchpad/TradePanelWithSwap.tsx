@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -50,17 +50,40 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
     }
   }, [isAuthenticated, solanaAddress, getBalance, isLoading]);
 
-  // Fetch real on-chain token balance for sells
-  useEffect(() => {
-    if (isAuthenticated && solanaAddress && token.mint_address) {
-      getTokenBalance(token.mint_address)
-        .then(bal => {
-          console.log(`[TradePanelWithSwap] On-chain token balance: ${bal}`);
-          setOnChainTokenBalance(bal);
-        })
-        .catch(() => setOnChainTokenBalance(null));
+  // Fetch and keep refreshing real on-chain token balance for sells
+  const refreshTokenBalance = useCallback(async () => {
+    if (!isAuthenticated || !solanaAddress || !token.mint_address) return;
+    try {
+      const bal = await getTokenBalance(token.mint_address);
+      console.log(`[TradePanelWithSwap] On-chain token balance: ${bal}`);
+      setOnChainTokenBalance(bal);
+    } catch {
+      // Keep previous known value on transient RPC errors
     }
-  }, [isAuthenticated, solanaAddress, token.mint_address, getTokenBalance, isLoading]);
+  }, [isAuthenticated, solanaAddress, token.mint_address, getTokenBalance]);
+
+  useEffect(() => {
+    void refreshTokenBalance();
+  }, [refreshTokenBalance, isLoading, tradeType]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !solanaAddress || !token.mint_address) return;
+
+    const interval = window.setInterval(() => {
+      void refreshTokenBalance();
+    }, 3000);
+
+    const onFocus = () => {
+      void refreshTokenBalance();
+    };
+
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [isAuthenticated, solanaAddress, token.mint_address, refreshTokenBalance]);
 
   const virtualSol = (token.virtual_sol_reserves || 30) + (token.real_sol_reserves || 0);
   const virtualToken = (token.virtual_token_reserves || 1_000_000_000) - (token.real_token_reserves || 0);
@@ -136,6 +159,9 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
       setAmount('');
       setSelectedPreset(null);
       getBalance().then(setSolBalance).catch(() => {});
+      void refreshTokenBalance();
+      window.setTimeout(() => void refreshTokenBalance(), 1500);
+      window.setTimeout(() => void refreshTokenBalance(), 5000);
 
       // Show profit card modal
       setProfitCardData({
