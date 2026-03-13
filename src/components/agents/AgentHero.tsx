@@ -52,7 +52,7 @@ export function AgentHero() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground">Launch via X (Twitter)</h3>
-              <p className="text-sm text-muted-foreground">The only way to create tokens on MoonDexo</p>
+              <p className="text-sm text-muted-foreground">The only way to create tokens on Saturn</p>
             </div>
           </div>
 
