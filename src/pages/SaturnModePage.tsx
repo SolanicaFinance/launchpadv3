@@ -79,8 +79,8 @@ function ClawModeContent() {
         <header className="sticky top-0 backdrop-blur-md border-b" style={{ background: "hsl(var(--saturn-bg) / 0.85)", borderColor: "hsl(var(--saturn-border))", zIndex: 50 }}>
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🌙</span>
-              <span className="text-lg font-black uppercase tracking-wider saturn-gradient-text">MOONDEXO</span>
+              <span className="text-2xl">🪐</span>
+              <span className="text-lg font-black uppercase tracking-wider saturn-gradient-text">SATURN</span>
             </div>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium" style={{ color: "hsl(var(--saturn-muted))" }}>
               {navLinks.map((link) => (
