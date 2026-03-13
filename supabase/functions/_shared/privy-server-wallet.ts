@@ -31,7 +31,7 @@ interface PrivyUser {
 async function getAuthorizationSignature(
   url: string,
   body: Record<string, unknown>,
-  options: { idempotencyKey?: string } = {},
+  options: { idempotencyKey?: string; authorizationKeyId?: string } = {},
 ): Promise<string> {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
   if (!authKeyRaw) {
@@ -43,10 +43,13 @@ async function getAuthorizationSignature(
     throw new Error("PRIVY_APP_ID must be configured");
   }
 
-  // Build the payload (per Privy docs): include only required/allowed Privy headers
+  // Build the payload (per Privy docs): include Privy-prefixed headers that are on the request.
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
+  if (options.authorizationKeyId) {
+    payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
+  }
   if (options.idempotencyKey) {
     payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   }
@@ -159,38 +162,25 @@ function getAuthHeaders(): Record<string, string> {
 
 async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
   const authKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+  const requestHeaders: Record<string, string> = {};
 
-  const attempt = async (includeAuthKeyHeader: boolean): Promise<Response> => {
-    const requestHeaders: Record<string, string> = {};
-    if (includeAuthKeyHeader && authKeyId) {
-      requestHeaders["privy-authorization-key"] = authKeyId;
-    }
-
-    // Per Privy signing spec, sign only privy-app-id (+ optional privy-idempotency-key)
-    // and do not include auth key id in the signature payload.
-    const authSignature = await getAuthorizationSignature(url, bodyObj);
-
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        ...getAuthHeaders(),
-        ...requestHeaders,
-        "privy-authorization-signature": authSignature,
-      },
-      body: JSON.stringify(bodyObj),
-    });
-  };
-
-  let res = await attempt(true);
-
-  // Fallback: retry without key-id header in case the stored key-id is stale.
-  if (res.status === 401 && authKeyId) {
-    const firstBody = await res.text();
-    console.warn("[privy-auth] 401 with privy-authorization-key, retrying without key-id header:", firstBody);
-    res = await attempt(false);
+  if (authKeyId) {
+    requestHeaders["privy-authorization-key"] = authKeyId;
   }
 
-  return res;
+  const authSignature = await getAuthorizationSignature(url, bodyObj, {
+    authorizationKeyId: authKeyId || undefined,
+  });
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      ...requestHeaders,
+      "privy-authorization-signature": authSignature,
+    },
+    body: JSON.stringify(bodyObj),
+  });
 }
 
 /**
