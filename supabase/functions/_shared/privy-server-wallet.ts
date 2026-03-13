@@ -27,7 +27,11 @@ interface PrivyUser {
 
 // --- Authorization Signature (EXACTLY per Privy docs) ---
 
-function getAuthorizationSignature(url: string, body: Record<string, unknown>): string {
+function getAuthorizationSignature(
+  url: string,
+  body: Record<string, unknown>,
+  options: { authorizationKeyId?: string; idempotencyKey?: string } = {},
+): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
   if (!authKeyRaw) {
     throw new Error("PRIVY_AUTHORIZATION_KEY must be configured");
@@ -38,16 +42,19 @@ function getAuthorizationSignature(url: string, body: Record<string, unknown>): 
     throw new Error("PRIVY_APP_ID must be configured");
   }
 
-  // Payload — EXACTLY as shown in Privy docs
-  // Only privy-app-id in headers. No privy-authorization-key.
+  // Sign all privy-* headers present on request (app-id required; key/idempotency optional)
+  const payloadHeaders: Record<string, string> = {
+    "privy-app-id": appId,
+  };
+  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
+  if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
+
   const payload = {
     version: 1,
     method: "POST",
     url,
     body,
-    headers: {
-      "privy-app-id": appId,
-    },
+    headers: payloadHeaders,
   };
 
   // JSON-canonicalize the payload and convert to buffer
@@ -105,19 +112,87 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
-function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
-  // Generate signature — matches EXACTLY the docs example
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+function normalizeAuthorizationKeyId(rawValue: string): string | null {
+  if (!rawValue) return null;
 
-  // Send request — only privy-authorization-signature header, NO privy-authorization-key
-  return fetch(url, {
-    method: "POST",
-    headers: {
+  const looksLikePrivateKey =
+    rawValue.startsWith("wallet-auth:") ||
+    rawValue.includes("BEGIN PRIVATE KEY") ||
+    rawValue.length > 96;
+
+  if (looksLikePrivateKey) {
+    console.warn("[privy-auth] PRIVY_AUTHORIZATION_KEY_ID appears invalid (looks like a private key), ignoring it");
+    return null;
+  }
+
+  return rawValue;
+}
+
+async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
+  const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+  const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
+
+  const runRequest = async (authorizationKeyId?: string): Promise<Response> => {
+    const requestHeaders: Record<string, string> = {
       ...getAuthHeaders(),
-      "privy-authorization-signature": authSignature,
-    },
-    body: JSON.stringify(bodyObj),
-  });
+    };
+
+    if (authorizationKeyId) {
+      requestHeaders["privy-authorization-key"] = authorizationKeyId;
+    }
+
+    const authSignature = getAuthorizationSignature(url, bodyObj, {
+      authorizationKeyId,
+    });
+
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        ...requestHeaders,
+        "privy-authorization-signature": authSignature,
+      },
+      body: JSON.stringify(bodyObj),
+    });
+  };
+
+  // Primary: include key-id if configured; fallback: retry without key-id on 401 mismatch
+  const primary = await runRequest(authKeyId || undefined);
+  if (primary.status !== 401) return primary;
+
+  if (authKeyId) {
+    const retry = await runRequest(undefined);
+    if (retry.status !== 401) {
+      console.warn("[privy-auth] 401 with key-id, retry without key-id succeeded");
+      return retry;
+    }
+  }
+
+  return primary;
+}
+
+async function getWalletAuthDebug(walletId: string): Promise<string> {
+  try {
+    const res = await fetch(`https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      return `wallet_lookup_failed status=${res.status} body=${body.slice(0, 300)}`;
+    }
+
+    const data: any = await res.json();
+    return JSON.stringify({
+      wallet_id: data?.id || walletId,
+      owner_id: data?.owner_id || null,
+      policy_ids: Array.isArray(data?.policy_ids) ? data.policy_ids : [],
+      additional_signers: Array.isArray(data?.additional_signers) ? data.additional_signers : [],
+      authorization_threshold: data?.authorization_threshold ?? null,
+    });
+  } catch (err) {
+    return `wallet_lookup_exception ${(err as Error)?.message || String(err)}`;
+  }
 }
 
 /**
@@ -203,6 +278,16 @@ export async function signAndSendTransaction(
 
   if (!res.ok) {
     const body = await res.text();
+
+    if (res.status === 401) {
+      const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+      const authKeyIdStatus = normalizeAuthorizationKeyId(rawAuthKeyId) ? "present" : "missing_or_invalid";
+      const walletAuthDebug = await getWalletAuthDebug(walletId);
+      throw new Error(
+        `Privy signAndSendTransaction failed (401): ${body} | auth_key_id_status=${authKeyIdStatus} | wallet_auth=${walletAuthDebug}`,
+      );
+    }
+
     throw new Error(`Privy signAndSendTransaction failed (${res.status}): ${body}`);
   }
 
