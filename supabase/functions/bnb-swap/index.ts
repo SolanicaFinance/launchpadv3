@@ -290,7 +290,7 @@ async function executePancakeSwapSell(
   const txHash = await evmSendTransaction(walletId, {
     to: PANCAKE_ROUTER,
     data: callData,
-    gas: numberToHex(350000n),
+    gas_limit: numberToHex(350000n),
   });
 
   return { txHash, estimatedOutput: formatEther(amountOutMin) };
