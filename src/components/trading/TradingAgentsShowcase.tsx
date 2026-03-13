@@ -29,7 +29,7 @@ const STRATEGIES = [
   },
   {
     id: "aggressive",
-    name: "MoonDexo Alpha",
+    name: "Saturn Alpha",
     strategy: "Aggressive",
     icon: Zap,
     color: "text-red-400",
