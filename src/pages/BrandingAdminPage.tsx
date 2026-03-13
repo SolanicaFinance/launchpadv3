@@ -180,7 +180,7 @@ export default function BrandingAdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="agentBrandName">Agent Brand Name</Label>
-                  <Input id="agentBrandName" value={form.agentBrandName || ""} onChange={(e) => set("agentBrandName", e.target.value)} placeholder="e.g. MoonDexo Agents" />
+                  <Input id="agentBrandName" value={form.agentBrandName || ""} onChange={(e) => set("agentBrandName", e.target.value)} placeholder="e.g. Saturn Agents" />
                 </div>
                 <div>
                   <Label htmlFor="communityPrefix">Community URL Prefix</Label>
