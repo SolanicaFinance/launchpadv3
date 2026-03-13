@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const STRATEGIES = [
   {
     id: "conservative",
-    name: "MoonDexo Guard",
+    name: "Saturn Guard",
     strategy: "Conservative",
     icon: Shield,
     color: "text-emerald-400",
