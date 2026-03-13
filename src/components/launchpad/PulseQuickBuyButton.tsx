@@ -337,7 +337,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
 
       const ticker = funToken?.ticker ?? codexToken?.symbol ?? '';
       const toastId = `quick-buy-${Date.now()}`;
-      toast.loading("⚡ Trade Executing...", { id: toastId, description: `Buying ${amount} SOL of $${ticker}` });
+      toast.success("✅ Trade Executed!", { id: toastId, description: "Confirming transaction..." });
       setBuyingAmount(amount);
 
       try {
@@ -346,7 +346,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           toast.success("✅ Trade Executed!", {
             id: toastId,
             description: result.signature
-              ? `TX: ${result.signature.slice(0, 8)}... · ${lastLatencyMs || ''}ms`
+              ? `TX: ${result.signature.slice(0, 8)}... · ${result.totalMs || lastLatencyMs || ''}ms`
               : `Bought ${amount} SOL of $${ticker}`,
             action: result.signature
               ? {
@@ -355,6 +355,8 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
                 }
               : undefined,
           });
+          // Optimistic balance set to flip button to "Sell 100%" instantly
+          queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
           queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
         }
       } catch (err: any) {
