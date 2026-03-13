@@ -156,7 +156,7 @@ export default function BrandingAdminPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="brandName">Brand Name</Label>
-                  <Input id="brandName" value={form.brandName || ""} onChange={(e) => set("brandName", e.target.value)} placeholder="e.g. MoonDexo" />
+                  <Input id="brandName" value={form.brandName || ""} onChange={(e) => set("brandName", e.target.value)} placeholder="e.g. Saturn" />
                 </div>
                 <div>
                   <Label htmlFor="brandShortName">Short Name</Label>
