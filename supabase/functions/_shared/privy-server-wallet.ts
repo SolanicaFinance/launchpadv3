@@ -65,33 +65,53 @@ async function getAuthorizationSignature(
 
   console.log("[privy-auth] Payload length:", serializedPayload.length, "URL:", url, "signed headers:", Object.keys(payload.headers));
 
-  // Strip wallet-auth: prefix (per Privy docs)
-  const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
+  // Strip wallet-auth: prefix and clean whitespace/newlines
+  const privateKeyAsString = authKeyRaw
+    .replace("wallet-auth:", "")
+    .replace(/\\n/g, "\n")
+    .replace(/\r/g, "")
+    .trim();
+
+  console.log("[privy-auth] Key length after cleanup:", privateKeyAsString.length, "starts with:", privateKeyAsString.substring(0, 15));
 
   let privateKey: ReturnType<typeof createPrivateKey>;
-  try {
-    // Privy docs format: key body can be provided without PEM headers.
-    const privateKeyPem = privateKeyAsString.includes("BEGIN PRIVATE KEY")
-      ? privateKeyAsString
-      : `-----BEGIN PRIVATE KEY-----\n${privateKeyAsString}\n-----END PRIVATE KEY-----`;
 
-    privateKey = createPrivateKey({ key: privateKeyPem, format: "pem" });
-    console.log("[privy-auth] Key loaded via PEM, type:", privateKey.type, "asymmetricKeyType:", privateKey.asymmetricKeyType);
-  } catch (pemErr) {
-    console.log("[privy-auth] PEM parse failed, trying DER:", (pemErr as Error).message);
-    // Fallback: some environments store the key as raw base64 PKCS8 DER bytes.
-    const normalized = privateKeyAsString.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
-    const binary = atob(padded);
-    const derBytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) derBytes[i] = binary.charCodeAt(i);
+  // Strategy 1: Already has PEM headers
+  if (privateKeyAsString.includes("BEGIN")) {
+    try {
+      privateKey = createPrivateKey({ key: privateKeyAsString, format: "pem" });
+      console.log("[privy-auth] Key loaded via raw PEM");
+    } catch (e) {
+      throw new Error(`Failed to parse PEM key: ${(e as Error).message}`);
+    }
+  } else {
+    // Strategy 2: Raw base64 body — wrap in PEM headers
+    // Remove any whitespace/newlines within the base64 body
+    const cleanBase64 = privateKeyAsString.replace(/\s+/g, "");
+    const pem = `-----BEGIN PRIVATE KEY-----\n${cleanBase64}\n-----END PRIVATE KEY-----`;
+    try {
+      privateKey = createPrivateKey({ key: pem, format: "pem" });
+      console.log("[privy-auth] Key loaded via wrapped PEM");
+    } catch (pemErr) {
+      console.log("[privy-auth] Wrapped PEM failed:", (pemErr as Error).message, "trying DER...");
+      // Strategy 3: Decode base64 to DER bytes directly
+      try {
+        const normalized = cleanBase64.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+        const binary = atob(padded);
+        const derBytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) derBytes[i] = binary.charCodeAt(i);
 
-    privateKey = createPrivateKey({
-      key: derBytes,
-      format: "der",
-      type: "pkcs8",
-    });
-    console.log("[privy-auth] Key loaded via DER, type:", privateKey.type, "asymmetricKeyType:", privateKey.asymmetricKeyType);
+        privateKey = createPrivateKey({
+          key: derBytes,
+          format: "der",
+          type: "pkcs8",
+        });
+        console.log("[privy-auth] Key loaded via DER");
+      } catch (derErr) {
+        throw new Error(`Failed to parse authorization key in any format. PEM: ${(pemErr as Error).message}, DER: ${(derErr as Error).message}`);
+      }
+    }
   }
 
   // Explicitly request DER-encoded ECDSA signature (Privy expects DER format)
