@@ -78,7 +78,7 @@ interface PortfolioModalProps {
 export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
   const { walletAddress, getTokenBalance } = useSolanaWalletWithPrivy();
   const { useUserHoldings } = useLaunchpad();
-  const { executeFastSwap } = useFastSwap();
+  const { executeTurboSwap: executeFastSwap } = useTurboSwap();
   const { toast } = useToast();
 
   const { data: holdings = [], isLoading: loadingHoldings } = useUserHoldings(walletAddress);

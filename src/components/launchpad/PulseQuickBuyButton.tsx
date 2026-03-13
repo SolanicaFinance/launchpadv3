@@ -251,7 +251,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
   isCompact?: boolean;
   mintAddress: string | null;
 }) {
-  const { executeFastSwap, isLoading, lastLatencyMs, walletAddress } = useFastSwap();
+  const { executeTurboSwap: executeFastSwap, isLoading, lastLatencyMs, walletAddress } = useTurboSwap();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
