@@ -248,7 +248,6 @@ export async function signTransaction(
   const url = `https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
   const bodyObj = {
     method: "signTransaction",
-    caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
     params: {
       transaction: serializedTransaction,
       encoding: "base64",
