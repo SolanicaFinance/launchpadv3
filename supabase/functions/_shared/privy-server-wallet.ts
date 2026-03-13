@@ -161,7 +161,8 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
-  const authKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+  const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+  const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
   const requestHeaders: Record<string, string> = {};
 
   if (authKeyId) {
