@@ -1784,6 +1784,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       downloadName={`${describedToken.ticker || describedToken.name || "token"}.png`}
                       onClear={() => setDescribedToken(null)}
                     />
+                  </div>
                   <div className="gate-token-preview-info space-y-2">
                     <Input
                       value={describedToken.name}
