@@ -2664,7 +2664,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <div className="gate-token-preview">
                       <div className="gate-token-preview-avatar">
                         {holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl ? (
-                          <img src={holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl} alt="Token" className="w-full h-full object-cover" />
+                          <ImagePreviewOverlay
+                            src={holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl}
+                            alt="Token"
+                            downloadName={`${holdersToken.ticker || holdersToken.name || "token"}.png`}
+                            onClear={() => { setHoldersImagePreview(null); setHoldersMeme(null); }}
+                          />
                         ) : (
                           <Bot className="h-8 w-8 text-muted-foreground" />
                         )}
