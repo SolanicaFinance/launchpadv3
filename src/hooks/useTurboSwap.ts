@@ -26,7 +26,6 @@ export function useTurboSwap() {
   const { executeFastSwap, isLoading: isFastSwapLoading, lastLatencyMs: lastFastLatencyMs } = useFastSwap();
   const [isLoading, setIsLoading] = useState(false);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
-  const turboUnavailableRef = useRef(false);
 
   const executeTurboSwap = useCallback(async (
     token: Token,
