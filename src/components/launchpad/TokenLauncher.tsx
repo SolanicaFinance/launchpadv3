@@ -1633,24 +1633,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                 {isGenerating ? (
                   <MemeLoadingAnimation />
                 ) : meme?.imageUrl ? (
-                  <div className="relative w-full h-full group">
-                    <img src={meme.imageUrl} alt={meme.name || "Generated"} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => {
-                        const a = document.createElement("a");
-                        a.href = meme.imageUrl;
-                        a.download = `${meme.ticker || meme.name || "token"}.png`;
-                        a.target = "_blank";
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
-                      className="absolute bottom-1 right-1 p-1.5 rounded-md bg-background/80 border border-border opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Download image"
-                    >
-                      <Download className="h-3.5 w-3.5 text-foreground" />
-                    </button>
-                  </div>
+                  <ImagePreviewOverlay
+                    src={meme.imageUrl}
+                    alt={meme.name || "Generated"}
+                    downloadName={`${meme.ticker || meme.name || "token"}.png`}
+                    onClear={() => setMeme(null)}
+                  />
                 ) : (
                   <Shuffle className="h-8 w-8 text-muted-foreground" />
                 )}
