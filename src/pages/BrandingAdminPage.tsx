@@ -362,7 +362,7 @@ export default function BrandingAdminPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="pageTitle">Page Title (shown in browser tab)</Label>
-                  <Input id="pageTitle" value={form.pageTitle || ""} onChange={(e) => set("pageTitle", e.target.value)} placeholder="MoonDexo Trading Terminal - Solana and EVM" />
+                  <Input id="pageTitle" value={form.pageTitle || ""} onChange={(e) => set("pageTitle", e.target.value)} placeholder="Saturn Trading Terminal - Solana and EVM" />
                   <p className="text-xs text-muted-foreground mt-1">{(form.pageTitle || "").length}/60 characters recommended</p>
                 </div>
                 <div>
