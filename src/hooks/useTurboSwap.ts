@@ -6,7 +6,7 @@
  * All execution happens server-side for ~3x speed improvement.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,6 +27,7 @@ export function useTurboSwap() {
   const { executeFastSwap, isLoading: isFastSwapLoading, lastLatencyMs: lastFastLatencyMs } = useFastSwap();
   const [isLoading, setIsLoading] = useState(false);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
+  const turboUnavailableRef = useRef(false);
 
   const executeTurboSwap = useCallback(async (
     token: Token,
@@ -39,9 +40,23 @@ export function useTurboSwap() {
     }
 
     setIsLoading(true);
-    const t0 = performance.now();
 
     try {
+      if (turboUnavailableRef.current) {
+        const fallbackStart = performance.now();
+        const fallbackResult = await executeFastSwap(token, amount, isBuy, slippageBps);
+        const fallbackLatency = Math.round(performance.now() - fallbackStart);
+        setLastLatencyMs(fallbackLatency);
+
+        return {
+          success: true,
+          signature: fallbackResult.signature,
+          outputAmount: isBuy ? fallbackResult.tokensOut : fallbackResult.solOut,
+          totalMs: fallbackLatency,
+        };
+      }
+
+      const t0 = performance.now();
       const { data, error } = await supabase.functions.invoke('turbo-trade', {
         body: {
           privyUserId: user?.privyId || undefined,
@@ -65,6 +80,7 @@ export function useTurboSwap() {
 
       const clientLatency = Math.round(performance.now() - t0);
       setLastLatencyMs(clientLatency);
+      turboUnavailableRef.current = false;
       
       console.log(`[TurboSwap] ⚡ Client roundtrip: ${clientLatency}ms | Server: ${data.totalMs}ms | sig: ${data.signature?.slice(0, 12)}...`);
 
@@ -95,6 +111,7 @@ export function useTurboSwap() {
         throw err;
       }
 
+      turboUnavailableRef.current = true;
       console.warn('[TurboSwap] Server signing unavailable, falling back to direct swap route');
       const fallbackStart = performance.now();
       const fallbackResult = await executeFastSwap(token, amount, isBuy, slippageBps);
