@@ -54,15 +54,34 @@ function getAuthorizationSignature(url: string, body: Record<string, unknown>): 
   const serializedPayload = canonicalize(payload) as string;
   const serializedPayloadBuffer = new TextEncoder().encode(serializedPayload);
 
-  // Remove wallet-auth: prefix (per docs)
-  const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
+  // Normalize key input: supports wallet-auth: prefix, raw base64, escaped newlines, or pasted PEM blocks
+  const normalizedKeyBody = authKeyRaw
+    .replace(/^wallet-auth:/, "")
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\\n/g, "")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "")
+    .trim()
+    .replace(/\s+/g, "");
 
-  // Convert to PEM format (per docs: simple wrapping)
-  const privateKeyAsPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyAsString}\n-----END PRIVATE KEY-----`;
-  const privateKey = crypto.createPrivateKey({
-    key: privateKeyAsPem,
-    format: "pem",
-  });
+  if (!normalizedKeyBody) {
+    throw new Error("invalid PEM private key");
+  }
+
+  // Wrap at 64 chars to produce a valid PEM block
+  const wrappedKeyBody = normalizedKeyBody.match(/.{1,64}/g)?.join("\n") ?? normalizedKeyBody;
+  const privateKeyAsPem = `-----BEGIN PRIVATE KEY-----\n${wrappedKeyBody}\n-----END PRIVATE KEY-----`;
+
+  let privateKey: crypto.KeyObject;
+  try {
+    privateKey = crypto.createPrivateKey({
+      key: privateKeyAsPem,
+      format: "pem",
+    });
+  } catch {
+    throw new Error("invalid PEM private key");
+  }
 
   // Sign (per docs: crypto.sign with sha256)
   const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, privateKey);
