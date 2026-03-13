@@ -31,7 +31,7 @@ interface PrivyUser {
 async function getAuthorizationSignature(
   url: string,
   body: Record<string, unknown>,
-  signedPrivyHeaders: Record<string, string> = {},
+  options: { idempotencyKey?: string } = {},
 ): Promise<string> {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
   if (!authKeyRaw) {
@@ -43,16 +43,20 @@ async function getAuthorizationSignature(
     throw new Error("PRIVY_APP_ID must be configured");
   }
 
-  // Build the payload (per Privy docs)
+  // Build the payload (per Privy docs): include only required/allowed Privy headers
+  const payloadHeaders: Record<string, string> = {
+    "privy-app-id": appId,
+  };
+  if (options.idempotencyKey) {
+    payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
+  }
+
   const payload = {
     version: 1,
     method: "POST",
     url,
     body,
-    headers: {
-      "privy-app-id": appId,
-      ...signedPrivyHeaders,
-    },
+    headers: payloadHeaders,
   };
 
   // JSON-canonicalize the payload and convert to Uint8Array
@@ -63,8 +67,6 @@ async function getAuthorizationSignature(
 
   // Strip wallet-auth: prefix (per Privy docs)
   const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
-
-  console.log("[privy-auth] Key prefix (first 20 chars):", privateKeyAsString.substring(0, 20) + "...");
 
   let privateKey: ReturnType<typeof createPrivateKey>;
   try {
@@ -152,18 +154,20 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
   const authKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
 
   const attempt = async (includeAuthKeyHeader: boolean): Promise<Response> => {
-    const signedPrivyHeaders: Record<string, string> = {};
+    const requestHeaders: Record<string, string> = {};
     if (includeAuthKeyHeader && authKeyId) {
-      signedPrivyHeaders["privy-authorization-key"] = authKeyId;
+      requestHeaders["privy-authorization-key"] = authKeyId;
     }
 
-    const authSignature = await getAuthorizationSignature(url, bodyObj, signedPrivyHeaders);
+    // Per Privy signing spec, sign only privy-app-id (+ optional privy-idempotency-key)
+    // and do not include auth key id in the signature payload.
+    const authSignature = await getAuthorizationSignature(url, bodyObj);
 
     return fetch(url, {
       method: "POST",
       headers: {
         ...getAuthHeaders(),
-        ...signedPrivyHeaders,
+        ...requestHeaders,
         "privy-authorization-signature": authSignature,
       },
       body: JSON.stringify(bodyObj),
@@ -172,7 +176,7 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
 
   let res = await attempt(true);
 
-  // Fallback: if key-id is stale/mismatched, retry once without key-id header
+  // Fallback: retry without key-id header in case the stored key-id is stale.
   if (res.status === 401 && authKeyId) {
     const firstBody = await res.text();
     console.warn("[privy-auth] 401 with privy-authorization-key, retrying without key-id header:", firstBody);
