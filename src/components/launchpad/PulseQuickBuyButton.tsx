@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from "react";
 import { Zap, Loader2, ArrowDownToLine } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useFastSwap } from "@/hooks/useFastSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useBnbSwap } from "@/hooks/useBnbSwap";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
