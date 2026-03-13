@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { X, Briefcase, Loader2, Check, AlertCircle, TrendingDown } from "lucide-react";
 import { useLaunchpad, type Token, formatTokenAmount, formatSolAmount } from "@/hooks/useLaunchpad";
-import { useFastSwap } from "@/hooks/useFastSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useToast } from "@/hooks/use-toast";
 
