@@ -28,7 +28,11 @@ interface PrivyUser {
 
 // --- Authorization Signature using Web Crypto API ---
 
-async function getAuthorizationSignature(url: string, body: Record<string, unknown>): Promise<string> {
+async function getAuthorizationSignature(
+  url: string,
+  body: Record<string, unknown>,
+  signedPrivyHeaders: Record<string, string> = {},
+): Promise<string> {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
   if (!authKeyRaw) {
     throw new Error("PRIVY_AUTHORIZATION_KEY must be configured for wallet RPC calls");
@@ -47,6 +51,7 @@ async function getAuthorizationSignature(url: string, body: Record<string, unkno
     body,
     headers: {
       "privy-app-id": appId,
+      ...signedPrivyHeaders,
     },
   };
 
@@ -54,7 +59,7 @@ async function getAuthorizationSignature(url: string, body: Record<string, unkno
   const serializedPayload = canonicalize(payload) as string;
   const serializedPayloadBuffer = new TextEncoder().encode(serializedPayload);
 
-  console.log("[privy-auth] Payload length:", serializedPayload.length, "URL:", url);
+  console.log("[privy-auth] Payload length:", serializedPayload.length, "URL:", url, "signed headers:", Object.keys(payload.headers));
 
   // Strip wallet-auth: prefix (per Privy docs)
   const privateKeyAsString = authKeyRaw.replace("wallet-auth:", "").trim();
@@ -143,6 +148,40 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
+async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
+  const authKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+
+  const attempt = async (includeAuthKeyHeader: boolean): Promise<Response> => {
+    const signedPrivyHeaders: Record<string, string> = {};
+    if (includeAuthKeyHeader && authKeyId) {
+      signedPrivyHeaders["privy-authorization-key"] = authKeyId;
+    }
+
+    const authSignature = await getAuthorizationSignature(url, bodyObj, signedPrivyHeaders);
+
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        ...signedPrivyHeaders,
+        "privy-authorization-signature": authSignature,
+      },
+      body: JSON.stringify(bodyObj),
+    });
+  };
+
+  let res = await attempt(true);
+
+  // Fallback: if key-id is stale/mismatched, retry once without key-id header
+  if (res.status === 401 && authKeyId) {
+    const firstBody = await res.text();
+    console.warn("[privy-auth] 401 with privy-authorization-key, retrying without key-id header:", firstBody);
+    res = await attempt(false);
+  }
+
+  return res;
+}
+
 /**
  * Look up a Privy user and return their linked accounts.
  */
@@ -224,19 +263,7 @@ export async function signAndSendTransaction(
 
   console.log("[privy] signAndSendTransaction URL:", url);
 
-  // Generate authorization signature using Web Crypto API
-  const authSignature = await getAuthorizationSignature(url, bodyObj);
-
-  const authKeyId = Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "privy-authorization-signature": authSignature,
-      ...(authKeyId ? { "privy-authorization-key": authKeyId } : {}),
-    },
-    body: JSON.stringify(bodyObj),
-  });
+  const res = await postPrivyRpc(url, bodyObj);
 
   if (!res.ok) {
     const body = await res.text();
@@ -263,18 +290,7 @@ export async function signTransaction(
     },
   };
 
-  const authSignature = await getAuthorizationSignature(url, bodyObj);
-
-  const authKeyId = Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "privy-authorization-signature": authSignature,
-      ...(authKeyId ? { "privy-authorization-key": authKeyId } : {}),
-    },
-    body: JSON.stringify(bodyObj),
-  });
+  const res = await postPrivyRpc(url, bodyObj);
 
   if (!res.ok) {
     const body = await res.text();
@@ -305,18 +321,7 @@ export async function evmSendTransaction(
 
   console.log("[privy] eth_sendTransaction URL:", url, "to:", txParams.to);
 
-  const authSignature = await getAuthorizationSignature(url, bodyObj);
-
-  const authKeyId = Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "privy-authorization-signature": authSignature,
-      ...(authKeyId ? { "privy-authorization-key": authKeyId } : {}),
-    },
-    body: JSON.stringify(bodyObj),
-  });
+  const res = await postPrivyRpc(url, bodyObj);
 
   if (!res.ok) {
     const body = await res.text();
