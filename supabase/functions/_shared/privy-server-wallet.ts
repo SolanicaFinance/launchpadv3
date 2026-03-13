@@ -299,6 +299,15 @@ export async function signAndSendTransaction(
 
   if (!res.ok) {
     const body = await res.text();
+
+    if (res.status === 401) {
+      const authKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim() || "missing";
+      const walletAuthDebug = await getWalletAuthDebug(walletId);
+      throw new Error(
+        `Privy signAndSendTransaction failed (401): ${body} | auth_key_id=${authKeyId} | wallet_auth=${walletAuthDebug}`
+      );
+    }
+
     throw new Error(`Privy signAndSendTransaction failed (${res.status}): ${body}`);
   }
 
