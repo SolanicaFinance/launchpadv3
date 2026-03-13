@@ -2001,7 +2001,15 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
             <div className="gate-token-preview">
               <div className="gate-token-preview-avatar">
                 {customImagePreview ? (
-                  <img src={customImagePreview} alt="Token" className="w-full h-full object-cover" />
+                  <ImagePreviewOverlay
+                    src={customImagePreview}
+                    alt="Token"
+                    downloadName={`${customToken.name || "token"}.png`}
+                    onClear={() => {
+                      setCustomImagePreview(null);
+                      setCustomImageFile(null);
+                    }}
+                  />
                 ) : (
                   <Pencil className="h-8 w-8 text-muted-foreground" />
                 )}
