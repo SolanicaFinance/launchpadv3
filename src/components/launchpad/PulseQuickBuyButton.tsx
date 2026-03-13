@@ -275,8 +275,10 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
       }
     },
     enabled: !!isAuthenticated && !!walletAddress && !!mintAddress,
-    staleTime: 5_000,
-    refetchInterval: 15_000,
+    staleTime: 3_000,
+    refetchInterval: 8_000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const handleTriggerClick = useCallback(
@@ -390,18 +392,34 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
         return;
       }
 
-      if (!tokenBalance || tokenBalance <= 0) {
+      const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
+      const name = funToken?.name ?? codexToken?.name ?? '';
+      const toastId = `quick-sell-${Date.now()}`;
+
+      // Always fetch fresh on-chain balance before selling
+      let freshBalance = tokenBalance ?? 0;
+      try {
+        const connection = new Connection(getRpcUrl().url, "confirmed");
+        const owner = new PublicKey(walletAddress!);
+        const mint = new PublicKey(token.mint_address);
+        const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+        const account = resp.value[0];
+        freshBalance = account?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
+        // Update cache with real balance
+        queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], freshBalance);
+      } catch (e) {
+        console.warn("[PulseQuickSell] Failed to fetch fresh balance, using cached:", e);
+      }
+
+      if (!freshBalance || freshBalance <= 0) {
         toast.error("No tokens to sell");
         return;
       }
 
-      const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
-      const name = funToken?.name ?? codexToken?.name ?? '';
-      const toastId = `quick-sell-${Date.now()}`;
       toast.success(`✅ Sold 100% of $${ticker}`, { id: toastId, description: "Confirming transaction..." });
       setIsSelling(true);
       try {
-        const result = await executeFastSwap(token, tokenBalance, false, 500);
+        const result = await executeFastSwap(token, freshBalance, false, 500);
         if (result.success) {
           toast.success(`✅ Sold 100% of $${ticker}`, {
             id: toastId,
