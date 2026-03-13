@@ -394,18 +394,20 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
       const ticker = funToken?.ticker ?? codexToken?.symbol ?? 'tokens';
       const name = funToken?.name ?? codexToken?.name ?? '';
       const toastId = `quick-sell-${Date.now()}`;
-      toast.loading("⚡ Selling...", { id: toastId, description: `Selling 100% of $${ticker}` });
+      toast.success(`✅ Sold 100% of $${ticker}`, { id: toastId, description: "Confirming transaction..." });
       setIsSelling(true);
       try {
         const result = await executeFastSwap(token, tokenBalance, false, 500);
         if (result.success) {
           toast.success(`✅ Sold 100% of $${ticker}`, {
             id: toastId,
-            description: `${name}${result.signature ? ` · TX: ${result.signature.slice(0, 8)}...` : ''}${lastLatencyMs ? ` · ${lastLatencyMs}ms` : ''}`,
+            description: `${name}${result.signature ? ` · TX: ${result.signature.slice(0, 8)}...` : ''}${result.totalMs || lastLatencyMs ? ` · ${result.totalMs || lastLatencyMs}ms` : ''}`,
             action: result.signature
               ? { label: "View TX", onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank") }
               : undefined,
           });
+          // Optimistic: set balance to 0 so button flips back to Buy
+          queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 0);
           queryClient.invalidateQueries({ queryKey: ["quick-sell-balance", walletAddress, mintAddress] });
         }
       } catch (err: any) {
