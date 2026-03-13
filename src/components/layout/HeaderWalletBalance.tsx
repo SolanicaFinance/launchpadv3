@@ -182,7 +182,7 @@ function HeaderWalletBalanceInner() {
               <MenuItem
                 icon={<Wallet className="h-4 w-4" />}
                 label="Portfolio"
-                onClick={() => { setMenuOpen(false); setPortfolioOpen(true); }}
+                onClick={() => { setMenuOpen(false); navigate("/portfolio"); }}
               />
               <MenuItem
                 icon={<ArrowDownToLine className="h-4 w-4" />}

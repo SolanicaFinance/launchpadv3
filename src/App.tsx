@@ -71,6 +71,7 @@ const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"
 const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
 const AllTokensPage = lazyWithRetry(() => import("./pages/AllTokensPage"));
 const RewardsPage = lazyWithRetry(() => import("./pages/RewardsPage"));
+const PortfolioPage = lazyWithRetry(() => import("./pages/PortfolioPage"));
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
@@ -191,7 +192,7 @@ const App = () => (
                      <Route path="/merch" element={<MerchStorePage />} />
                      <Route path="/leverage" element={<LeveragePage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
-                     <Route path="/portfolio" element={<Navigate to="/panel?tab=portfolio" replace />} />
+                     <Route path="/portfolio" element={<PortfolioPage />} />
                      <Route path="/earnings" element={<Navigate to="/panel?tab=earnings" replace />} />
                      <Route path="/punch" element={<PunchPage />} />
                      <Route path="/punch-test" element={<PunchTestPage />} />

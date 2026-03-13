@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useBannerGenerator } from "@/hooks/useBannerGenerator";
 import { MemeLoadingAnimation, MemeLoadingText } from "@/components/launchpad/MemeLoadingAnimation";
+import { ImagePreviewOverlay } from "@/components/launchpad/ImagePreviewOverlay";
 import { usePhantomWallet } from "@/hooks/usePhantomWallet";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Connection, Transaction, VersionedTransaction, PublicKey, Keypair } from "@solana/web3.js";
@@ -1632,24 +1633,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                 {isGenerating ? (
                   <MemeLoadingAnimation />
                 ) : meme?.imageUrl ? (
-                  <div className="relative w-full h-full group">
-                    <img src={meme.imageUrl} alt={meme.name || "Generated"} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => {
-                        const a = document.createElement("a");
-                        a.href = meme.imageUrl;
-                        a.download = `${meme.ticker || meme.name || "token"}.png`;
-                        a.target = "_blank";
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
-                      className="absolute bottom-1 right-1 p-1.5 rounded-md bg-background/80 border border-border opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Download image"
-                    >
-                      <Download className="h-3.5 w-3.5 text-foreground" />
-                    </button>
-                  </div>
+                  <ImagePreviewOverlay
+                    src={meme.imageUrl}
+                    alt={meme.name || "Generated"}
+                    downloadName={`${meme.ticker || meme.name || "token"}.png`}
+                    onClear={() => setMeme(null)}
+                  />
                 ) : (
                   <Shuffle className="h-8 w-8 text-muted-foreground" />
                 )}
@@ -1789,7 +1778,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               <>
                 <div className="gate-token-preview">
                   <div className="gate-token-preview-avatar">
-                    <img src={describedToken.imageUrl} alt={describedToken.name} className="w-full h-full object-cover" />
+                    <ImagePreviewOverlay
+                      src={describedToken.imageUrl}
+                      alt={describedToken.name}
+                      downloadName={`${describedToken.ticker || describedToken.name || "token"}.png`}
+                      onClear={() => setDescribedToken(null)}
+                    />
                   </div>
                   <div className="gate-token-preview-info space-y-2">
                     <Input
@@ -1903,7 +1897,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               <>
                 <div className="gate-token-preview">
                   <div className="gate-token-preview-avatar">
-                    <img src={realisticToken.imageUrl} alt={realisticToken.name} className="w-full h-full object-cover" />
+                    <ImagePreviewOverlay
+                      src={realisticToken.imageUrl}
+                      alt={realisticToken.name}
+                      downloadName={`${realisticToken.ticker || realisticToken.name || "token"}.png`}
+                      onClear={() => setRealisticToken(null)}
+                    />
                   </div>
                   <div className="gate-token-preview-info space-y-2">
                     <Input
@@ -2002,7 +2001,15 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
             <div className="gate-token-preview">
               <div className="gate-token-preview-avatar">
                 {customImagePreview ? (
-                  <img src={customImagePreview} alt="Token" className="w-full h-full object-cover" />
+                  <ImagePreviewOverlay
+                    src={customImagePreview}
+                    alt="Token"
+                    downloadName={`${customToken.name || "token"}.png`}
+                    onClear={() => {
+                      setCustomImagePreview(null);
+                      setCustomImageFile(null);
+                    }}
+                  />
                 ) : (
                   <Pencil className="h-8 w-8 text-muted-foreground" />
                 )}
@@ -2657,7 +2664,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <div className="gate-token-preview">
                       <div className="gate-token-preview-avatar">
                         {holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl ? (
-                          <img src={holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl} alt="Token" className="w-full h-full object-cover" />
+                          <ImagePreviewOverlay
+                            src={holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl}
+                            alt="Token"
+                            downloadName={`${holdersToken.ticker || holdersToken.name || "token"}.png`}
+                            onClear={() => { setHoldersImagePreview(null); setHoldersMeme(null); }}
+                          />
                         ) : (
                           <Bot className="h-8 w-8 text-muted-foreground" />
                         )}
@@ -2844,7 +2856,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <div className="gate-token-preview">
                       <div className="gate-token-preview-avatar">
                         {funImagePreview || funToken.imageUrl ? (
-                          <img src={funImagePreview || funToken.imageUrl} alt="Token" className="w-full h-full object-cover" />
+                          <ImagePreviewOverlay
+                            src={funImagePreview || funToken.imageUrl}
+                            alt="Token"
+                            downloadName={`${funToken.ticker || funToken.name || "token"}.png`}
+                            onClear={() => { setFunImagePreview(null); setFunToken({ ...funToken, imageUrl: "" }); }}
+                          />
                         ) : (
                           <PartyPopper className="h-8 w-8 text-muted-foreground" />
                         )}
