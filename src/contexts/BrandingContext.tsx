@@ -110,7 +110,7 @@ const DEFAULT_CONFIG: BrandingConfig = {
   telegramUrl: null,
   logoUrl: "/moondexo-logo.png",
   faviconUrl: "/moondexo-logo.png",
-  ogImageUrl: "https://moondexo.com/moondexo-logo.png",
+  ogImageUrl: "https://saturntrade.com/moondexo-logo.png",
   iconEmoji: BRAND.iconEmoji,
   forumName: BRAND.forumName,
   communityPrefix: BRAND.communityPrefix,
@@ -132,8 +132,8 @@ const DEFAULT_CONFIG: BrandingConfig = {
   featureAlphaTrackerEnabled: true,
   featureXTrackerEnabled: true,
   featureGovernanceEnabled: true,
-  pageTitle: "MoonDexo Trading Terminal - Solana and EVM",
-  metaDescription: "MoonDexo — Your one step trading Terminal and Launchpad on Solana and EVM.",
+  pageTitle: "Saturn Trading Terminal - Solana and EVM",
+  metaDescription: "Saturn — Your one step trading Terminal and Launchpad on Solana and EVM.",
 };
 
 interface BrandingContextValue {

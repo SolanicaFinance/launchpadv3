@@ -11,7 +11,7 @@ export function SaturnHero() {
 
       {/* Title */}
       <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight mb-4">
-        <span className="saturn-gradient-text">MOONDEXO</span>
+        <span className="saturn-gradient-text">SATURN</span>
       </h1>
 
       {/* Subtitle */}

@@ -564,7 +564,7 @@ export default function PanelUnifiedDashboard() {
                                 Balance: h.balance,
                                 Value_SOL: (h.balance * h.tokens!.price_sol).toFixed(6),
                               }));
-                            exportToCSV(data, "moondexo-portfolio.csv");
+                            exportToCSV(data, "saturn-portfolio.csv");
                             toast({ title: "Exported", description: "Portfolio CSV downloaded" });
                           }}
                         >
@@ -995,7 +995,7 @@ export default function PanelUnifiedDashboard() {
                 <h3 className="text-[10px] font-bold text-foreground mb-1.5 font-mono uppercase">How It Works</h3>
                 <ol className="text-[10px] text-muted-foreground space-y-1 list-decimal list-inside leading-relaxed">
                   <li>Share your unique referral link</li>
-                  <li>They sign up and start trading on MoonDexo</li>
+                  <li>They sign up and start trading on Saturn</li>
                   <li>You earn <span className="text-[#f97316] font-semibold">50%</span> of their trading fees</li>
                   <li>Rewards tracked in real-time</li>
                 </ol>

@@ -6,7 +6,7 @@ export function SaturnAgentSection() {
   return (
     <section className="mb-12">
       <h2 className="saturn-section-title saturn-gradient-text mb-6 flex items-center gap-3">
-        🌙 MoonDexo Agents
+        🪐 Saturn Agents
       </h2>
 
       {/* Welcome Banner */}
@@ -17,7 +17,7 @@ export function SaturnAgentSection() {
           </div>
           <div className="flex-1">
             <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "hsl(var(--saturn-text))" }}>
-              Welcome to MoonDexo Agents
+              Welcome to Saturn Agents
             </h3>
             <p className="leading-relaxed mb-4" style={{ color: "hsl(var(--saturn-muted))" }}>
               <span className="font-medium" style={{ color: "hsl(var(--saturn-text))" }}>
@@ -158,7 +158,7 @@ export function SaturnAgentSection() {
               <ul className="space-y-1" style={{ color: "hsl(var(--saturn-muted))" }}>
                 <li>• 2% trading fee on all swaps</li>
                 <li>• 80% goes to token creator (agent)</li>
-                <li>• 20% goes to MoonDexo treasury 🌙</li>
+                <li>• 20% goes to Saturn treasury 🪐</li>
                 <li>• Fees auto-claimed every minute</li>
               </ul>
             </div>

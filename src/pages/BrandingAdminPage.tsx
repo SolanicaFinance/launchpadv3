@@ -156,11 +156,11 @@ export default function BrandingAdminPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="brandName">Brand Name</Label>
-                  <Input id="brandName" value={form.brandName || ""} onChange={(e) => set("brandName", e.target.value)} placeholder="e.g. MoonDexo" />
+                  <Input id="brandName" value={form.brandName || ""} onChange={(e) => set("brandName", e.target.value)} placeholder="e.g. Saturn" />
                 </div>
                 <div>
                   <Label htmlFor="brandShortName">Short Name</Label>
-                  <Input id="brandShortName" value={form.brandShortName || ""} onChange={(e) => set("brandShortName", e.target.value)} placeholder="e.g. MoonDexo" />
+                  <Input id="brandShortName" value={form.brandShortName || ""} onChange={(e) => set("brandShortName", e.target.value)} placeholder="e.g. Saturn" />
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="tagline">Tagline</Label>
@@ -176,11 +176,11 @@ export default function BrandingAdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="forumName">Forum Name</Label>
-                  <Input id="forumName" value={form.forumName || ""} onChange={(e) => set("forumName", e.target.value)} placeholder="e.g. MoonDexo Forum" />
+                  <Input id="forumName" value={form.forumName || ""} onChange={(e) => set("forumName", e.target.value)} placeholder="e.g. Saturn Forum" />
                 </div>
                 <div>
                   <Label htmlFor="agentBrandName">Agent Brand Name</Label>
-                  <Input id="agentBrandName" value={form.agentBrandName || ""} onChange={(e) => set("agentBrandName", e.target.value)} placeholder="e.g. MoonDexo Agents" />
+                  <Input id="agentBrandName" value={form.agentBrandName || ""} onChange={(e) => set("agentBrandName", e.target.value)} placeholder="e.g. Saturn Agents" />
                 </div>
                 <div>
                   <Label htmlFor="communityPrefix">Community URL Prefix</Label>
@@ -362,7 +362,7 @@ export default function BrandingAdminPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="pageTitle">Page Title (shown in browser tab)</Label>
-                  <Input id="pageTitle" value={form.pageTitle || ""} onChange={(e) => set("pageTitle", e.target.value)} placeholder="MoonDexo Trading Terminal - Solana and EVM" />
+                  <Input id="pageTitle" value={form.pageTitle || ""} onChange={(e) => set("pageTitle", e.target.value)} placeholder="Saturn Trading Terminal - Solana and EVM" />
                   <p className="text-xs text-muted-foreground mt-1">{(form.pageTitle || "").length}/60 characters recommended</p>
                 </div>
                 <div>

@@ -104,7 +104,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
               <div className="flex items-center gap-2">
-                <img src={saturnLogo} alt="MoonDexo" className="w-6 h-6" />
+                <img src={saturnLogo} alt="Saturn" className="w-6 h-6" />
                 <span className="text-[#c8ff00] font-bold text-sm tracking-[0.2em] uppercase">{BRAND.name}</span>
               </div>
               <span className="text-white/25 text-[10px] font-mono">{timeStr}</span>

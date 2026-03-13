@@ -1,19 +1,19 @@
 /**
- * MoonDexo — Edge Function Branding Constants
+ * Saturn — Edge Function Branding Constants
  * 
  * Single source of truth for all display-facing brand strings in edge functions.
  * Mirrors src/config/branding.ts for the frontend.
  */
 export const BRAND = {
-  name: "MoonDexo",
-  shortName: "MoonDexo",
-  domain: "moondexo.com",
-  appUrl: "https://moondexo.com",
-  twitterHandle: "@moondexo",
-  twitterUrl: "https://x.com/moondexo",
+  name: "Saturn",
+  shortName: "Saturn",
+  domain: "saturntrade.com",
+  appUrl: "https://saturntrade.lovable.app",
+  twitterHandle: "@saturntrade",
+  twitterUrl: "https://x.com/saturntrade",
   logoPath: "/moondexo-logo.png",
-  ogImage: "https://moondexo.com/moondexo-logo.png",
-  forumName: "MoonDexo Forum",
+  ogImage: "https://saturntrade.com/moondexo-logo.png",
+  forumName: "Saturn Forum",
   communityPrefix: "t/",
   platformTokenTicker: "CLAW",
   platformTokenName: "CLAW",

@@ -48,11 +48,11 @@ async function fetchUserTweets(
   return tweets;
 }
 
-function checkPostContent(text: string): { hasMoon: boolean; hasMoondexo: boolean } {
+function checkPostContent(text: string): { hasMoon: boolean; hasSaturn: boolean } {
   const lower = text.toLowerCase();
   const hasMoon = lower.includes("$moon");
-  const hasMoondexo = lower.includes("@moondexo");
-  return { hasMoon, hasMoondexo };
+  const hasSaturn = lower.includes("@saturntrade");
+  return { hasMoon, hasSaturn };
 }
 
 serve(async (req) => {
@@ -114,12 +114,12 @@ serve(async (req) => {
             newLastPostId = tweetId;
           }
 
-          const { hasMoon, hasMoondexo } = checkPostContent(text);
+          const { hasMoon, hasSaturn } = checkPostContent(text);
 
-          if (!hasMoon && !hasMoondexo) continue;
+          if (!hasMoon && !hasSaturn) continue;
 
           // Both in same post = only 5 points (one reward), pick one type
-          if (hasMoon && hasMoondexo) {
+          if (hasMoon && hasSaturn) {
             // Insert single event for "both"
             const { error: insertErr } = await supabase
               .from("social_reward_events")
@@ -135,7 +135,7 @@ serve(async (req) => {
 
             if (!insertErr) {
               pointsEarned += 5;
-              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (both $MOON+@MoonDexo) tweet:${tweetId}`);
+              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (both $MOON+@Saturn) tweet:${tweetId}`);
             }
           } else if (hasMoon) {
             const { error: insertErr } = await supabase
@@ -154,14 +154,14 @@ serve(async (req) => {
               pointsEarned += 5;
               console.log(`[check-social-rewards] @${user.twitter_username} +5 pts ($MOON) tweet:${tweetId}`);
             }
-          } else if (hasMoondexo) {
+          } else if (hasSaturn) {
             const { error: insertErr } = await supabase
               .from("social_reward_events")
               .insert({
                 social_reward_id: user.id,
                 post_id: tweetId,
                 post_url: tweetUrl,
-                reward_type: "moondexo_tag",
+                reward_type: "saturn_tag",
                 points: 5,
               })
               .select("id")
@@ -169,7 +169,7 @@ serve(async (req) => {
 
             if (!insertErr) {
               pointsEarned += 5;
-              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (@MoonDexo) tweet:${tweetId}`);
+              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (@Saturn) tweet:${tweetId}`);
             }
           }
         }

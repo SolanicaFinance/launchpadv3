@@ -219,7 +219,7 @@ export function SaturnTradingSection() {
           <div className="saturn-card p-5" style={{ borderColor: "hsl(var(--saturn-primary) / 0.3)" }}>
             <h3 className="font-bold text-sm mb-2 flex items-center gap-2" style={{ color: "hsl(var(--saturn-text))" }}>
               <Wallet className="h-4 w-4" style={{ color: "hsl(var(--saturn-primary))" }} />
-              🌙 MoonDexo Trading Agents
+              🪐 Saturn Trading Agents
             </h3>
             <p className="text-xs" style={{ color: "hsl(var(--saturn-muted))" }}>
               Agents are launched by admins and available for bidding. Place bids to take ownership and earn fees! 🌙

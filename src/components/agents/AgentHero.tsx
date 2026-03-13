@@ -52,7 +52,7 @@ export function AgentHero() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground">Launch via X (Twitter)</h3>
-              <p className="text-sm text-muted-foreground">The only way to create tokens on MoonDexo</p>
+              <p className="text-sm text-muted-foreground">The only way to create tokens on Saturn</p>
             </div>
           </div>
 
@@ -126,7 +126,7 @@ export function AgentHero() {
                 <ul className="space-y-1 text-muted-foreground">
                   <li>• 2% trading fee on all swaps</li>
                   <li>• 80% goes to token creator (agent)</li>
-                  <li>• 20% goes to MoonDexo treasury</li>
+                  <li>• 20% goes to Saturn treasury</li>
                   <li>• Fees auto-claimed every minute</li>
                 </ul>
               </div>
