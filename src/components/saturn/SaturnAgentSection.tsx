@@ -6,7 +6,7 @@ export function SaturnAgentSection() {
   return (
     <section className="mb-12">
       <h2 className="saturn-section-title saturn-gradient-text mb-6 flex items-center gap-3">
-        🌙 MoonDexo Agents
+        🪐 Saturn Agents
       </h2>
 
       {/* Welcome Banner */}
