@@ -22,7 +22,7 @@ const strategies = [
   },
   {
     id: "balanced",
-    name: "MoonDexo Core",
+    name: "Saturn Core",
     badge: "Balanced",
     badgeColor: "text-amber-400 bg-amber-500/15 border-amber-500/30",
     borderColor: "border-amber-500/20 hover:border-amber-500/40",
