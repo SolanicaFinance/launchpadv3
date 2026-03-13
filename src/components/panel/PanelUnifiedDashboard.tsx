@@ -564,7 +564,7 @@ export default function PanelUnifiedDashboard() {
                                 Balance: h.balance,
                                 Value_SOL: (h.balance * h.tokens!.price_sol).toFixed(6),
                               }));
-                            exportToCSV(data, "moondexo-portfolio.csv");
+                            exportToCSV(data, "saturn-portfolio.csv");
                             toast({ title: "Exported", description: "Portfolio CSV downloaded" });
                           }}
                         >
