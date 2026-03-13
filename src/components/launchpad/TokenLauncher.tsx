@@ -1896,8 +1896,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               <>
                 <div className="gate-token-preview">
                   <div className="gate-token-preview-avatar">
-                    <img src={realisticToken.imageUrl} alt={realisticToken.name} className="w-full h-full object-cover" />
-                  </div>
+                    <ImagePreviewOverlay
+                      src={realisticToken.imageUrl}
+                      alt={realisticToken.name}
+                      downloadName={`${realisticToken.ticker || realisticToken.name || "token"}.png`}
+                      onClear={() => setRealisticToken(null)}
+                    />
                   <div className="gate-token-preview-info space-y-2">
                     <Input
                       value={realisticToken.name}
