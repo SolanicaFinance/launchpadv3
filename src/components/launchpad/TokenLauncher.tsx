@@ -2856,7 +2856,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <div className="gate-token-preview">
                       <div className="gate-token-preview-avatar">
                         {funImagePreview || funToken.imageUrl ? (
-                          <img src={funImagePreview || funToken.imageUrl} alt="Token" className="w-full h-full object-cover" />
+                          <ImagePreviewOverlay
+                            src={funImagePreview || funToken.imageUrl}
+                            alt="Token"
+                            downloadName={`${funToken.ticker || funToken.name || "token"}.png`}
+                            onClear={() => { setFunImagePreview(null); setFunToken({ ...funToken, imageUrl: "" }); }}
+                          />
                         ) : (
                           <PartyPopper className="h-8 w-8 text-muted-foreground" />
                         )}
