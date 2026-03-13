@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Download, RefreshCw, Copy, Check, ExternalLink, Lightbulb, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import saturnLogo from "@/assets/moondexo-logo.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { BRAND } from "@/config/branding";
 

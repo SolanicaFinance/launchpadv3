@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import defaultAvatar from "@/assets/moondexo-logo.png";
+import defaultAvatar from "@/assets/saturn-logo.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useUserProfile, isWalletAddress } from "@/hooks/useUserProfile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

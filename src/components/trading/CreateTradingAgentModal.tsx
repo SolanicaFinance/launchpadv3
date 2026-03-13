@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateTradingAgent } from "@/hooks/useTradingAgents";
 import { supabase } from "@/integrations/supabase/client";
-import clawLogo from "@/assets/moondexo-logo.png";
+import clawLogo from "@/assets/saturn-logo.png";
 
 const formSchema = z.object({
   name: z.string().optional(),

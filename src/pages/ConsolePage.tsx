@@ -3,7 +3,7 @@ import { Send, Loader2, Users, Pencil, Shuffle, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { usePrivy } from "@privy-io/react-auth";
-import clawLogo from "@/assets/moondexo-logo.png";
+import clawLogo from "@/assets/saturn-logo.png";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 
 interface ConsoleMessage {

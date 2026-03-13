@@ -1,6 +1,6 @@
 // System agent uses static avatar
 export const SYSTEM_CLAW_ID = "00000000-0000-0000-0000-000000000001";
-export const SYSTEM_CLAW_AVATAR = "/moondexo-logo.png";
+export const SYSTEM_CLAW_AVATAR = "/saturn-logo.png";
 
 // Backwards compat aliases
 export const SYSTEM_TUNA_ID = SYSTEM_CLAW_ID;

@@ -22,10 +22,10 @@ export const BRAND = {
   twitterUrl: "https://x.com/saturntrade",
 
   // ── Assets ──
-  logoPath: "/moondexo-logo.png",
+  logoPath: "/saturn-logo.png",
   iconEmoji: "🪐",
-  ogImage: "https://saturntrade.com/moondexo-logo.png",
-  faviconPath: "/moondexo-logo.png",
+  ogImage: "https://saturntrade.com/saturn-logo.png",
+  faviconPath: "/saturn-logo.png",
 
   // ── Feature Names ──
   forumName: "Saturn Forum",
@@ -48,8 +48,8 @@ export const BRAND = {
   // When rebranding, update ALL of the following:
   // 1. src/config/branding.ts (this file) — all string values above
   // 2. supabase/functions/_shared/branding.ts — edge function branding
-  // 3. src/assets/moondexo-logo.png — logo used in Privy wallet connect dialog & app header
-  // 4. public/moondexo-logo.png — logo used for favicon, OG image, and direct URL references
+  // 3. src/assets/saturn-logo.png — logo used in Privy wallet connect dialog & app header
+  // 4. public/saturn-logo.png — logo used for favicon, OG image, and direct URL references
   // 5. Privy Dashboard — update app name & logo at https://dashboard.privy.io
   // 6. Database branding_config table — if using DB-driven white-labeling via /admin/branding
 

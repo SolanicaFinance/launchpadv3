@@ -8,7 +8,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Wallet, Ghost, LogOut, Copy, Check, ExternalLink, Terminal } from "lucide-react";
-import saturnLogo from "@/assets/moondexo-logo.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 import { copyToClipboard } from "@/lib/clipboard";
 import { BRAND } from "@/config/branding";
 

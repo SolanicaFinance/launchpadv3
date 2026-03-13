@@ -6,7 +6,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { usePanelNav } from "@/hooks/usePanelNav";
 import { useMatrixMode } from "@/contexts/MatrixModeContext";
-import saturnLogo from "@/assets/moondexo-logo.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 
 const LOGO_SRC = saturnLogo;

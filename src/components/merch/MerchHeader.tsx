@@ -1,5 +1,5 @@
 import { ShoppingBag } from "lucide-react";
-import saturnMerchLogo from "@/assets/moondexo-logo.png";
+import saturnMerchLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 
 interface MerchHeaderProps {
