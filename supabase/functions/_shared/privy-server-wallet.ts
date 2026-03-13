@@ -321,18 +321,7 @@ export async function evmSendTransaction(
 
   console.log("[privy] eth_sendTransaction URL:", url, "to:", txParams.to);
 
-  const authSignature = await getAuthorizationSignature(url, bodyObj);
-
-  const authKeyId = Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "privy-authorization-signature": authSignature,
-      ...(authKeyId ? { "privy-authorization-key": authKeyId } : {}),
-    },
-    body: JSON.stringify(bodyObj),
-  });
+  const res = await postPrivyRpc(url, bodyObj);
 
   if (!res.ok) {
     const body = await res.text();
