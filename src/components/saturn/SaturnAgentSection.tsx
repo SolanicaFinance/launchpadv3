@@ -158,7 +158,7 @@ export function SaturnAgentSection() {
               <ul className="space-y-1" style={{ color: "hsl(var(--saturn-muted))" }}>
                 <li>• 2% trading fee on all swaps</li>
                 <li>• 80% goes to token creator (agent)</li>
-                <li>• 20% goes to MoonDexo treasury 🌙</li>
+                <li>• 20% goes to Saturn treasury 🪐</li>
                 <li>• Fees auto-claimed every minute</li>
               </ul>
             </div>

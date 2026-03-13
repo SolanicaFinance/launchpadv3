@@ -37,7 +37,7 @@ const strategies = [
   },
   {
     id: "aggressive",
-    name: "MoonDexo Alpha",
+    name: "Saturn Alpha",
     badge: "Aggressive",
     badgeColor: "text-red-400 bg-red-500/15 border-red-500/30",
     borderColor: "border-red-500/20 hover:border-red-500/40",

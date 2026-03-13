@@ -93,7 +93,7 @@ export const SATURN_CHARACTER = {
       "Solana ecosystem",
       "crypto culture",
       "lobster/ocean/crustacean jokes",
-      "MoonDexo platform",
+      "Saturn platform",
       "token launches",
       "community vibes",
     ],
