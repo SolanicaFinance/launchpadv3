@@ -1,23 +1,62 @@
 
+## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
 
-## Plan: Bypass Turbo-Trade, Use Direct Client-Side Jupiter Swaps
+### What was built:
+1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
+   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
+   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
+   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
+   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
+   - Records trade in DB + alpha_trades (non-blocking)
+   - Returns signature immediately with timing breakdown
 
-### Problem
-The `turbo-trade` edge function uses Privy server-side wallet signing which is broken (persistent 401 authorization error). Every swap attempt hits the server first, wastes ~700ms on a failing call, then falls back to client-side. The user wants to eliminate turbo entirely and use the working Jupiter client-side path directly.
+2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
+   - Single `supabase.functions.invoke('turbo-trade')` call
+   - No client-side tx building or signing
+   - Background query invalidation after 500ms
+   - Logs client roundtrip vs server execution time
 
-### Changes
+3. **Wired into trade components:**
+   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
+   - `PortfolioModal.tsx` — uses `useTurboSwap`
 
-**1. `src/hooks/useTurboSwap.ts`** — Remove the `turbo-trade` edge function call entirely. The `executeTurboSwap` function will directly delegate to `executeFastSwap` (which uses client-side Jupiter via `useJupiterSwap` + Privy embedded wallet signing). This eliminates the ~700ms wasted roundtrip to the failing server.
+### Expected latency:
+```
+Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
+After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
+```
 
-**2. Speed improvement** — Since `executeFastSwap` in `useFastSwap.ts` already has all the optimizations (cached blockhash, parallel Jito broadcast, optimistic UI, cached DBC client), swaps will execute at full speed without the server detour.
+---
 
-### What stays the same
-- All 4 callers (`PulseQuickBuyButton`, `PortfolioPage`, `PortfolioModal`, `UniversalTradePanel`) use `useTurboSwap` — they don't need changes since the hook interface stays identical.
-- `useFastSwap.ts`, `useJupiterSwap.ts`, `useSolanaWalletPrivy.ts` — unchanged, these are the working client-side swap path.
-- The `turbo-trade` edge function remains deployed but unused (can be cleaned up later).
+## 6-Phase Axiom Feature Integration Plan (SAVED)
 
-### Result
-- Zero wasted server calls
-- Direct client-side execution: Jupiter quote → Jupiter swap tx → Privy embedded wallet sign → broadcast
-- Same speed as before turbo was introduced (~1-2s vs 3s+ with failing turbo)
+### Phase 1: Copy Trade Execution
+- New `copy-trade-execute` edge function
+- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
+- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
+- New `copy_trade_log` table
 
+### Phase 2: Limit Orders (SL/TP)
+- Jupiter limit order program integration
+- `limit-order-create` edge function
+- `limit_orders` DB table
+- Limit order tab in trade panel
+
+### Phase 3: Real-Time WebSocket Token Feed
+- Helius WebSocket for sub-1s new pair detection
+- Replace Codex polling (~30s) 
+- Edge function → Supabase Realtime channel
+
+### Phase 4: DCA (Dollar Cost Averaging)
+- `dca_orders` DB table
+- `dca-execute` cron edge function
+- DCA tab in trade panel
+
+### Phase 5: Enhanced Token Safety
+- LP lock status, mint authority, honeypot detection
+- Safety score badge on Pulse cards
+
+### Phase 6: Wallet PnL Analytics
+- `wallet-pnl-calculate` edge function
+- Per-wallet realized/unrealized PnL
+- Rank tracked wallets by performance

@@ -6,9 +6,8 @@
  * All execution happens server-side for ~3x speed improvement.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFastSwap } from '@/hooks/useFastSwap';
 import type { Token } from '@/hooks/useLaunchpad';
@@ -27,7 +26,6 @@ export function useTurboSwap() {
   const { executeFastSwap, isLoading: isFastSwapLoading, lastLatencyMs: lastFastLatencyMs } = useFastSwap();
   const [isLoading, setIsLoading] = useState(false);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
-  const turboUnavailableRef = useRef(false);
 
   const executeTurboSwap = useCallback(async (
     token: Token,
@@ -42,47 +40,14 @@ export function useTurboSwap() {
     setIsLoading(true);
 
     try {
-      if (turboUnavailableRef.current) {
-        const fallbackStart = performance.now();
-        const fallbackResult = await executeFastSwap(token, amount, isBuy, slippageBps);
-        const fallbackLatency = Math.round(performance.now() - fallbackStart);
-        setLastLatencyMs(fallbackLatency);
-
-        return {
-          success: true,
-          signature: fallbackResult.signature,
-          outputAmount: isBuy ? fallbackResult.tokensOut : fallbackResult.solOut,
-          totalMs: fallbackLatency,
-        };
-      }
-
+      // Direct client-side execution via Jupiter + Privy embedded wallet
+      // Turbo server-side route bypassed due to Privy authorization key issues
       const t0 = performance.now();
-      const { data, error } = await supabase.functions.invoke('turbo-trade', {
-        body: {
-          privyUserId: user?.privyId || undefined,
-          profileId: profileId || undefined,
-          walletAddress: solanaAddress || undefined,
-          mintAddress: token.mint_address,
-          amount,
-          isBuy,
-          slippageBps,
-          tokenStatus: token.status,
-        },
-      });
+      const result = await executeFastSwap(token, amount, isBuy, slippageBps);
+      const latency = Math.round(performance.now() - t0);
+      setLastLatencyMs(latency);
 
-      if (error) {
-        throw new Error(error.message || 'Turbo trade failed');
-      }
-
-      if (!data?.success) {
-        throw new Error(data?.error || 'Turbo trade failed');
-      }
-
-      const clientLatency = Math.round(performance.now() - t0);
-      setLastLatencyMs(clientLatency);
-      turboUnavailableRef.current = false;
-      
-      console.log(`[TurboSwap] ⚡ Client roundtrip: ${clientLatency}ms | Server: ${data.totalMs}ms | sig: ${data.signature?.slice(0, 12)}...`);
+      console.log(`[TurboSwap] ⚡ Direct swap: ${latency}ms | sig: ${result.signature?.slice(0, 12)}...`);
 
       // Background query invalidation
       setTimeout(() => {
@@ -95,35 +60,13 @@ export function useTurboSwap() {
 
       return {
         success: true,
-        signature: data.signature,
-        outputAmount: data.outputAmount,
-        totalMs: data.totalMs,
-        timings: data.timings,
+        signature: result.signature,
+        outputAmount: isBuy ? result.tokensOut : result.solOut,
+        totalMs: latency,
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      const shouldFallbackToClientSwap =
-        message.includes('Privy signAndSendTransaction failed (401)') ||
-        message.includes('No valid authorization signatures were provided');
-
-      if (!shouldFallbackToClientSwap) {
-        console.error('[TurboSwap] Error:', err);
-        throw err;
-      }
-
-      turboUnavailableRef.current = true;
-      console.warn('[TurboSwap] Server signing unavailable, falling back to direct swap route');
-      const fallbackStart = performance.now();
-      const fallbackResult = await executeFastSwap(token, amount, isBuy, slippageBps);
-      const fallbackLatency = Math.round(performance.now() - fallbackStart);
-      setLastLatencyMs(fallbackLatency);
-
-      return {
-        success: true,
-        signature: fallbackResult.signature,
-        outputAmount: isBuy ? fallbackResult.tokensOut : fallbackResult.solOut,
-        totalMs: fallbackLatency,
-      };
+      console.error('[TurboSwap] Error:', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
