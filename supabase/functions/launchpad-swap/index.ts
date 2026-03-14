@@ -254,7 +254,7 @@ serve(async (req) => {
             traderAvatarUrl = profile.avatar_url;
           }
         }
-        await supabase.from("alpha_trades").insert({
+        await supabase.from("alpha_trades").upsert({
           wallet_address: userWallet,
           token_mint: token.mint_address,
           token_name: token.name,
