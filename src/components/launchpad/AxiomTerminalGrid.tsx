@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { FunToken } from "@/hooks/useFunTokensPaginated";
 import { CodexPairToken } from "@/hooks/useCodexNewPairs";
 import { useKingOfTheHill } from "@/hooks/useKingOfTheHill";
@@ -37,6 +37,20 @@ const COLUMN_TABS = [
 
 type ColumnTab = typeof COLUMN_TABS[number]["id"];
 
+const DEFAULT_QB = 0.5;
+
+function getColumnQb(colId: string): number {
+  try {
+    const v = localStorage.getItem(`pulse-col-qb-${colId}`);
+    if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
+  } catch {}
+  return DEFAULT_QB;
+}
+
+function saveColumnQb(colId: string, amount: number) {
+  try { localStorage.setItem(`pulse-col-qb-${colId}`, String(amount)); } catch {}
+}
+
 function PulseColumnSkeleton() {
   return (
     <div className="flex flex-col gap-2 sm:gap-3 p-2">
@@ -70,7 +84,7 @@ function PulseEmptyColumn({ label, color }: { label: string; color: string }) {
   );
 }
 
-export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount, onQuickBuyChange, proTradersMap = {}, chain = 'solana', networkId = SOLANA_NETWORK_ID, nativeCurrency = 'SOL' }: AxiomTerminalGridProps) {
+export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs = [], codexCompleting = [], codexGraduated = [], quickBuyAmount: _globalQb, onQuickBuyChange, proTradersMap = {}, chain = 'solana', networkId = SOLANA_NETWORK_ID, nativeCurrency = 'SOL' }: AxiomTerminalGridProps) {
   const [mobileTab, setMobileTab] = useState<ColumnTab>("new");
   const [tabletRightTab, setTabletRightTab] = useState<"final" | "migrated">("final");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -78,64 +92,48 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const tabBarRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
 
+  // Per-column quick-buy amounts
+  const [qbNew, setQbNew] = useState(() => getColumnQb("new"));
+  const [qbFinal, setQbFinal] = useState(() => getColumnQb("final"));
+  const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated"));
+
+  const handleQbChange = useCallback((colId: ColumnTab, amount: number) => {
+    saveColumnQb(colId, amount);
+    if (colId === "new") setQbNew(amount);
+    else if (colId === "final") setQbFinal(amount);
+    else setQbMigrated(amount);
+  }, []);
+
+  const qbMap: Record<ColumnTab, number> = { new: qbNew, final: qbFinal, migrated: qbMigrated };
+
   const isBnb = chain === 'bnb';
+  const [activeFilterColumn, setActiveFilterColumn] = useState<ColumnId>("new");
+  const { filters, updateFilter, resetFilter, applyFilters, hasActiveFilters } = usePulseFilters();
 
-  const {
-    filters, activeFilterColumn, setActiveFilterColumn,
-    updateFilter, resetFilter, hasActiveFilters,
-    applyFilterToFunTokens, applyFilterToCodexTokens,
-  } = usePulseFilters();
+  // Filter DB tokens into columns
+  const { filteredNewPairs, filteredFinalStretch, filteredMigrated } = useMemo(() => {
+    const newPairs: FunToken[] = [];
+    const finalStretch: FunToken[] = [];
+    const migrated: FunToken[] = [];
 
-  const { newPairs, finalStretch, migrated } = useMemo(() => {
-    // On BNB chain, DB tokens are empty — only Codex tokens used
-    if (isBnb) return { newPairs: [] as FunToken[], finalStretch: [] as FunToken[], migrated: [] as FunToken[] };
-
-    const newPairs = tokens
-      .filter(t => (t.bonding_progress ?? 0) < 80 && t.status !== 'graduated')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    let finalStretch = tokens
-      .filter(t => (t.bonding_progress ?? 0) >= 5 && t.status !== 'graduated')
-      .sort((a, b) => (b.bonding_progress ?? 0) - (a.bonding_progress ?? 0));
-
-    if (finalStretch.length < 3 && kingTokens.length > 0) {
-      const existingIds = new Set(finalStretch.map(t => t.id));
-      const kingFill = kingTokens
-        .filter(k => !existingIds.has(k.id))
-        .slice(0, 3 - finalStretch.length)
-        .map(k => ({
-          id: k.id, name: k.name, ticker: k.ticker, description: null,
-          image_url: k.image_url, creator_wallet: k.creator_wallet ?? "",
-          twitter_url: k.twitter_url, website_url: null,
-          twitter_avatar_url: k.twitter_avatar_url ?? null,
-          twitter_verified: k.twitter_verified ?? false,
-          twitter_verified_type: k.twitter_verified_type ?? null,
-          mint_address: k.mint_address, dbc_pool_address: k.dbc_pool_address,
-          status: k.status, price_sol: 0, price_change_24h: null,
-          volume_24h_sol: 0, total_fees_earned: 0, holder_count: k.holder_count,
-          market_cap_sol: k.market_cap_sol, bonding_progress: k.bonding_progress,
-          trading_fee_bps: k.trading_fee_bps, fee_mode: k.fee_mode,
-          agent_id: k.agent_id, launchpad_type: k.launchpad_type,
-          last_distribution_at: null, created_at: k.created_at, updated_at: k.created_at,
-        } satisfies FunToken));
-      finalStretch = [...finalStretch, ...kingFill];
+    for (const t of tokens) {
+      const progress = t.bonding_progress ?? 0;
+      const status = t.status ?? 'active';
+      if (status === 'graduated' || status === 'migrated') migrated.push(t);
+      else if (progress >= 50) finalStretch.push(t);
+      else newPairs.push(t);
     }
+    return {
+      filteredNewPairs: applyFilters(newPairs, "new"),
+      filteredFinalStretch: applyFilters(finalStretch, "final"),
+      filteredMigrated: applyFilters(migrated, "migrated"),
+    };
+  }, [tokens, applyFilters]);
 
-    const migrated = tokens
-      .filter(t => t.status === 'graduated')
-      .sort((a, b) => (b.market_cap_sol ?? 0) - (a.market_cap_sol ?? 0));
-
-    return { newPairs, finalStretch, migrated };
-  }, [tokens, kingTokens, isBnb]);
-
-  // Apply filters
-  const filteredNewPairs = useMemo(() => applyFilterToFunTokens(newPairs, "new", solPrice), [newPairs, filters, solPrice]);
-  const filteredFinalStretch = useMemo(() => applyFilterToFunTokens(finalStretch, "final", solPrice), [finalStretch, filters, solPrice]);
-  const filteredMigrated = useMemo(() => applyFilterToFunTokens(migrated, "migrated", solPrice), [migrated, filters, solPrice]);
-
-  const filteredCodexNew = useMemo(() => applyFilterToCodexTokens(codexNewPairs, "new"), [codexNewPairs, filters]);
-  const filteredCodexCompleting = useMemo(() => applyFilterToCodexTokens(codexCompleting, "final"), [codexCompleting, filters]);
-  const filteredCodexGraduated = useMemo(() => applyFilterToCodexTokens(codexGraduated, "migrated"), [codexGraduated, filters]);
+  // Filter codex tokens
+  const filteredCodexNew = useMemo(() => applyFilters(codexNewPairs, "new"), [codexNewPairs, applyFilters]);
+  const filteredCodexCompleting = useMemo(() => applyFilters(codexCompleting, "final"), [codexCompleting, applyFilters]);
+  const filteredCodexGraduated = useMemo(() => applyFilters(codexGraduated, "migrated"), [codexGraduated, applyFilters]);
 
   // Collect addresses for sparkline batch fetch (all columns)
   const allAddresses = useMemo(() => {
@@ -179,6 +177,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   };
 
   const renderColumnContent = (col: typeof columns[number]) => {
+    const colQb = qbMap[col.id];
     if (isLoading) return <PulseColumnSkeleton />;
     if (col.tokens.length === 0 && col.codex.length === 0) return <PulseEmptyColumn label={col.label} color={col.color} />;
     return (
@@ -187,7 +186,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
           <CodexPairRow
             key={`codex-${t.address}`}
             token={t}
-            quickBuyAmount={quickBuyAmount}
+            quickBuyAmount={colQb}
             proTraders={0}
             sparklineData={t.address ? sparklineMap?.[t.address] : undefined}
             chain={chain}
@@ -198,7 +197,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             key={token.id}
             token={token}
             solPrice={solPrice}
-            quickBuyAmount={quickBuyAmount}
+            quickBuyAmount={colQb}
             proTraders={proTradersMap[token.id] ?? 0}
             sparklineData={token.mint_address ? sparklineMap?.[token.mint_address] : undefined}
           />
@@ -254,8 +253,9 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
         <div className="pulse-column-v2 border-r border-border">
           <PulseColumnHeaderBar
             label={columnLabels.new} color={COLUMN_TABS[0].color} icon={Rocket}
-            quickBuyAmount={quickBuyAmount}
-            onQuickBuyChange={onQuickBuyChange}
+            columnId="new"
+            quickBuyAmount={qbNew}
+            onQuickBuyChange={(v) => handleQbChange("new", v)}
             onOpenFilters={() => openFiltersForColumn("new")}
             hasActiveFilters={hasActiveFilters("new")}
           />
@@ -296,8 +296,9 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
           <div key={col.id} className={`pulse-column-v2 ${i < 2 ? "border-r border-border" : ""}`}>
             <PulseColumnHeaderBar
               label={col.label} color={col.color} icon={col.icon}
-              quickBuyAmount={quickBuyAmount}
-              onQuickBuyChange={onQuickBuyChange}
+              columnId={col.id}
+              quickBuyAmount={qbMap[col.id]}
+              onQuickBuyChange={(v) => handleQbChange(col.id, v)}
               onOpenFilters={() => openFiltersForColumn(col.id)}
               hasActiveFilters={hasActiveFilters(col.id)}
             />

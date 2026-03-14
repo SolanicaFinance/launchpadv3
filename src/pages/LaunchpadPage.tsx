@@ -191,6 +191,7 @@ export default function LaunchpadPage() {
           label="Launchpad"
           color="160 84% 39%"
           icon={Rocket}
+          columnId="launchpad"
           quickBuyAmount={quickBuyAmount}
           onQuickBuyChange={handleQuickBuyChange}
           onOpenFilters={() => setFiltersOpen(true)}
