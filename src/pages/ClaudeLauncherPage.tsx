@@ -165,7 +165,7 @@ export default function ClaudeLauncherPage() {
   const [isPhantomGenerating, setIsPhantomGenerating] = useState(false);
   const [phantomDescribePrompt, setPhantomDescribePrompt] = useState("");
   const [phantomInputMode, setPhantomInputMode] = useState<"random" | "describe" | "custom">("random");
-  const [phantomTradingFee, setPhantomTradingFee] = useState(200); // 200 bps = 2% default
+  const [phantomTradingFee, setPhantomTradingFee] = useState(100); // 100 bps = 1% creator fee default
   
   const { 
     generateBanner, 
