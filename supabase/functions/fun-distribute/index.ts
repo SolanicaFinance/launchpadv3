@@ -547,20 +547,34 @@ serve(async (req) => {
             `[fun-distribute] Punch Token ${token.ticker}: ${claimedSol} SOL → Creator 70% (${recipientAmount.toFixed(6)}), Platform 30% (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
           );
         } else {
-          // Regular tokens: creator gets 50%, rest for buyback/system
-          recipientAmount = claimedSol * CREATOR_FEE_SHARE;
-          platformAmount = claimedSol * (BUYBACK_FEE_SHARE + SYSTEM_FEE_SHARE);
-          
-          // Partner split from platform share - EXCLUDE Phantom mode tokens
+          // Regular/Phantom tokens
           const isPhantom = token.launchpad_type === 'phantom';
-          if (!isPhantom && isTokenEligibleForPartnerSplit(token.created_at)) {
-            partnerAmount = platformAmount * 0.5;
-            platformAmount = platformAmount * 0.5;
-          }
           
-          console.log(
-            `[fun-distribute] ${isPhantom ? 'Phantom' : 'Regular'} Token ${token.ticker}: ${claimedSol} SOL → Creator ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}${isPhantom ? ' (partner split excluded)' : ''}`
-          );
+          // Phantom tokens with stored fee breakdown: use creator_fee_bps / trading_fee_bps ratio
+          if (isPhantom && token.trading_fee_bps && token.creator_fee_bps != null) {
+            const creatorShare = token.creator_fee_bps / token.trading_fee_bps;
+            const platformShare = 1 - creatorShare;
+            recipientAmount = claimedSol * creatorShare;
+            platformAmount = claimedSol * platformShare;
+            
+            console.log(
+              `[fun-distribute] Phantom Token ${token.ticker}: ${claimedSol} SOL → Creator ${(creatorShare * 100).toFixed(1)}% (${recipientAmount.toFixed(6)}), Platform ${(platformShare * 100).toFixed(1)}% (${platformAmount.toFixed(6)}) [${token.creator_fee_bps}/${token.trading_fee_bps} bps]`
+            );
+          } else {
+            // Legacy regular tokens: creator gets 50%, rest for buyback/system
+            recipientAmount = claimedSol * CREATOR_FEE_SHARE;
+            platformAmount = claimedSol * (BUYBACK_FEE_SHARE + SYSTEM_FEE_SHARE);
+            
+            // Partner split from platform share - EXCLUDE Phantom mode tokens
+            if (!isPhantom && isTokenEligibleForPartnerSplit(token.created_at)) {
+              partnerAmount = platformAmount * 0.5;
+              platformAmount = platformAmount * 0.5;
+            }
+            
+            console.log(
+              `[fun-distribute] ${isPhantom ? 'Phantom (legacy)' : 'Regular'} Token ${token.ticker}: ${claimedSol} SOL → Creator ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
+            );
+          }
         }
       }
 
