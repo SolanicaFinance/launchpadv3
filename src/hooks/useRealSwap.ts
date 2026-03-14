@@ -21,7 +21,7 @@ interface SwapResult {
 }
 
 export function useRealSwap() {
-  const { signAndSendTransaction, walletAddress, getConnection, getBalance } = useSolanaWalletWithPrivy();
+  const { signAndSendTransaction, walletAddress, getConnection, getBalance, getTokenBalanceRaw } = useSolanaWalletWithPrivy();
   const { buyToken, sellToken } = useJupiterSwap();
   const { profileId } = useAuth();
   const queryClient = useQueryClient();
