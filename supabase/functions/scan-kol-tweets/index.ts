@@ -123,6 +123,16 @@ Deno.serve(async (req) => {
           const errBody = await resp.text().catch(() => "");
           const msg = `HTTP ${resp.status}: ${errBody.substring(0, 200)}`;
           console.error(`[scan] @${kol.username}: ${msg}`);
+          
+          // Auto-deactivate KOLs that return 404 / user not found
+          if (resp.status === 404 || resp.status === 403 || errBody.toLowerCase().includes("not found") || errBody.toLowerCase().includes("user not found") || errBody.toLowerCase().includes("suspended")) {
+            console.log(`[scan] Deactivating @${kol.username} — user not found or suspended`);
+            await supabase
+              .from("kol_accounts")
+              .update({ is_active: false, last_scanned_at: new Date().toISOString() })
+              .eq("id", kol.id);
+          }
+          
           runErrors.push({ username: kol.username, message: msg, preview: errBody.substring(0, 500) });
           runCounters.errorsCount++;
           continue;
@@ -156,14 +166,9 @@ Deno.serve(async (req) => {
         console.log(`[scan] @${kol.username}: found ${tweets.length} tweets from response`);
         
         if (tweets.length === 0) {
-          // Log the response structure for debugging
-          const responseKeys = JSON.stringify(Object.keys(data || {})).substring(0, 200);
-          runErrors.push({ 
-            username: kol.username, 
-            message: `No tweets extracted. Response keys: ${responseKeys}`,
-            preview: JSON.stringify(data).substring(0, 500),
-          });
-          runCounters.errorsCount++;
+          // This is normal — user may just have no recent tweets or API returned empty
+          // Don't count as an error, just update scan timestamp and move on
+          console.log(`[scan] @${kol.username}: no tweets in response, skipping`);
           
           await supabase
             .from("kol_accounts")
