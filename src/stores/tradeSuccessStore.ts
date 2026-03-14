@@ -4,6 +4,7 @@ export interface TradeSuccessData {
   type: 'buy' | 'sell';
   ticker: string;
   tokenName?: string;
+  mintAddress?: string;
   amount?: string; // e.g. "0.5 SOL" or "100%"
   signature?: string;
   executionMs?: number;

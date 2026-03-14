@@ -10,8 +10,11 @@ import {
   TrendingDown,
   Coins,
   ImagePlus,
+  BarChart3,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTradeSuccessStore } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 
@@ -25,6 +28,7 @@ function truncateSig(sig: string, chars = 6) {
 
 export function TradeSuccessPopup() {
   const { isVisible, data, hide } = useTradeSuccessStore();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [showProfitCard, setShowProfitCard] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -236,6 +240,32 @@ export function TradeSuccessPopup() {
                       <ExternalLink className="h-3.5 w-3.5" />
                     </button>
                   )}
+
+                  {/* Trade & Portfolio row */}
+                  <div className="flex gap-2">
+                    {data.mintAddress && (
+                      <button
+                        onClick={() => {
+                          hide();
+                          navigate(`/launchpad/${data.mintAddress}`);
+                        }}
+                        className="flex-1 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-foreground/80 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        Trade
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        hide();
+                        navigate("/portfolio");
+                      }}
+                      className="flex-1 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-foreground/80 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      <Wallet className="h-3.5 w-3.5" />
+                      Portfolio
+                    </button>
+                  </div>
 
                   {/* Generate PnL Card button (sell only) */}
                   {isSell && (
