@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SATURN_TOKEN_CA } from "@/hooks/useSaturnTokenData";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 interface HolderEntry {
   rank: number;
@@ -64,9 +66,13 @@ function getRankBg(rank: number) {
 
 export default function SixtyNineListPage() {
   const { data, isLoading, refetch, isFetching } = useTop69Holders();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      <div className="md:ml-[48px] flex flex-col min-h-screen">
+        <AppHeader onMobileMenuOpen={() => setMobileOpen(true)} />
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
@@ -271,6 +277,7 @@ export default function SixtyNineListPage() {
             Buy $SATURN
           </a>
         </div>
+      </div>
       </div>
     </div>
   );
