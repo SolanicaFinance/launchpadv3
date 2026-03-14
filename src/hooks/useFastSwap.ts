@@ -55,7 +55,7 @@ export function useFastSwap() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
 
-  const recordTradeForAlphaTracker = useCallback(async (
+  const recordTradeForAlphaTracker = useCallback((
     token: Token,
     amount: number,
     isBuy: boolean,
@@ -75,8 +75,8 @@ export function useFastSwap() {
     const amountSolForInsert = isBuy ? amount : (outputAmount ?? 0);
     const amountTokensForInsert = isBuy ? (outputAmount ?? 0) : amount;
 
-    // Path 1: direct client upsert
-    await recordAlphaTrade({
+    // Path 1: direct client upsert (fire-and-forget to avoid swap latency)
+    void recordAlphaTrade({
       walletAddress: resolvedWallet,
       tokenMint: token.mint_address,
       tokenName: token.name,
@@ -89,28 +89,26 @@ export function useFastSwap() {
     });
 
     // Path 2: service-role alpha_only fallback (critical for unindexed tokens)
-    try {
-      const { error } = await supabase.functions.invoke('launchpad-swap', {
-        body: {
-          mintAddress: token.mint_address,
-          userWallet: resolvedWallet,
-          amount,
-          isBuy,
-          profileId: profileId || undefined,
-          signature,
-          outputAmount: outputAmount ?? null,
-          tokenName: token.name,
-          tokenTicker: token.ticker,
-          mode: 'alpha_only',
-        },
-      });
-
+    void supabase.functions.invoke('launchpad-swap', {
+      body: {
+        mintAddress: token.mint_address,
+        userWallet: resolvedWallet,
+        amount,
+        isBuy,
+        profileId: profileId || undefined,
+        signature,
+        outputAmount: outputAmount ?? null,
+        tokenName: token.name,
+        tokenTicker: token.ticker,
+        mode: 'alpha_only',
+      },
+    }).then(({ error }) => {
       if (error) {
         console.warn('[FastSwap] alpha_only record failed:', error.message);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.warn('[FastSwap] alpha_only invoke failed:', err);
-    }
+    });
   }, [walletAddress, solanaAddress, profileId]);
 
   // Start blockhash poller on mount
