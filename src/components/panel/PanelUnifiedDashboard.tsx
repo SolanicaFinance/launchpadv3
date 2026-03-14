@@ -301,6 +301,7 @@ export default function PanelUnifiedDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountSecurityOpen, setAccountSecurityOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [hasSeenDepositPrompt, setHasSeenDepositPrompt] = useState(false);
   const [launchPage, setLaunchPage] = useState(1);
   const [portfolioPage, setPortfolioPage] = useState(1);
   const PORTFOLIO_PER_PAGE = 5;
