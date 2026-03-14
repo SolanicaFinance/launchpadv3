@@ -351,10 +351,79 @@ export default function WhitepaperPage() {
                 </div>
               </section>
 
-              {/* Section 9 — Fee Architecture */}
+              {/* Section 9 — Portfolio & PnL Cards */}
+              <section id="portfolio">
+                <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
+                  9. Portfolio &amp; PnL Cards
+                </h2>
+
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  The {BRAND.name} portfolio panel provides a real-time overview of all token holdings in the connected wallet. It features a compact pie chart, paginated token list, dust filtering, quick-sell actions, and shareable PnL trade cards.
+                </p>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">Portfolio Features</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { feature: "Pie Chart Breakdown", desc: "Visual allocation of holdings by SOL value — only tokens above the dust threshold are displayed" },
+                    { feature: "Dust Filtering", desc: "Tokens worth less than 0.0001 SOL are hidden from the main view to keep the portfolio clean" },
+                    { feature: "Paginated Holdings", desc: "Holdings are displayed 5 per page with Previous/Next navigation to prevent excessive scrolling" },
+                    { feature: "Sell 100% Quick Action", desc: "Each token card includes a one-click Sell button that routes directly to the trade page with the token pre-selected" },
+                  ].map((item) => (
+                    <Card key={item.feature} className="p-4 bg-card/50">
+                      <h4 className="font-semibold text-foreground text-sm">{item.feature}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                    </Card>
+                  ))}
+                </div>
+
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">PnL Trade Cards</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  After every buy or sell trade, {BRAND.name} generates a shareable PnL card showing the trade action, SOL amount received or spent, token details, and a QR code linking to the token page. Cards can be saved as images or shared directly to X/Twitter with one click.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { feature: "Trade Summary", desc: "Shows BUY/SELL action, token name, ticker, and SOL value in a visually rich card" },
+                    { feature: "QR Code", desc: "Auto-generated QR code linking to the token's trade page for instant sharing" },
+                    { feature: "X/Twitter Share", desc: "One-click share to X with pre-formatted trade details and platform branding" },
+                    { feature: "Image Export", desc: "Download the PnL card as a high-resolution image for social media posting" },
+                  ].map((item) => (
+                    <Card key={item.feature} className="p-4 bg-card/50">
+                      <h4 className="font-semibold text-foreground text-sm">{item.feature}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section 10 — Staking */}
+              <section id="staking">
+                <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
+                  10. Staking (Coming Soon)
+                </h2>
+
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  Staking on AI agents will become available soon with the <strong className="text-success">$SATURN</strong> and <strong className="text-success">$SOL</strong> coins. Users will be able to stake tokens on specific AI trading agents to earn a share of the agent's trading fees and participate in governance decisions.
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { feature: "Agent Staking", desc: "Stake $SATURN or $SOL on your preferred AI trading agents to earn fee share rewards" },
+                    { feature: "Fee Distribution", desc: "Stakers receive proportional rewards from the agent's accumulated trading fees" },
+                    { feature: "Governance", desc: "Staked tokens provide voting power on platform decisions and agent strategy parameters" },
+                    { feature: "Flexible Lock", desc: "Multiple staking durations with tiered reward multipliers" },
+                  ].map((item) => (
+                    <Card key={item.feature} className="p-4 bg-card/50">
+                      <h4 className="font-semibold text-foreground text-sm">{item.feature}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section 11 — Fee Architecture */}
               <section id="fee-architecture">
                 <h2 className="text-2xl font-bold text-foreground border-b border-border pb-3 mb-6">
-                  9. Fee Architecture
+                  11. Fee Architecture
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
