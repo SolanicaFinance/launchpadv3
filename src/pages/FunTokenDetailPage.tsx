@@ -822,11 +822,11 @@ export default function FunTokenDetailPage() {
           </div>
 
           {/* ──── PHONE ONLY: Stats row ──── */}
-          <div className="md:hidden grid grid-cols-3 gap-1.5">
+          <div className="md:hidden grid grid-cols-3 gap-1">
             {stats.slice(0, 3).map((s, i) => (
               <div key={i} className="trade-stat-card">
-                <p className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-widest">{s.label}</p>
-                <p className={`text-sm font-mono font-bold mt-1 ${s.accent ? 'text-primary' : 'text-foreground'}`}>{s.value}</p>
+                <p className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-widest">{s.label}</p>
+                <p className={`text-xs font-mono font-bold mt-0.5 ${s.accent ? 'text-primary' : 'text-foreground'}`}>{s.value}</p>
               </div>
             ))}
           </div>
