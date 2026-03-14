@@ -467,6 +467,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
             type: 'sell',
             ticker,
             tokenName: name || ticker,
+            mintAddress,
             amount: '100%',
             signature: result.signature,
             executionMs: result.totalMs || lastLatencyMs || undefined,
