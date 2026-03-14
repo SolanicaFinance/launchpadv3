@@ -17,7 +17,7 @@ const corsHeaders = {
 };
 
 const REQUIRED_SOL = 1.0;
-const TREASURY_WALLET = "HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx";
+const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
 const RENT_EXEMPT_RESERVE = 0.002; // Keep small amount for rent
 
 // Forward SOL from payment wallet to treasury

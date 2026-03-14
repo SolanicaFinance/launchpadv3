@@ -14,7 +14,7 @@ const corsHeaders = {
 const BAGS_API_URL = "https://public-api-v2.bags.fm/api/v1";
 
 // Treasury wallet - receives 100% of fees
-const TREASURY_WALLET = "HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx";
+const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
 
 // Decrypt secret key from XOR-encrypted storage
 function decryptSecretKey(encryptedHex: string, encryptionKey: string): Uint8Array {

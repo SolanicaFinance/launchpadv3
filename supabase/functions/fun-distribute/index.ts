@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 // Treasury wallet
-const TREASURY_WALLET = "HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx";
+const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
 
 // Partner fee split configuration (3 weeks from Feb 6, 2026)
 // IMPORTANT: Only applies to tokens LAUNCHED after this date (not retroactive)

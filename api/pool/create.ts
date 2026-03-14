@@ -243,7 +243,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       p_token_id: tokenId,
       p_earner_type: 'system',
       p_share_bps: 10000, // 100% of 2% = 2% to treasury
-      p_wallet_address: PLATFORM_FEE_WALLET, // HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx
+      p_wallet_address: PLATFORM_FEE_WALLET, // B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc
     });
 
     if (systemFeeError) {

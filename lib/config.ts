@@ -12,7 +12,7 @@ export const WSOL_MINT = 'So11111111111111111111111111111111111111112';
 
 // Platform Configuration - Treasury Wallet
 // This wallet receives all platform fees and locked LP tokens
-export const PLATFORM_FEE_WALLET = 'HSVmkUnmkjD9YLJmgeHCRyL1isusKkU3xv4VwDaZJqRx';
+export const PLATFORM_FEE_WALLET = 'B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc';
 
 // Token settings
 // CRITICAL: Use 9 decimals to match Axiom/DEXTools expectations for migration display
