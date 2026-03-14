@@ -385,32 +385,49 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
             <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground truncate shrink min-w-0">
               {isBuy ? 'Amount to buy' : `Sell ${token.ticker}`}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground">
+            <span className="text-[10px] font-mono text-muted-foreground truncate shrink-0 max-w-[50%] text-right">
               Bal: {isBuy
                 ? (solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—')
-                : `${formatTokenAmount(effectiveTokenBalance)} ${token.ticker}`}
+                : `${formatTokenAmount(effectiveTokenBalance)} ${token.ticker.length > 6 ? token.ticker.slice(0, 5) + '…' : token.ticker}`}
             </span>
           </div>
-          <div className="relative bg-background/60 border border-border/50 rounded-lg hover:border-border/80 focus-within:border-primary/50 transition-colors">
-            <Input
-              type="number"
+          <div className="relative bg-background/60 border border-border/50 rounded-lg hover:border-border/80 focus-within:border-primary/50 transition-colors overflow-hidden">
+            <input
+              type="text"
+              inputMode="decimal"
               placeholder="0.00"
-              value={amount}
-              onChange={(e) => { setAmount(e.target.value); setSelectedPreset(null); }}
-              className="border-0 bg-transparent text-xl font-mono h-14 pr-24 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/30"
+              value={(() => {
+                if (!amount) return '';
+                const num = parseFloat(amount);
+                if (!isFinite(num)) return amount;
+                if (!isBuy && num >= 10_000) {
+                  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2)}M`;
+                  return `${(num / 1_000).toFixed(1)}K`;
+                }
+                return amount;
+              })()}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[KMBkmb]/g, '');
+                if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                  setAmount(raw);
+                  setSelectedPreset(null);
+                }
+              }}
+              className="w-full border-0 bg-transparent font-mono h-14 pl-3 pr-24 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/30 text-ellipsis overflow-hidden [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              style={{ fontSize: 'clamp(14px, 3vw, 20px)' }}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 shrink-0">
               <button
                 onClick={handleMaxClick}
                 className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#2a2a1a] text-[#c8b400] hover:bg-[#3a3a2a] transition-colors border border-[#4a4a2a]"
               >
                 MAX
               </button>
-              <span className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1">
+              <span className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1 shrink-0">
                 {isBuy
                   ? <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="SOL" className="w-4 h-4 rounded-full" />
                   : token.image_url && <img src={token.image_url} alt={token.ticker} className="w-4 h-4 rounded-full" />}
-                {isBuy ? 'SOL' : token.ticker}
+                {isBuy ? 'SOL' : (token.ticker.length > 6 ? token.ticker.slice(0, 5) + '…' : token.ticker)}
               </span>
             </div>
           </div>
