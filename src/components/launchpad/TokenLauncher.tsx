@@ -1294,7 +1294,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
             telegramUrl: phantomToken.telegramUrl || "",
             discordUrl: phantomToken.discordUrl || "",
             phantomWallet: phantomWallet.address,
-            tradingFeeBps: phantomTradingFee,
+            tradingFeeBps: phantomTradingFee + 100, // creator fee + 1% platform base
+            creatorFeeBps: phantomTradingFee, // creator portion only
             confirmed: true,
             mintAddress: data.mintAddress,
             dbcPoolAddress: data.dbcPoolAddress,
