@@ -8,12 +8,28 @@ const corsHeaders = {
 
 const TWITTERAPI_BASE = "https://api.twitterapi.io/twitter";
 
+const KEYWORDS = {
+  cashtag: "$saturn",
+  handle: "@saturnterminal",
+};
+
+const POINTS = {
+  view: 0.2,
+  retweet: 0.5,
+  comment: 0.3,
+  mention: 5, // base mention reward
+};
+
+function hasKeywords(text: string): boolean {
+  const lower = text.toLowerCase();
+  return lower.includes(KEYWORDS.cashtag) || lower.includes(KEYWORDS.handle);
+}
+
 async function fetchUserTweets(
   username: string,
   sinceId: string | null,
   apiKey: string
 ): Promise<any[]> {
-  // Use user timeline endpoint
   const url = new URL(`${TWITTERAPI_BASE}/user/last_tweets`);
   url.searchParams.set("userName", username);
   url.searchParams.set("count", "20");
@@ -37,7 +53,6 @@ async function fetchUserTweets(
     return [];
   }
 
-  // Filter only tweets newer than sinceId
   if (sinceId) {
     return tweets.filter((t: any) => {
       const tweetId = t.id || t.id_str;
@@ -48,11 +63,26 @@ async function fetchUserTweets(
   return tweets;
 }
 
-function checkPostContent(text: string): { hasMoon: boolean; hasSaturn: boolean } {
-  const lower = text.toLowerCase();
-  const hasMoon = lower.includes("$moon");
-  const hasSaturn = lower.includes("@saturntrade");
-  return { hasMoon, hasSaturn };
+function calculateEngagementPoints(tweet: any): {
+  viewPoints: number;
+  retweetPoints: number;
+  commentPoints: number;
+  views: number;
+  retweets: number;
+  comments: number;
+} {
+  const views = Number(tweet.viewCount || tweet.view_count || tweet.views || 0);
+  const retweets = Number(tweet.retweetCount || tweet.retweet_count || tweet.retweets || 0);
+  const comments = Number(tweet.replyCount || tweet.reply_count || tweet.replies || 0);
+
+  return {
+    viewPoints: Math.round(views * POINTS.view * 100) / 100,
+    retweetPoints: Math.round(retweets * POINTS.retweet * 100) / 100,
+    commentPoints: Math.round(comments * POINTS.comment * 100) / 100,
+    views,
+    retweets,
+    comments,
+  };
 }
 
 serve(async (req) => {
@@ -75,7 +105,6 @@ serve(async (req) => {
   );
 
   try {
-    // Get all social reward users
     const { data: users, error: usersError } = await supabase
       .from("social_rewards")
       .select("*")
@@ -109,67 +138,87 @@ serve(async (req) => {
           const text = tweet.text || tweet.full_text || "";
           const tweetUrl = `https://x.com/${user.twitter_username}/status/${tweetId}`;
 
-          // Track the latest post ID
           if (!newLastPostId || BigInt(tweetId) > BigInt(newLastPostId)) {
             newLastPostId = tweetId;
           }
 
-          const { hasMoon, hasSaturn } = checkPostContent(text);
+          if (!hasKeywords(text)) continue;
 
-          if (!hasMoon && !hasSaturn) continue;
+          // Base mention reward
+          const { error: mentionErr } = await supabase
+            .from("social_reward_events")
+            .insert({
+              social_reward_id: user.id,
+              post_id: tweetId,
+              post_url: tweetUrl,
+              reward_type: "mention",
+              points: POINTS.mention,
+            })
+            .select("id")
+            .maybeSingle();
 
-          // Both in same post = only 5 points (one reward), pick one type
-          if (hasMoon && hasSaturn) {
-            // Insert single event for "both"
-            const { error: insertErr } = await supabase
+          if (!mentionErr) {
+            pointsEarned += POINTS.mention;
+            console.log(`[check-social-rewards] @${user.twitter_username} +${POINTS.mention} pts (mention) tweet:${tweetId}`);
+          }
+
+          // Engagement-based rewards (views, retweets, comments)
+          const engagement = calculateEngagementPoints(tweet);
+
+          if (engagement.viewPoints > 0) {
+            const { error: viewErr } = await supabase
               .from("social_reward_events")
               .insert({
                 social_reward_id: user.id,
-                post_id: tweetId,
+                post_id: `${tweetId}_views`,
                 post_url: tweetUrl,
-                reward_type: "moon_mention",
-                points: 5,
+                reward_type: "views",
+                points: engagement.viewPoints,
               })
               .select("id")
               .maybeSingle();
 
-            if (!insertErr) {
-              pointsEarned += 5;
-              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (both $MOON+@Saturn) tweet:${tweetId}`);
+            if (!viewErr) {
+              pointsEarned += engagement.viewPoints;
+              console.log(`[check-social-rewards] @${user.twitter_username} +${engagement.viewPoints} pts (${engagement.views} views) tweet:${tweetId}`);
             }
-          } else if (hasMoon) {
-            const { error: insertErr } = await supabase
+          }
+
+          if (engagement.retweetPoints > 0) {
+            const { error: rtErr } = await supabase
               .from("social_reward_events")
               .insert({
                 social_reward_id: user.id,
-                post_id: tweetId,
+                post_id: `${tweetId}_retweets`,
                 post_url: tweetUrl,
-                reward_type: "moon_mention",
-                points: 5,
+                reward_type: "retweets",
+                points: engagement.retweetPoints,
               })
               .select("id")
               .maybeSingle();
 
-            if (!insertErr) {
-              pointsEarned += 5;
-              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts ($MOON) tweet:${tweetId}`);
+            if (!rtErr) {
+              pointsEarned += engagement.retweetPoints;
+              console.log(`[check-social-rewards] @${user.twitter_username} +${engagement.retweetPoints} pts (${engagement.retweets} RTs) tweet:${tweetId}`);
             }
-          } else if (hasSaturn) {
-            const { error: insertErr } = await supabase
+          }
+
+          if (engagement.commentPoints > 0) {
+            const { error: cmtErr } = await supabase
               .from("social_reward_events")
               .insert({
                 social_reward_id: user.id,
-                post_id: tweetId,
+                post_id: `${tweetId}_comments`,
                 post_url: tweetUrl,
-                reward_type: "saturn_tag",
-                points: 5,
+                reward_type: "comments",
+                points: engagement.commentPoints,
               })
               .select("id")
               .maybeSingle();
 
-            if (!insertErr) {
-              pointsEarned += 5;
-              console.log(`[check-social-rewards] @${user.twitter_username} +5 pts (@Saturn) tweet:${tweetId}`);
+            if (!cmtErr) {
+              pointsEarned += engagement.commentPoints;
+              console.log(`[check-social-rewards] @${user.twitter_username} +${engagement.commentPoints} pts (${engagement.comments} comments) tweet:${tweetId}`);
             }
           }
         }
@@ -183,7 +232,7 @@ serve(async (req) => {
           updatePayload.last_checked_post_id = newLastPostId;
         }
         if (pointsEarned > 0) {
-          updatePayload.points = (user.points || 0) + pointsEarned;
+          updatePayload.points = Math.round(((user.points || 0) + pointsEarned) * 100) / 100;
           totalRewarded++;
         }
 
@@ -196,7 +245,6 @@ serve(async (req) => {
         console.error(`[check-social-rewards] Error for @${user.twitter_username}:`, (userErr as Error).message?.slice(0, 100));
       }
 
-      // Small delay between users to avoid rate limiting
       await new Promise((r) => setTimeout(r, 500));
     }
 

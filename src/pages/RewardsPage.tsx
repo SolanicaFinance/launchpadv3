@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { XIcon } from "@/components/icons/XIcon";
-import { Gift, Users, Star, Clock, ExternalLink, Loader2, Trophy, Zap } from "lucide-react";
+import { Gift, Users, Star, Clock, ExternalLink, Loader2, Trophy, Zap, Eye, Repeat2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface SocialReward {
@@ -27,6 +27,15 @@ interface RewardEvent {
   created_at: string;
 }
 
+const REWARD_TYPE_MAP: Record<string, { label: string; icon: typeof Star }> = {
+  mention: { label: "$SATURN / @saturnterminal mention", icon: Star },
+  moon_mention: { label: "$SATURN mention", icon: Star },
+  saturn_tag: { label: "@saturnterminal tag", icon: Star },
+  views: { label: "Post views", icon: Eye },
+  retweets: { label: "Retweets", icon: Repeat2 },
+  comments: { label: "Comments", icon: MessageCircle },
+};
+
 export default function RewardsPage() {
   const { isAuthenticated, login, user } = useAuth();
   const { user: privyUser, linkTwitter, ready } = usePrivy();
@@ -43,13 +52,11 @@ export default function RewardsPage() {
 
   const twitterLinked = !!twitterAccount;
 
-  // Fetch reward data
   const fetchRewardData = useCallback(async () => {
     if (!twitterAccount?.username) return;
     
     setLoading(true);
     try {
-      // Fetch user's reward record
       const { data: rewardData } = await supabase
         .from("social_rewards")
         .select("*")
@@ -59,7 +66,6 @@ export default function RewardsPage() {
       if (rewardData) {
         setReward(rewardData as any);
 
-        // Fetch events
         const { data: eventsData } = await supabase
           .from("social_reward_events")
           .select("*")
@@ -70,7 +76,6 @@ export default function RewardsPage() {
         setEvents((eventsData || []) as any);
       }
 
-      // Fetch total users
       const { count } = await supabase
         .from("social_rewards")
         .select("*", { count: "exact", head: true });
@@ -91,7 +96,6 @@ export default function RewardsPage() {
     }
   }, [twitterLinked, fetchRewardData]);
 
-  // Join rewards program
   const handleJoin = async () => {
     if (!twitterAccount || !user) return;
     
@@ -121,7 +125,6 @@ export default function RewardsPage() {
     }
   };
 
-  // Handle X authorization
   const handleLinkTwitter = async () => {
     try {
       await linkTwitter();
@@ -140,7 +143,7 @@ export default function RewardsPage() {
           </div>
           <h1 className="text-2xl font-bold font-mono text-foreground">Social Rewards</h1>
           <p className="text-sm text-muted-foreground">
-            Earn points by mentioning <span className="text-primary font-bold">$MOON</span> or tagging <span className="text-primary font-bold">@MoonDexo</span> in your posts on X.
+            Earn points by mentioning <span className="text-primary font-bold">$SATURN</span> or tagging <span className="text-primary font-bold">@saturnterminal</span> in your posts on X.
           </p>
           <button
             onClick={() => login()}
@@ -153,7 +156,7 @@ export default function RewardsPage() {
     );
   }
 
-  // Authenticated but X not linked
+  // X not linked
   if (!twitterLinked) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -186,7 +189,7 @@ export default function RewardsPage() {
     );
   }
 
-  // Twitter linked but not joined
+  // Not joined yet
   if (!reward) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -200,13 +203,9 @@ export default function RewardsPage() {
             Welcome, @{twitterAccount.username}!
           </h1>
           <p className="text-sm text-muted-foreground">
-            Join the Social Rewards program to earn points for mentioning <span className="text-primary font-bold">$MOON</span> or tagging <span className="text-primary font-bold">@MoonDexo</span>.
+            Join the Social Rewards program to earn points for posting about <span className="text-primary font-bold">$SATURN</span> or <span className="text-primary font-bold">@saturnterminal</span>.
           </p>
-          <div className="p-4 rounded-xl border border-border/40 bg-card/30 text-left space-y-2">
-            <p className="text-xs font-mono text-muted-foreground"><Star className="inline h-3 w-3 mr-1 text-primary" /> 5 points per post with <span className="text-primary">$MOON</span></p>
-            <p className="text-xs font-mono text-muted-foreground"><Star className="inline h-3 w-3 mr-1 text-primary" /> 5 points per post with <span className="text-primary">@MoonDexo</span></p>
-            <p className="text-xs font-mono text-muted-foreground/60"><Zap className="inline h-3 w-3 mr-1" /> Posts checked every 10 minutes</p>
-          </div>
+          <PointSystemCard />
           <button
             onClick={handleJoin}
             disabled={joining}
@@ -223,7 +222,7 @@ export default function RewardsPage() {
     );
   }
 
-  // Main rewards dashboard
+  // Main dashboard
   return (
     <div className="min-h-screen p-4 pt-20 md:pt-24 max-w-2xl mx-auto space-y-6">
       {/* Profile card */}
@@ -275,19 +274,8 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="rounded-xl border border-border/30 bg-card/10 p-4 space-y-2">
-        <h3 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">How to earn</h3>
-        <p className="text-[11px] font-mono text-muted-foreground">
-          <Star className="inline h-3 w-3 mr-1 text-primary" /> Post on X with <span className="text-primary font-bold">$MOON</span> → earn <span className="text-primary font-bold">5 points</span>
-        </p>
-        <p className="text-[11px] font-mono text-muted-foreground">
-          <Star className="inline h-3 w-3 mr-1 text-primary" /> Post on X with <span className="text-primary font-bold">@MoonDexo</span> → earn <span className="text-primary font-bold">5 points</span>
-        </p>
-        <p className="text-[11px] font-mono text-muted-foreground/60">
-          Both in the same post? Only one reward of 5 points (no double-dipping).
-        </p>
-      </div>
+      {/* Point System */}
+      <PointSystemCard />
 
       {/* Recent reward events */}
       <div className="space-y-2">
@@ -295,32 +283,76 @@ export default function RewardsPage() {
         {events.length === 0 ? (
           <div className="rounded-xl border border-border/20 bg-card/10 p-6 text-center">
             <p className="text-xs text-muted-foreground font-mono">
-              No rewards yet. Start posting about $MOON or @MoonDexo on X!
+              No rewards yet. Start posting about $SATURN or @saturnterminal on X!
             </p>
           </div>
         ) : (
           <div className="space-y-1.5">
-            {events.map((event) => (
-              <div key={event.id} className="flex items-center gap-3 rounded-lg border border-border/20 bg-card/10 px-3 py-2">
-                <Star className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px] font-mono text-foreground">
-                    +{event.points} pts — {event.reward_type === "moon_mention" ? "$MOON mention" : "@MoonDexo tag"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/50 ml-2">
-                    {new Date(event.created_at).toLocaleDateString()}
-                  </span>
+            {events.map((event) => {
+              const info = REWARD_TYPE_MAP[event.reward_type] || { label: event.reward_type, icon: Star };
+              const Icon = info.icon;
+              return (
+                <div key={event.id} className="flex items-center gap-3 rounded-lg border border-border/20 bg-card/10 px-3 py-2">
+                  <Icon className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] font-mono text-foreground">
+                      +{event.points} pts — {info.label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/50 ml-2">
+                      {new Date(event.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {event.post_url && (
+                    <a href={event.post_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                 </div>
-                {event.post_url && (
-                  <a href={event.post_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function PointSystemCard() {
+  return (
+    <div className="rounded-xl border border-border/30 bg-card/10 p-4 space-y-3">
+      <h3 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Point System</h3>
+      <p className="text-[11px] font-mono text-muted-foreground/70">
+        Post on X mentioning <span className="text-primary font-bold">$SATURN</span> or <span className="text-primary font-bold">@saturnterminal</span> to start earning:
+      </p>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Star className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+          <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-primary font-bold">5 pts</span> — per qualifying post (mention $SATURN or @saturnterminal)
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Eye className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+          <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-primary font-bold">0.2 pts</span> — per view on your qualifying post
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Repeat2 className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+          <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-primary font-bold">0.5 pts</span> — per retweet on your qualifying post
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+          <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-primary font-bold">0.3 pts</span> — per comment on your qualifying post
+          </span>
+        </div>
+      </div>
+      <p className="text-[10px] font-mono text-muted-foreground/40">
+        <Zap className="inline h-3 w-3 mr-1" /> Posts checked every 10 minutes. Engagement metrics update each cycle.
+      </p>
     </div>
   );
 }
