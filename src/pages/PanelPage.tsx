@@ -50,6 +50,28 @@ export default function PanelPage() {
     if (ok) { setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
 
+  // Show loading spinner while Privy initializes (prevents "Connect Wallet" flash)
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <Sidebar mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+        <div className="md:ml-[48px] flex flex-col min-h-screen">
+          <AppHeader onMobileMenuOpen={() => setMobileMenuOpen(true)} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <img
+                src={saturnLogo}
+                alt={BRAND.name}
+                className="w-12 h-12 animate-pulse drop-shadow-[0_0_24px_rgba(132,204,22,0.3)]"
+              />
+              <div className="w-5 h-5 border-2 border-transparent border-t-primary rounded-full animate-spin" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
