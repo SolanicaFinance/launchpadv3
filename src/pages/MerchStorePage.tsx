@@ -75,7 +75,7 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "mug-ceramic",
-    name: "MoonDexo Ceramic Mug",
+    name: `${BRAND.shortName} Ceramic Mug`,
     description: "11oz ceramic mug, dishwasher safe",
     priceSol: 0.1,
     category: "accessory",
