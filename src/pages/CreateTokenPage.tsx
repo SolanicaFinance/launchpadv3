@@ -4,9 +4,10 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { TokenLauncher } from "@/components/launchpad/TokenLauncher";
 import { BnbLauncher } from "@/components/launchpad/BnbLauncher";
-import { Rocket, ExternalLink, CheckCircle2, ArrowLeft, Shield, Zap, Coins } from "lucide-react";
+import { Rocket, ExternalLink, CheckCircle2, ArrowLeft, Shield, Zap, Coins, Copy, Check } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useChain } from "@/contexts/ChainContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface LaunchResult {
   success: boolean;
@@ -164,9 +165,32 @@ function SuccessResult({
   onReset: () => void;
 }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCA = () => {
+    if (!result.mintAddress) return;
+    navigator.clipboard.writeText(result.mintAddress);
+    setCopied(true);
+    toast({ title: "Copied!", description: "Contract address copied to clipboard" });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-400 max-w-[640px] mx-auto">
+      {/* LIVE banner */}
+      <div className="text-center">
+        <span
+          className="inline-block text-2xl md:text-3xl font-black tracking-tight"
+          style={{
+            color: "hsl(142, 71%, 45%)",
+            textShadow: "0 0 20px hsl(142 71% 45% / 0.5), 0 0 40px hsl(142 71% 45% / 0.25)",
+          }}
+        >
+          Your token is LIVE 🚀
+        </span>
+      </div>
+
       {/* Token card */}
       <div className="launch-page-form-container rounded-2xl p-6 flex items-center gap-4">
         {result.imageUrl ? (
@@ -182,11 +206,21 @@ function SuccessResult({
         )}
         <div className="flex-1 min-w-0">
           <p className="text-base font-bold text-emerald-300 tracking-tight">
-            {result.name} (${result.ticker}) launched! 🚀
+            {result.name} (${result.ticker})
           </p>
-          <p className="text-[11px] text-muted-foreground font-mono truncate mt-1.5">
-            {result.mintAddress}
-          </p>
+          {/* Clickable CA */}
+          <button
+            onClick={handleCopyCA}
+            className="flex items-center gap-1.5 mt-1.5 text-[11px] text-muted-foreground font-mono hover:text-foreground transition-colors group"
+            title="Click to copy contract address"
+          >
+            <span className="truncate max-w-[320px]">{result.mintAddress}</span>
+            {copied ? (
+              <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+            ) : (
+              <Copy className="w-3 h-3 opacity-50 group-hover:opacity-100 flex-shrink-0" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -203,19 +237,17 @@ function SuccessResult({
             Solscan <ExternalLink className="w-3.5 h-3.5" />
           </a>
         )}
-        {result.tradeUrl && (
-          <a
-            href={result.tradeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+        {result.mintAddress && (
+          <button
+            onClick={() => navigate(`/trade/${result.mintAddress}`)}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-primary hover:brightness-110 transition-all hover:scale-[1.02] duration-200"
             style={{
               background: "hsl(var(--primary) / 0.08)",
               border: "1px solid hsl(var(--primary) / 0.2)",
             }}
           >
-            Trade <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+            Trade
+          </button>
         )}
       </div>
 
