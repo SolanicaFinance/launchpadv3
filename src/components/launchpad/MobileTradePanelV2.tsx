@@ -335,43 +335,40 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Amount Input ── */}
         <div className="space-y-1 mb-1">
-          <div className="flex justify-between items-center px-0.5 min-w-0">
-            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate">
+          <div className="flex justify-between items-center px-0.5 min-w-0 gap-2">
+            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground shrink-0">
               {isBuy ? "You pay" : "You sell"}
             </span>
-            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate max-w-[60%] text-right">
-              {isBuy
-                ? solBalance !== null ? `${solBalance.toFixed(4)} SOL` : "—"
+            <button
+              onClick={handleMaxClick}
+              className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate hover:text-foreground transition-colors"
+              title="Click to use max"
+            >
+              Bal: {isBuy
+                ? solBalance !== null ? `${solBalance.toFixed(3)} SOL` : "—"
                 : `${formatAmount(userTokenBalance)} ${shortTicker}`}
-            </span>
+            </button>
           </div>
-          <div className="relative">
+          <div className="relative overflow-hidden rounded-lg border border-border/40 bg-secondary/30 focus-within:ring-1 focus-within:ring-primary/40 focus-within:border-primary/30 transition-all">
             <input
               type="text"
               inputMode="decimal"
               placeholder="0.00"
               value={displayInputValue}
               onChange={(e) => {
-                // Strip abbreviation suffixes so user can type freely
                 const raw = e.target.value.replace(/[KMBkmb]/g, '');
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
                   setAmount(raw);
                   setSelectedPreset(null);
                 }
               }}
-              className="w-full h-11 text-sm font-mono font-bold pl-3 pr-20 sm:pr-24 rounded-lg border border-border/40 bg-secondary/30 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              style={{ fontSize: 'max(16px, 0.875rem)' }}
+              className="w-full h-11 font-mono font-bold pl-3 pr-[88px] bg-transparent text-foreground placeholder:text-muted-foreground/30 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
+              style={{ fontSize: 'clamp(14px, 4vw, 16px)' }}
             />
-            {/* Show full precision below when abbreviated */}
-            {!isBuy && numericAmount >= 10_000 && (
-              <span className="absolute left-3 -bottom-3.5 text-[8px] font-mono text-muted-foreground/50 truncate max-w-[60%]">
-                {numericAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-              </span>
-            )}
-            <div className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1 shrink-0">
               <button
                 onClick={handleMaxClick}
-                className="h-7 min-w-[44px] px-2 rounded-md font-mono text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                className="h-7 px-2 rounded-md font-mono text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95 shrink-0"
               >
                 MAX
               </button>
