@@ -10,7 +10,7 @@ import type { Token } from '@/hooks/useLaunchpad';
 import { useQueryClient } from '@tanstack/react-query';
 
 const SOL_DECIMALS = 9;
-const TOKEN_DECIMALS = 6; // Meteora DBC tokens typically use 6 decimals
+const DEFAULT_TOKEN_DECIMALS = 6;
 
 interface SwapResult {
   success: boolean;
@@ -21,7 +21,7 @@ interface SwapResult {
 }
 
 export function useRealSwap() {
-  const { signAndSendTransaction, walletAddress, getConnection, getBalance } = useSolanaWalletWithPrivy();
+  const { signAndSendTransaction, walletAddress, getConnection, getBalance, getTokenBalanceRaw } = useSolanaWalletWithPrivy();
   const { buyToken, sellToken } = useJupiterSwap();
   const { profileId } = useAuth();
   const queryClient = useQueryClient();
@@ -35,6 +35,7 @@ export function useRealSwap() {
     amount: number,
     isBuy: boolean,
     slippageBps: number = 500,
+    tokenDecimals?: number,
   ): Promise<SwapResult> => {
     if (!walletAddress) throw new Error('Wallet not connected');
     if (!token.dbc_pool_address) throw new Error('Token has no DBC pool address');
@@ -48,14 +49,25 @@ export function useRealSwap() {
     const poolAddress = new PublicKey(token.dbc_pool_address);
     const ownerPubkey = new PublicKey(walletAddress);
 
+    // Resolve decimals dynamically for sells
+    let resolvedDecimals = tokenDecimals ?? DEFAULT_TOKEN_DECIMALS;
+    if (!isBuy && !tokenDecimals) {
+      try {
+        const raw = await getTokenBalanceRaw(token.mint_address);
+        resolvedDecimals = raw.decimals;
+      } catch (e) {
+        console.warn('[useRealSwap] Failed to resolve decimals:', e);
+      }
+    }
+
     // Convert amount to lamports/smallest unit
     let amountIn: BN;
     if (isBuy) {
       // Buying: amount is in SOL
       amountIn = new BN(Math.floor(amount * 10 ** SOL_DECIMALS));
     } else {
-      // Selling: amount is in tokens
-      amountIn = new BN(Math.floor(amount * 10 ** TOKEN_DECIMALS));
+      // Selling: amount is in tokens — use resolved decimals
+      amountIn = new BN(Math.floor(amount * 10 ** resolvedDecimals));
     }
 
     // Calculate minimum amount out with slippage
@@ -108,7 +120,7 @@ export function useRealSwap() {
       signature,
       graduated: false,
     };
-  }, [walletAddress, getConnection, signAndSendTransaction, profileId]);
+  }, [walletAddress, getConnection, signAndSendTransaction, profileId, getTokenBalanceRaw]);
 
   /**
    * Execute a real on-chain swap for graduated tokens via Jupiter
@@ -118,10 +130,22 @@ export function useRealSwap() {
     amount: number,
     isBuy: boolean,
     slippageBps: number = 500,
+    tokenDecimals?: number,
   ): Promise<SwapResult> => {
     if (!walletAddress) throw new Error('Wallet not connected');
 
-    console.log('[useRealSwap] Jupiter swap:', { mint: token.mint_address, amount, isBuy });
+    // Resolve decimals dynamically for sells
+    let resolvedDecimals = tokenDecimals ?? DEFAULT_TOKEN_DECIMALS;
+    if (!isBuy && !tokenDecimals) {
+      try {
+        const raw = await getTokenBalanceRaw(token.mint_address);
+        resolvedDecimals = raw.decimals;
+      } catch (e) {
+        console.warn('[useRealSwap] Failed to resolve decimals for graduated sell:', e);
+      }
+    }
+
+    console.log('[useRealSwap] Jupiter swap:', { mint: token.mint_address, amount, isBuy, decimals: resolvedDecimals });
 
     let result;
     if (isBuy) {
@@ -136,7 +160,7 @@ export function useRealSwap() {
       result = await sellToken(
         token.mint_address,
         amount,
-        TOKEN_DECIMALS,
+        resolvedDecimals,
         walletAddress,
         signAndSendTransaction as any,
         slippageBps,
@@ -149,7 +173,7 @@ export function useRealSwap() {
       tokensOut: isBuy ? result.outputAmount : undefined,
       solOut: !isBuy ? result.outputAmount : undefined,
     };
-  }, [walletAddress, signAndSendTransaction, buyToken, sellToken]);
+  }, [walletAddress, signAndSendTransaction, buyToken, sellToken, getTokenBalanceRaw]);
 
   /**
    * Main swap function - routes to correct implementation based on token status

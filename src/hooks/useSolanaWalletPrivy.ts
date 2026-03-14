@@ -199,6 +199,35 @@ export function useSolanaWalletWithPrivy() {
     }
   }, [walletAddress, getConnection]);
 
+  /**
+   * Get token balance with raw amount string and decimals — for exact 100% sells
+   */
+  const getTokenBalanceRaw = useCallback(async (mintAddress: string): Promise<{ balance: number; decimals: number; rawAmount: string }> => {
+    if (!walletAddress || !mintAddress) return { balance: 0, decimals: 6, rawAmount: '0' };
+    try {
+      const connection = getConnection();
+      const owner = new PublicKey(walletAddress);
+      const mint = new PublicKey(mintAddress);
+      const accounts = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+      if (accounts.value.length === 0) return { balance: 0, decimals: 6, rawAmount: '0' };
+
+      const rawTotal = accounts.value.reduce((sum, acc) => {
+        const raw = (acc.account.data as any)?.parsed?.info?.tokenAmount?.amount;
+        return sum + BigInt(raw || '0');
+      }, BigInt(0));
+
+      const decimals = (accounts.value[0]?.account.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
+      const balance = Number(rawTotal) / (10 ** decimals);
+      const rawAmount = rawTotal.toString();
+
+      console.log(`[getTokenBalanceRaw] ${mintAddress.slice(0,8)}… raw: ${rawAmount}, decimals: ${decimals}, balance: ${balance}`);
+      return { balance, decimals, rawAmount };
+    } catch (err) {
+      console.error("[getTokenBalanceRaw] Error:", err);
+      return { balance: 0, decimals: 6, rawAmount: '0' };
+    }
+  }, [walletAddress, getConnection]);
+
   // Sign-only (no send) — needed for Meteora/Lighthouse flows with ephemeral keypairs
   const signTransaction = useCallback(
     async <T extends Transaction | VersionedTransaction>(
@@ -261,6 +290,7 @@ export function useSolanaWalletWithPrivy() {
     getBalance,
     getBalanceStrict,
     getTokenBalance,
+    getTokenBalanceRaw,
     signAndSendTransaction,
     signTransaction,
     getSolanaWallet,

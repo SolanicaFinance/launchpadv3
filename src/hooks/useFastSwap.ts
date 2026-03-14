@@ -26,7 +26,7 @@ import type { Token } from '@/hooks/useLaunchpad';
 import { useQueryClient } from '@tanstack/react-query';
 
 const SOL_DECIMALS = 9;
-const TOKEN_DECIMALS = 6;
+const DEFAULT_TOKEN_DECIMALS = 6;
 
 interface FastSwapResult {
   success: boolean;
@@ -48,7 +48,7 @@ function getOrCreateDbcClient(connection: Connection, rpcUrl: string): DynamicBo
 }
 
 export function useFastSwap() {
-  const { signAndSendTransaction, walletAddress, getConnection } = useSolanaWalletWithPrivy();
+  const { signAndSendTransaction, walletAddress, getConnection, getTokenBalanceRaw } = useSolanaWalletWithPrivy();
   const { buyToken, sellToken } = useJupiterSwap();
   const { profileId, solanaAddress } = useAuth();
   const queryClient = useQueryClient();
@@ -125,6 +125,7 @@ export function useFastSwap() {
     amount: number,
     isBuy: boolean,
     slippageBps: number = 500,
+    tokenDecimals?: number,
   ): Promise<FastSwapResult> => {
     if (!walletAddress) throw new Error('Wallet not connected');
     if (!token.dbc_pool_address) throw new Error('Token has no DBC pool address');
@@ -138,9 +139,22 @@ export function useFastSwap() {
     const poolAddress = new PublicKey(token.dbc_pool_address);
     const ownerPubkey = new PublicKey(walletAddress);
 
+    // Resolve decimals dynamically for sells
+    let resolvedDecimals = tokenDecimals ?? DEFAULT_TOKEN_DECIMALS;
+    if (!isBuy && !tokenDecimals) {
+      // Fetch real decimals from on-chain token account
+      try {
+        const raw = await getTokenBalanceRaw(token.mint_address);
+        resolvedDecimals = raw.decimals;
+        console.log(`[FastSwap] Resolved token decimals from chain: ${resolvedDecimals}`);
+      } catch (e) {
+        console.warn('[FastSwap] Failed to resolve decimals, using default:', DEFAULT_TOKEN_DECIMALS);
+      }
+    }
+
     const amountIn = isBuy
       ? new BN(Math.floor(amount * 10 ** SOL_DECIMALS))
-      : new BN(Math.floor(amount * 10 ** TOKEN_DECIMALS));
+      : new BN(Math.floor(amount * 10 ** resolvedDecimals));
 
     const minimumAmountOut = new BN(0);
 
@@ -154,7 +168,7 @@ export function useFastSwap() {
       console.log(`[FastSwap] Pool fetch: ${Math.round(performance.now() - t2)}ms`);
       if (poolState) {
         virtualSolReserves = Number(poolState.quoteReserve) / 10 ** SOL_DECIMALS;
-        virtualTokenReserves = Number(poolState.baseReserve) / 10 ** TOKEN_DECIMALS;
+        virtualTokenReserves = Number(poolState.baseReserve) / 10 ** resolvedDecimals;
       }
     } catch (e) {
       console.log(`[FastSwap] Pool fetch failed: ${Math.round(performance.now() - t2)}ms`);
@@ -205,7 +219,7 @@ export function useFastSwap() {
     }).catch(err => console.warn('[FastSwap] DB record failed (non-fatal):', err));
 
     return { success: true, signature, graduated: false };
-  }, [walletAddress, getConnection, signAndSendTransaction, profileId, recordTradeForAlphaTracker]);
+  }, [walletAddress, getConnection, signAndSendTransaction, profileId, recordTradeForAlphaTracker, getTokenBalanceRaw]);
 
   /**
    * Fast graduated token swap via Jupiter
@@ -215,8 +229,20 @@ export function useFastSwap() {
     amount: number,
     isBuy: boolean,
     slippageBps: number = 500,
+    tokenDecimals?: number,
   ): Promise<FastSwapResult> => {
     if (!walletAddress) throw new Error('Wallet not connected');
+
+    // Resolve decimals dynamically for sells
+    let resolvedDecimals = tokenDecimals ?? DEFAULT_TOKEN_DECIMALS;
+    if (!isBuy && !tokenDecimals) {
+      try {
+        const raw = await getTokenBalanceRaw(token.mint_address);
+        resolvedDecimals = raw.decimals;
+      } catch (e) {
+        console.warn('[FastSwap] Failed to resolve decimals for graduated sell:', e);
+      }
+    }
 
     let result;
     if (isBuy) {
@@ -226,7 +252,7 @@ export function useFastSwap() {
       );
     } else {
       result = await sellToken(
-        token.mint_address, amount, TOKEN_DECIMALS, walletAddress,
+        token.mint_address, amount, resolvedDecimals, walletAddress,
         signAndSendTransaction as any, slippageBps,
       );
     }
@@ -237,7 +263,7 @@ export function useFastSwap() {
       tokensOut: isBuy ? result.outputAmount : undefined,
       solOut: !isBuy ? result.outputAmount : undefined,
     };
-  }, [walletAddress, signAndSendTransaction, buyToken, sellToken]);
+  }, [walletAddress, signAndSendTransaction, buyToken, sellToken, getTokenBalanceRaw]);
 
   /**
    * Main fast swap — routes based on token status, optimistic UI

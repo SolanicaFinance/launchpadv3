@@ -431,19 +431,21 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
       const name = funToken?.name ?? codexToken?.name ?? '';
       const toastId = `quick-sell-${Date.now()}`;
 
-      // Always fetch fresh on-chain balance before selling
+      // Always fetch fresh on-chain balance with exact raw amounts before selling
       let freshBalance = tokenBalance ?? 0;
       try {
         const connection = new Connection(getRpcUrl().url, "confirmed");
         const owner = new PublicKey(walletAddress!);
         const mint = new PublicKey(token.mint_address);
         const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
-        // Sum ALL token accounts for this mint
-        freshBalance = resp.value.reduce((sum, acc) => {
-          const ta = acc.account?.data?.parsed?.info?.tokenAmount;
-          const v = typeof ta?.uiAmount === 'number' ? ta.uiAmount : (ta?.uiAmountString ? parseFloat(ta.uiAmountString) : 0);
-          return sum + (isFinite(v) ? v : 0);
-        }, 0);
+        // Sum ALL token accounts using BigInt for exact precision
+        const rawTotal = resp.value.reduce((sum, acc) => {
+          const raw = (acc.account?.data as any)?.parsed?.info?.tokenAmount?.amount;
+          return sum + BigInt(raw || '0');
+        }, BigInt(0));
+        const decimals = (resp.value[0]?.account?.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
+        freshBalance = Number(rawTotal) / (10 ** decimals);
+        console.log(`[PulseQuickSell] Raw: ${rawTotal.toString()}, decimals: ${decimals}, balance: ${freshBalance}`);
         // Update cache with real balance
         queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], freshBalance);
       } catch (e) {

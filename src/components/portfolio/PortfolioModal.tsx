@@ -76,7 +76,7 @@ interface PortfolioModalProps {
 }
 
 export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
-  const { walletAddress, getTokenBalance } = useSolanaWalletWithPrivy();
+  const { walletAddress, getTokenBalance, getTokenBalanceRaw } = useSolanaWalletWithPrivy();
   const { useUserHoldings } = useLaunchpad();
   const { executeTurboSwap: executeFastSwap } = useTurboSwap();
   const { toast } = useToast();
@@ -95,13 +95,13 @@ export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
 
       setSellStatuses((s) => ({ ...s, [holding.id]: "pending" }));
       try {
-        // Fetch real on-chain balance instead of stale DB value
+        // Fetch real on-chain balance with exact raw precision
         let sellAmount = holding.balance;
         if (token.mint_address) {
           try {
-            const onChain = await getTokenBalance(token.mint_address);
-            console.log(`[Portfolio] DB: ${holding.balance}, On-chain: ${onChain}`);
-            if (onChain > 0) sellAmount = onChain;
+            const { balance } = await getTokenBalanceRaw(token.mint_address);
+            console.log(`[Portfolio] DB: ${holding.balance}, On-chain raw: ${balance}`);
+            if (balance > 0) sellAmount = balance;
           } catch (e) {
             console.warn("[Portfolio] On-chain balance fetch failed:", e);
           }
@@ -116,7 +116,7 @@ export function PortfolioModal({ open, onClose }: PortfolioModalProps) {
         toast({ title: `Failed to sell ${token.ticker}`, description: e?.message?.slice(0, 80) || "Unknown error", variant: "destructive" });
       }
     },
-    [executeFastSwap, toast, getTokenBalance],
+    [executeFastSwap, toast, getTokenBalanceRaw],
   );
 
   const sellAll = useCallback(async () => {
