@@ -10,6 +10,7 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFastSwap } from '@/hooks/useFastSwap';
+import { useSolanaWalletWithPrivy } from '@/hooks/useSolanaWalletPrivy';
 import type { Token } from '@/hooks/useLaunchpad';
 
 interface TurboSwapResult {
