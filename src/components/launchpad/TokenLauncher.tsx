@@ -130,7 +130,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
 
   // Phantom specific state
   const [isPhantomLaunching, setIsPhantomLaunching] = useState(false);
-  const [phantomTradingFee, setPhantomTradingFee] = useState(200);
+  const [phantomTradingFee, setPhantomTradingFee] = useState(100); // 100 bps = 1% creator fee default
   const [phantomDevBuySolInput, setPhantomDevBuySolInput] = useState<string>(""); // Optional dev buy amount in SOL (raw input)
   const phantomDevBuySol = parseDevBuySol(phantomDevBuySolInput);
   const [phantomSubMode, setPhantomSubMode] = useState<"random" | "describe" | "realistic" | "custom">("random");
