@@ -339,7 +339,7 @@ export default function CareersPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground">
-                We're looking for experienced crypto users, developers, and traders to beta test the MoonDexo platform 
+                We're looking for experienced crypto users, developers, and traders to beta test the {BRAND.name} platform 
                 before public launch. As a beta tester, you'll get early access to features, provide feedback directly 
                 to the team, and help us identify and fix issues.
               </p>
