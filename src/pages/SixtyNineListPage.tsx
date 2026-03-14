@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Crown, Trophy, TrendingUp, Shield, Gem, ExternalLink, RefreshCw, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight } from "lucide-react";
+import { Crown, Trophy, TrendingUp, Shield, Gem, ExternalLink, RefreshCw, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
