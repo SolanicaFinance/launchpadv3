@@ -2179,31 +2179,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
         {/* Phantom Mode */}
         {generatorMode === "phantom" && (
           <div className="space-y-6">
-            {/* Wallet Mode Toggle: Phantom vs Privy */}
-            <div className="flex gap-1 p-1 rounded-xl bg-muted/30 border border-border/50">
-              <button
-                onClick={() => setLaunchWalletMode("phantom")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs rounded-lg transition-all ${
-                  launchWalletMode === "phantom"
-                    ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Wallet className="h-3.5 w-3.5" />
-                Phantom
-              </button>
-              <button
-                onClick={() => setLaunchWalletMode("privy")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs rounded-lg transition-all ${
-                  launchWalletMode === "privy"
-                    ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Rocket className="h-3.5 w-3.5" />
-                1-Click (Privy)
-              </button>
-            </div>
+            {/* Force privy mode - Phantom tab removed */}
 
             {/* ═══ PRIVY WALLET MODE ═══ */}
             {launchWalletMode === "privy" && (
