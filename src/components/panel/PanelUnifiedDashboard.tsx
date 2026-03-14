@@ -589,18 +589,19 @@ export default function PanelUnifiedDashboard() {
                   ) : (
                     <>
                       <div className="space-y-1.5">
-                        {(holdings as HoldingWithToken[]).map((holding) => {
+                        {paginatedHoldings.map((holding) => {
                           if (!holding.tokens) return null;
                           const value = holding.balance * holding.tokens.price_sol;
                           return (
-                            <Link key={holding.id} to={`/trade/${holding.tokens.mint_address}`}>
-                              <div
-                                className="p-3 flex items-center gap-3 rounded-xl transition-all duration-200 hover:scale-[1.01] group"
-                                style={{
-                                  background: "rgba(255,255,255,0.02)",
-                                  border: "1px solid rgba(255,255,255,0.05)",
-                                }}
-                              >
+                            <div
+                              key={holding.id}
+                              className="p-3 flex items-center gap-3 rounded-xl transition-all duration-200 group"
+                              style={{
+                                background: "rgba(255,255,255,0.02)",
+                                border: "1px solid rgba(255,255,255,0.05)",
+                              }}
+                            >
+                              <Link to={`/trade/${holding.tokens.mint_address}`} className="flex items-center gap-3 flex-1 min-w-0">
                                 <Avatar className="h-9 w-9 rounded-lg ring-1 ring-white/10">
                                   <AvatarImage src={holding.tokens.image_url || undefined} />
                                   <AvatarFallback className="rounded-lg text-[10px] font-bold bg-white/5">
@@ -616,24 +617,62 @@ export default function PanelUnifiedDashboard() {
                                 </div>
                                 <div className="text-right shrink-0">
                                   <p className="text-sm font-bold font-mono" style={{ color: NEON_LIME }}>
-                                    {formatSolAmount(value)}
+                                    {value >= 0.001 ? formatSolAmount(value) : "<0.001"}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground">{currencySymbol}</p>
                                 </div>
-                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
-                              </div>
-                            </Link>
+                              </Link>
+                              <Link
+                                to={`/trade/${holding.tokens.mint_address}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="shrink-0 px-2 py-1 rounded-md text-[9px] font-mono font-bold uppercase tracking-wider transition-all
+                                           bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 hover:border-destructive/40"
+                              >
+                                Sell
+                              </Link>
+                            </div>
                           );
                         })}
                       </div>
+                      {/* Pagination */}
+                      {portfolioTotalPages > 1 && (
+                        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={portfolioPage <= 1}
+                            onClick={() => setPortfolioPage(p => Math.max(1, p - 1))}
+                            className="text-[10px] font-mono"
+                          >
+                            ← Prev
+                          </Button>
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {portfolioPage}/{portfolioTotalPages}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={portfolioPage >= portfolioTotalPages}
+                            onClick={() => setPortfolioPage(p => Math.min(portfolioTotalPages, p + 1))}
+                            className="text-[10px] font-mono"
+                          >
+                            Next →
+                          </Button>
+                        </div>
+                      )}
+                      {dustCount > 0 && (
+                        <p className="text-[10px] text-muted-foreground/50 mt-2 text-center font-mono">
+                          {dustCount} dust token{dustCount > 1 ? 's' : ''} hidden (&lt;0.0001 SOL)
+                        </p>
+                      )}
                       {/* Export button */}
-                      <div className="mt-3 flex justify-end">
+                      <div className="mt-2 flex justify-end">
                         <Button
                           variant="ghost"
                           size="sm"
                           className="gap-1.5 text-[10px] font-mono text-muted-foreground hover:text-foreground"
                           onClick={() => {
-                            const data = (holdings as HoldingWithToken[])
+                            const data = displayHoldings
                               .filter(h => h.tokens)
                               .map(h => ({
                                 Token: h.tokens!.name,
