@@ -2130,7 +2130,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                 {/* Trading Fee */}
                 <div className="space-y-3 phantom-slider">
                   <div className="flex items-center justify-between">
-                    <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Trading Fee</span>
+                    <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Creator Fee</span>
                     <span
                       className={`font-bold text-base font-mono ${
                         phantomTradingFee >= 900
