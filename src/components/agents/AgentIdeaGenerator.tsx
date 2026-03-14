@@ -170,7 +170,7 @@ export function AgentIdeaGenerator() {
               </Label>
               <Textarea
                 id="prompt"
-                placeholder="e.g., 'Claw astronaut on the moon', 'Claw lobster at a pool party', 'cyberpunk Claw hacker'..."
+                placeholder="e.g., 'Saturn astronaut on the moon', 'Saturn at a pool party', 'cyberpunk Saturn hacker'..."
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 className="min-h-[80px] bg-background border-border"
