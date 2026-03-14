@@ -497,10 +497,15 @@ export default function PanelUnifiedDashboard() {
         <div className="relative z-10 flex flex-wrap gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <button
             onClick={() => setDepositOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono font-bold transition-all animate-pulse hover:animate-none"
+            style={{
+              background: `linear-gradient(135deg, ${NEON_LIME}20, ${EMERALD}15)`,
+              border: `1px solid ${NEON_LIME}50`,
+              color: NEON_LIME,
+              boxShadow: `0 0 12px ${NEON_LIME}15, 0 0 4px ${NEON_LIME}10`,
+            }}
           >
-            <ArrowDownToLine className="h-3 w-3" /> Deposit
+            <ArrowDownToLine className="h-3.5 w-3.5" /> Deposit to Trade
           </button>
           <button
             onClick={() => setSettingsOpen(true)}
