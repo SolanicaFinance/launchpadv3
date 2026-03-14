@@ -34,8 +34,9 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   if (!data) return null;
 
   const isBuy = data.action === "buy";
+  const hasPnl = data.pnlPercent !== undefined && data.pnlPercent !== null;
   const pnl = data.pnlPercent ?? 0;
-  const isPositive = pnl >= 0;
+  const isPositive = isBuy || pnl >= 0;
   const qrLink = referralLink || "https://saturn.trade/";
   const truncatedWallet = solanaAddress
     ? `${solanaAddress.slice(0, 4)}...${solanaAddress.slice(-4)}`
