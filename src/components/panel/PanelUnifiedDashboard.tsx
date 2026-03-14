@@ -394,11 +394,11 @@ export default function PanelUnifiedDashboard() {
     }
   };
 
-  // Pie chart data for portfolio
+  // Pie chart data for portfolio — only tokens with value
   const pieData = useMemo(() => {
     const typedHoldings = holdings as HoldingWithToken[];
     const items = typedHoldings
-      .filter(h => h.tokens && h.balance * h.tokens.price_sol > 0)
+      .filter(h => h.tokens && h.balance * h.tokens.price_sol > 0.0001)
       .map(h => ({
         name: h.tokens!.ticker,
         value: h.balance * h.tokens!.price_sol,
@@ -407,6 +407,17 @@ export default function PanelUnifiedDashboard() {
       .slice(0, 6);
     return items;
   }, [holdings]);
+
+  // Filter holdings for display — hide dust (< 0.0001 SOL value)
+  const displayHoldings = useMemo(() => {
+    return (holdings as HoldingWithToken[])
+      .filter(h => h.tokens && h.balance * h.tokens.price_sol >= 0.0001)
+      .sort((a, b) => (b.balance * (b.tokens?.price_sol || 0)) - (a.balance * (a.tokens?.price_sol || 0)));
+  }, [holdings]);
+
+  const portfolioTotalPages = Math.max(1, Math.ceil(displayHoldings.length / PORTFOLIO_PER_PAGE));
+  const paginatedHoldings = displayHoldings.slice((portfolioPage - 1) * PORTFOLIO_PER_PAGE, portfolioPage * PORTFOLIO_PER_PAGE);
+  const dustCount = (holdings as HoldingWithToken[]).length - displayHoldings.length;
 
   const PIE_COLORS = [NEON_LIME, EMERALD, CYAN, NEON_LIME_GLOW, "#a78bfa", "#f97316"];
 
