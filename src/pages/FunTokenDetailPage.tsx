@@ -943,7 +943,7 @@ export default function FunTokenDetailPage() {
               <ContractSection />
               <DescriptionSection />
               <PnlSimulator />
-              <CommentsSection />
+              {/* Comments removed for platform tokens */}
             </div>
             {!isPunchToken && (
               <div className="col-span-5 flex flex-col gap-2">
