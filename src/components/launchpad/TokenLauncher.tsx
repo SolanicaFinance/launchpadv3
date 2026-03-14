@@ -1199,12 +1199,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
          // Sign transaction — Phantom or Privy embedded wallet
          let signedTx: Transaction | VersionedTransaction | null;
          if (usePrivy) {
-           // Privy embedded wallet: auto-sign (no popup with showWalletUIs: false)
-           // For Privy, we need to use signAndSendTransaction from the Privy hook
-           // But since the launch flow needs sign-only + ephemeral sign + manual send,
-           // we use phantomWallet.signTransaction as fallback for now
-           // TODO: implement Privy sign-only flow
-           signedTx = await phantomWallet.signTransaction(tx as any);
+           // Privy embedded wallet: sign-only via useSignTransaction (no popup with showWalletUIs: false)
+           signedTx = await privySignTransaction(tx);
          } else {
            signedTx = await phantomWallet.signTransaction(tx as any);
          }
