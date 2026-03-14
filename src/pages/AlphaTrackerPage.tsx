@@ -42,6 +42,13 @@ export default function AlphaTrackerPage() {
   const [tradeTypeFilter, setTradeTypeFilter] = useState<TradeTypeFilter>("all");
   const [holdingFilter, setHoldingFilter] = useState<HoldingFilter>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [tick, setTick] = useState(0);
+
+  // Re-render every second to update relative timestamps
+  useEffect(() => {
+    const iv = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
 
   const hasActiveFilters = searchToken || searchWallet || tradeTypeFilter !== "all" || holdingFilter !== "all";
 
