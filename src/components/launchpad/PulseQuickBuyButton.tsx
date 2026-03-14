@@ -108,7 +108,8 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
 
   // For BNB tokens, use the BNB quick buy flow
   if (isBnb && mintAddress) {
-    return <BnbQuickBuy mintAddress={mintAddress} ticker={funToken?.ticker ?? codexToken?.symbol ?? ''} quickBuyAmount={quickBuyAmount} isCompact={isCompact} />;
+    const imageUrl = funToken?.image_url ?? codexToken?.imageUrl ?? undefined;
+    return <BnbQuickBuy mintAddress={mintAddress} ticker={funToken?.ticker ?? codexToken?.symbol ?? ''} quickBuyAmount={quickBuyAmount} isCompact={isCompact} tokenImageUrl={imageUrl} />;
   }
 
   // Solana swap path
