@@ -179,6 +179,13 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
 
                 {/* Token info row */}
                 <div className="mt-4 flex items-center gap-2">
+                  {data.tokenImageUrl ? (
+                    <img src={data.tokenImageUrl} alt={data.tokenTicker} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                      {data.tokenTicker.slice(0, 2)}
+                    </div>
+                  )}
                   <span
                     className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md"
                     style={{

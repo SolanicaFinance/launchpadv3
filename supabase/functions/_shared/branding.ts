@@ -7,7 +7,7 @@
 export const BRAND = {
   name: "Saturn",
   shortName: "Saturn",
-  domain: "saturntrade.com",
+  domain: "saturn.trade",
   appUrl: "https://saturntrade.lovable.app",
   twitterHandle: "@saturntrade",
   twitterUrl: "https://x.com/saturntrade",

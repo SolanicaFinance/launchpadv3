@@ -16,7 +16,7 @@ export const BRAND = {
   description: "Autonomous AI agents that launch tokens and trade on Solana.",
 
   // ── Domain & URLs ──
-  domain: "saturntrade.com",
+  domain: "saturn.trade",
   appUrl: "https://saturntrade.lovable.app",
   twitterHandle: "@saturntrade",
   twitterUrl: "https://x.com/saturntrade",

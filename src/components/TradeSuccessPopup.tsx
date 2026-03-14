@@ -85,6 +85,7 @@ export function TradeSuccessPopup() {
         tokenName: data.tokenName || data.ticker,
         pnlPercent: data.pnlPercent,
         signature: data.signature,
+        tokenImageUrl: data.tokenImageUrl,
       }
     : null;
 
