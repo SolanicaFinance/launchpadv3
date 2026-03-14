@@ -2611,7 +2611,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       disabled={isPhantomLaunching || !phantomToken.name.trim() || !phantomToken.ticker.trim() || (!phantomImagePreview && !phantomMeme?.imageUrl && !phantomToken.imageUrl) || (phantomWallet.balance !== null && phantomWallet.balance < 0.02)}
                       className="w-full h-13 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer phantom-action-btn"
                     >
-                      {isPhantomLaunching ? <><Rocket className="h-4 w-4 animate-bounce" /> Launching...</> : <><Rocket className="h-4 w-4" /> Launch (~0.02 SOL)</>}
+                      {isPhantomLaunching ? <><Rocket className="h-4 w-4 animate-bounce" /> Launching...</> : <><Rocket className="h-4 w-4" /> Launch</>}
                     </button>
 
                     {phantomWallet.balance !== null && phantomWallet.balance < 0.02 && (
@@ -2635,7 +2635,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               </div>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/30">Launch Fee</span>
+                  <span className="text-white/30">Fee</span>
                   <span className="font-bold font-mono text-primary">~0.02 SOL</span>
                 </div>
                 <div className="h-px bg-white/[0.04]" />
@@ -2891,7 +2891,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       disabled={isPhantomLaunching || !holdersToken.name.trim() || !holdersToken.ticker.trim() || (!holdersImagePreview && !holdersMeme?.imageUrl && !holdersToken.imageUrl) || (phantomWallet.balance !== null && phantomWallet.balance < 0.02)}
                       className="gate-btn gate-btn-primary w-full"
                     >
-                      {isPhantomLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><Users className="h-4 w-4 mr-2" /> Launch Holder Rewards Token (~0.02 SOL)</>}
+                      {isPhantomLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><Users className="h-4 w-4 mr-2" /> Launch Holder Rewards Token</>}
                     </Button>
 
                     {phantomWallet.balance !== null && phantomWallet.balance < 0.02 && (
@@ -3146,7 +3146,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       disabled={isFunLaunching || !funToken.name.trim() || !funToken.ticker.trim() || (!funImagePreview && !funToken.imageUrl) || (phantomWallet.balance !== null && phantomWallet.balance < funLpSol + 0.02)}
                       className="gate-btn gate-btn-primary w-full"
                     >
-                      {isFunLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><PartyPopper className="h-4 w-4 mr-2" /> Launch FUN Token (~{(funLpSol + 0.02).toFixed(2)} SOL)</>}
+                      {isFunLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><PartyPopper className="h-4 w-4 mr-2" /> Launch FUN Token (~{funLpSol.toFixed(2)} SOL)</>}
                     </Button>
 
                     {phantomWallet.balance !== null && phantomWallet.balance < funLpSol + 0.02 && (
