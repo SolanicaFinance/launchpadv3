@@ -45,7 +45,7 @@ export async function recordAlphaTrade(trade: AlphaTradeRecord): Promise<void> {
             tx_hash: trade.txHash,
             chain: trade.chain || "solana",
           },
-          { onConflict: "tx_hash" }
+          { onConflict: "tx_hash", ignoreDuplicates: true }
         );
 
       if (!error) {
