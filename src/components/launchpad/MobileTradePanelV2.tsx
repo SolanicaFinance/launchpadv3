@@ -189,6 +189,20 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
       if (isBondingMode && bondingToken) {
         const result = await executeRealSwap(bondingToken, numericAmount, isBuy, slippage * 100);
         signature = result.signature;
+
+        // Record bonding curve trade to alpha tracker (was previously skipped)
+        if (signature) {
+          await recordAlphaTrade({
+            walletAddress: solanaAddress!,
+            tokenMint: mintAddress,
+            tokenName: tokenInfo.name,
+            tokenTicker: tokenInfo.ticker,
+            tradeType: isBuy ? 'buy' : 'sell',
+            amountSol: numericAmount,
+            txHash: signature,
+            chain: 'solana',
+          });
+        }
       } else {
         if (useJupiterRoute) {
           const result = isBuy
