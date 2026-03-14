@@ -1,27 +1,30 @@
 import { useMemo, useEffect, useState } from "react";
 import { useWallets, useCreateWallet, usePrivy } from "@privy-io/react-auth";
+import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 
 export function usePrivyEvmWallet() {
+  const privyAvailable = usePrivyAvailable();
   const { wallets } = useWallets();
-  const { ready, authenticated } = usePrivy();
+  const { ready: privyReady, authenticated: privyAuth } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [creatingWallet, setCreatingWallet] = useState(false);
 
+  const ready = privyAvailable ? privyReady : true;
+  const authenticated = privyAvailable ? privyAuth : false;
+
   const evmWallet = useMemo(() => {
-    if (!wallets || wallets.length === 0) return null;
-    // Privy embedded EVM wallet
+    if (!privyAvailable || !wallets || wallets.length === 0) return null;
     return wallets.find(
       (w) => w.walletClientType === "privy" && w.address?.startsWith("0x")
     ) || wallets.find(
       (w) => w.address?.startsWith("0x")
     ) || null;
-  }, [wallets]);
+  }, [wallets, privyAvailable]);
 
   const address = evmWallet?.address || undefined;
 
-  // Auto-create EVM wallet for logged-in users who don't have one
   useEffect(() => {
-    if (!ready || !authenticated || evmWallet || creatingWallet) return;
+    if (!privyAvailable || !ready || !authenticated || evmWallet || creatingWallet) return;
 
     setCreatingWallet(true);
     createWallet()
@@ -29,11 +32,10 @@ export function usePrivyEvmWallet() {
         console.log("[usePrivyEvmWallet] Created EVM wallet:", wallet?.address);
       })
       .catch((err: any) => {
-        // "already has an embedded wallet" is expected
         console.warn("[usePrivyEvmWallet] Create wallet:", err?.message || err);
       })
       .finally(() => setCreatingWallet(false));
-  }, [ready, authenticated, evmWallet, createWallet, creatingWallet]);
+  }, [privyAvailable, ready, authenticated, evmWallet, createWallet, creatingWallet]);
 
   return {
     address,
