@@ -382,10 +382,10 @@ export function AgentIdeaGenerator() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { prompt: "Claw astronaut", bg: "from-blue-500/20 to-purple-500/20" },
-                { prompt: "Cyber Claw", bg: "from-pink-500/20 to-cyan-500/20" },
-                { prompt: "King Claw", bg: "from-yellow-500/20 to-orange-500/20" },
-                { prompt: "Ninja Claw", bg: "from-gray-500/20 to-red-500/20" },
+                { prompt: "Saturn astronaut", bg: "from-blue-500/20 to-purple-500/20" },
+                { prompt: "Cyber Saturn", bg: "from-pink-500/20 to-cyan-500/20" },
+                { prompt: "King Saturn", bg: "from-yellow-500/20 to-orange-500/20" },
+                { prompt: "Ninja Saturn", bg: "from-gray-500/20 to-red-500/20" },
               ].map((example) => (
                 <button
                   key={example.prompt}

@@ -26,7 +26,7 @@ interface XBotRulesFormProps {
 
 const DEFAULT_MENTIONS = ["@moltbook", BRAND.twitterHandle, BRAND.twitterHandle];
 const SUGGESTED_CASHTAGS = ["$CLAW", "$SOL", "$BTC", "$ETH"];
-const SUGGESTED_KEYWORDS = ["saturntrade", "clawmode", "moltbook"];
+const SUGGESTED_KEYWORDS = ["saturntrade", "saturn", "moltbook"];
 
 const DEFAULT_PERSONA_PROMPT = `You're a knowledgeable crypto native with genuine opinions.
 Generate a reply (max 240 chars).

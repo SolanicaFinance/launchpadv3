@@ -166,7 +166,7 @@ const positions: Position[] = [
     department: "Documentation",
     type: "Contract",
     icon: Globe,
-    description: "Create comprehensive documentation, tutorials, and educational content for the Claw SDK and platform.",
+    description: "Create comprehensive documentation, tutorials, and educational content for the Saturn SDK and platform.",
     requirements: [
       "3+ years technical writing",
       "Developer documentation experience",
