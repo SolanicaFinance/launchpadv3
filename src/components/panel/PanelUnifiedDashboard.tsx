@@ -494,19 +494,7 @@ export default function PanelUnifiedDashboard() {
         </div>
 
         {/* Quick Actions Row */}
-        <div className="relative z-10 flex flex-wrap gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <button
-            onClick={() => setDepositOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono font-bold transition-all animate-pulse hover:animate-none"
-            style={{
-              background: `linear-gradient(135deg, ${NEON_LIME}20, ${EMERALD}15)`,
-              border: `1px solid ${NEON_LIME}50`,
-              color: NEON_LIME,
-              boxShadow: `0 0 12px ${NEON_LIME}15, 0 0 4px ${NEON_LIME}10`,
-            }}
-          >
-            <ArrowDownToLine className="h-3.5 w-3.5" /> Deposit to Trade
-          </button>
+        <div className="relative z-10 flex flex-wrap items-center gap-2 mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <button
             onClick={() => setSettingsOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -520,6 +508,18 @@ export default function PanelUnifiedDashboard() {
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
           >
             <User className="h-3 w-3" /> Account & Security
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={() => setDepositOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-mono font-black uppercase tracking-wider transition-all hover:scale-105"
+            style={{
+              background: `linear-gradient(135deg, ${NEON_LIME}, ${EMERALD})`,
+              color: "#000",
+              boxShadow: `0 0 20px ${NEON_LIME}30, 0 0 6px ${NEON_LIME}20`,
+            }}
+          >
+            <ArrowDownToLine className="h-4 w-4" /> Deposit
           </button>
         </div>
 
