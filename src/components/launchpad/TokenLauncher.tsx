@@ -431,6 +431,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       toast({ title: "No meme to launch", description: "Click Randomize first", variant: "destructive" });
       return;
     }
+    if (!meme.name.trim() || !meme.ticker.trim()) {
+      toast({ title: "Name & ticker required", description: "Enter your own token name and ticker before launching", variant: "destructive" });
+      return;
+    }
     await performLaunch(meme);
   }, [meme, performLaunch, toast]);
 
@@ -481,14 +485,9 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || "Generation failed");
       if (data?.meme) {
-        setDescribedToken(data.meme);
-        setBannerTextName(data.meme.name);
-        setBannerTextTicker(data.meme.ticker);
+        setDescribedToken({ ...data.meme, name: "", ticker: "" });
         setBannerImageUrl(data.meme.imageUrl);
-        if (data.meme.imageUrl) {
-          await generateBanner({ imageUrl: data.meme.imageUrl, tokenName: data.meme.name, ticker: data.meme.ticker });
-        }
-        toast({ title: "Meme Generated! 🎨", description: `${data.meme.name} ($${data.meme.ticker}) created!` });
+        toast({ title: "Image Generated! 🎨", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -500,6 +499,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const handleDescribeLaunch = useCallback(async () => {
     if (!describedToken) {
       toast({ title: "No token generated", description: "Generate first", variant: "destructive" });
+      return;
+    }
+    if (!describedToken.name.trim() || !describedToken.ticker.trim()) {
+      toast({ title: "Name & ticker required", description: "Enter your own token name and ticker before launching", variant: "destructive" });
       return;
     }
     await performLaunch(describedToken);
@@ -520,14 +523,9 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || "Generation failed");
       if (data?.meme) {
-        setRealisticToken(data.meme);
-        setBannerTextName(data.meme.name);
-        setBannerTextTicker(data.meme.ticker);
+        setRealisticToken({ ...data.meme, name: "", ticker: "" });
         setBannerImageUrl(data.meme.imageUrl);
-        if (data.meme.imageUrl) {
-          await generateBanner({ imageUrl: data.meme.imageUrl, tokenName: data.meme.name, ticker: data.meme.ticker });
-        }
-        toast({ title: "Realistic Image Generated! 📸", description: `${data.meme.name} ($${data.meme.ticker}) created!` });
+        toast({ title: "Realistic Image Generated! 📸", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -539,6 +537,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const handleRealisticLaunch = useCallback(async () => {
     if (!realisticToken) {
       toast({ title: "No token generated", description: "Generate first", variant: "destructive" });
+      return;
+    }
+    if (!realisticToken.name.trim() || !realisticToken.ticker.trim()) {
+      toast({ title: "Name & ticker required", description: "Enter your own token name and ticker before launching", variant: "destructive" });
       return;
     }
     await performLaunch(realisticToken);
@@ -556,16 +558,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (data?.meme) {
         setPhantomMeme(data.meme);
         setPhantomToken({
-          name: data.meme.name,
-          ticker: data.meme.ticker,
+          name: "",
+          ticker: "",
           description: data.meme.description || "",
           imageUrl: data.meme.imageUrl,
-          websiteUrl: data.meme.websiteUrl || "",
-          twitterUrl: data.meme.twitterUrl || "",
+          websiteUrl: "",
+          twitterUrl: "",
           telegramUrl: "",
           discordUrl: "",
         });
-        toast({ title: "AI Token Generated! 🤖", description: `${data.meme.name} ready for Phantom launch!` });
+        toast({ title: "AI Image Generated! 🤖", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -589,16 +591,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (data?.meme) {
         setPhantomMeme(data.meme);
         setPhantomToken({
-          name: data.meme.name,
-          ticker: data.meme.ticker,
+          name: "",
+          ticker: "",
           description: data.meme.description || "",
           imageUrl: data.meme.imageUrl,
-          websiteUrl: data.meme.websiteUrl || "",
-          twitterUrl: data.meme.twitterUrl || "",
+          websiteUrl: "",
+          twitterUrl: "",
           telegramUrl: "",
           discordUrl: "",
         });
-        toast({ title: "Meme Generated! 🎨", description: `${data.meme.name} created from your description!` });
+        toast({ title: "Image Generated! 🎨", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -622,16 +624,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (data?.meme) {
         setPhantomMeme(data.meme);
         setPhantomToken({
-          name: data.meme.name,
-          ticker: data.meme.ticker,
+          name: "",
+          ticker: "",
           description: data.meme.description || "",
           imageUrl: data.meme.imageUrl,
-          websiteUrl: data.meme.websiteUrl || "",
-          twitterUrl: data.meme.twitterUrl || "",
+          websiteUrl: "",
+          twitterUrl: "",
           telegramUrl: "",
           discordUrl: "",
         });
-        toast({ title: "Realistic Image Generated! 📸", description: `${data.meme.name} created from your description!` });
+        toast({ title: "Realistic Image Generated! 📸", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -674,16 +676,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (data?.meme) {
         setHoldersMeme(data.meme);
         setHoldersToken({
-          name: data.meme.name,
-          ticker: data.meme.ticker,
+          name: "",
+          ticker: "",
           description: data.meme.description || "",
           imageUrl: data.meme.imageUrl,
-          websiteUrl: data.meme.websiteUrl || "",
-          twitterUrl: data.meme.twitterUrl || "",
+          websiteUrl: "",
+          twitterUrl: "",
           telegramUrl: "",
           discordUrl: "",
         });
-        toast({ title: "AI Token Generated! 🤖", description: `${data.meme.name} ready for Holders launch!` });
+        toast({ title: "AI Image Generated! 🤖", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
@@ -707,16 +709,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (data?.meme) {
         setHoldersMeme(data.meme);
         setHoldersToken({
-          name: data.meme.name,
-          ticker: data.meme.ticker,
+          name: "",
+          ticker: "",
           description: data.meme.description || "",
           imageUrl: data.meme.imageUrl,
-          websiteUrl: data.meme.websiteUrl || "",
-          twitterUrl: data.meme.twitterUrl || "",
+          websiteUrl: "",
+          twitterUrl: "",
           telegramUrl: "",
           discordUrl: "",
         });
-        toast({ title: "Meme Generated! 🎨", description: `${data.meme.name} created from your description!` });
+        toast({ title: "Image Generated! 🎨", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
