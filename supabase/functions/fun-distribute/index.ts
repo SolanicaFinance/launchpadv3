@@ -175,7 +175,7 @@ serve(async (req) => {
       .from("fun_fee_claims")
       .select(`
         *,
-        fun_token:fun_tokens(id, name, ticker, creator_wallet, punch_creator_wallet, status, api_account_id, agent_id, trading_agent_id, is_trading_agent_token, fee_mode, agent_fee_share_bps, launchpad_type, created_at)
+        fun_token:fun_tokens(id, name, ticker, creator_wallet, punch_creator_wallet, status, api_account_id, agent_id, trading_agent_id, is_trading_agent_token, fee_mode, agent_fee_share_bps, launchpad_type, created_at, trading_fee_bps, creator_fee_bps)
       `)
       .eq("creator_distributed", false)
       .order("claimed_at", { ascending: true });
