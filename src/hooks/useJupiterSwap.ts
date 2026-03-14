@@ -95,7 +95,7 @@ export function useJupiterSwap() {
       const jupKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
       if (jupKey) swapHeaders['x-api-key'] = jupKey;
 
-      const swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
+      let swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
         method: 'POST',
         headers: swapHeaders,
         body: JSON.stringify({
@@ -106,6 +106,23 @@ export function useJupiterSwap() {
           prioritizationFeeLamports: 'auto',
         }),
       });
+
+      // If 401, retry without API key
+      if (swapResponse.status === 401 && swapHeaders['x-api-key']) {
+        console.warn('[Jupiter] Swap API key rejected (401), retrying without key...');
+        delete swapHeaders['x-api-key'];
+        swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
+          method: 'POST',
+          headers: swapHeaders,
+          body: JSON.stringify({
+            quoteResponse: quote,
+            userPublicKey: userWallet,
+            wrapAndUnwrapSol: true,
+            dynamicComputeUnitLimit: true,
+            prioritizationFeeLamports: 'auto',
+          }),
+        });
+      }
 
       if (!swapResponse.ok) {
         const error = await swapResponse.json();

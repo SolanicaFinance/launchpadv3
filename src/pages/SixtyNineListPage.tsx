@@ -357,23 +357,60 @@ export default function SixtyNineListPage() {
               {/* Rows */}
               <div className="space-y-1.5">
                 {isLoading ? (
-                  Array.from({ length: 15 }).map((_, i) => (
+                  Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                     <div key={i} className="px-3 py-3 rounded-lg bg-card/20 border border-border/10">
                       <Skeleton className="h-6 w-full" />
                     </div>
                   ))
                 ) : (
-                  sortedHolders.map((h: HolderEntry, i: number) => (
-                    <HolderRow
-                      key={h.address}
-                      holder={h}
-                      rank={i + 1}
-                      animDelay={Math.min(i * 30, 600)}
-                    />
-                  ))
+                  paginatedHolders.map((h: HolderEntry, i: number) => {
+                    const globalRank = (currentPage - 1) * ITEMS_PER_PAGE + i + 1;
+                    return (
+                      <HolderRow
+                        key={h.address}
+                        holder={h}
+                        rank={globalRank}
+                        animDelay={Math.min(i * 30, 300)}
+                      />
+                    );
+                  })
                 )}
               </div>
-            </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-border/20">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-border/20 bg-card/30 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-[36px] h-9 rounded-lg text-xs font-bold transition-all ${
+                        page === currentPage
+                          ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                          : "border border-border/20 bg-card/30 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-border/20 bg-card/30 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
 
             {/* ────── Sidebar Column ────── */}
             <div className="w-full lg:w-[280px] flex-shrink-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
