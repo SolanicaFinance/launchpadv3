@@ -60,7 +60,7 @@ serve(async (req) => {
     // Get undistributed claw_fee_claims
     const { data: undistributedClaims, error: claimsError } = await supabase
       .from("claw_fee_claims")
-      .select(`*, fun_token:claw_tokens(id, name, ticker, creator_wallet, status, agent_id, trading_agent_id, is_trading_agent_token, agent_fee_share_bps)`)
+      .select(`*, fun_token:claw_tokens(id, name, ticker, creator_wallet, status, agent_id, trading_agent_id, is_trading_agent_token, agent_fee_share_bps, creator_fee_bps, trading_fee_bps)`)
       .eq("creator_distributed", false)
       .order("claimed_at", { ascending: true });
 
