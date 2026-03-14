@@ -108,7 +108,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
 
   const isBnb = chain === 'bnb';
   const [activeFilterColumn, setActiveFilterColumn] = useState<ColumnId>("new");
-  const { filters, updateFilter, resetFilter, applyFilters, hasActiveFilters } = usePulseFilters();
+  const { filters, updateFilter, resetFilter, applyFilterToFunTokens, applyFilterToCodexTokens, hasActiveFilters } = usePulseFilters();
 
   // Filter DB tokens into columns
   const { filteredNewPairs, filteredFinalStretch, filteredMigrated } = useMemo(() => {
@@ -124,16 +124,16 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
       else newPairs.push(t);
     }
     return {
-      filteredNewPairs: applyFilters(newPairs, "new"),
-      filteredFinalStretch: applyFilters(finalStretch, "final"),
-      filteredMigrated: applyFilters(migrated, "migrated"),
+      filteredNewPairs: applyFilterToFunTokens(newPairs, "new", solPrice),
+      filteredFinalStretch: applyFilterToFunTokens(finalStretch, "final", solPrice),
+      filteredMigrated: applyFilterToFunTokens(migrated, "migrated", solPrice),
     };
-  }, [tokens, applyFilters]);
+  }, [tokens, applyFilterToFunTokens, solPrice]);
 
   // Filter codex tokens
-  const filteredCodexNew = useMemo(() => applyFilters(codexNewPairs, "new"), [codexNewPairs, applyFilters]);
-  const filteredCodexCompleting = useMemo(() => applyFilters(codexCompleting, "final"), [codexCompleting, applyFilters]);
-  const filteredCodexGraduated = useMemo(() => applyFilters(codexGraduated, "migrated"), [codexGraduated, applyFilters]);
+  const filteredCodexNew = useMemo(() => applyFilterToCodexTokens(codexNewPairs, "new"), [codexNewPairs, applyFilterToCodexTokens]);
+  const filteredCodexCompleting = useMemo(() => applyFilterToCodexTokens(codexCompleting, "final"), [codexCompleting, applyFilterToCodexTokens]);
+  const filteredCodexGraduated = useMemo(() => applyFilterToCodexTokens(codexGraduated, "migrated"), [codexGraduated, applyFilterToCodexTokens]);
 
   // Collect addresses for sparkline batch fetch (all columns)
   const allAddresses = useMemo(() => {
