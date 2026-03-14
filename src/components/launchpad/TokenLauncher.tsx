@@ -1041,8 +1041,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
         console.log(`[Phantom Launch] Balance: ${currentBalance} SOL`);
       } catch (e) {
         console.warn(`[Phantom Launch] Balance fetch failed, using cached:`, e instanceof Error ? e.message : e);
-        if (phantomWallet.balance !== null && phantomWallet.balance > 0) {
+        if (!usePrivy && phantomWallet.balance !== null && phantomWallet.balance > 0) {
           currentBalance = phantomWallet.balance;
+        } else if (usePrivy && privyBalance !== null && privyBalance > 0) {
+          currentBalance = privyBalance;
         }
       }
       
