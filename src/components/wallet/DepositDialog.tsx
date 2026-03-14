@@ -4,6 +4,7 @@ import { Copy, Check, ArrowDownToLine, ExternalLink } from "lucide-react";
 import QRCode from "react-qr-code";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useToast } from "@/hooks/use-toast";
+import { fetchBnbBalance } from "@/lib/bscRpc";
 
 interface DepositDialogProps {
   open: boolean;
@@ -14,14 +15,23 @@ interface DepositDialogProps {
   onDepositDetected?: () => void;
 }
 
-import { fetchBnbBalance } from "@/lib/bscRpc";
-
 export function DepositDialog({ open, onOpenChange, address, chain, getBalance, onDepositDetected }: DepositDialogProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [depositDetected, setDepositDetected] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number | null>(null);
   const openingBalance = useRef<number | null>(null);
+  const hasTriggeredDetection = useRef(false);
+  const getBalanceRef = useRef(getBalance);
+  const onDepositDetectedRef = useRef(onDepositDetected);
+
+  useEffect(() => {
+    getBalanceRef.current = getBalance;
+  }, [getBalance]);
+
+  useEffect(() => {
+    onDepositDetectedRef.current = onDepositDetected;
+  }, [onDepositDetected]);
 
   const isBnb = chain === "bnb";
   const currencyLabel = isBnb ? "BNB" : "SOL";
@@ -33,30 +43,40 @@ export function DepositDialog({ open, onOpenChange, address, chain, getBalance, 
   const pollBalance = useCallback(async () => {
     try {
       let bal: number;
+
       if (isBnb) {
         bal = await fetchBnbBalance(address);
-      } else if (getBalance) {
-        bal = await getBalance();
       } else {
-        return;
+        const fetchSolBalance = getBalanceRef.current;
+        if (!fetchSolBalance) return;
+        bal = await fetchSolBalance();
       }
+
       setCurrentBalance(bal);
+
       if (openingBalance.current === null) {
         openingBalance.current = bal;
-      } else if (bal > openingBalance.current + 0.0001) {
+        return;
+      }
+
+      if (!hasTriggeredDetection.current && bal > openingBalance.current + 0.0001) {
+        hasTriggeredDetection.current = true;
         setDepositDetected(true);
-        onDepositDetected?.();
+        onDepositDetectedRef.current?.();
       }
     } catch {
       // ignore polling errors
     }
-  }, [address, isBnb, getBalance, onDepositDetected]);
+  }, [address, isBnb]);
 
   useEffect(() => {
     if (!open || !address) return;
+
     setDepositDetected(false);
-    openingBalance.current = null;
     setCurrentBalance(null);
+    openingBalance.current = null;
+    hasTriggeredDetection.current = false;
+
     pollBalance();
     const interval = setInterval(pollBalance, 3000);
     return () => clearInterval(interval);
@@ -82,56 +102,46 @@ export function DepositDialog({ open, onOpenChange, address, chain, getBalance, 
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-5 py-4">
-          {/* Deposit detected banner */}
           {depositDetected && (
-            <div className="w-full rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-center animate-in fade-in slide-in-from-top-2">
-              <Check className="w-6 h-6 text-green-400 mx-auto mb-1" />
-              <p className="text-sm font-bold text-green-400">Deposit received!</p>
+            <div className="w-full rounded-xl bg-success/10 border border-success/30 p-4 text-center animate-in fade-in slide-in-from-top-2">
+              <Check className="w-6 h-6 text-success mx-auto mb-1" />
+              <p className="text-sm font-bold text-success">Deposit received!</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Balance: {currentBalance?.toFixed(6)} {currencyLabel}
               </p>
             </div>
           )}
 
-          {/* Chain label */}
           <div className="text-xs font-mono text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-lg border border-border/30">
             {chainLabel}
           </div>
 
-          {/* QR Code */}
           <div className="bg-white p-4 rounded-2xl shadow-lg">
             <QRCode value={address} size={180} level="M" />
           </div>
 
-          {/* Address */}
           <button
             onClick={handleCopy}
             className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors group"
           >
-            <span className="text-xs font-mono text-foreground truncate flex-1 text-left">
-              {address}
-            </span>
+            <span className="text-xs font-mono text-foreground truncate flex-1 text-left">{address}</span>
             {copied ? (
-              <Check className="w-4 h-4 text-green-400 shrink-0" />
+              <Check className="w-4 h-4 text-success shrink-0" />
             ) : (
               <Copy className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
             )}
           </button>
 
-          {/* Balance display */}
           {currentBalance !== null && !depositDetected && (
             <div className="text-center">
               <p className="text-[10px] text-muted-foreground font-mono uppercase">Current Balance</p>
               <p className="text-lg font-bold font-mono text-foreground">
                 {currentBalance.toFixed(6)} {currencyLabel}
               </p>
-              <p className="text-[10px] text-muted-foreground/60 mt-1 animate-pulse">
-                Waiting for deposit...
-              </p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1 animate-pulse">Waiting for deposit...</p>
             </div>
           )}
 
-          {/* Explorer link */}
           <a
             href={explorerUrl}
             target="_blank"
@@ -142,9 +152,9 @@ export function DepositDialog({ open, onOpenChange, address, chain, getBalance, 
             <ExternalLink className="w-3 h-3" />
           </a>
 
-          {/* Warning */}
           <p className="text-[10px] text-destructive/70 text-center max-w-xs">
-            Only send {currencyLabel} on {isBnb ? "BNB Smart Chain" : "Solana"} to this address. Sending other tokens or using wrong networks may result in loss.
+            Only send {currencyLabel} on {isBnb ? "BNB Smart Chain" : "Solana"} to this address. Sending other
+            tokens or using wrong networks may result in loss.
           </p>
         </div>
       </DialogContent>
