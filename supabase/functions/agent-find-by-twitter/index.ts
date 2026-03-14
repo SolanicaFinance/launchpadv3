@@ -13,7 +13,7 @@ interface TokenInfo {
   mint: string | null;
   imageUrl: string | null;
   createdAt: string;
-  totalFeesEarned: number;      // 80% creator share of all collected fees
+  totalFeesEarned: number;      // creator share based on token's creator_fee_bps / trading_fee_bps
   totalFeesClaimed: number;     // What's been paid out via creator_claim
   unclaimedFees: number;        // Difference (what they can withdraw)
   volume24h: number;
