@@ -136,7 +136,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const tokenSymbol = ticker.toUpperCase().slice(0, 10);
       const tokenDescription = description || `${tokenName} - A fun meme coin!`;
       const tokenImage = imageUrl || '';
-      const tokenWebsite = websiteUrl || `https://tuna.fun/t/${tokenSymbol}`;
+      const tokenWebsite = websiteUrl || undefined;
       const tokenTwitter = twitterUrl || undefined;
       
       // Detect image MIME type
