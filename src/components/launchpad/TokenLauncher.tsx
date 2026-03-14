@@ -16,6 +16,7 @@ import { usePhantomWallet } from "@/hooks/usePhantomWallet";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { LaunchpadDepositPrompt } from "./LaunchpadDepositPrompt";
 import { Connection, Transaction, VersionedTransaction, PublicKey, Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
