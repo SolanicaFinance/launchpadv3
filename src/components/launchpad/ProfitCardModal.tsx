@@ -244,8 +244,11 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
             <Button
               onClick={handleSaveImage}
               disabled={saving}
-              variant="outline"
-              className="flex-1 h-11 font-mono text-xs uppercase tracking-widest border-[#c8ff00]/20 text-[#c8ff00] hover:bg-[#c8ff00]/10"
+              className="flex-1 h-11 font-mono text-xs uppercase tracking-widest"
+              style={{
+                background: "linear-gradient(135deg, #c8ff00, #84cc16)",
+                color: "#050a08",
+              }}
             >
               <Download className="h-3.5 w-3.5 mr-1.5" />
               {saving ? "Saving..." : "Save Image"}

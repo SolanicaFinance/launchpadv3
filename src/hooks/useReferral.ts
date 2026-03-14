@@ -53,7 +53,7 @@ export function useReferralCode() {
   }, [profileId]);
 
   const referralLink = referralCode
-    ? `https://saturntrade.com/link/${referralCode}`
+    ? `https://saturn.trade/link/${referralCode}`
     : null;
 
   return { referralCode, referralLink, referralCount, loading };
