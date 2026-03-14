@@ -169,6 +169,7 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
           type: 'buy',
           ticker,
           tokenName,
+          mintAddress,
           amount: `${amount} BNB`,
           signature: result.txHash,
           tokenImageUrl,
