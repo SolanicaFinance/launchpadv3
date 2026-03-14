@@ -12,6 +12,7 @@ import { useBnbPrice } from "@/hooks/useBnbPrice";
 import { SOLANA_NETWORK_ID, BSC_NETWORK_ID } from "@/hooks/useCodexNewPairs";
 import { TradePanelWithSwap } from "@/components/launchpad/TradePanelWithSwap";
 import { UniversalTradePanel } from "@/components/launchpad/UniversalTradePanel";
+import { MobileTradePanelV2 } from "@/components/launchpad/MobileTradePanelV2";
 import { BnbTradePanel } from "@/components/launchpad/BnbTradePanel";
 import { EmbeddedWalletCard } from "@/components/launchpad/EmbeddedWalletCard";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
