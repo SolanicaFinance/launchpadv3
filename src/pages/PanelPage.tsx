@@ -71,7 +71,7 @@ export default function PanelPage() {
                 className="w-16 h-16 mx-auto mb-5 drop-shadow-[0_0_24px_rgba(132,204,22,0.3)]"
               />
               <h1 className="text-xl font-black text-foreground mb-1 tracking-tight font-mono uppercase">
-                MoonDexo Panel
+                {BRAND.shortName} Panel
               </h1>
               <p className="text-xs text-muted-foreground mb-6 leading-relaxed font-mono">
                 Connect wallet to access your portfolio, earnings & trading tools.
