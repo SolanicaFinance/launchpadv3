@@ -975,6 +975,23 @@ export default function FunTokenDetailPage() {
               <TokenDetailsSection />
               <ContractSection />
               <DescriptionSection />
+              {(token as any).launchpad_type === 'phantom' && (token as any).trading_fee_bps && (
+                <div className="trade-glass-panel p-3 space-y-1.5">
+                  <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60">Fee Breakdown</h3>
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-muted-foreground/70">Total Fee</span>
+                    <span className="text-foreground">{((token as any).trading_fee_bps / 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-muted-foreground/70">Creator</span>
+                    <span className="text-primary">{(((token as any).creator_fee_bps || 0) / 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-muted-foreground/70">Platform</span>
+                    <span className="text-muted-foreground">{(((token as any).trading_fee_bps - ((token as any).creator_fee_bps || 0)) / 100).toFixed(1)}%</span>
+                  </div>
+                </div>
+              )}
               {(token as any).fee_mode === 'holder_rewards' && (
                 <div className="trade-glass-panel p-3 space-y-1.5">
                   <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60 flex items-center gap-1.5">

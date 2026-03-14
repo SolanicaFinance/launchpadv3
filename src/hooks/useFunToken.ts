@@ -22,6 +22,8 @@ export interface FunToken {
   holder_count?: number;
   market_cap_sol?: number;
   bonding_progress?: number;
+  trading_fee_bps?: number | null;
+  creator_fee_bps?: number | null;
   last_distribution_at: string | null;
   created_at: string;
   updated_at: string;
