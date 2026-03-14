@@ -4,12 +4,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useBnbSwap } from "@/hooks/useBnbSwap";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { toast } from "sonner";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
+import { recordAlphaTradeInBackground } from "@/lib/recordAlphaTrade";
 import type { Token } from "@/hooks/useLaunchpad";
 import type { FunToken } from "@/hooks/useFunTokensPaginated";
 import type { CodexPairToken } from "@/hooks/useCodexNewPairs";
