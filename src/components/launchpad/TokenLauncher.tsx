@@ -1326,10 +1326,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
             ticker: phantomToken.ticker.toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 10),
             description: phantomToken.description || "",
             imageUrl,
-            websiteUrl: phantomToken.websiteUrl || "",
-            twitterUrl: phantomToken.twitterUrl || "",
-            telegramUrl: phantomToken.telegramUrl || "",
-            discordUrl: phantomToken.discordUrl || "",
+            websiteUrl: phantomToken.websiteUrl?.trim() || undefined,
+            twitterUrl: phantomToken.twitterUrl?.trim() || undefined,
+            telegramUrl: phantomToken.telegramUrl?.trim() || undefined,
+            discordUrl: phantomToken.discordUrl?.trim() || undefined,
             phantomWallet: activeWalletAddress,
             tradingFeeBps: phantomTradingFee + 100, // creator fee + 1% platform base
             creatorFeeBps: phantomTradingFee, // creator portion only
