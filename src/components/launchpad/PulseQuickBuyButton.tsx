@@ -348,23 +348,19 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
 
       const ticker = funToken?.ticker ?? codexToken?.symbol ?? '';
       const toastId = `quick-buy-${Date.now()}`;
-      toast.success("✅ Trade Executed!", { id: toastId, description: "Confirming transaction..." });
+      toast.loading("⚡ Executing trade...", { id: toastId });
       setBuyingAmount(amount);
 
       try {
         const result = await executeFastSwap(token, amount, true, 500);
         if (result.success) {
-          toast.success("✅ Trade Executed!", {
-            id: toastId,
-            description: result.signature
-              ? `TX: ${result.signature.slice(0, 8)}... · ${result.totalMs || lastLatencyMs || ''}ms`
-              : `Bought ${amount} SOL of $${ticker}`,
-            action: result.signature
-              ? {
-                  label: "View TX",
-                  onClick: () => window.open(`https://solscan.io/tx/${result.signature}`, "_blank"),
-                }
-              : undefined,
+          toast.dismiss(toastId);
+          showTradeSuccess({
+            type: 'buy',
+            ticker,
+            amount: `${amount} SOL`,
+            signature: result.signature,
+            executionMs: result.totalMs || lastLatencyMs || undefined,
           });
           // Optimistic balance set to flip button to "Sell 100%" instantly
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
