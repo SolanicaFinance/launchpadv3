@@ -203,6 +203,20 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         }
 
         if (signature) {
+          // Client-side direct insert — ironclad fallback
+          recordAlphaTrade({
+            walletAddress: solanaAddress!,
+            tokenMint: mintAddress,
+            tokenName: tokenInfo.name,
+            tokenTicker: tokenInfo.ticker,
+            tradeType: isBuy ? 'buy' : 'sell',
+            amountSol: numericAmount,
+            amountTokens: resultOutputAmount ?? undefined,
+            txHash: signature,
+            chain: 'solana',
+          });
+
+          // Edge function (secondary, non-blocking)
           supabase.functions.invoke("launchpad-swap", {
             body: { mintAddress, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature, outputAmount: resultOutputAmount ?? null, tokenName: tokenInfo.name, tokenTicker: tokenInfo.ticker, mode: "alpha_only" },
           }).catch(() => {});

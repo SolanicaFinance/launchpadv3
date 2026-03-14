@@ -230,6 +230,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       setTimeout(() => setShowLatency(false), 5000);
 
       if (result.signature) {
+        // Client-side direct insert — ironclad fallback
+        recordAlphaTrade({
+          walletAddress: solanaAddress!,
+          tokenMint: token.mint_address,
+          tokenName: token.name,
+          tokenTicker: token.ticker,
+          tradeType: isBuy ? 'buy' : 'sell',
+          amountSol: numericAmount,
+          amountTokens: result.outputAmount,
+          txHash: result.signature,
+          chain: 'solana',
+        });
+
+        // Edge function (secondary, non-blocking)
         supabase.functions.invoke('launchpad-swap', {
           body: {
             mintAddress: token.mint_address,
