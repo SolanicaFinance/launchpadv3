@@ -187,7 +187,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
               href="https://x.com/saturntrade"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
+              className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
                          text-muted-foreground/70 hover:text-foreground
                          hover:bg-card/40 hover:scale-[1.03]"
             >
@@ -197,7 +197,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
               href="https://t.me/saturntrade"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
+              className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
                          text-muted-foreground/70 hover:text-foreground
                          hover:bg-card/40 hover:scale-[1.03]"
               title="Telegram"
