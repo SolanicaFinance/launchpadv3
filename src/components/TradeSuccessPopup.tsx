@@ -241,6 +241,32 @@ export function TradeSuccessPopup() {
                     </button>
                   )}
 
+                  {/* Trade & Portfolio row */}
+                  <div className="flex gap-2">
+                    {data.mintAddress && (
+                      <button
+                        onClick={() => {
+                          hide();
+                          navigate(`/launchpad/${data.mintAddress}`);
+                        }}
+                        className="flex-1 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-foreground/80 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        Trade
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        hide();
+                        navigate("/portfolio");
+                      }}
+                      className="flex-1 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-foreground/80 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      <Wallet className="h-3.5 w-3.5" />
+                      Portfolio
+                    </button>
+                  </div>
+
                   {/* Generate PnL Card button (sell only) */}
                   {isSell && (
                     <button
