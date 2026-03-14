@@ -21,13 +21,11 @@ interface SwapResult {
   priceImpact: number;
 }
 
-function getJupiterHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const apiKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
-  if (apiKey) {
-    headers['x-api-key'] = apiKey;
-  }
-  return headers;
+const JUPITER_API_KEY = (import.meta as any).env?.VITE_JUPITER_API_KEY || '';
+
+function buildQuoteUrl(params: URLSearchParams): string {
+  const base = `${JUPITER_API}/quote?${params}`;
+  return JUPITER_API_KEY ? `${base}&api-key=${JUPITER_API_KEY}` : base;
 }
 
 export function useJupiterSwap() {
@@ -48,10 +46,15 @@ export function useJupiterSwap() {
         amount: amountLamports.toString(),
         slippageBps: slippageBps.toString(),
       });
-      const res = await fetch(`${JUPITER_API}/quote?${params}`, {
-        method: 'GET',
-        headers: getJupiterHeaders(),
-      });
+
+      // Try with API key first
+      let res = await fetch(buildQuoteUrl(params));
+
+      // Fallback: retry without API key if 401
+      if (res.status === 401 && JUPITER_API_KEY) {
+        console.warn('[Jupiter] API key rejected, retrying without key');
+        res = await fetch(`${JUPITER_API}/quote?${params}`);
+      }
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         console.error('[Jupiter] Quote error:', res.status, errData);
