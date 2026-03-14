@@ -199,33 +199,35 @@ export default function RewardsPage() {
   // Not joined yet
   if (!reward) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="flex items-center justify-center gap-3">
-            {twitterAccount.profilePictureUrl && (
-              <img src={twitterAccount.profilePictureUrl} alt="" className="h-16 w-16 rounded-full border-2 border-primary/30" />
-            )}
+      <LaunchpadLayout>
+        <div className="flex items-center justify-center p-4 min-h-[60vh]">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="flex items-center justify-center gap-3">
+              {twitterAccount.profilePictureUrl && (
+                <img src={twitterAccount.profilePictureUrl} alt="" className="h-16 w-16 rounded-full border-2 border-primary/30" />
+              )}
+            </div>
+            <h1 className="text-2xl font-bold font-mono text-foreground">
+              Welcome, @{twitterAccount.username}!
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Join the Social Rewards program to earn points for posting about <span className="text-primary font-bold">$SATURN</span> or <span className="text-primary font-bold">@saturnterminal</span>.
+            </p>
+            <PointSystemCard />
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="w-full py-3 rounded-xl font-mono text-sm font-bold uppercase tracking-widest bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
+              {joining ? "Joining..." : "Join Social Rewards"}
+            </button>
+            <p className="text-[10px] text-muted-foreground/40">
+              {totalUsers} user{totalUsers !== 1 ? "s" : ""} already joined
+            </p>
           </div>
-          <h1 className="text-2xl font-bold font-mono text-foreground">
-            Welcome, @{twitterAccount.username}!
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Join the Social Rewards program to earn points for posting about <span className="text-primary font-bold">$SATURN</span> or <span className="text-primary font-bold">@saturnterminal</span>.
-          </p>
-          <PointSystemCard />
-          <button
-            onClick={handleJoin}
-            disabled={joining}
-            className="w-full py-3 rounded-xl font-mono text-sm font-bold uppercase tracking-widest bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
-            {joining ? "Joining..." : "Join Social Rewards"}
-          </button>
-          <p className="text-[10px] text-muted-foreground/40">
-            {totalUsers} user{totalUsers !== 1 ? "s" : ""} already joined
-          </p>
         </div>
-      </div>
+      </LaunchpadLayout>
     );
   }
 
