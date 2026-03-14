@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS alpha_trades_tx_hash_unique ON public.alpha_trades (tx_hash);
