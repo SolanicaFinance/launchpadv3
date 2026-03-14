@@ -66,10 +66,15 @@ Deno.serve(async (req) => {
     const DEFAULT_FEE_BPS = 200;
     const tradingFeeBps = Math.max(MIN_FEE_BPS, Math.min(MAX_FEE_BPS, Math.round(Number(rawFeeBps) || DEFAULT_FEE_BPS)));
     
-    // Validate dev buy amount (max 10 SOL to prevent abuse)
-    const devBuySol = Math.max(0, Math.min(100, Number(rawDevBuySol) || 0));
-    console.log("[fun-phantom-create] Validated tradingFeeBps:", tradingFeeBps, "from raw:", rawFeeBps);
-    console.log("[fun-phantom-create] Dev buy amount:", devBuySol, "SOL");
+    // Creator fee = total fee minus 1% platform base (100 bps)
+    // If explicitly provided, use it; otherwise derive from total
+    const PLATFORM_BASE_BPS = 100;
+    const creatorFeeBps = rawCreatorFeeBps != null 
+      ? Math.max(0, Math.min(MAX_FEE_BPS, Math.round(Number(rawCreatorFeeBps))))
+      : Math.max(0, tradingFeeBps - PLATFORM_BASE_BPS);
+    
+    console.log("[fun-phantom-create] Validated tradingFeeBps:", tradingFeeBps, "creatorFeeBps:", creatorFeeBps, "from raw:", rawFeeBps);
+    console.log("[fun-phantom-create] Dev buy amount:", rawDevBuySol, "SOL");
 
     // ===== PHASE 2: Record token after confirmation =====
     if (confirmed === true && confirmedMintAddress && confirmedPoolAddress) {
