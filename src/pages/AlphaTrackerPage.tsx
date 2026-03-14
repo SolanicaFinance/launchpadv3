@@ -184,12 +184,11 @@ export default function AlphaTrackerPage() {
                   <div className="min-w-0 flex items-center gap-1.5">
                     <div className="h-6 w-6 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
                       {trade.token_image_url ? (
-                        <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-[7px] font-bold text-muted-foreground">
-                          {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
+                        <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).style.removeProperty('display'); }} />
+                      ) : null}
+                      <span className="text-[7px] font-bold text-muted-foreground" style={trade.token_image_url ? { display: 'none' } : undefined}>
+                        {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
+                      </span>
                     </div>
                     <Link
                       to={`/trade/${trade.token_mint}`}
