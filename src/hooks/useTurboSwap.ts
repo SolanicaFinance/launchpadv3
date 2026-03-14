@@ -74,7 +74,7 @@ export function useTurboSwap() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.privyId, profileId, solanaAddress, queryClient, executeFastSwap]);
+  }, [user?.privyId, profileId, effectiveWallet, queryClient, executeFastSwap]);
 
   return {
     executeTurboSwap,
