@@ -340,28 +340,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 {v}%
               </button>
             ))}
-            <button
-              onClick={() => setShowCustomSlippage(!showCustomSlippage)}
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-full border transition-all ${
-                showCustomSlippage
-                  ? 'border-primary/60 bg-primary/10 text-primary'
-                  : 'border-border/40 text-muted-foreground hover:border-border/70 hover:text-foreground bg-background/40'
-              }`}
-            >
-              ⚙️
-            </button>
-            {showCustomSlippage && (
-              <div className="relative w-16">
-                <Input
-                  type="number"
-                  placeholder="0.5"
-                  value={customSlippage}
-                  onChange={(e) => handleCustomSlippage(e.target.value)}
-                  className="h-5 text-[10px] font-mono pr-4 border-border/40 bg-background/40 rounded-full"
-                />
-                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground font-mono">%</span>
-              </div>
-            )}
+            <div className="relative w-16">
+              <Input
+                type="number"
+                placeholder="Custom"
+                value={customSlippage}
+                onChange={(e) => handleCustomSlippage(e.target.value)}
+                className={`h-5 text-[10px] font-mono pr-4 rounded-full ${
+                  customSlippage && !SLIPPAGE_PRESETS.includes(slippage)
+                    ? 'border-primary/60 bg-primary/10 text-primary'
+                    : 'border-border/40 bg-background/40'
+                }`}
+              />
+              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground font-mono">%</span>
+            </div>
           </div>
         </div>
 

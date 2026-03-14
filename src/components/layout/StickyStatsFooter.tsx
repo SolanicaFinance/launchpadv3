@@ -332,7 +332,7 @@ export function StickyStatsFooter() {
           </div>
         </div>
 
-        {/* CENTER: Stats — hidden on mobile */}
+        {/* CENTER: Crypto Prices — hidden on mobile */}
         {!isMobile && (
           <div style={{
             display: "flex",
@@ -346,10 +346,7 @@ export function StickyStatsFooter() {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-              <Users style={{ width: "11px", height: "11px", color: "rgba(255,255,255,0.4)" }} />
-              <StatItem label="Users" value={platformUsers !== null ? platformUsers.toLocaleString() : "—"} />
-            </div>
+            <FooterCryptoPrices />
           </div>
         )}
 

@@ -76,29 +76,21 @@ export function AdvancedSettingsSheet({
                   {v}%
                 </button>
               ))}
-              <button
-                onClick={() => setShowCustom(!showCustom)}
-                className={`h-12 px-4 rounded-2xl font-mono text-sm font-bold border transition-all active:scale-95 ${
-                  showCustom
-                    ? "border-primary/60 bg-primary/15 text-primary"
-                    : "border-border/40 text-muted-foreground hover:border-border/60 bg-secondary/50"
-                }`}
-              >
-                Custom
-              </button>
             </div>
-            {showCustom && (
-              <div className="relative">
-                <Input
-                  type="number"
-                  placeholder="Enter slippage %"
-                  value={customSlippage}
-                  onChange={(e) => handleCustom(e.target.value)}
-                  className="h-12 text-base font-mono pr-10 rounded-2xl border-border/40 bg-secondary/50"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">%</span>
-              </div>
-            )}
+            <div className="relative">
+              <Input
+                type="number"
+                placeholder="Custom %"
+                value={customSlippage}
+                onChange={(e) => handleCustom(e.target.value)}
+                className={`h-12 text-base font-mono pr-10 rounded-2xl ${
+                  customSlippage && !SLIPPAGE_PRESETS.includes(slippage)
+                    ? "border-primary/60 bg-primary/15 text-primary"
+                    : "border-border/40 bg-secondary/50"
+                }`}
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">%</span>
+            </div>
           </div>
 
           {/* Toggles */}
