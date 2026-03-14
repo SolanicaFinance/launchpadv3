@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { XIcon } from "@/components/icons/XIcon";
+import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { Gift, Users, Star, Clock, ExternalLink, Loader2, Trophy, Zap, Eye, Repeat2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
