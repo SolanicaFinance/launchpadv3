@@ -19,7 +19,7 @@ const NAV_LINKS = [
   { to: "/discover", label: "Discover", icon: TrendingUp },
   { to: "/alpha-tracker", label: "Alpha", icon: Crosshair },
   { to: "/x-tracker", label: "X Tracker", icon: Radar },
-  { to: "/agents", label: "Agents", icon: Bot },
+  { to: "/agents", label: "Staking", icon: Bot },
   { to: "/leverage", label: "Leverage", icon: CandlestickChart },
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
