@@ -1374,7 +1374,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
        window.clearTimeout(stillWorkingTimer);
        setIsPhantomLaunching(false);
      }
-  }, [phantomWallet, phantomToken, phantomMeme, phantomImagePreview, phantomTradingFee, phantomDevBuySol, toast, uploadPhantomImageIfNeeded, onLaunchSuccess, onShowResult]);
+  }, [phantomWallet, phantomToken, phantomMeme, phantomImagePreview, phantomTradingFee, phantomDevBuySol, toast, uploadPhantomImageIfNeeded, onLaunchSuccess, onShowResult, launchWalletMode, privyWalletAddress, isAuthenticated, privyWalletReady, privyBalance]);
 
   // FUN mode handlers
   const uploadFunImageIfNeeded = useCallback(async (): Promise<string> => {
