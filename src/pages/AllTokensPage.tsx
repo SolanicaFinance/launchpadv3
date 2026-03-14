@@ -226,7 +226,7 @@ export default function AllTokensPage() {
         {/* Token Grid — full width, no side spacing */}
         <div>
           {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 px-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 px-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="bg-card border border-border overflow-hidden animate-pulse">
                   <Skeleton className="w-full aspect-[16/9]" />
