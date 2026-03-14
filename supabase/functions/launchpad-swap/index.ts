@@ -98,20 +98,47 @@ serve(async (req) => {
       );
     }
 
-    // Get token
-    const { data: token, error: tokenError } = await supabase
+    // Get token - check tokens table first, then fall back to fun_tokens
+    let token: any = null;
+    let tokenSource = "tokens";
+    
+    const { data: legacyToken, error: legacyError } = await supabase
       .from("tokens")
       .select("*")
       .eq("mint_address", mintAddress)
       .single();
 
-    if (tokenError || !token) {
-      console.error("[launchpad-swap] Token not found:", tokenError);
+    if (legacyToken) {
+      token = legacyToken;
+      tokenSource = "tokens";
+    } else {
+      // Fallback to fun_tokens table
+      const { data: funToken, error: funError } = await supabase
+        .from("fun_tokens")
+        .select("*")
+        .eq("mint_address", mintAddress)
+        .single();
+
+      if (funToken) {
+        token = {
+          ...funToken,
+          virtual_sol_reserves: 30,
+          virtual_token_reserves: 1_000_000_000,
+          real_sol_reserves: 0,
+          real_token_reserves: 800_000_000,
+        };
+        tokenSource = "fun_tokens";
+      }
+    }
+
+    if (!token) {
+      console.error("[launchpad-swap] Token not found in any table for mint:", mintAddress);
       return new Response(
         JSON.stringify({ error: "Token not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    console.log("[launchpad-swap] Token found in", tokenSource, ":", token.name);
 
     // ===== RECORD MODE =====
     // When mode === 'record', the client has already executed the on-chain swap.
