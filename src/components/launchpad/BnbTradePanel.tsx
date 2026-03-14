@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowDownToLine } from "lucide-react";
+import { recordAlphaTradeInBackground } from "@/lib/recordAlphaTrade";
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 
 const BNB_PRESETS = [0.01, 0.05, 0.1, 0.25, 0.5, 1];
@@ -56,6 +57,20 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
             ? { label: "View TX", onClick: () => window.open(result.explorerUrl, "_blank") }
             : undefined,
         });
+
+        if (result.txHash) {
+          recordAlphaTradeInBackground({
+            walletAddress: userWallet,
+            tokenMint: tokenAddress,
+            tokenName: name,
+            tokenTicker: ticker,
+            tradeType: action,
+            amountSol: amtNum,
+            amountTokens: result.estimatedOutput ? Number(result.estimatedOutput) : 0,
+            txHash: result.txHash,
+            chain: "bnb",
+          });
+        }
       } else {
         toast.error("❌ Swap Failed", { id: toastId, description: result.error?.slice(0, 120) });
       }

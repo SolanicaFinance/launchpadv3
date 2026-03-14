@@ -9,6 +9,7 @@ interface BnbSwapResult {
   explorerUrl?: string;
   route?: string;
   reason?: string;
+  estimatedOutput?: string;
 }
 
 export function useBnbSwap() {
@@ -43,6 +44,7 @@ export function useBnbSwap() {
         txHash: data.txHash,
         explorerUrl: data.explorerUrl,
         route: data.route,
+        estimatedOutput: data.estimatedOutput,
       };
     } catch (err: any) {
       // Parse structured error from edge function

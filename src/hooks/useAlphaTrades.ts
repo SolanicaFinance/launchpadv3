@@ -76,7 +76,19 @@ export function useAlphaTrades(limit = 50) {
       )
       .subscribe();
 
+    const interval = window.setInterval(() => {
+      void fetchTrades();
+    }, 5000);
+
+    const onFocus = () => {
+      void fetchTrades();
+    };
+
+    window.addEventListener("focus", onFocus);
+
     return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
       supabase.removeChannel(channel);
     };
   }, [fetchTrades, limit]);
