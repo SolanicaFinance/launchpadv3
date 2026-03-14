@@ -248,18 +248,13 @@ export function useFastSwap() {
       if (token.status === 'graduated') {
         result = await swapGraduated(token, amount, isBuy, slippageBps);
 
-        // Client-side direct insert — awaited to prevent silent loss
-        await recordAlphaTrade({
-          walletAddress: walletAddress!,
-          tokenMint: token.mint_address,
-          tokenName: token.name,
-          tokenTicker: token.ticker,
-          tradeType: isBuy ? 'buy' : 'sell',
-          amountSol: amount,
-          amountTokens: isBuy ? result.tokensOut : undefined,
-          txHash: result.signature,
-          chain: 'solana',
-        });
+        await recordTradeForAlphaTracker(
+          token,
+          amount,
+          isBuy,
+          result.signature,
+          isBuy ? result.tokensOut : result.solOut,
+        );
 
         // Edge function record (non-blocking, secondary)
         supabase.functions.invoke('launchpad-swap', {
