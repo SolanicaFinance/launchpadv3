@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BRAND } from "@/config/branding";
 import { Rocket, Upload, Link as LinkIcon, Twitter, Globe, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,7 +256,7 @@ export default function TokenLauncherWidget({ config }: TokenLauncherWidgetProps
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Powered by MoonDexo
+            Powered by {BRAND.name}
           </p>
         </form>
       </CardContent>

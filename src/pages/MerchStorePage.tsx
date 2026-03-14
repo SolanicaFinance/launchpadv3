@@ -41,7 +41,7 @@ const PRODUCTS: Product[] = [
   {
     id: "hat-snapback",
     name: `${BRAND.shortName} Snapback`,
-    description: "Structured snapback with embroidered MoonDexo logo",
+    description: `Structured snapback with embroidered ${BRAND.shortName} logo`,
     priceSol: 0.15,
     category: "accessory",
     colors: [
@@ -53,8 +53,8 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "hat-beanie",
-    name: "MoonDexo Beanie",
-    description: "Knit beanie with woven MoonDexo patch",
+    name: `${BRAND.shortName} Beanie`,
+    description: `Knit beanie with woven ${BRAND.shortName} patch`,
     priceSol: 0.12,
     category: "accessory",
     colors: [
@@ -75,7 +75,7 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "mug-ceramic",
-    name: "MoonDexo Ceramic Mug",
+    name: `${BRAND.shortName} Ceramic Mug`,
     description: "11oz ceramic mug, dishwasher safe",
     priceSol: 0.1,
     category: "accessory",
@@ -88,8 +88,8 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "phone-case",
-    name: "MoonDexo Phone Case",
-    description: "Slim protective case with MoonDexo design",
+    name: `${BRAND.shortName} Phone Case`,
+    description: `Slim protective case with ${BRAND.shortName} design`,
     priceSol: 0.12,
     category: "accessory",
     bgGradient: "bg-gradient-to-br from-violet-900/30 to-zinc-900",
@@ -97,8 +97,8 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "tshirt-dev",
-    name: "MoonDexo Dev Tee",
-    description: '"I build on MoonDexo" limited edition tee',
+    name: `${BRAND.shortName} Dev Tee`,
+    description: `"I build on ${BRAND.shortName}" limited edition tee`,
     priceSol: 0.3,
     category: "apparel",
     sizes: ["S", "M", "L", "XL", "2XL"],

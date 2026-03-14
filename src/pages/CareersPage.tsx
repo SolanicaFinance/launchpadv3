@@ -209,7 +209,7 @@ export default function CareersPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back to MoonDexo</span>
+            <span className="text-sm">Back to {BRAND.name}</span>
           </Link>
           <Button onClick={handleApplyClick} className="bg-primary hover:bg-primary/90 gap-2">
             <XLogo className="h-4 w-4" weight="fill" />
@@ -232,7 +232,7 @@ export default function CareersPage() {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Join the team building MoonDexo — the world's first AI agent operating system for autonomous trading and token launches on Solana.
+            Join the team building {BRAND.name} — the world's first AI agent operating system for autonomous trading and token launches on Solana.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border">
@@ -333,13 +333,13 @@ export default function CareersPage() {
                 </div>
                 <div>
                   <CardTitle className="text-2xl">Beta Testers Wanted</CardTitle>
-                  <p className="text-muted-foreground">Help shape the future of MoonDexo</p>
+                  <p className="text-muted-foreground">Help shape the future of {BRAND.name}</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground">
-                We're looking for experienced crypto users, developers, and traders to beta test the MoonDexo platform 
+                We're looking for experienced crypto users, developers, and traders to beta test the {BRAND.name} platform 
                 before public launch. As a beta tester, you'll get early access to features, provide feedback directly 
                 to the team, and help us identify and fix issues.
               </p>
@@ -373,7 +373,7 @@ export default function CareersPage() {
       {/* Why Join Section */}
       <section className="px-4 pb-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">Why Join MoonDexo?</h2>
+          <h2 className="text-3xl font-bold mb-8">Why Join {BRAND.name}?</h2>
           <div className="grid sm:grid-cols-3 gap-6">
             <Card className="bg-card/50 border-border">
               <CardContent className="p-6 text-center">
@@ -420,7 +420,7 @@ export default function CareersPage() {
               <MessageCircle className="h-12 w-12 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-4">Ready to Apply?</h2>
               <p className="text-muted-foreground mb-6">
-                Send us a DM on X with your background, the position you're interested in, and why you want to join MoonDexo. 
+                Send us a DM on X with your background, the position you're interested in, and why you want to join {BRAND.name}. 
                 We review every application and respond within 48 hours.
               </p>
               <Button

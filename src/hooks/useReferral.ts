@@ -53,7 +53,7 @@ export function useReferralCode() {
   }, [profileId]);
 
   const referralLink = referralCode
-    ? `https://moondexo.com/link/${referralCode}`
+    ? `https://saturntrade.com/link/${referralCode}`
     : null;
 
   return { referralCode, referralLink, referralCount, loading };

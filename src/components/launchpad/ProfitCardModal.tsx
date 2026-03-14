@@ -54,7 +54,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
         useCORS: true,
       });
       const link = document.createElement("a");
-      link.download = `moondexo-${data.tokenTicker}-${Date.now()}.png`;
+      link.download = `saturn-${data.tokenTicker}-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (e) {
@@ -93,7 +93,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                 background: "radial-gradient(ellipse at 30% 20%, rgba(200,255,0,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(132,204,22,0.06) 0%, transparent 50%)",
               }}
             />
-            {/* MoonDexo ring decoration */}
+            {/* Saturn ring decoration */}
             <div
               className="absolute -right-12 -top-12 w-40 h-40 pointer-events-none opacity-10"
               style={{

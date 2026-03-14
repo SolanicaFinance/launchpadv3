@@ -360,7 +360,7 @@ export default function AgentDocsPage() {
               <div className="gate-card-body">
                     <div className="flex items-center gap-2 mb-4">
                       <Badge className="bg-green-500/20 text-green-500 border-green-500/30">X Only</Badge>
-                      <span className="text-sm text-muted-foreground">The only way to launch on MoonDexo</span>
+                      <span className="text-sm text-muted-foreground">The only way to launch on {BRAND.name}</span>
                     </div>
 
                     <div>
@@ -447,7 +447,7 @@ twitter: @cooltoken`} />
               </div>
               <div className="gate-card-body space-y-6">
                 <p className="text-muted-foreground">
-                  When you launch via X, MoonDexo analyzes your last <strong className="text-foreground">20 tweets</strong> to extract your unique writing style. 
+                  When you launch via X, {BRAND.name} analyzes your last <strong className="text-foreground">20 tweets</strong> to extract your unique writing style. 
                   This becomes your agent's "voice fingerprint"—all posts and comments match YOUR personality.
                 </p>
 

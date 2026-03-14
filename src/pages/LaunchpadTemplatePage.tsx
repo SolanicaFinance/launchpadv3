@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { BRAND } from "@/config/branding";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSwap } from "@/hooks/useSwap";
@@ -778,7 +779,7 @@ export default function LaunchpadTemplatePage() {
       >
         <div className="max-w-7xl mx-auto text-center">
           <p style={{ color: design.colors.textMuted }} className="text-sm">
-            Powered by MoonDexo • 2% trading fees
+            Powered by {BRAND.name} • 2% trading fees
           </p>
         </div>
       </footer>
