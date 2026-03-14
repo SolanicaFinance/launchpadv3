@@ -4155,36 +4155,45 @@ export type Database = {
       }
       kol_accounts: {
         Row: {
+          added_at: string | null
           cached_avatar_url: string | null
           created_at: string
           display_name: string | null
+          follower_count: number | null
           id: string
           is_active: boolean
           last_scanned_at: string | null
           last_scanned_tweet_id: string | null
           profile_image_url: string | null
+          source: string | null
           username: string
         }
         Insert: {
+          added_at?: string | null
           cached_avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          follower_count?: number | null
           id?: string
           is_active?: boolean
           last_scanned_at?: string | null
           last_scanned_tweet_id?: string | null
           profile_image_url?: string | null
+          source?: string | null
           username: string
         }
         Update: {
+          added_at?: string | null
           cached_avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          follower_count?: number | null
           id?: string
           is_active?: boolean
           last_scanned_at?: string | null
           last_scanned_tweet_id?: string | null
           profile_image_url?: string | null
+          source?: string | null
           username?: string
         }
         Relationships: []
