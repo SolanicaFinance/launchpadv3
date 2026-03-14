@@ -11,6 +11,7 @@ import { Wallet, Ghost, LogOut, Copy, Check, ExternalLink, Terminal } from "luci
 import saturnLogo from "@/assets/saturn-logo.png";
 import { copyToClipboard } from "@/lib/clipboard";
 import { BRAND } from "@/config/branding";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 
 const PanelUnifiedDashboard = lazy(() => import("@/components/panel/PanelUnifiedDashboard"));
 const PanelPhantomTab = lazy(() => import("@/components/panel/PanelPhantomTab"));
@@ -29,6 +30,7 @@ export default function PanelPage() {
   const { isAdmin } = useIsAdmin(solanaAddress);
   const { chain, chainConfig } = useChain();
   const evmWallet = useEvmWallet();
+  const { walletAddress: embeddedSolAddress } = useSolanaWalletWithPrivy();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [adminTab, setAdminTab] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function PanelPage() {
   }, []);
 
   const isBnb = chain === 'bnb';
-  const displayAddress = isBnb ? evmWallet.address : solanaAddress;
+  const displayAddress = isBnb ? evmWallet.address : (embeddedSolAddress || solanaAddress);
   const explorerUrl = isBnb
     ? `https://bscscan.com/address/${displayAddress}`
     : `https://solscan.io/account/${displayAddress}`;
