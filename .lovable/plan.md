@@ -1,104 +1,70 @@
 
-## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-### Problem
-TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
-Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+## Fix Portfolio & Launches to Use Real Data
 
-### Architecture
-1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
-   - Privy embedded wallet handles all on-chain signing (same as trading)
-   - Users logged in via Privy can launch directly — no Phantom popup
-   - Logged-out users can still generate memes, prompted to login on Launch
+### Problems Identified
 
-2. **Simplify the "phantom" mode → "launch" mode**
-   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
-   - Rename to generic wallet references since Privy handles everything
-   - Keep all sub-modes (random, describe, realistic, custom)
+1. **Portfolio shows 0**: Uses `useUserHoldings` which queries the `token_holdings` DB table (only populated by internal swap handler). Most users have no rows there. Meanwhile, the Wallet section already uses `useWalletHoldings` (real on-chain RPC data) — that works correctly.
 
-3. **On-chain flow change:**
-   ```
-   Before: Phantom popup → user signs → broadcast
-   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
-   ```
+2. **Launches missing tokens**: `useUserTokens` queries the `tokens` table, but tokens like Madtopus are created in the `fun_tokens` table. The two tables are separate systems. Launches section never queries `fun_tokens`.
 
-4. **Auth gate on launch:**
-   - Check `useAuth()` / `usePrivy()` for logged-in state
-   - If not logged in → trigger Privy login modal
-   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
+### Changes
 
-### Files to modify:
-- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
-- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
-- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
-- `src/components/launchpad/CreateTokenModal.tsx` — same
-- `src/pages/FunLauncherPage.tsx` — same
+**1. `src/hooks/useLaunchpad.ts` — Fix `useUserTokens` to include `fun_tokens`**
 
-### Dependencies:
-- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
-- `src/hooks/useAuth.ts` (already exists)
-- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+Update `useUserTokens` to query BOTH `tokens` AND `fun_tokens` tables by `creator_wallet`, merge results, and return a unified list. This ensures all launched tokens (regardless of launchpad type) appear in the Launches section.
 
----
-
-## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
-
-### What was built:
-1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
-   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
-   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
-   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
-   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
-   - Records trade in DB + alpha_trades (non-blocking)
-   - Returns signature immediately with timing breakdown
-
-2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
-   - Single `supabase.functions.invoke('turbo-trade')` call
-   - No client-side tx building or signing
-   - Background query invalidation after 500ms
-   - Logs client roundtrip vs server execution time
-
-3. **Wired into trade components:**
-   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
-   - `PortfolioModal.tsx` — uses `useTurboSwap`
-
-### Expected latency:
-```
-Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
-After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
+```typescript
+const useUserTokens = (walletAddress) => {
+  return useQuery({
+    queryFn: async () => {
+      // Query both tables
+      const [tokensResult, funTokensResult] = await Promise.all([
+        supabase.from('tokens').select('*').eq('creator_wallet', walletAddress),
+        supabase.from('fun_tokens').select('*').eq('creator_wallet', walletAddress)
+      ]);
+      // Normalize fun_tokens to Token shape and merge
+      const funMapped = (funTokensResult.data || []).map(ft => ({
+        ...ft, market_cap_sol: ft.market_cap_sol || 0,
+        bonding_curve_progress: ft.bonding_progress || 0,
+      }));
+      return [...(tokensResult.data || []), ...funMapped];
+    }
+  });
+};
 ```
 
----
+**2. `src/components/panel/PanelUnifiedDashboard.tsx` — Make Portfolio use real on-chain data**
 
-## 6-Phase Axiom Feature Integration Plan (SAVED)
+Replace `useUserHoldings` (DB-based) with `useWalletHoldings` (on-chain RPC) for the Portfolio section. Cross-reference the returned mints with `fun_tokens` to get name/ticker/image/price metadata for the pie chart and holdings list.
 
-### Phase 1: Copy Trade Execution
-- New `copy-trade-execute` edge function
-- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
-- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
-- New `copy_trade_log` table
+- Import `useWalletHoldings` and `useTokenMetadata`
+- Use on-chain holdings for balance data
+- Look up token metadata (name, ticker, image, price) from `fun_tokens` by mint address
+- Build pie chart from real on-chain values × cached prices
+- Create a new hook or inline query: fetch `fun_tokens` rows where `mint_address IN (holding mints)` to get prices and metadata
 
-### Phase 2: Limit Orders (SL/TP)
-- Jupiter limit order program integration
-- `limit-order-create` edge function
-- `limit_orders` DB table
-- Limit order tab in trade panel
+**3. New query helper for portfolio metadata**
 
-### Phase 3: Real-Time WebSocket Token Feed
-- Helius WebSocket for sub-1s new pair detection
-- Replace Codex polling (~30s) 
-- Edge function → Supabase Realtime channel
+Add a query inside `PanelUnifiedDashboard` (or a small hook) that fetches `fun_tokens` metadata for all held mints:
 
-### Phase 4: DCA (Dollar Cost Averaging)
-- `dca_orders` DB table
-- `dca-execute` cron edge function
-- DCA tab in trade panel
+```typescript
+const { data: tokenMeta } = useQuery({
+  queryKey: ['portfolio-meta', holdingMints],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('fun_tokens')
+      .select('mint_address, name, ticker, image_url, price_sol, market_cap_sol')
+      .in('mint_address', holdingMints);
+    return new Map(data?.map(t => [t.mint_address, t]) || []);
+  },
+  enabled: holdingMints.length > 0,
+});
+```
 
-### Phase 5: Enhanced Token Safety
-- LP lock status, mint authority, honeypot detection
-- Safety score badge on Pulse cards
+This gives real portfolio values: on-chain balance × cached price from `fun_tokens`.
 
-### Phase 6: Wallet PnL Analytics
-- `wallet-pnl-calculate` edge function
-- Per-wallet realized/unrealized PnL
-- Rank tracked wallets by performance
+### Files to Edit
+- `src/hooks/useLaunchpad.ts` — merge `fun_tokens` into `useUserTokens`
+- `src/components/panel/PanelUnifiedDashboard.tsx` — replace DB holdings with on-chain holdings + fun_tokens metadata for Portfolio section
+
