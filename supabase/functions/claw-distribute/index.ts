@@ -8,11 +8,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const CREATOR_FEE_SHARE = 0.3;        // 30% to creator (X launcher)
-const AGENT_FEE_SHARE = 0.3;          // 30% to agent trading wallet  
-const TRADING_AGENT_FEE_SHARE = 0.3;  // 30% to trading agent wallet
-const SYSTEM_FEE_SHARE = 0.4;         // 40% to system treasury
-const MIN_DISTRIBUTION_SOL = 0.05;
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+function calculateCreatorShare(claimedSol: number, creatorFeeBps: number | null, tradingFeeBps: number | null): { creatorSol: number; platformSol: number } {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return { creatorSol: 0, platformSol: claimedSol };
+  const creatorRatio = cBps / bps;
+  const creatorSol = Math.floor(claimedSol * creatorRatio * 1e9) / 1e9;
+  return { creatorSol, platformSol: claimedSol - creatorSol };
+}
+const MIN_DISTRIBUTION_SOL = 0.005;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -55,7 +60,7 @@ serve(async (req) => {
     // Get undistributed claw_fee_claims
     const { data: undistributedClaims, error: claimsError } = await supabase
       .from("claw_fee_claims")
-      .select(`*, fun_token:claw_tokens(id, name, ticker, creator_wallet, status, agent_id, trading_agent_id, is_trading_agent_token, agent_fee_share_bps)`)
+      .select(`*, fun_token:claw_tokens(id, name, ticker, creator_wallet, status, agent_id, trading_agent_id, is_trading_agent_token, agent_fee_share_bps, creator_fee_bps, trading_fee_bps)`)
       .eq("creator_distributed", false)
       .order("claimed_at", { ascending: true });
 
@@ -104,8 +109,7 @@ serve(async (req) => {
     let successCount = 0;
 
     for (const group of groups.values()) {
-      const feeShare = group.isTradingAgent ? TRADING_AGENT_FEE_SHARE : AGENT_FEE_SHARE;
-      const recipientAmount = group.claimedSol * feeShare;
+      const { creatorSol: recipientAmount } = calculateCreatorShare(group.claimedSol, group.token.creator_fee_bps, group.token.trading_fee_bps);
 
       if (recipientAmount < MIN_DISTRIBUTION_SOL) {
         // Mark as distributed but skip payment

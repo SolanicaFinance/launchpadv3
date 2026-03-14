@@ -9,8 +9,17 @@ const corsHeaders = {
 
 const MIN_CLAIM_SOL = 0.01;
 const MAX_SINGLE_CLAIM_SOL = 5.0;
-const CREATOR_SHARE = 0.3;
 const CLAIM_COOLDOWN_MS = 60 * 60 * 1000;
+const CLAIM_LOCK_SECONDS = 60;
+const TREASURY_RESERVE_SOL = 0.05;
+
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | null): number {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return 0;
+  return cBps / bps;
+}
 const CLAIM_LOCK_SECONDS = 60;
 const TREASURY_RESERVE_SOL = 0.05;
 
@@ -24,6 +33,7 @@ async function calculateClaimable(
   targetTokenIds: string[],
   funTokenIds: string[],
   clawTokenIds: string[],
+  tokenBpsMap: Map<string, { creator_fee_bps: number; trading_fee_bps: number }>,
 ) {
   let totalCreatorEarned = 0;
   const tokenEarnings: Record<string, number> = {};
@@ -37,7 +47,9 @@ async function calculateClaimable(
       .in("fun_token_id", funTargetIds);
 
     for (const fc of feeClaims || []) {
-      const earned = (fc.claimed_sol || 0) * CREATOR_SHARE;
+      const bps = tokenBpsMap.get(fc.fun_token_id) || { creator_fee_bps: 100, trading_fee_bps: 200 };
+      const ratio = getCreatorRatio(bps.creator_fee_bps, bps.trading_fee_bps);
+      const earned = Math.floor((fc.claimed_sol || 0) * ratio * 1e9) / 1e9;
       tokenEarnings[fc.fun_token_id] = (tokenEarnings[fc.fun_token_id] || 0) + earned;
       totalCreatorEarned += earned;
     }
@@ -52,7 +64,9 @@ async function calculateClaimable(
       .in("fun_token_id", clawTargetIds);
 
     for (const fc of feeClaims || []) {
-      const earned = (fc.claimed_sol || 0) * CREATOR_SHARE;
+      const bps = tokenBpsMap.get(fc.fun_token_id) || { creator_fee_bps: 100, trading_fee_bps: 200 };
+      const ratio = getCreatorRatio(bps.creator_fee_bps, bps.trading_fee_bps);
+      const earned = Math.floor((fc.claimed_sol || 0) * ratio * 1e9) / 1e9;
       tokenEarnings[fc.fun_token_id] = (tokenEarnings[fc.fun_token_id] || 0) + earned;
       totalCreatorEarned += earned;
     }
@@ -192,6 +206,25 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: false, error: `No tokens found launched by @${normalizedUsername}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ===== Fetch token bps for accurate creator share calculation =====
+    const tokenBpsMap = new Map<string, { creator_fee_bps: number; trading_fee_bps: number }>();
+    
+    const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
+    const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
+    
+    if (funTargetIds.length > 0) {
+      const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
+      for (const t of funTokenData || []) {
+        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      }
+    }
+    if (clawTargetIds.length > 0) {
+      const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
+      for (const t of clawTokenData || []) {
+        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      }
+    }
+
     // ===== Rate limit check — by twitter_username =====
     const { data: lastClaim } = await supabase
       .from("claw_distributions")
@@ -218,7 +251,7 @@ Deno.serve(async (req) => {
     }
 
     // Calculate claimable
-    const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds);
+    const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
 
     console.log(`[saturn-creator-claim] @${normalizedUsername}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
 
@@ -250,7 +283,7 @@ Deno.serve(async (req) => {
 
     try {
       // Re-verify after lock
-      const verifiedCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds);
+      const verifiedCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
       
       if (verifiedCalc.claimable < MIN_CLAIM_SOL) {
         console.log(`[saturn-creator-claim] ⚠️ Post-lock: claimable=${verifiedCalc.claimable.toFixed(6)} < ${MIN_CLAIM_SOL}`);

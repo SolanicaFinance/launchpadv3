@@ -2978,6 +2978,51 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_fee_ledger: {
+        Row: {
+          created_at: string | null
+          creator_fee_bps: number
+          creator_share_sol: number
+          distribution_signature: string | null
+          fee_claim_id: string | null
+          fee_claim_table: string
+          fun_token_id: string
+          id: string
+          platform_share_sol: number
+          status: string
+          total_claimed_sol: number
+          trading_fee_bps: number
+        }
+        Insert: {
+          created_at?: string | null
+          creator_fee_bps: number
+          creator_share_sol: number
+          distribution_signature?: string | null
+          fee_claim_id?: string | null
+          fee_claim_table?: string
+          fun_token_id: string
+          id?: string
+          platform_share_sol: number
+          status?: string
+          total_claimed_sol: number
+          trading_fee_bps: number
+        }
+        Update: {
+          created_at?: string | null
+          creator_fee_bps?: number
+          creator_share_sol?: number
+          distribution_signature?: string | null
+          fee_claim_id?: string | null
+          fee_claim_table?: string
+          fun_token_id?: string
+          id?: string
+          platform_share_sol?: number
+          status?: string
+          total_claimed_sol?: number
+          trading_fee_bps?: number
+        }
+        Relationships: []
+      }
       cron_locks: {
         Row: {
           acquired_at: string
@@ -9976,6 +10021,17 @@ export type Database = {
           p_wallet_address: string
         }
         Returns: undefined
+      }
+      calculate_creator_share: {
+        Args: {
+          p_claimed_sol: number
+          p_creator_fee_bps: number
+          p_trading_fee_bps: number
+        }
+        Returns: {
+          creator_sol: number
+          platform_sol: number
+        }[]
       }
       calculate_trending_topics: { Args: never; Returns: undefined }
       can_pin_posts: { Args: { _user_id: string }; Returns: boolean }

@@ -29,26 +29,19 @@ function isTokenEligibleForPartnerSplit(tokenCreatedAt: string | Date | null | u
   return createdDate >= PARTNER_SPLIT_START;
 }
 
-// Fee distribution splits for REGULAR tokens (non-API, non-Agent)
-const CREATOR_FEE_SHARE = 0.5;    // 50% to creator
-const BUYBACK_FEE_SHARE = 0.3;   // 30% for buybacks
-const SYSTEM_FEE_SHARE = 0.2;    // 20% kept for system expenses
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+// Platform always takes 1% (100 bps), creator gets the rest
+function calculateCreatorShare(claimedSol: number, creatorFeeBps: number | null, tradingFeeBps: number | null): { creatorSol: number; platformSol: number } {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return { creatorSol: 0, platformSol: claimedSol };
+  const creatorRatio = cBps / bps;
+  const creatorSol = Math.floor(claimedSol * creatorRatio * 1e9) / 1e9;
+  return { creatorSol, platformSol: claimedSol - creatorSol };
+}
 
-// Fee distribution splits for API-LAUNCHED tokens
-// Total trading fee is 2%, split 50/50:
-// - API users get 50% = 1% of total trade volume
-// - Platform keeps 50% = 1% of total trade volume (stays in treasury)
-const API_USER_FEE_SHARE = 0.5;   // 50% to API account owner (1% of 2%)
-const API_PLATFORM_FEE_SHARE = 0.5; // 50% to platform (1% of 2%)
-
-// Fee distribution splits for AGENT-LAUNCHED tokens
-// New 3-way split: 30% creator, 30% agent trading pool, 40% system
-const AGENT_CREATOR_FEE_SHARE = 0.3;   // 30% to X launcher/creator
-const AGENT_TRADING_FEE_SHARE = 0.3;   // 30% to agent trading wallet
-const AGENT_PLATFORM_FEE_SHARE = 0.4;  // 40% to platform
-
-// Minimum SOL to distribute (avoid micro-transactions that eat gas)
-const MIN_DISTRIBUTION_SOL = 0.05;
+// Minimum SOL to distribute (lowered to support small creators)
+const MIN_DISTRIBUTION_SOL = 0.005;
 
 // Maximum retries for transaction
 const MAX_TX_RETRIES = 3;
@@ -344,8 +337,8 @@ serve(async (req) => {
       if (isHolderRewards) {
         // HOLDER REWARDS MODE: Route 50% to holder_reward_pool instead of creator
         // The fun-holder-distribute cron will distribute to holders every 5 minutes
-        const holderAmount = claimedSol * CREATOR_FEE_SHARE; // 50% goes to holder pool
-        let platformAmount = claimedSol * (1 - CREATOR_FEE_SHARE); // 50% platform
+        const { creatorSol: holderAmount, platformSol: holderPlatformAmount } = calculateCreatorShare(claimedSol, token.creator_fee_bps, token.trading_fee_bps);
+        let platformAmount = holderPlatformAmount;
         
         // Partner split from platform share
         if (isTokenEligibleForPartnerSplit(token.created_at)) {
@@ -487,96 +480,22 @@ serve(async (req) => {
       const isAgentToken = group.recipientType === "agent";
       const isApiToken = group.recipientType === "api_user";
 
-      // Calculate fee splits based on token type
-      let recipientAmount: number;
-      let platformAmount: number;
+      // Unified fee split: always use creator_fee_bps / trading_fee_bps
+      const { creatorSol, platformSol } = calculateCreatorShare(claimedSol, token.creator_fee_bps, token.trading_fee_bps);
+      let recipientAmount = creatorSol;
+      let platformAmount = platformSol;
       let partnerAmount = 0;
 
-      if (isAgentToken) {
-        // Agent tokens: 30% creator / 30% agent trading / 40% system
-        const isTradingAgent = !!group.tradingAgentId;
-        recipientAmount = claimedSol * AGENT_TRADING_FEE_SHARE; // 30% to agent/trading wallet
-        platformAmount = claimedSol * AGENT_PLATFORM_FEE_SHARE; // 40% to platform
-        // Creator 30% is handled separately below (held if no wallet linked yet)
-        const creatorAmount = claimedSol * AGENT_CREATOR_FEE_SHARE; // 30% to X creator
-        
-        // Partner split from platform share
-        if (isTokenEligibleForPartnerSplit(token.created_at)) {
-          partnerAmount = platformAmount * 0.5;
-          platformAmount = platformAmount * 0.5;
-        }
-        
-        // Store creator amount for later distribution
-        (group as any)._creatorAmount = creatorAmount;
-        
-        console.log(
-          `[fun-distribute] ${isTradingAgent ? 'Trading' : 'Standard'} Agent Token ${token.ticker}: ${claimedSol} SOL → Agent 30% (${recipientAmount.toFixed(6)}), Creator 30% (${creatorAmount.toFixed(6)}), Platform 40% (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-        );
-      } else if (isApiToken) {
-        // API tokens: 50/50 split between API user and platform
-        recipientAmount = claimedSol * API_USER_FEE_SHARE;
-        platformAmount = claimedSol * API_PLATFORM_FEE_SHARE;
-        
-        // Partner split from platform share
-        if (isTokenEligibleForPartnerSplit(token.created_at)) {
-          partnerAmount = platformAmount * 0.5;
-          platformAmount = platformAmount * 0.5;
-        }
-        
-        console.log(
-          `[fun-distribute] API Token ${token.ticker}: ${claimedSol} SOL → API User ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-        );
-      } else {
-        // Check if this is a punch token (70/30 split)
-        const isPunchToken = token.launchpad_type === 'punch';
-        
-        if (isPunchToken) {
-          // Punch tokens: 70% creator, 30% platform
-          const PUNCH_CREATOR_FEE_SHARE = 0.7;
-          const PUNCH_SYSTEM_FEE_SHARE = 0.3;
-          recipientAmount = claimedSol * PUNCH_CREATOR_FEE_SHARE;
-          platformAmount = claimedSol * PUNCH_SYSTEM_FEE_SHARE;
-          
-          // Partner split from platform share if eligible
-          if (isTokenEligibleForPartnerSplit(token.created_at)) {
-            partnerAmount = platformAmount * 0.5;
-            platformAmount = platformAmount * 0.5;
-          }
-          
-          console.log(
-            `[fun-distribute] Punch Token ${token.ticker}: ${claimedSol} SOL → Creator 70% (${recipientAmount.toFixed(6)}), Platform 30% (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-          );
-        } else {
-          // Regular/Phantom tokens
-          const isPhantom = token.launchpad_type === 'phantom';
-          
-          // Phantom tokens with stored fee breakdown: use creator_fee_bps / trading_fee_bps ratio
-          if (isPhantom && token.trading_fee_bps && token.creator_fee_bps != null) {
-            const creatorShare = token.creator_fee_bps / token.trading_fee_bps;
-            const platformShare = 1 - creatorShare;
-            recipientAmount = claimedSol * creatorShare;
-            platformAmount = claimedSol * platformShare;
-            
-            console.log(
-              `[fun-distribute] Phantom Token ${token.ticker}: ${claimedSol} SOL → Creator ${(creatorShare * 100).toFixed(1)}% (${recipientAmount.toFixed(6)}), Platform ${(platformShare * 100).toFixed(1)}% (${platformAmount.toFixed(6)}) [${token.creator_fee_bps}/${token.trading_fee_bps} bps]`
-            );
-          } else {
-            // Legacy regular tokens: creator gets 50%, rest for buyback/system
-            recipientAmount = claimedSol * CREATOR_FEE_SHARE;
-            platformAmount = claimedSol * (BUYBACK_FEE_SHARE + SYSTEM_FEE_SHARE);
-            
-            // Partner split from platform share - EXCLUDE Phantom mode tokens
-            if (!isPhantom && isTokenEligibleForPartnerSplit(token.created_at)) {
-              partnerAmount = platformAmount * 0.5;
-              platformAmount = platformAmount * 0.5;
-            }
-            
-            console.log(
-              `[fun-distribute] ${isPhantom ? 'Phantom (legacy)' : 'Regular'} Token ${token.ticker}: ${claimedSol} SOL → Creator ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-            );
-          }
-        }
+      // Partner split from platform share
+      if (isTokenEligibleForPartnerSplit(token.created_at)) {
+        partnerAmount = platformAmount * 0.5;
+        platformAmount = platformAmount * 0.5;
       }
+
+      const creatorPct = token.trading_fee_bps ? ((token.creator_fee_bps || 0) / token.trading_fee_bps * 100).toFixed(1) : '0';
+      console.log(
+        `[fun-distribute] ${isAgentToken ? 'Agent' : isApiToken ? 'API' : token.launchpad_type === 'punch' ? 'Punch' : 'Regular'} Token ${token.ticker}: ${claimedSol.toFixed(6)} SOL → Creator ${creatorPct}% (${recipientAmount.toFixed(6)}), Platform (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''} [${token.creator_fee_bps || 0}/${token.trading_fee_bps || 0} bps]`
+      );
 
       // Send partner fee if applicable
       if (partnerAmount > 0) {
@@ -1068,9 +987,12 @@ serve(async (req) => {
           continue;
         }
 
-        // Pump.fun tokens use 80/20 split (creator/platform)
-        const creatorAmount = claimedSol * 0.8;
-        let platformAmount = claimedSol * 0.2;
+        // Pump.fun tokens: use bps if available, fallback to 80/20
+        const pumpCreatorBps = token.creator_fee_bps || 800;
+        const pumpTradingBps = token.trading_fee_bps || 1000;
+        const { creatorSol: pumpCreatorSol, platformSol: pumpPlatformSol } = calculateCreatorShare(claimedSol, pumpCreatorBps, pumpTradingBps);
+        const creatorAmount = pumpCreatorSol;
+        let platformAmount = pumpPlatformSol;
         let partnerAmount = 0;
         
         // Partner split from platform share

@@ -13,7 +13,7 @@ interface TokenInfo {
   mint: string | null;
   imageUrl: string | null;
   createdAt: string;
-  totalFeesEarned: number;      // 80% creator share of all collected fees
+  totalFeesEarned: number;      // creator share based on token's creator_fee_bps / trading_fee_bps
   totalFeesClaimed: number;     // What's been paid out via creator_claim
   unclaimedFees: number;        // Difference (what they can withdraw)
   volume24h: number;
@@ -38,7 +38,14 @@ interface ClaimableAgent {
   tokens: TokenInfo[];
 }
 
-const CREATOR_SHARE = 0.8; // 80% goes to creator
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+// Platform always takes 1% (100 bps), creator gets the rest
+function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | null): number {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return 0;
+  return cBps / bps;
+}
 
 /**
  * Find agents and tokens by Twitter username.
@@ -130,7 +137,8 @@ Deno.serve(async (req) => {
         .from("fun_tokens")
         .select(`
           id, name, ticker, mint_address, image_url, created_at,
-          volume_24h_sol, market_cap_sol, price_sol, holder_count, dbc_pool_address, agent_id
+          volume_24h_sol, market_cap_sol, price_sol, holder_count, dbc_pool_address, agent_id,
+          creator_fee_bps, trading_fee_bps
         `)
         .in("agent_id", agentIds);
       agentTokens = tokens || [];
@@ -143,7 +151,8 @@ Deno.serve(async (req) => {
         .from("fun_tokens")
         .select(`
           id, name, ticker, mint_address, image_url, created_at,
-          volume_24h_sol, market_cap_sol, price_sol, holder_count, dbc_pool_address, creator_wallet, agent_id
+          volume_24h_sol, market_cap_sol, price_sol, holder_count, dbc_pool_address, creator_wallet, agent_id,
+          creator_fee_bps, trading_fee_bps
         `)
         .in("id", socialTokenIds);
       socialTokenDetails = tokens || [];
@@ -192,7 +201,8 @@ Deno.serve(async (req) => {
     // Helper to compute token info with correct fee calculations
     const computeTokenInfo = (t: any): TokenInfo => {
       const totalCollected = tokenEarnedMap.get(t.id) || 0;
-      const creatorEarned = totalCollected * CREATOR_SHARE;
+      const ratio = getCreatorRatio(t.creator_fee_bps, t.trading_fee_bps);
+      const creatorEarned = Math.floor(totalCollected * ratio * 1e9) / 1e9;
       const creatorPaid = tokenPaidMap.get(t.id) || 0;
       const unclaimed = Math.max(0, creatorEarned - creatorPaid);
 
