@@ -118,6 +118,7 @@ const App = () => (
           <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />
+            <TradeSuccessPopup />
             <ErrorBoundary>
               <BrowserRouter>
               <StickyStatsFooter />
