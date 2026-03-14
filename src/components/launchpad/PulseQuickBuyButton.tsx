@@ -421,7 +421,9 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
       }
 
       if (!freshBalance || freshBalance <= 0) {
-        toast.error("No tokens to sell");
+        // No holdings — flip button back to Quick Buy
+        queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 0);
+        toast.error("No tokens to sell — switched back to Buy");
         return;
       }
 
