@@ -64,6 +64,9 @@ export function useFastSwap() {
   ) => {
     if (!walletAddress || !signature) return;
 
+    const amountSolForInsert = isBuy ? amount : (outputAmount ?? 0);
+    const amountTokensForInsert = isBuy ? (outputAmount ?? 0) : amount;
+
     // Path 1: direct client upsert (existing behavior)
     await recordAlphaTrade({
       walletAddress,
@@ -71,8 +74,8 @@ export function useFastSwap() {
       tokenName: token.name,
       tokenTicker: token.ticker,
       tradeType: isBuy ? 'buy' : 'sell',
-      amountSol: amount,
-      amountTokens: isBuy ? outputAmount : undefined,
+      amountSol: amountSolForInsert,
+      amountTokens: amountTokensForInsert,
       txHash: signature,
       chain: 'solana',
     });
