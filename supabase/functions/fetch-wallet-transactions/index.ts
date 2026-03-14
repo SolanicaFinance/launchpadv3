@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -121,6 +123,11 @@ Deno.serve(async (req) => {
       };
     });
 
+    // ── Sync swap transactions to alpha_trades (non-blocking) ──
+    syncSwapsToAlphaTracker(walletAddress, enhancedTxs || [], transactions).catch((err) =>
+      console.warn("[fetch-wallet-transactions] alpha sync failed (non-fatal):", err)
+    );
+
     return new Response(JSON.stringify({ transactions }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -150,4 +157,80 @@ function inferTxType(tx: any, wallet: string): "send" | "receive" | "swap" | "un
   if (nt.some((t: any) => t.fromUserAccount === wallet && t.toUserAccount !== wallet)) return "send";
   if (nt.some((t: any) => t.toUserAccount === wallet && t.fromUserAccount !== wallet)) return "receive";
   return "unknown";
+}
+
+/**
+ * Sync swap transactions from Helius enhanced data into alpha_trades.
+ * Uses service role to bypass RLS. Upserts on tx_hash to prevent duplicates.
+ */
+async function syncSwapsToAlphaTracker(
+  walletAddress: string,
+  enhancedTxs: any[],
+  parsedTxs: ParsedTx[]
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) return;
+
+  const sb = createClient(supabaseUrl, serviceKey);
+
+  // Only sync successful swaps
+  const swapRows: any[] = [];
+
+  for (let i = 0; i < parsedTxs.length; i++) {
+    const parsed = parsedTxs[i];
+    const raw = enhancedTxs[i];
+    if (parsed.type !== "swap" || parsed.status !== "success") continue;
+
+    // Extract token info from enhanced tx
+    const tokenTransfers = raw?.tokenTransfers || [];
+    const nativeTransfers = raw?.nativeTransfers || [];
+
+    // Determine if buy or sell by checking SOL flow
+    const solOut = nativeTransfers
+      .filter((t: any) => t.fromUserAccount === walletAddress)
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0) / 1e9;
+    const solIn = nativeTransfers
+      .filter((t: any) => t.toUserAccount === walletAddress)
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0) / 1e9;
+
+    const isBuy = solOut > solIn;
+    const solAmount = Math.abs(isBuy ? solOut - solIn : solIn - solOut);
+
+    // Skip dust / negligible amounts
+    if (solAmount < 0.0001) continue;
+
+    // Find the non-SOL token involved
+    const WSOL = "So11111111111111111111111111111111111111112";
+    const nonSolTransfer = tokenTransfers.find((t: any) => t.mint !== WSOL);
+    const tokenMint = nonSolTransfer?.mint || parsed.token || "unknown";
+    const tokenAmount = nonSolTransfer?.tokenAmount || parsed.amount || 0;
+
+    swapRows.push({
+      wallet_address: walletAddress,
+      token_mint: tokenMint,
+      token_name: null,
+      token_ticker: null,
+      trade_type: isBuy ? "buy" : "sell",
+      amount_sol: Number(solAmount.toFixed(6)),
+      amount_tokens: tokenAmount,
+      price_sol: null,
+      price_usd: null,
+      tx_hash: parsed.signature,
+      chain: "solana",
+      created_at: new Date(parsed.timestamp).toISOString(),
+    });
+  }
+
+  if (swapRows.length === 0) return;
+
+  const { error } = await sb
+    .from("alpha_trades")
+    .upsert(swapRows, { onConflict: "tx_hash", ignoreDuplicates: true });
+
+  if (error) {
+    console.warn("[syncSwapsToAlphaTracker] upsert error:", error.message);
+  } else {
+    console.log(`[syncSwapsToAlphaTracker] ✅ Synced ${swapRows.length} swaps to alpha_trades`);
+  }
 }
