@@ -38,7 +38,14 @@ interface ClaimableAgent {
   tokens: TokenInfo[];
 }
 
-const CREATOR_SHARE = 0.8; // 80% goes to creator
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+// Platform always takes 1% (100 bps), creator gets the rest
+function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | null): number {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return 0;
+  return cBps / bps;
+}
 
 /**
  * Find agents and tokens by Twitter username.

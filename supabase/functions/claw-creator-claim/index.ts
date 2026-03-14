@@ -206,6 +206,25 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: false, error: `No tokens found launched by @${normalizedUsername}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ===== Fetch token bps for accurate creator share calculation =====
+    const tokenBpsMap = new Map<string, { creator_fee_bps: number; trading_fee_bps: number }>();
+    
+    const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
+    const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
+    
+    if (funTargetIds.length > 0) {
+      const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
+      for (const t of funTokenData || []) {
+        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      }
+    }
+    if (clawTargetIds.length > 0) {
+      const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
+      for (const t of clawTokenData || []) {
+        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      }
+    }
+
     // ===== Rate limit check — by twitter_username =====
     const { data: lastClaim } = await supabase
       .from("claw_distributions")
