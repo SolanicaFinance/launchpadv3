@@ -84,9 +84,13 @@ export function useJupiterSwap() {
         throw new Error('Failed to get swap quote');
       }
 
-      const res = await fetch(`${JUPITER_API}/swap`, {
+      const swapUrl = JUPITER_API_KEY
+        ? `${JUPITER_API}/swap?api-key=${JUPITER_API_KEY}`
+        : `${JUPITER_API}/swap`;
+
+      const res = await fetch(swapUrl, {
         method: 'POST',
-        headers: getJupiterHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           quoteResponse: quote,
           userPublicKey: userWallet,
