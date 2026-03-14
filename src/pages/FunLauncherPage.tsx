@@ -260,7 +260,7 @@ export default function FunLauncherPage() {
                   {editingQb ? (
                     <input
                       autoFocus type="text" inputMode="decimal" value={qbInput}
-                      onChange={e => { if (e.target.value === "" || /^\d*\.?\d*$/.test(e.target.value)) setQbInput(e.target.value); }}
+                      onChange={e => handleQbChange(e.target.value)}
                       onBlur={handleQbSave} onKeyDown={e => e.key === "Enter" && handleQbSave()}
                       className="w-10 bg-transparent text-[11px] font-mono font-bold text-foreground outline-none"
                       onClick={e => e.stopPropagation()}
