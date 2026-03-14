@@ -2,29 +2,27 @@ import { useMemo, useEffect, useState } from "react";
 import { useWallets, useCreateWallet, usePrivy } from "@privy-io/react-auth";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 
-export function usePrivyEvmWallet() {
-  const privyAvailable = usePrivyAvailable();
+const FALLBACK = { address: undefined, isReady: true, wallet: null } as const;
+
+function usePrivyEvmWalletInner() {
   const { wallets } = useWallets();
-  const { ready: privyReady, authenticated: privyAuth } = usePrivy();
+  const { ready, authenticated } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [creatingWallet, setCreatingWallet] = useState(false);
 
-  const ready = privyAvailable ? privyReady : true;
-  const authenticated = privyAvailable ? privyAuth : false;
-
   const evmWallet = useMemo(() => {
-    if (!privyAvailable || !wallets || wallets.length === 0) return null;
+    if (!wallets || wallets.length === 0) return null;
     return wallets.find(
       (w) => w.walletClientType === "privy" && w.address?.startsWith("0x")
     ) || wallets.find(
       (w) => w.address?.startsWith("0x")
     ) || null;
-  }, [wallets, privyAvailable]);
+  }, [wallets]);
 
   const address = evmWallet?.address || undefined;
 
   useEffect(() => {
-    if (!privyAvailable || !ready || !authenticated || evmWallet || creatingWallet) return;
+    if (!ready || !authenticated || evmWallet || creatingWallet) return;
 
     setCreatingWallet(true);
     createWallet()
@@ -35,11 +33,18 @@ export function usePrivyEvmWallet() {
         console.warn("[usePrivyEvmWallet] Create wallet:", err?.message || err);
       })
       .finally(() => setCreatingWallet(false));
-  }, [privyAvailable, ready, authenticated, evmWallet, createWallet, creatingWallet]);
+  }, [ready, authenticated, evmWallet, createWallet, creatingWallet]);
 
   return {
     address,
     isReady: ready && !creatingWallet,
     wallet: evmWallet,
   };
+}
+
+export function usePrivyEvmWallet() {
+  const privyAvailable = usePrivyAvailable();
+  if (!privyAvailable) return FALLBACK;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return usePrivyEvmWalletInner();
 }
