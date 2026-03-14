@@ -963,7 +963,7 @@ export default function FunTokenDetailPage() {
               <ChartSection chartHeight={380} />
               <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
             </div>
-            {/* Right: Trade + Info + Comments + Wallet */}
+            {/* Right: Trade + Wallet only (token details already shown in top header) */}
             <div className="col-span-3 flex flex-col gap-2">
               {isPunchToken ? (
                 <div className="trade-glass-panel px-4 py-3 flex items-center gap-2">
@@ -974,9 +974,6 @@ export default function FunTokenDetailPage() {
                 <TradeSection />
               )}
               {!isPunchToken && <EmbeddedWalletCard />}
-              <TokenDetailsSection />
-              <ContractSection />
-              <DescriptionSection />
               {(token as any).launchpad_type === 'phantom' && (token as any).trading_fee_bps && (
                 <div className="trade-glass-panel p-3 space-y-1.5">
                   <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60">Fee Breakdown</h3>
