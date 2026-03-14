@@ -189,7 +189,7 @@ export function AgentIdeaGenerator() {
               {isGenerating ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Generating Claw Meme...
+                  Generating Saturn Meme...
                 </>
               ) : (
                 <>
