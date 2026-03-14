@@ -3,6 +3,7 @@ import { lazyWithRetry } from "@/utils/lazyWithRetry";
 // Blockhash poller is started lazily in useFastSwap when trading is needed
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TradeSuccessPopup } from "@/components/TradeSuccessPopup";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
