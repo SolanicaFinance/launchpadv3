@@ -163,27 +163,6 @@ export function StickyStatsFooter() {
     setTimeout(() => setNpRefreshing(false), 600);
   };
 
-  useEffect(() => {
-    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count, error }) => {
-      if (!error && count !== null) setPlatformUsers(count);
-    });
-
-    // Realtime: increment count when new users register
-    const channel = supabase
-      .channel("profiles-count")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "profiles" },
-        () => {
-          setPlatformUsers((prev) => (prev !== null ? prev + 1 : prev));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const isPunchDomain = typeof window !== "undefined" && (window.location.hostname === "punchlaunch.fun" || window.location.hostname === "www.punchlaunch.fun");
   if (pathname.startsWith("/punch") || pathname.startsWith("/punch-test") || isPunchDomain) return null;
