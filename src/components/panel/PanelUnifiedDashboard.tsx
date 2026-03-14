@@ -733,17 +733,6 @@ export default function PanelUnifiedDashboard() {
                 />
               </div>
 
-  // Auto-open deposit dialog when balance is 0 on first panel load
-  useEffect(() => {
-    if (balance === null || balance > 0) return;
-    if (hasSeenDepositPrompt) return;
-    const timer = setTimeout(() => {
-      setDepositOpen(true);
-      setHasSeenDepositPrompt(true);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [balance, hasSeenDepositPrompt]);
-
 
               {/* Recent claims */}
               {earningsData?.claims?.length > 0 && (
