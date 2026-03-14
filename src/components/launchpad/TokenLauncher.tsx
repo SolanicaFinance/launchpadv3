@@ -2328,36 +2328,113 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         {/* Token Preview & Form */}
                         {!isPhantomGenerating && (phantomSubMode === "custom" || phantomMeme || phantomToken.name) && (
                           <>
+                            {/* Image Upload Area */}
                             <div className="phantom-image-upload-area">
                               {phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl ? (
                                 <div className="relative w-full h-full group">
                                   <img src={phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl} alt="Token" className="w-full h-full object-cover rounded-xl" />
-                                  <button onClick={() => { setPhantomImageFile(null); setPhantomImagePreview(null); if (phantomMeme) setPhantomMeme({ ...phantomMeme, imageUrl: "" }); setPhantomToken({ ...phantomToken, imageUrl: "" }); }}
-                                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-destructive hover:bg-destructive/80 flex items-center justify-center transition-colors z-10 shadow-lg">
-                                    <X className="h-3.5 w-3.5 text-destructive-foreground" />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
+                                    <label className="cursor-pointer text-white/80 text-xs font-medium flex items-center gap-1.5 hover:text-white transition-colors">
+                                      <Image className="h-4 w-4" />
+                                      Change
+                                      <input type="file" accept="image/*" onChange={handlePhantomImageChange} className="hidden" />
+                                    </label>
+                                  </div>
+                                  <button
+                                    onClick={() => { setPhantomImageFile(null); setPhantomImagePreview(null); if (phantomMeme) setPhantomMeme({ ...phantomMeme, imageUrl: "" }); setPhantomToken({ ...phantomToken, imageUrl: "" }); }}
+                                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors z-10 shadow-lg cursor-pointer"
+                                    title="Remove image"
+                                  >
+                                    <X className="h-3.5 w-3.5 text-white" />
                                   </button>
                                 </div>
                               ) : (
                                 <label className="w-full h-full flex flex-col items-center justify-center gap-2 cursor-pointer group">
-                                  <Image className="h-5 w-5 text-muted-foreground/40" />
-                                  <p className="text-[11px] text-muted-foreground/50">Upload PNG/JPG/SVG</p>
+                                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-white/[0.08] transition-colors duration-200">
+                                    <Image className="h-5 w-5 text-white/25 group-hover:text-primary/60 transition-colors" />
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-[11px] text-white/40 font-medium">Upload PNG/JPG/SVG</p>
+                                    <p className="text-[9px] text-white/20 mt-0.5">(max 5MB)</p>
+                                  </div>
                                   <input type="file" accept="image/*" onChange={handlePhantomImageChange} className="hidden" />
                                 </label>
                               )}
                             </div>
 
+                            {/* Token Name + Ticker */}
                             <div className="space-y-3">
-                              <Input value={phantomToken.name} onChange={(e) => setPhantomToken({ ...phantomToken, name: e.target.value.slice(0, 32) })}
-                                className="phantom-glass-input h-10 rounded-xl" placeholder="Token name" maxLength={32} />
-                              <div className="flex items-center gap-3 pl-2">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
+                                  <Bot className="h-5 w-5 text-white/30" />
+                                </div>
+                                <Input value={phantomToken.name} onChange={(e) => setPhantomToken({ ...phantomToken, name: e.target.value.slice(0, 32) })}
+                                  className="phantom-glass-input h-10 rounded-xl flex-1" placeholder="Token name" maxLength={32} />
+                              </div>
+                              <div className="flex items-center gap-3 pl-[52px]">
                                 <span className="text-primary text-sm font-bold">$</span>
                                 <Input value={phantomToken.ticker} onChange={(e) => setPhantomToken({ ...phantomToken, ticker: e.target.value.toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 10) })}
                                   className="phantom-glass-input h-9 w-32 font-mono rounded-lg" placeholder="TICKER" maxLength={10} />
+                                {(phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl) && (
+                                  <button
+                                    onClick={() => {
+                                      const imageUrl = phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl;
+                                      if (!imageUrl) return;
+                                      const a = document.createElement("a");
+                                      a.href = imageUrl;
+                                      a.download = `${(phantomToken.ticker || "token").toLowerCase()}.png`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      document.body.removeChild(a);
+                                    }}
+                                    className="px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap cursor-pointer"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    Download Generated img
+                                  </button>
+                                )}
                               </div>
                             </div>
 
-                            <Textarea value={phantomToken.description} onChange={(e) => setPhantomToken({ ...phantomToken, description: e.target.value })}
-                              placeholder="Description (optional)" className="phantom-glass-textarea rounded-xl min-h-[80px]" maxLength={500} />
+                            {/* Description with char counter */}
+                            <div className="space-y-1">
+                              <Textarea value={phantomToken.description} onChange={(e) => setPhantomToken({ ...phantomToken, description: e.target.value })}
+                                placeholder="Description (optional)" className="phantom-glass-textarea rounded-xl min-h-[80px]" maxLength={500} />
+                              {phantomToken.description.length > 0 && (
+                                <p className="text-right text-[9px] text-white/20 font-mono pr-1">{phantomToken.description.length}/500</p>
+                              )}
+                            </div>
+
+                            {/* Social links */}
+                            <details className="group phantom-social-details">
+                              <summary className="flex items-center gap-2 text-xs text-white/30 cursor-pointer transition-colors">
+                                <Globe className="h-3 w-3" />
+                                <span>Add Social Links (optional)</span>
+                              </summary>
+                              <div className="mt-3 space-y-2.5 pl-5">
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-4 w-4 text-white/20 flex-shrink-0" />
+                                  <Input placeholder="Website URL" value={phantomToken.websiteUrl || ""}
+                                    onChange={(e) => setPhantomToken({ ...phantomToken, websiteUrl: e.target.value })}
+                                    className="phantom-glass-input text-sm rounded-lg" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Twitter className="h-4 w-4 text-white/20 flex-shrink-0" />
+                                  <Input placeholder="X/Twitter URL" value={phantomToken.twitterUrl || ""}
+                                    onChange={(e) => setPhantomToken({ ...phantomToken, twitterUrl: e.target.value })}
+                                    className="phantom-glass-input text-sm rounded-lg" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <MessageCircle className="h-4 w-4 text-white/20 flex-shrink-0" />
+                                  <Input placeholder="Telegram URL" value={phantomToken.telegramUrl || ""}
+                                    onChange={(e) => setPhantomToken({ ...phantomToken, telegramUrl: e.target.value })}
+                                    className="phantom-glass-input text-sm rounded-lg" />
+                                </div>
+                              </div>
+                            </details>
+
+                            {/* Divider */}
+                            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
                             {/* 1-Click Launch Button */}
                             <button onClick={() => handlePhantomLaunch()}
