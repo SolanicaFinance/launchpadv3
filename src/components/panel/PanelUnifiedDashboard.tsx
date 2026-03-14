@@ -238,6 +238,7 @@ export default function PanelUnifiedDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountSecurityOpen, setAccountSecurityOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [launchPage, setLaunchPage] = useState(1);
 
   // Profile for settings modal
   const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null } | null>(null);
