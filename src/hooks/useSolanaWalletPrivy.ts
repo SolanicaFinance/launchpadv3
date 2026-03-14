@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useWallets, useSignAndSendTransaction as usePrivySolanaSignAndSend } from "@privy-io/react-auth/solana";
+import { useWallets, useSignAndSendTransaction as usePrivySolanaSignAndSend, useSignTransaction as usePrivySolanaSign } from "@privy-io/react-auth/solana";
 import { Connection, Transaction, VersionedTransaction, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "./useSolanaWallet";
 import { getCachedBlockhash } from "@/lib/blockhashCache";
@@ -13,6 +13,7 @@ export function useSolanaWalletWithPrivy() {
   const { authenticated, user, ready } = usePrivy();
   const { wallets } = useWallets();
   const privySolana = usePrivySolanaSignAndSend();
+  const privySign = usePrivySolanaSign();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const rpcData = getRpcUrl();
@@ -197,6 +198,58 @@ export function useSolanaWalletWithPrivy() {
     }
   }, [walletAddress, getConnection]);
 
+  // Sign-only (no send) — needed for Meteora/Lighthouse flows with ephemeral keypairs
+  const signTransaction = useCallback(
+    async <T extends Transaction | VersionedTransaction>(
+      transaction: T,
+      options?: { walletAddress?: string }
+    ): Promise<T> => {
+      let wallet: any;
+      if (options?.walletAddress) {
+        wallet = wallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
+      } else {
+        wallet = getSolanaWallet();
+      }
+      if (!wallet) throw new Error("No embedded wallet connected");
+
+      // Update blockhash for legacy transactions
+      const { blockhash } = await getCachedBlockhash();
+      if (!(transaction as any)?.version) {
+        (transaction as Transaction).recentBlockhash = blockhash;
+        (transaction as Transaction).feePayer = wallet.address ? new PublicKey(wallet.address) : undefined;
+      }
+
+      const serializedTx = transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
+
+      console.log("[useSolanaWalletPrivy] Sign-only via Privy signTransaction", {
+        walletAddress: wallet.address,
+        txBytes: serializedTx.length,
+      });
+
+      const result = await privySign.signTransaction({
+        transaction: serializedTx,
+        wallet: wallet as any,
+        chain: "solana:mainnet" as any,
+        options: {
+          uiOptions: { showWalletUIs: false },
+        },
+      });
+
+      // result.signedTransaction is Uint8Array — deserialize back to the appropriate type
+      const signedBytes = result.signedTransaction instanceof Uint8Array
+        ? result.signedTransaction
+        : new Uint8Array(result.signedTransaction);
+
+      // Determine if versioned or legacy and deserialize accordingly
+      if ((transaction as any)?.version !== undefined || transaction instanceof VersionedTransaction) {
+        return VersionedTransaction.deserialize(signedBytes) as T;
+      } else {
+        return Transaction.from(signedBytes) as T;
+      }
+    },
+    [getSolanaWallet, privySign, wallets]
+  );
+
   return {
     walletAddress,
     isWalletReady,
@@ -208,6 +261,7 @@ export function useSolanaWalletWithPrivy() {
     getBalanceStrict,
     getTokenBalance,
     signAndSendTransaction,
+    signTransaction,
     getSolanaWallet,
     getEmbeddedWallet,
   };
