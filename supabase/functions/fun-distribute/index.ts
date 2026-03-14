@@ -29,26 +29,19 @@ function isTokenEligibleForPartnerSplit(tokenCreatedAt: string | Date | null | u
   return createdDate >= PARTNER_SPLIT_START;
 }
 
-// Fee distribution splits for REGULAR tokens (non-API, non-Agent)
-const CREATOR_FEE_SHARE = 0.5;    // 50% to creator
-const BUYBACK_FEE_SHARE = 0.3;   // 30% for buybacks
-const SYSTEM_FEE_SHARE = 0.2;    // 20% kept for system expenses
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+// Platform always takes 1% (100 bps), creator gets the rest
+function calculateCreatorShare(claimedSol: number, creatorFeeBps: number | null, tradingFeeBps: number | null): { creatorSol: number; platformSol: number } {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return { creatorSol: 0, platformSol: claimedSol };
+  const creatorRatio = cBps / bps;
+  const creatorSol = Math.floor(claimedSol * creatorRatio * 1e9) / 1e9;
+  return { creatorSol, platformSol: claimedSol - creatorSol };
+}
 
-// Fee distribution splits for API-LAUNCHED tokens
-// Total trading fee is 2%, split 50/50:
-// - API users get 50% = 1% of total trade volume
-// - Platform keeps 50% = 1% of total trade volume (stays in treasury)
-const API_USER_FEE_SHARE = 0.5;   // 50% to API account owner (1% of 2%)
-const API_PLATFORM_FEE_SHARE = 0.5; // 50% to platform (1% of 2%)
-
-// Fee distribution splits for AGENT-LAUNCHED tokens
-// New 3-way split: 30% creator, 30% agent trading pool, 40% system
-const AGENT_CREATOR_FEE_SHARE = 0.3;   // 30% to X launcher/creator
-const AGENT_TRADING_FEE_SHARE = 0.3;   // 30% to agent trading wallet
-const AGENT_PLATFORM_FEE_SHARE = 0.4;  // 40% to platform
-
-// Minimum SOL to distribute (avoid micro-transactions that eat gas)
-const MIN_DISTRIBUTION_SOL = 0.05;
+// Minimum SOL to distribute (lowered to support small creators)
+const MIN_DISTRIBUTION_SOL = 0.005;
 
 // Maximum retries for transaction
 const MAX_TX_RETRIES = 3;
