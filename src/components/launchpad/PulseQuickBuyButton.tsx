@@ -443,6 +443,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
           showTradeSuccess({
             type: 'sell',
             ticker,
+            tokenName: name || ticker,
             amount: '100%',
             signature: result.signature,
             executionMs: result.totalMs || lastLatencyMs || undefined,
