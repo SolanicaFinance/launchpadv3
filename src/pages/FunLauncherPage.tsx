@@ -125,6 +125,17 @@ export default function FunLauncherPage() {
     setQuickBuyAmount(newAmount);
   }, [activePreset, quickBuyAmount]);
 
+  const handleQbChange = useCallback((val: string) => {
+    if (val === "" || /^\d*\.?\d*$/.test(val)) {
+      setQbInput(val);
+      const num = parseFloat(val);
+      if (num > 0 && isFinite(num)) {
+        setQuickBuyAmount(num);
+        savePresetAmount(activePreset, num);
+      }
+    }
+  }, [activePreset]);
+
   const handleQbSave = useCallback(() => {
     setEditingQb(false);
     const num = parseFloat(qbInput);
