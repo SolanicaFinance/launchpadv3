@@ -402,7 +402,7 @@ export default function HomePage() {
                 animationFillMode: "both",
               }}
             >
-{BRAND.name}
+Saturn Terminal
             </h1>
 
             {/* Subtitle */}
