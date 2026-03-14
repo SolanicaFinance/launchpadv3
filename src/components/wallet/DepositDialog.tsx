@@ -45,6 +45,7 @@ export function DepositDialog({ open, onOpenChange, address, chain, getBalance, 
         openingBalance.current = bal;
       } else if (bal > openingBalance.current + 0.0001) {
         setDepositDetected(true);
+        onDepositDetected?.();
       }
     } catch {
       // ignore polling errors
