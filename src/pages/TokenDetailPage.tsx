@@ -40,6 +40,7 @@ export default function TokenDetailPage() {
   const { useToken, useTokenTransactions, useTokenHolders, useUserHoldings } = useLaunchpad();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const { data: token, isLoading: isLoadingToken, refetch: refetchToken } = useToken(mintAddress || '');
   const { data: transactions = [], isLoading: isLoadingTxs, refetch: refetchTxs } = useTokenTransactions(token?.id || '');
