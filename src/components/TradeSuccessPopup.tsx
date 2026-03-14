@@ -157,18 +157,6 @@ export function TradeSuccessPopup() {
                   </div>
                 )}
 
-                {/* Execution speed */}
-                {data.executionMs && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Execution Speed</span>
-                    <span className="flex items-center gap-1.5 text-xs font-mono text-foreground/70">
-                      <Clock className="h-3 w-3 text-emerald-400/60" />
-                      {data.executionMs < 1000
-                        ? `${data.executionMs}ms`
-                        : `${(data.executionMs / 1000).toFixed(1)}s`}
-                    </span>
-                  </div>
-                )}
 
                 {/* Agent */}
                 {data.agentName && (
