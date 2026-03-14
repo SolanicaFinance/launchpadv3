@@ -16,6 +16,7 @@ export interface ProfitCardData {
   outputAmount?: number;
   pnlPercent?: number;
   signature?: string;
+  tokenImageUrl?: string;
 }
 
 interface ProfitCardModalProps {
@@ -33,9 +34,9 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   if (!data) return null;
 
   const isBuy = data.action === "buy";
-  const pnl = data.pnlPercent ?? (isBuy ? Math.random() * 200 - 50 : Math.random() * 300 - 100);
+  const pnl = data.pnlPercent ?? 0;
   const isPositive = pnl >= 0;
-  const qrLink = referralLink || window.location.origin;
+  const qrLink = referralLink || "https://saturn.trade/";
   const truncatedWallet = solanaAddress
     ? `${solanaAddress.slice(0, 4)}...${solanaAddress.slice(-4)}`
     : "—";
@@ -105,7 +106,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
             <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
               <div className="flex items-center gap-2">
                 <img src={saturnLogo} alt="Saturn" className="w-6 h-6" />
-                <span className="text-[#c8ff00] font-bold text-sm tracking-[0.2em] uppercase">{BRAND.name}</span>
+                <span className="text-[#c8ff00] font-bold text-sm tracking-[0.2em] uppercase">SATURN.TRADE</span>
               </div>
               <span className="text-white/25 text-[10px] font-mono">{timeStr}</span>
             </div>
@@ -178,6 +179,13 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
 
                 {/* Token info row */}
                 <div className="mt-4 flex items-center gap-2">
+                  {data.tokenImageUrl ? (
+                    <img src={data.tokenImageUrl} alt={data.tokenTicker} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                      {data.tokenTicker.slice(0, 2)}
+                    </div>
+                  )}
                   <span
                     className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md"
                     style={{
