@@ -444,6 +444,8 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
             signature: result.signature,
             executionMs: result.totalMs || lastLatencyMs || undefined,
             agentName: name || undefined,
+            tokenImageUrl: funToken?.image_url ?? codexToken?.imageUrl ?? undefined,
+            pnlSol: result.solOut ?? undefined,
           });
           // Optimistic: set balance to 0 so button flips back to Buy
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 0);
