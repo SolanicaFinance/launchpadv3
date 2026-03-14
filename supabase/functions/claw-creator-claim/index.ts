@@ -9,8 +9,17 @@ const corsHeaders = {
 
 const MIN_CLAIM_SOL = 0.01;
 const MAX_SINGLE_CLAIM_SOL = 5.0;
-const CREATOR_SHARE = 0.3;
 const CLAIM_COOLDOWN_MS = 60 * 60 * 1000;
+const CLAIM_LOCK_SECONDS = 60;
+const TREASURY_RESERVE_SOL = 0.05;
+
+// Unified fee calculation: creator_fee_bps / trading_fee_bps
+function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | null): number {
+  const bps = tradingFeeBps || 200;
+  const cBps = creatorFeeBps || 0;
+  if (bps <= 0) return 0;
+  return cBps / bps;
+}
 const CLAIM_LOCK_SECONDS = 60;
 const TREASURY_RESERVE_SOL = 0.05;
 
