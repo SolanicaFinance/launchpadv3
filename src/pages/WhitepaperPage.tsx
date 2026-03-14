@@ -31,7 +31,7 @@ export default function WhitepaperPage() {
               <p className="text-base sm:text-lg text-muted-foreground max-w-[90%] mx-auto">
                 Multi-Chain AI Trading Terminal — Solana &amp; BNB Chain
               </p>
-              <p className="text-sm text-muted-foreground mt-2">Token: <strong className="text-success">$MOON</strong> · Version 2.0 · March 2026</p>
+              <p className="text-sm text-muted-foreground mt-2">Token: <strong className="text-success">$SATURN</strong> · Version 2.1 · March 2026</p>
             </div>
 
             {/* Table of Contents */}
