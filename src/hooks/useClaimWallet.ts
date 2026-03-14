@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
+import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 
 export type ClaimWalletKind = "embedded" | "external";
 
@@ -8,7 +9,6 @@ export interface ClaimWalletOption {
   address: string;
   kind: ClaimWalletKind;
   label: string;
-  // Privy wallet object (shape depends on connector)
   wallet: any;
 }
 
@@ -16,7 +16,15 @@ function shortAddr(addr: string) {
   return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 }
 
-export function useClaimWallet(preferredAddress?: string | null) {
+const FALLBACK = {
+  options: [] as ClaimWalletOption[],
+  selected: null,
+  selectedAddress: null as string | null,
+  setSelectedAddress: (() => {}) as React.Dispatch<React.SetStateAction<string | null>>,
+  isReady: false,
+} as const;
+
+function useClaimWalletInner(preferredAddress?: string | null) {
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
 
@@ -42,7 +50,6 @@ export function useClaimWallet(preferredAddress?: string | null) {
         return { address: w.address, kind, label, wallet: w };
       });
 
-    // Prefer external wallets first (likely the one used in the launch post)
     list.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "external" ? -1 : 1));
     return list;
   }, [wallets, isPrivyEmbeddedWallet]);
@@ -84,4 +91,11 @@ export function useClaimWallet(preferredAddress?: string | null) {
     setSelectedAddress,
     isReady,
   };
+}
+
+export function useClaimWallet(preferredAddress?: string | null) {
+  const privyAvailable = usePrivyAvailable();
+  if (!privyAvailable) return FALLBACK;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useClaimWalletInner(preferredAddress);
 }

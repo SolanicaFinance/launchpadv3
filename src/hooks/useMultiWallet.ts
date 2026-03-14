@@ -11,6 +11,7 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
+import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 
 const MAX_WALLETS = 25;
 const ACTIVE_WALLET_KEY = "claw_active_wallet";
@@ -19,11 +20,26 @@ export interface ManagedWallet {
   address: string;
   label: string;
   isDefault: boolean;
-  balance: number | null; // null = not yet fetched
+  balance: number | null;
   index: number;
 }
 
-export function useMultiWallet() {
+const FALLBACK = {
+  managedWallets: [] as ManagedWallet[],
+  activeWallet: null,
+  activeAddress: null as string | null,
+  switchWallet: (_addr: string) => {},
+  createNewWallet: async () => { throw new Error("Privy not available"); return "" as string; },
+  renameWallet: async (_addr: string, _label: string) => {},
+  refreshBalances: async () => {},
+  getWalletByAddress: (_addr: string) => null,
+  creating: false,
+  ready: false,
+  canCreateMore: false,
+  walletCount: 0,
+} as const;
+
+function useMultiWalletInner() {
   const { profileId } = useAuth();
   const { wallets, ready } = useWallets();
   const { createWallet } = useCreateWallet();
@@ -34,7 +50,6 @@ export function useMultiWallet() {
 
   const rpcUrl = getRpcUrl().url;
 
-  // Filter to embedded wallets only
   const embeddedWallets = useMemo(() => {
     if (!wallets) return [];
     return wallets.filter((w: any) => {
@@ -44,7 +59,6 @@ export function useMultiWallet() {
     });
   }, [wallets]);
 
-  // Load labels from DB
   useEffect(() => {
     if (!profileId) return;
     supabase
@@ -61,7 +75,6 @@ export function useMultiWallet() {
       });
   }, [profileId]);
 
-  // Restore active wallet from localStorage
   useEffect(() => {
     if (embeddedWallets.length === 0) return;
     const stored = localStorage.getItem(ACTIVE_WALLET_KEY);
@@ -72,7 +85,6 @@ export function useMultiWallet() {
     }
   }, [embeddedWallets]);
 
-  // Build managed wallet list
   const managedWallets: ManagedWallet[] = useMemo(() => {
     return embeddedWallets.map((w: any, i: number) => ({
       address: w.address,
@@ -87,13 +99,11 @@ export function useMultiWallet() {
     return managedWallets.find((w) => w.address === activeAddress) || managedWallets[0] || null;
   }, [managedWallets, activeAddress]);
 
-  // Switch wallet
   const switchWallet = useCallback((address: string) => {
     setActiveAddress(address);
     localStorage.setItem(ACTIVE_WALLET_KEY, address);
   }, []);
 
-  // Create new wallet
   const createNewWallet = useCallback(async () => {
     if (embeddedWallets.length >= MAX_WALLETS) {
       throw new Error(`Maximum ${MAX_WALLETS} wallets reached`);
@@ -118,7 +128,6 @@ export function useMultiWallet() {
     }
   }, [createWallet, embeddedWallets.length, profileId]);
 
-  // Rename wallet
   const renameWallet = useCallback(async (address: string, newLabel: string) => {
     setLabels((prev) => ({ ...prev, [address]: newLabel }));
     if (profileId) {
@@ -131,7 +140,6 @@ export function useMultiWallet() {
     }
   }, [profileId]);
 
-  // Refresh balances
   const refreshBalances = useCallback(async () => {
     if (embeddedWallets.length === 0) return;
     const connection = new Connection(rpcUrl, "confirmed");
@@ -149,14 +157,12 @@ export function useMultiWallet() {
     setBalances(results);
   }, [embeddedWallets, rpcUrl]);
 
-  // Auto-refresh balances on mount and when wallets change
   useEffect(() => {
     if (embeddedWallets.length > 0) {
       refreshBalances();
     }
   }, [embeddedWallets.length]);
 
-  // Get Privy wallet object for a specific address (for signing)
   const getWalletByAddress = useCallback((address: string) => {
     return embeddedWallets.find((w: any) => w.address === address) || null;
   }, [embeddedWallets]);
@@ -175,4 +181,11 @@ export function useMultiWallet() {
     canCreateMore: embeddedWallets.length < MAX_WALLETS,
     walletCount: embeddedWallets.length,
   };
+}
+
+export function useMultiWallet() {
+  const privyAvailable = usePrivyAvailable();
+  if (!privyAvailable) return FALLBACK;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useMultiWalletInner();
 }

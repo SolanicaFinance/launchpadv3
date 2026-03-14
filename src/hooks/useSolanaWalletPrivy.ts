@@ -4,12 +4,28 @@ import { useWallets, useSignAndSendTransaction as usePrivySolanaSignAndSend, use
 import { Connection, Transaction, VersionedTransaction, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "./useSolanaWallet";
 import { getCachedBlockhash } from "@/lib/blockhashCache";
+import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 import bs58 from "bs58";
 
+const FALLBACK = {
+  walletAddress: null as string | null,
+  isWalletReady: false,
+  isConnecting: false,
+  rpcUrl: "",
+  debug: {} as any,
+  getConnection: () => new Connection("https://api.mainnet-beta.solana.com"),
+  getBalance: async () => 0,
+  getBalanceStrict: async () => { throw new Error("Privy not available"); return 0; },
+  getTokenBalance: async (_mint: string) => 0,
+  getTokenBalanceRaw: async (_mint: string) => ({ balance: 0, decimals: 6, rawAmount: '0' }),
+  signAndSendTransaction: async (_tx: any, _opts?: any): Promise<{ signature: string; confirmed: boolean }> => { throw new Error("Privy not available"); },
+  signTransaction: async <T extends Transaction | VersionedTransaction>(_tx: T, _opts?: any): Promise<T> => { throw new Error("Privy not available"); },
+  getSolanaWallet: () => null,
+  getEmbeddedWallet: () => null,
+} as const;
 
-// Hook that uses Privy - MUST only be called inside PrivyProvider when privyAvailable is true
-// IMPORTANT: This project uses EMBEDDED wallets only. External wallets are intentionally ignored.
-export function useSolanaWalletWithPrivy() {
+// Inner hook — MUST only be called inside PrivyProvider
+function useSolanaWalletWithPrivyInner() {
   const { authenticated, user, ready } = usePrivy();
   const { wallets } = useWallets();
   const privySolana = usePrivySolanaSignAndSend();
@@ -35,18 +51,14 @@ export function useSolanaWalletWithPrivy() {
     );
   }, []);
 
-  // Embedded wallet ONLY
   const getEmbeddedWallet = useCallback(() => {
     const embedded = wallets?.find((w: any) => isPrivyEmbeddedWallet(w));
     return embedded || null;
   }, [wallets, isPrivyEmbeddedWallet]);
 
-  // Alias kept for compatibility with existing callers
   const getSolanaWallet = useCallback(() => getEmbeddedWallet(), [getEmbeddedWallet]);
 
-  // Wallet address is embedded wallet only (no linkedAccounts fallback)
   const walletAddress = getEmbeddedWallet()?.address || null;
-
   const isWalletReady = ready && authenticated && !!walletAddress;
 
   const signAndSendTransaction = useCallback(
@@ -54,7 +66,6 @@ export function useSolanaWalletWithPrivy() {
       transaction: Transaction | VersionedTransaction,
       options?: { skipPreflight?: boolean; walletAddress?: string }
     ): Promise<{ signature: string; confirmed: boolean }> => {
-      // Support multi-wallet: use specified wallet or default embedded
       let wallet: any;
       if (options?.walletAddress) {
         wallet = wallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
@@ -68,16 +79,13 @@ export function useSolanaWalletWithPrivy() {
       try {
         setIsConnecting(true);
 
-        // Use cached blockhash for speed (0ms vs 200-500ms)
         const { blockhash, lastValidBlockHeight } = await getCachedBlockhash();
 
-        // Update legacy transaction blockhash + fee payer
         if (!(transaction as any)?.version) {
           (transaction as Transaction).recentBlockhash = blockhash;
           (transaction as Transaction).feePayer = wallet.address ? new PublicKey(wallet.address) : undefined;
         }
 
-        // Serialize transaction to Uint8Array for Privy's standard wallet API
         const serializedTx = transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
 
         console.log("[useSolanaWalletPrivy] Signing via Privy signAndSendTransaction", {
@@ -94,17 +102,13 @@ export function useSolanaWalletWithPrivy() {
           },
         });
 
-        // result.signature is Uint8Array — convert to base58 string
         const signature = typeof result.signature === "string"
           ? result.signature
           : bs58.encode(Buffer.from(result.signature));
 
         console.log("[useSolanaWalletPrivy] Tx sent, signature:", signature);
 
-        // Skip Jito fan-out: Privy's signAndSendTransaction already submitted the tx.
-        // Resubmitting causes 400 errors (duplicate signature / stale blockhash).
-
-        // Optimistic: don't block on confirmation. Poll in background.
+        // Privy already submitted — just confirm in background, no Jito fan-out needed
         connection.confirmTransaction(
           { signature, blockhash, lastValidBlockHeight },
           "confirmed"
@@ -128,7 +132,6 @@ export function useSolanaWalletWithPrivy() {
 
   const getBalance = useCallback(async (): Promise<number> => {
     if (!walletAddress) return 0;
-
     try {
       const connection = getConnection();
       const pubkey = new PublicKey(walletAddress);
@@ -142,7 +145,6 @@ export function useSolanaWalletWithPrivy() {
 
   const getBalanceStrict = useCallback(async (): Promise<number> => {
     if (!walletAddress) throw new Error("No wallet address");
-
     const connection = getConnection();
     const pubkey = new PublicKey(walletAddress);
     const balance = await connection.getBalance(pubkey);
@@ -177,14 +179,12 @@ export function useSolanaWalletWithPrivy() {
       const accounts = await connection.getParsedTokenAccountsByOwner(owner, { mint });
       if (accounts.value.length === 0) return 0;
 
-      // Sum raw integer amounts via BigInt to avoid floating-point precision loss
       const rawTotal = accounts.value.reduce((sum, acc) => {
         const raw = (acc.account.data as any)?.parsed?.info?.tokenAmount?.amount;
         return sum + BigInt(raw || '0');
       }, BigInt(0));
 
       const decimals = (accounts.value[0]?.account.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
-      // Convert to number only at the end — preserves exact integer for amounts < 2^53
       const balance = Number(rawTotal) / (10 ** decimals);
 
       console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… raw: ${rawTotal.toString()}, decimals: ${decimals}, balance: ${balance}`);
@@ -195,9 +195,6 @@ export function useSolanaWalletWithPrivy() {
     }
   }, [walletAddress, getConnection]);
 
-  /**
-   * Get token balance with raw amount string and decimals — for exact 100% sells
-   */
   const getTokenBalanceRaw = useCallback(async (mintAddress: string): Promise<{ balance: number; decimals: number; rawAmount: string }> => {
     if (!walletAddress || !mintAddress) return { balance: 0, decimals: 6, rawAmount: '0' };
     try {
@@ -224,7 +221,6 @@ export function useSolanaWalletWithPrivy() {
     }
   }, [walletAddress, getConnection]);
 
-  // Sign-only (no send) — needed for Meteora/Lighthouse flows with ephemeral keypairs
   const signTransaction = useCallback(
     async <T extends Transaction | VersionedTransaction>(
       transaction: T,
@@ -238,7 +234,6 @@ export function useSolanaWalletWithPrivy() {
       }
       if (!wallet) throw new Error("No embedded wallet connected");
 
-      // Update blockhash for legacy transactions
       const { blockhash } = await getCachedBlockhash();
       if (!(transaction as any)?.version) {
         (transaction as Transaction).recentBlockhash = blockhash;
@@ -261,12 +256,10 @@ export function useSolanaWalletWithPrivy() {
         },
       });
 
-      // result.signedTransaction is Uint8Array — deserialize back to the appropriate type
       const signedBytes = result.signedTransaction instanceof Uint8Array
         ? result.signedTransaction
         : new Uint8Array(result.signedTransaction);
 
-      // Determine if versioned or legacy and deserialize accordingly
       if ((transaction as any)?.version !== undefined || transaction instanceof VersionedTransaction) {
         return VersionedTransaction.deserialize(signedBytes) as T;
       } else {
@@ -292,4 +285,12 @@ export function useSolanaWalletWithPrivy() {
     getSolanaWallet,
     getEmbeddedWallet,
   };
+}
+
+// Guarded export — safe to call outside PrivyProvider
+export function useSolanaWalletWithPrivy() {
+  const privyAvailable = usePrivyAvailable();
+  if (!privyAvailable) return FALLBACK;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useSolanaWalletWithPrivyInner();
 }

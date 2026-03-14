@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
+import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 
 const DELEGATION_KEY = "claw_wallet_delegated";
 
-export function useDelegatedWallet() {
+const FALLBACK = {
+  isDelegated: false,
+  isDelegating: false,
+  needsDelegation: false,
+  requestDelegation: async () => {},
+  dismiss: () => {},
+  embeddedWallet: undefined,
+} as const;
+
+function useDelegatedWalletInner() {
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
 
@@ -24,7 +34,6 @@ export function useDelegatedWallet() {
     }
   });
 
-  // Find embedded wallet
   const embeddedWallet = wallets?.find(
     (w: any) =>
       w.walletClientType === "privy" ||
@@ -32,8 +41,6 @@ export function useDelegatedWallet() {
       String(w?.name ?? "").toLowerCase().includes("privy")
   );
 
-  // With TEE execution, delegation is not needed — wallets already support
-  // server-side access. Auto-mark as delegated when an embedded wallet exists.
   useEffect(() => {
     if (embeddedWallet) {
       setIsDelegated(true);
@@ -43,10 +50,9 @@ export function useDelegatedWallet() {
     }
   }, [embeddedWallet]);
 
-  const needsDelegation = false; // TEE wallets don't need delegation
+  const needsDelegation = false;
 
   const requestDelegation = useCallback(async () => {
-    // No-op for TEE wallets — already delegated
     setIsDelegated(true);
     try {
       localStorage.setItem(DELEGATION_KEY, "true");
@@ -68,4 +74,11 @@ export function useDelegatedWallet() {
     dismiss,
     embeddedWallet,
   };
+}
+
+export function useDelegatedWallet() {
+  const privyAvailable = usePrivyAvailable();
+  if (!privyAvailable) return FALLBACK;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useDelegatedWalletInner();
 }
