@@ -3146,7 +3146,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       disabled={isFunLaunching || !funToken.name.trim() || !funToken.ticker.trim() || (!funImagePreview && !funToken.imageUrl) || (phantomWallet.balance !== null && phantomWallet.balance < funLpSol + 0.02)}
                       className="gate-btn gate-btn-primary w-full"
                     >
-                      {isFunLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><PartyPopper className="h-4 w-4 mr-2" /> Launch FUN Token (~{(funLpSol + 0.02).toFixed(2)} SOL)</>}
+                      {isFunLaunching ? <><Rocket className="h-4 w-4 mr-2 animate-bounce" /> Launching...</> : <><PartyPopper className="h-4 w-4 mr-2" /> Launch FUN Token (~{funLpSol.toFixed(2)} SOL)</>}
                     </Button>
 
                     {phantomWallet.balance !== null && phantomWallet.balance < funLpSol + 0.02 && (
