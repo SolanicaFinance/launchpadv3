@@ -67,7 +67,7 @@ Return ONLY a JSON object (no markdown):
 {
   "name": "Creative single-word token name (max 10 chars)",
   "ticker": "3-4 letter ticker in CAPS",
-  "description": "Catchy description with 🦞 emoji (max 80 chars)",
+  "description": "Catchy description (max 80 chars, NO emojis)",
   "imagePrompt": "Detailed image prompt describing the LOBSTER mascot in the themed style",
   "tweetText": "Viral tweet announcing this token (include @Saturn mention, 🦞 emojis, max 280 chars)"
 }`;

@@ -113,7 +113,7 @@ ${explicitTicker ? `CRITICAL: The user EXPLICITLY requested the ticker to be "${
 Generate a meme token identity. Rules:
 ${explicitName ? `- Name: USE EXACTLY "${explicitName}" - do NOT modify it` : '- Name: 1-2 short catchy meme-style words (max 10 chars total). Must directly relate to the user\'s idea.'}
 ${explicitTicker ? `- Ticker: USE EXACTLY "${explicitTicker}" - do NOT modify it` : '- Ticker: 3-6 UPPERCASE letters that make sense from the name. NO random letter combos.'}
-- Description: Fun catchy meme coin description under 200 chars with emoji. Reference the user's idea.
+- Description: Fun catchy meme coin description under 200 chars. NO emojis. Reference the user's idea.
 - Personality: 2-4 word fun personality matching the character vibe
 
 IMPORTANT: Do NOT use lobster/claw/pincer themes unless the user specifically asked for them. Match the user's idea exactly.
@@ -143,7 +143,7 @@ Return ONLY valid JSON: {"name": "...", "ticker": "...", "personality": "...", "
         name: name || "MemeCoin",
         ticker,
         personality: "Degen meme lord",
-        description: `${name} - born from the idea: "${userIdea}" 🚀`,
+        description: `${name} - born from the idea: "${userIdea}"`,
       };
     }
 

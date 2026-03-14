@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
     const vercelPayload = {
       name: tokenName.slice(0, 32),
       ticker: tokenTicker.slice(0, 10),
-      description: `${tokenName} — Born in the zoo! 🐵🧸 A meme coin launched via Punch Launch.`,
+      description: `${tokenName} — Born in the zoo! A meme coin launched via Punch Launch.`,
       imageUrl: storedImageUrl || undefined,
       twitterUrl: "https://x.com/punchitsol/status/2026923770934407218",
       websiteUrl: "https://punchlaunch.fun",
@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
       .insert({
         name: tokenName.slice(0, 50),
         ticker: tokenTicker.slice(0, 10),
-        description: `${tokenName} — Born in the zoo! 🐵🧸 A meme coin launched via Punch Launch.`,
+        description: `${tokenName} — Born in the zoo! A meme coin launched via Punch Launch.`,
         image_url: storedImageUrl || null,
         creator_wallet: punchFeeWallet,
         punch_creator_wallet: creatorWallet,
