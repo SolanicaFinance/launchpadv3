@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useWalletTransactions, WalletTransaction } from "@/hooks/useWalletTransactions";
 import { ArrowUpRight, ArrowDownLeft, Repeat, HelpCircle, ExternalLink, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   walletAddress: string | null;
+  pageSize?: number;
 }
 
 const typeConfig: Record<string, { icon: typeof ArrowUpRight; label: string; color: string }> = {
@@ -23,8 +26,9 @@ function formatTime(ts: number) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export default function WalletTransactionHistory({ walletAddress }: Props) {
+export default function WalletTransactionHistory({ walletAddress, pageSize }: Props) {
   const { data: transactions = [], isLoading } = useWalletTransactions(walletAddress);
+  const [page, setPage] = useState(1);
 
   if (isLoading) {
     return (
@@ -40,9 +44,15 @@ export default function WalletTransactionHistory({ walletAddress }: Props) {
     );
   }
 
+  const usePagination = !!pageSize;
+  const totalPages = usePagination ? Math.ceil(transactions.length / pageSize!) : 1;
+  const visibleTxs = usePagination
+    ? transactions.slice((page - 1) * pageSize!, page * pageSize!)
+    : transactions;
+
   return (
     <div className="space-y-1">
-      {transactions.map((tx) => {
+      {visibleTxs.map((tx) => {
         const cfg = typeConfig[tx.type] || typeConfig.unknown;
         const Icon = cfg.icon;
         return (
@@ -75,6 +85,29 @@ export default function WalletTransactionHistory({ walletAddress }: Props) {
           </a>
         );
       })}
+      {usePagination && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-[10px] font-mono"
+            disabled={page <= 1}
+            onClick={() => setPage(p => p - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-[10px] font-mono text-muted-foreground">{page} / {totalPages}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-[10px] font-mono"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -238,6 +238,7 @@ export default function PanelUnifiedDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountSecurityOpen, setAccountSecurityOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [launchPage, setLaunchPage] = useState(1);
 
   // Profile for settings modal
   const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null } | null>(null);
@@ -616,73 +617,7 @@ export default function PanelUnifiedDashboard() {
                 />
               </div>
 
-              {/* Earnings breakdown */}
-              <div>
-                <h3 className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-3">Your Tokens</h3>
-                {loadingEarnings ? (
-                  Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl mb-2" />)
-                ) : earningsData?.earnings?.length === 0 ? (
-                  <div
-                    className="rounded-xl p-8 text-center"
-                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
-                  >
-                    <p className="text-sm text-muted-foreground mb-3">You haven't created any tokens yet</p>
-                    <Link to="/">
-                      <Button
-                        className="gap-2 font-mono text-xs"
-                        style={{ background: `linear-gradient(135deg, ${NEON_LIME}, ${EMERALD})`, color: "#000" }}
-                      >
-                        <Rocket className="h-3.5 w-3.5" />
-                        Launch Your First Token
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {earningsData?.earnings?.map((earning: any) => (
-                      <div
-                        key={earning.id}
-                        className="p-3 flex items-center gap-3 rounded-xl transition-all duration-200"
-                        style={{
-                          background: "rgba(255,255,255,0.02)",
-                          border: "1px solid rgba(255,255,255,0.05)",
-                        }}
-                      >
-                        <Avatar className="h-9 w-9 rounded-lg ring-1 ring-white/10 shrink-0">
-                          <AvatarImage src={earning.tokens?.image_url || undefined} />
-                          <AvatarFallback className="rounded-lg text-[10px] font-bold bg-white/5">
-                            {earning.tokens?.ticker?.slice(0, 2) || "??"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{earning.tokens?.name || "Unknown"}</p>
-                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
-                            <span>Earned: <span className="font-mono" style={{ color: EMERALD }}>{formatSolAmount(earning.total_earned_sol || 0)}</span></span>
-                            <span>Claimable: <span className="font-mono" style={{ color: NEON_LIME_GLOW }}>{formatSolAmount(earning.unclaimed_sol || 0)}</span></span>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="h-7 text-[10px] font-mono uppercase shrink-0"
-                          style={{
-                            background: earning.unclaimed_sol >= MIN_CLAIM_SOL
-                              ? `linear-gradient(135deg, ${NEON_LIME}, ${EMERALD})`
-                              : undefined,
-                            color: earning.unclaimed_sol >= MIN_CLAIM_SOL ? "#000" : undefined,
-                          }}
-                          variant={earning.unclaimed_sol >= MIN_CLAIM_SOL ? "default" : "outline"}
-                          disabled={!earning.unclaimed_sol || earning.unclaimed_sol < MIN_CLAIM_SOL || claimingTokenId === earning.token_id}
-                          onClick={() => handleClaim(earning.token_id)}
-                        >
-                          {claimingTokenId === earning.token_id
-                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            : earning.unclaimed_sol < MIN_CLAIM_SOL ? "Min 0.05" : "Claim"}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
 
               {/* Recent claims */}
               {earningsData?.claims?.length > 0 && (
@@ -730,74 +665,134 @@ export default function PanelUnifiedDashboard() {
           </div>
           <CollapsibleContent>
             <div className="p-4 space-y-4">
-              {loadingCreated ? (
-                <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
-              ) : createdTokens.length === 0 ? (
-                <div
-                  className="rounded-xl p-8 text-center"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
-                >
+              {(() => {
+                const LAUNCH_PAGE_SIZE = 6;
+                const totalPages = Math.ceil(createdTokens.length / LAUNCH_PAGE_SIZE);
+                const paginatedTokens = createdTokens.slice((launchPage - 1) * LAUNCH_PAGE_SIZE, launchPage * LAUNCH_PAGE_SIZE);
+                const earningsMap = new Map((earningsData?.earnings || []).map((e: any) => [e.token_id, e]));
+
+                if (loadingCreated) return (
+                  <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+                );
+                if (createdTokens.length === 0) return (
                   <div
-                    className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: `${NEON_LIME_GLOW}10`, border: `1px solid ${NEON_LIME_GLOW}20` }}
+                    className="rounded-xl p-8 text-center"
+                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
                   >
-                    <Rocket className="h-6 w-6" style={{ color: NEON_LIME_GLOW, opacity: 0.5 }} />
-                  </div>
-                  <p className="text-sm font-medium text-foreground/80 mb-1">You haven't created any tokens yet</p>
-                  <p className="text-[11px] text-muted-foreground mb-1">Average launch ROI: <span style={{ color: EMERALD }} className="font-mono font-bold">+250%</span></p>
-                  <p className="text-xs text-muted-foreground mb-4">Create and launch your own token in minutes</p>
-                  <Link to="/">
-                    <Button
-                      className="gap-2 font-mono text-xs uppercase tracking-wider"
-                      style={{ background: `linear-gradient(135deg, ${NEON_LIME_GLOW}, #ea580c)`, color: "#000" }}
+                    <div
+                      className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                      style={{ background: `${NEON_LIME_GLOW}10`, border: `1px solid ${NEON_LIME_GLOW}20` }}
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Launch Your First Token
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {createdTokens.map((token: Token) => (
-                    <Link key={token.id} to={`/trade/${token.mint_address}`}>
-                      <div
-                        className="p-3 rounded-xl transition-all duration-200 hover:scale-[1.02] group"
-                        style={{
-                          background: "rgba(255,255,255,0.02)",
-                          border: "1px solid rgba(255,255,255,0.05)",
-                        }}
+                      <Rocket className="h-6 w-6" style={{ color: NEON_LIME_GLOW, opacity: 0.5 }} />
+                    </div>
+                    <p className="text-sm font-medium text-foreground/80 mb-1">You haven't created any tokens yet</p>
+                    <p className="text-xs text-muted-foreground mb-4">Create and launch your own token in minutes</p>
+                    <Link to="/">
+                      <Button
+                        className="gap-2 font-mono text-xs uppercase tracking-wider"
+                        style={{ background: `linear-gradient(135deg, ${NEON_LIME_GLOW}, #ea580c)`, color: "#000" }}
                       >
-                        <div className="flex items-center gap-3 mb-2">
-                          <Avatar className="h-9 w-9 rounded-lg ring-1 ring-white/10">
-                            <AvatarImage src={token.image_url || undefined} />
-                            <AvatarFallback className="rounded-lg text-[10px] font-bold bg-white/5">
-                              {token.ticker.slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{token.name}</p>
-                            <p className="text-[10px] font-mono text-muted-foreground">${token.ticker}</p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] capitalize shrink-0"
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Launch Your First Token
+                      </Button>
+                    </Link>
+                  </div>
+                );
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {paginatedTokens.map((token: Token) => {
+                        const earning = earningsMap.get(token.id) as any;
+                        const unclaimed = earning?.unclaimed_sol || 0;
+                        return (
+                          <div
+                            key={token.id}
+                            className="p-3 rounded-xl transition-all duration-200"
                             style={{
-                              borderColor: token.status === 'graduated' ? `${EMERALD}40` : `${NEON_LIME}40`,
-                              color: token.status === 'graduated' ? EMERALD : NEON_LIME,
+                              background: "rgba(255,255,255,0.02)",
+                              border: "1px solid rgba(255,255,255,0.05)",
                             }}
                           >
-                            {token.status || "active"}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-muted-foreground">MCAP</span>
-                          <span className="font-mono font-bold" style={{ color: NEON_LIME }}>{formatSolAmount(token.market_cap_sol)} {currencySymbol}</span>
-                        </div>
+                            <Link to={`/trade/${token.mint_address}`} className="block group">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Avatar className="h-9 w-9 rounded-lg ring-1 ring-white/10">
+                                  <AvatarImage src={token.image_url || undefined} />
+                                  <AvatarFallback className="rounded-lg text-[10px] font-bold bg-white/5">
+                                    {token.ticker.slice(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">{token.name}</p>
+                                  <p className="text-[10px] font-mono text-muted-foreground">${token.ticker}</p>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] capitalize shrink-0"
+                                  style={{
+                                    borderColor: token.status === 'graduated' ? `${EMERALD}40` : `${NEON_LIME}40`,
+                                    color: token.status === 'graduated' ? EMERALD : NEON_LIME,
+                                  }}
+                                >
+                                  {token.status || "active"}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="text-muted-foreground">MCAP</span>
+                                <span className="font-mono font-bold" style={{ color: NEON_LIME }}>{formatSolAmount(token.market_cap_sol)} {currencySymbol}</span>
+                              </div>
+                            </Link>
+                            {unclaimed > 0 && (
+                              <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                                <span className="text-[10px] text-muted-foreground">Claimable: <span className="font-mono" style={{ color: NEON_LIME_GLOW }}>{formatSolAmount(unclaimed)} {currencySymbol}</span></span>
+                                <Button
+                                  size="sm"
+                                  className="h-6 text-[10px] font-mono uppercase px-3"
+                                  style={{
+                                    background: unclaimed >= MIN_CLAIM_SOL
+                                      ? `linear-gradient(135deg, ${NEON_LIME}, ${EMERALD})`
+                                      : undefined,
+                                    color: unclaimed >= MIN_CLAIM_SOL ? "#000" : undefined,
+                                  }}
+                                  variant={unclaimed >= MIN_CLAIM_SOL ? "default" : "outline"}
+                                  disabled={unclaimed < MIN_CLAIM_SOL || claimingTokenId === token.id}
+                                  onClick={(e) => { e.preventDefault(); handleClaim(token.id); }}
+                                >
+                                  {claimingTokenId === token.id
+                                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                                    : unclaimed < MIN_CLAIM_SOL ? "Min 0.05" : "Claim"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[10px] font-mono"
+                          disabled={launchPage <= 1}
+                          onClick={() => setLaunchPage(p => p - 1)}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-[10px] font-mono text-muted-foreground">{launchPage} / {totalPages}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[10px] font-mono"
+                          disabled={launchPage >= totalPages}
+                          onClick={() => setLaunchPage(p => p + 1)}
+                        >
+                          Next
+                        </Button>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -869,7 +864,7 @@ export default function PanelUnifiedDashboard() {
 
               <div>
                 <h3 className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-3">Recent Activity</h3>
-                <WalletTransactionHistory walletAddress={walletAddr} />
+                <WalletTransactionHistory walletAddress={walletAddr} pageSize={5} />
               </div>
             </div>
           </CollapsibleContent>
