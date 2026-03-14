@@ -243,7 +243,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
             )}>
               {token.name}
             </span>
-            <span className="text-[11px] font-mono text-muted-foreground/50 truncate">${token.ticker}</span>
+            <span className="text-[11px] font-mono text-muted-foreground/50 flex-shrink-0">${token.ticker}</span>
             {isTrader && (
               <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wider flex-shrink-0 bg-cyan-500/10 text-cyan-400 border border-cyan-500/15">
                 <Bot className="w-2.5 h-2.5 inline mr-0.5 -mt-px" />Trader

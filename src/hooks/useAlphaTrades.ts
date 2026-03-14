@@ -45,17 +45,48 @@ export function useAlphaTrades(limit = 50) {
 
       const mints = [...new Set(tradesData.map((t) => t.token_mint).filter(Boolean))];
       if (mints.length > 0) {
-        const { data: tokens } = await supabase
+        const imgMap = new Map<string, string>();
+
+        // Check tokens table
+        const { data: tokensData } = await supabase
           .from("tokens")
           .select("mint_address, image_url")
           .in("mint_address", mints);
-        if (tokens) {
-          const imgMap = new Map<string, string>();
-          for (const t of tokens) {
+        if (tokensData) {
+          for (const t of tokensData) {
             if (t.image_url) imgMap.set(t.mint_address, t.image_url);
           }
-          setTokenImages(imgMap);
         }
+
+        // Check fun_tokens table for any mints not yet resolved
+        const unresolvedMints = mints.filter((m) => !imgMap.has(m));
+        if (unresolvedMints.length > 0) {
+          const { data: funData } = await supabase
+            .from("fun_tokens")
+            .select("mint_address, image_url")
+            .in("mint_address", unresolvedMints);
+          if (funData) {
+            for (const t of funData) {
+              if (t.mint_address && t.image_url) imgMap.set(t.mint_address, t.image_url);
+            }
+          }
+        }
+
+        // Check claw_tokens table for any remaining
+        const stillUnresolved = mints.filter((m) => !imgMap.has(m));
+        if (stillUnresolved.length > 0) {
+          const { data: clawData } = await supabase
+            .from("claw_tokens")
+            .select("mint_address, image_url")
+            .in("mint_address", stillUnresolved);
+          if (clawData) {
+            for (const t of clawData) {
+              if (t.mint_address && t.image_url) imgMap.set(t.mint_address, t.image_url);
+            }
+          }
+        }
+
+        setTokenImages(imgMap);
       }
     }
     setLoading(false);
