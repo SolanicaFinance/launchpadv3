@@ -7,6 +7,9 @@ import {
   Clock,
   Copy,
   CheckCheck,
+  TrendingUp,
+  TrendingDown,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
 import { useTradeSuccessStore } from "@/stores/tradeSuccessStore";
