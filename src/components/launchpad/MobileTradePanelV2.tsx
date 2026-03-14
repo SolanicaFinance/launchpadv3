@@ -281,10 +281,14 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
   const tradingDisabled = isLoading || bondingSwapLoading || jupiterLoading;
 
+  // Truncate ticker for display on small screens
+  const shortTicker = tokenInfo.ticker.length > 8 ? tokenInfo.ticker.slice(0, 7) + '…' : tokenInfo.ticker;
+
   return (
     <>
-      <div className="flex flex-col gap-2.5">
-        {/* ── Segmented BUY / SELL ── */}
+      {/* overflow-hidden prevents any child from causing horizontal scroll */}
+      <div className="flex flex-col gap-2 overflow-hidden">
+        {/* ── Segmented BUY / SELL — 36px tall, min-touch 44px via padding ── */}
         <div className="flex h-9 rounded-lg bg-secondary/30 border border-border/30 p-0.5 relative">
           <div
             className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-md transition-all duration-200 ${
@@ -293,7 +297,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           />
           <button
             onClick={() => { setTradeType("buy"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${
+            className={`flex-1 relative z-10 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
               isBuy ? "text-green-400" : "text-muted-foreground"
             }`}
           >
@@ -301,7 +305,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           </button>
           <button
             onClick={() => { setTradeType("sell"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${
+            className={`flex-1 relative z-10 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
               !isBuy ? "text-destructive" : "text-muted-foreground"
             }`}
           >
@@ -310,15 +314,15 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Amount Input ── */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center px-0.5">
-            <span className="text-[11px] font-mono text-muted-foreground">
+        <div className="space-y-1">
+          <div className="flex justify-between items-center px-0.5 min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate">
               {isBuy ? "You pay" : "You sell"}
             </span>
-            <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate max-w-[60%] text-right">
               {isBuy
                 ? solBalance !== null ? `${solBalance.toFixed(4)} SOL` : "—"
-                : `${formatAmount(userTokenBalance)} ${tokenInfo.ticker}`}
+                : `${formatAmount(userTokenBalance)} ${shortTicker}`}
             </span>
           </div>
           <div className="relative">
@@ -328,31 +332,32 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
               placeholder="0.00"
               value={amount}
               onChange={(e) => { setAmount(e.target.value); setSelectedPreset(null); }}
-              className="w-full h-10 text-sm font-mono font-bold pl-3 pr-24 rounded-lg border border-border/40 bg-secondary/30 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/30 transition-all"
+              className="w-full h-11 text-sm font-mono font-bold pl-3 pr-20 sm:pr-24 rounded-lg border border-border/40 bg-secondary/30 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/30 transition-all"
+              style={{ fontSize: 'max(16px, 0.875rem)' }} /* prevents iOS zoom on focus */
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               <button
                 onClick={handleMaxClick}
-                className="h-6 px-2 rounded-md font-mono text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                className="h-7 min-w-[44px] px-2 rounded-md font-mono text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
               >
                 MAX
               </button>
               {isBuy ? (
-                <img src={SOL_LOGO} alt="SOL" className="w-4 h-4 rounded-full" />
+                <img src={SOL_LOGO} alt="SOL" className="w-4 h-4 rounded-full shrink-0" />
               ) : tokenInfo.imageUrl ? (
-                <img src={tokenInfo.imageUrl} alt={tokenInfo.ticker} className="w-4 h-4 rounded-full" />
+                <img src={tokenInfo.imageUrl} alt={tokenInfo.ticker} className="w-4 h-4 rounded-full shrink-0" />
               ) : null}
             </div>
           </div>
         </div>
 
-        {/* ── Quick Amount Chips ── */}
-        <div className="flex gap-1.5">
+        {/* ── Quick Amount Chips — grid 2x2 on tiny screens, flex row on wider ── */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`flex-1 h-8 rounded-md font-mono text-[11px] font-semibold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
+              className={`h-9 min-h-[44px] rounded-md font-mono text-[10px] sm:text-[11px] font-semibold border transition-all active:scale-95 flex items-center justify-center gap-0.5 sm:gap-1 ${
                 selectedPreset === i
                   ? isBuy
                     ? "border-green-500/40 bg-green-500/10 text-green-400"
@@ -360,7 +365,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
                   : "border-border/30 text-muted-foreground bg-secondary/20 hover:bg-secondary/40"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full" />}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full shrink-0 hidden xs:block" />}
               {isBuy ? v : `${v}%`}
             </button>
           ))}
@@ -368,14 +373,14 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Compact Preview ── */}
         {numericAmount > 0 && (
-          <div className="rounded-lg bg-secondary/30 border border-border/20 px-3 py-2 space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] font-mono text-muted-foreground">You get ≈</span>
-              <span className="text-sm font-mono font-bold text-foreground">
+          <div className="rounded-lg bg-secondary/30 border border-border/20 px-2.5 sm:px-3 py-2 space-y-1">
+            <div className="flex justify-between items-center min-w-0 gap-2">
+              <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground shrink-0">You get ≈</span>
+              <span className="text-[12px] sm:text-sm font-mono font-bold text-foreground truncate">
                 {quoteLoading ? (
                   <Loader2 className="h-3 w-3 animate-spin inline" />
                 ) : (
-                  `${formatAmount(outputAmount)} ${isBuy ? tokenInfo.ticker : "SOL"}`
+                  `${formatAmount(outputAmount)} ${shortTicker}`
                 )}
               </span>
             </div>
@@ -392,24 +397,24 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Price Impact Warning ── */}
         {priceImpact > 5 && numericAmount > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-destructive/10 rounded-lg text-destructive border border-destructive/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-destructive/10 rounded-lg text-destructive border border-destructive/20">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[11px] font-mono font-semibold">High impact: {priceImpact.toFixed(2)}%</span>
+            <span className="text-[10px] sm:text-[11px] font-mono font-semibold truncate">High impact: {priceImpact.toFixed(2)}%</span>
           </div>
         )}
 
-        {/* ── Inline Indicators + Settings ── */}
-        <div className="flex items-center justify-between px-0.5">
-          <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60">
-            <span className="flex items-center gap-1">
+        {/* ── Inline Indicators + Settings — compact row ── */}
+        <div className="flex items-center justify-between px-0.5 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground/60 shrink min-w-0">
+            <span className="flex items-center gap-0.5 shrink-0">
               <span className="h-1.5 w-1.5 rounded-full bg-green-500" />MEV
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-0.5 shrink-0">
               <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />Anti-SW
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-muted-foreground/60">{slippage}% slp</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/60">{slippage}% slp</span>
             <AdvancedSettingsSheet
               slippage={slippage}
               onSlippageChange={setSlippage}
@@ -425,11 +430,11 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           </div>
         </div>
 
-        {/* ── Action Button ── */}
+        {/* ── Action Button — 48px tall, full-width, always visible ── */}
         {!isAuthenticated ? (
           <button
             onClick={() => login()}
-            className="w-full h-11 rounded-lg font-mono text-sm font-bold bg-green-500 hover:bg-green-600 text-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-lg font-mono text-sm font-bold bg-green-500 hover:bg-green-600 text-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <Wallet className="h-4 w-4" />
             Connect Wallet
@@ -438,7 +443,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           <button
             onClick={handleTrade}
             disabled={tradingDisabled || !numericAmount || (!isBondingMode && useJupiterRoute && quoteLoading)}
-            className={`w-full h-11 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 ${
+            className={`w-full h-12 rounded-lg font-mono text-[13px] sm:text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-1.5 ${
               isBuy
                 ? "bg-green-500 hover:bg-green-600 text-black"
                 : "bg-destructive hover:bg-destructive/90 text-white"
@@ -450,10 +455,10 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
               <>
                 BUY
                 {numericAmount > 0 && <img src={SOL_LOGO} alt="" className="w-4 h-4 rounded-full" />}
-                {numericAmount > 0 && <span>{numericAmount}</span>}
+                {numericAmount > 0 && <span className="truncate max-w-[80px]">{numericAmount}</span>}
               </>
             ) : (
-              <>SELL {tokenInfo.ticker}</>
+              <span className="truncate">SELL {shortTicker}</span>
             )}
           </button>
         )}

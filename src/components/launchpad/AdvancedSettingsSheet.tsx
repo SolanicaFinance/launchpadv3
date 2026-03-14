@@ -48,25 +48,26 @@ export function AdvancedSettingsSheet({
           <Settings2 className="h-3.5 w-3.5" />
         </button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-xl border-t border-border/40 bg-background px-4 pb-6 pt-3 max-h-[70vh] overflow-y-auto">
-        <SheetHeader className="pb-3">
+      <SheetContent side="bottom" className="rounded-t-xl border-t border-border/40 bg-background px-3 sm:px-4 pb-6 pt-3 max-h-[70vh] overflow-y-auto">
+        <SheetHeader className="pb-2 sm:pb-3">
           <SheetTitle className="text-xs font-mono font-bold tracking-wide text-center">
             Advanced Settings
           </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Slippage */}
           <div className="space-y-2">
             <label className="text-[10px] font-mono font-semibold text-foreground/70 uppercase tracking-wider">
               Slippage Tolerance
             </label>
-            <div className="flex flex-wrap gap-1.5">
+            {/* grid ensures chips never overflow — 5 cols on wider, wraps on tiny */}
+            <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
               {SLIPPAGE_PRESETS.map((v) => (
                 <button
                   key={v}
                   onClick={() => { onSlippageChange(v); setShowCustom(false); setCustomSlippage(""); }}
-                  className={`h-8 min-w-[44px] px-3 rounded-md font-mono text-xs font-bold border transition-all active:scale-95 ${
+                  className={`h-9 min-h-[44px] rounded-md font-mono text-[10px] sm:text-xs font-bold border transition-all active:scale-95 ${
                     slippage === v && !showCustom
                       ? "border-primary/50 bg-primary/12 text-primary"
                       : "border-border/30 text-muted-foreground hover:border-border/50 bg-secondary/40"
