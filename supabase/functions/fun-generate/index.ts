@@ -202,7 +202,7 @@ Return ONLY a JSON object with these exact fields (no markdown, no code blocks):
 {
   "name": "Single word name only (max 10 chars, NO compound words, MUST BE UNIQUE)",
   "ticker": "3-4 letter ticker in CAPS",
-  "description": "Trendy description with emoji (max 80 chars)"
+  "description": "Trendy catchy description (max 80 chars, NO emojis)"
 }`;
 
     console.log("[fun-generate] Generating concept for narrative:", narrativeInfo);

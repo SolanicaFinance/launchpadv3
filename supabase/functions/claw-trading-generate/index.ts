@@ -143,7 +143,7 @@ Return ONLY valid JSON: {"name": "...", "ticker": "...", "personality": "...", "
         name: name || "MemeCoin",
         ticker,
         personality: "Degen meme lord",
-        description: `${name} - born from the idea: "${userIdea}" 🚀`,
+        description: `${name} - born from the idea: "${userIdea}"`,
       };
     }
 
