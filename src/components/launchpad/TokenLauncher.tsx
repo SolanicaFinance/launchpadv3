@@ -2826,12 +2826,12 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                 <div className="h-px bg-white/[0.04]" />
                 <div className="flex justify-between items-center">
                   <span className="text-white/30">Your Fee Share</span>
-                  <span className="font-bold font-mono text-success">50%</span>
+                  <span className="font-bold font-mono text-success">{(phantomTradingFee / 100).toFixed(1)}%</span>
                 </div>
                 <div className="h-px bg-white/[0.04]" />
                 <div className="flex justify-between items-center">
                   <span className="text-white/30">Trading Fee</span>
-                  <span className="font-bold font-mono text-primary">{(phantomTradingFee / 100).toFixed(1)}%</span>
+                  <span className="font-bold font-mono text-primary">{((phantomTradingFee + 100) / 100).toFixed(1)}%</span>
                 </div>
               </div>
             </div>
