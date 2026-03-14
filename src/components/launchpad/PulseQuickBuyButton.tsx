@@ -319,6 +319,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
                 amount: `${quickBuyAmount} SOL`,
                 signature: result.signature,
                 executionMs: result.totalMs || lastLatencyMs || undefined,
+                tokenImageUrl: funToken?.image_url ?? codexToken?.imageUrl ?? undefined,
               });
               // Optimistic balance set to flip button to "Sell 100%" instantly
               queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
