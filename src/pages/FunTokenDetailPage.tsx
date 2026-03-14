@@ -1014,9 +1014,9 @@ export default function FunTokenDetailPage() {
 
       {/* ──── PHONE ONLY: Bottom-fixed quick action bar ──── */}
       {!isPunchToken && (
-        <div className="md:hidden fixed left-0 right-0 z-50 trade-mobile-bar" style={{ bottom: '40px', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
-          <div className="flex items-center gap-2.5 px-4 py-3">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="md:hidden fixed left-0 right-0 z-50 trade-mobile-bar" style={{ bottom: '48px', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 4px)' }}>
+          <div className="flex items-center gap-2 px-3 py-2">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <span className="text-[10px] font-mono text-muted-foreground truncate">
                 {(token.price_sol || 0).toFixed(6)} SOL
               </span>
@@ -1028,13 +1028,13 @@ export default function FunTokenDetailPage() {
             </div>
             <button
               onClick={() => setMobileTab('trade')}
-              className="trade-btn-buy font-mono text-xs font-bold px-6 py-2.5 rounded-lg min-h-[44px] active:scale-95"
+              className="trade-btn-buy font-mono text-xs font-bold min-w-[72px] px-4 py-2 rounded-lg min-h-[40px] active:scale-95"
             >
               BUY
             </button>
             <button
               onClick={() => setMobileTab('trade')}
-              className="trade-btn-sell font-mono text-xs font-bold px-6 py-2.5 rounded-lg min-h-[44px] active:scale-95"
+              className="trade-btn-sell font-mono text-xs font-bold min-w-[72px] px-4 py-2 rounded-lg min-h-[40px] active:scale-95"
             >
               SELL
             </button>
