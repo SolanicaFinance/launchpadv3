@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { VersionedTransaction } from '@solana/web3.js';
+import { supabase } from '@/integrations/supabase/client';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
-const JUPITER_API = 'https://api.jup.ag/swap/v1';
 
 interface QuoteResponse {
   inputMint: string;
@@ -21,13 +21,6 @@ interface SwapResult {
   priceImpact: number;
 }
 
-const JUPITER_API_KEY = (import.meta as any).env?.VITE_JUPITER_API_KEY || '';
-
-function buildQuoteUrl(params: URLSearchParams): string {
-  const base = `${JUPITER_API}/quote?${params}`;
-  return JUPITER_API_KEY ? `${base}&api-key=${JUPITER_API_KEY}` : base;
-}
-
 export function useJupiterSwap() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,27 +33,25 @@ export function useJupiterSwap() {
   ): Promise<QuoteResponse | null> => {
     try {
       const amountLamports = Math.floor(amount * (10 ** inputDecimals));
-      const params = new URLSearchParams({
-        inputMint,
-        outputMint,
-        amount: amountLamports.toString(),
-        slippageBps: slippageBps.toString(),
+
+      const { data, error } = await supabase.functions.invoke('jupiter-proxy', {
+        body: {
+          action: 'quote',
+          params: {
+            inputMint,
+            outputMint,
+            amount: amountLamports.toString(),
+            slippageBps: slippageBps.toString(),
+          },
+        },
       });
 
-      // Try with API key first
-      let res = await fetch(buildQuoteUrl(params));
+      if (error) {
+        console.error('[Jupiter] Proxy quote error:', error);
+        throw new Error(`Jupiter quote failed via proxy`);
+      }
 
-      // Fallback: retry without API key if 401
-      if (res.status === 401 && JUPITER_API_KEY) {
-        console.warn('[Jupiter] API key rejected, retrying without key');
-        res = await fetch(`${JUPITER_API}/quote?${params}`);
-      }
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.error('[Jupiter] Quote error:', res.status, errData);
-        throw new Error(`Jupiter quote failed (${res.status})`);
-      }
-      return await res.json();
+      return data;
     } catch (error) {
       console.error('Jupiter quote error:', error);
       return null;
@@ -84,29 +75,24 @@ export function useJupiterSwap() {
         throw new Error('Failed to get swap quote');
       }
 
-      const swapUrl = JUPITER_API_KEY
-        ? `${JUPITER_API}/swap?api-key=${JUPITER_API_KEY}`
-        : `${JUPITER_API}/swap`;
-
-      const res = await fetch(swapUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quoteResponse: quote,
-          userPublicKey: userWallet,
-          wrapAndUnwrapSol: true,
-          dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 'auto',
-        }),
+      const { data: swapData, error } = await supabase.functions.invoke('jupiter-proxy', {
+        body: {
+          action: 'swap',
+          body: {
+            quoteResponse: quote,
+            userPublicKey: userWallet,
+            wrapAndUnwrapSol: true,
+            dynamicComputeUnitLimit: true,
+            prioritizationFeeLamports: 'auto',
+          },
+        },
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.error('[Jupiter] Swap error:', res.status, errData);
-        throw new Error(`Jupiter swap failed (${res.status})`);
+      if (error) {
+        console.error('[Jupiter] Proxy swap error:', error);
+        throw new Error(`Jupiter swap failed via proxy`);
       }
 
-      const swapData = await res.json();
       const { swapTransaction } = swapData;
 
       const txBytes = Uint8Array.from(atob(swapTransaction), (c) => c.charCodeAt(0));
