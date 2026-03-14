@@ -82,7 +82,9 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
               "flex items-center gap-3 px-4 py-2.5 rounded-sm text-[13px] font-medium transition-all duration-200 w-full border-l-2",
               active
                 ? "text-foreground bg-surface-hover border-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/50 border-transparent"
+                : neonGreen
+                  ? "text-[hsl(72_100%_50%)] font-bold hover:text-foreground hover:bg-surface-hover/50 border-transparent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/50 border-transparent"
             );
 
             return (
