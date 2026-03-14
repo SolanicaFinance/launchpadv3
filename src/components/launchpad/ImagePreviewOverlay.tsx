@@ -1,4 +1,4 @@
-import { Download, X } from "lucide-react";
+import { X } from "lucide-react";
 
 interface ImagePreviewOverlayProps {
   src: string;
@@ -7,37 +7,19 @@ interface ImagePreviewOverlayProps {
   downloadName?: string;
 }
 
-export function ImagePreviewOverlay({ src, alt = "Generated", onClear, downloadName = "token.png" }: ImagePreviewOverlayProps) {
-  const handleDownload = () => {
-    const a = document.createElement("a");
-    a.href = src;
-    a.download = downloadName;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
+export function ImagePreviewOverlay({ src, alt = "Generated", onClear }: ImagePreviewOverlayProps) {
   return (
-    <div className="relative w-full h-full group">
+    <div className="relative w-full h-full">
       <img src={src} alt={alt} className="w-full h-full object-cover" />
       {onClear && (
         <button
           onClick={onClear}
-          className="absolute top-1.5 right-1.5 p-1.5 rounded-md bg-background/95 border border-border hover:bg-destructive/20 transition-colors z-10"
+          className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors z-10 shadow-lg"
           title="Remove image"
         >
-          <X className="h-4 w-4 text-foreground" />
+          <X className="h-3.5 w-3.5 text-white" />
         </button>
       )}
-      <button
-        onClick={handleDownload}
-        className="absolute bottom-1.5 right-1.5 px-2 py-1.5 rounded-md bg-background/95 border border-border hover:bg-primary/15 transition-colors z-10 flex items-center gap-1"
-        title="Download image"
-      >
-        <Download className="h-3.5 w-3.5 text-foreground" />
-        <span className="text-[10px] font-medium text-foreground">Download</span>
-      </button>
     </div>
   );
 }

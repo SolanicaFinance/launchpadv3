@@ -41,6 +41,7 @@ import {
   Camera,
   PartyPopper,
   Lock,
+  X,
 } from "lucide-react";
 
 interface MemeToken {
@@ -1670,6 +1671,22 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         placeholder="TICKER"
                         maxLength={10}
                       />
+                      {meme?.imageUrl && (
+                        <button
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = meme.imageUrl;
+                            a.download = `${(meme.ticker || "token").toLowerCase()}.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="ml-1 px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download Generated img
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -1808,6 +1825,22 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         placeholder="TICKER"
                         maxLength={10}
                       />
+                      {describedToken?.imageUrl && (
+                        <button
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = describedToken.imageUrl;
+                            a.download = `${(describedToken.ticker || "token").toLowerCase()}.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="ml-1 px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download Generated img
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1927,6 +1960,22 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         placeholder="TICKER"
                         maxLength={10}
                       />
+                      {realisticToken?.imageUrl && (
+                        <button
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = realisticToken.imageUrl;
+                            a.download = `${(realisticToken.ticker || "token").toLowerCase()}.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="ml-1 px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download Generated img
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2384,24 +2433,6 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                           </div>
                           <button
                             onClick={() => {
-                              const imageUrl = phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl;
-                              if (!imageUrl) return;
-                              const link = document.createElement("a");
-                              link.href = imageUrl;
-                              const fileBase = (phantomToken.ticker || phantomMeme?.ticker || "token").toLowerCase();
-                              link.download = `${fileBase}-image.png`;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }}
-                            className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-background/90 border border-border text-foreground text-[10px] font-medium hover:bg-primary/15 transition-colors z-10 flex items-center gap-1"
-                            title="Download image"
-                          >
-                            <Download className="h-3 w-3" />
-                            Download
-                          </button>
-                          <button
-                            onClick={() => {
                               setPhantomImageFile(null);
                               setPhantomImagePreview(null);
                               if (phantomMeme) {
@@ -2409,10 +2440,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                               }
                               setPhantomToken({ ...phantomToken, imageUrl: "" });
                             }}
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-background/95 border border-border flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-destructive/20 transition-all duration-200 hover:scale-110 z-10"
+                            className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors z-10 shadow-lg"
                             title="Remove image"
                           >
-                            <span className="text-xs font-bold">✕</span>
+                            <X className="h-3.5 w-3.5 text-white" />
                           </button>
                         </div>
                       ) : (
@@ -2457,6 +2488,24 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                           placeholder="TICKER"
                           maxLength={10}
                         />
+                        {(phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl) && (
+                          <button
+                            onClick={() => {
+                              const imageUrl = phantomImagePreview || phantomMeme?.imageUrl || phantomToken.imageUrl;
+                              if (!imageUrl) return;
+                              const a = document.createElement("a");
+                              a.href = imageUrl;
+                              a.download = `${(phantomToken.ticker || "token").toLowerCase()}.png`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }}
+                            className="px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download Generated img
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -2719,6 +2768,24 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                             placeholder="TICKER"
                             maxLength={10}
                           />
+                          {(holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl) && (
+                            <button
+                              onClick={() => {
+                                const imageUrl = holdersImagePreview || holdersMeme?.imageUrl || holdersToken.imageUrl;
+                                if (!imageUrl) return;
+                                const a = document.createElement("a");
+                                a.href = imageUrl;
+                                a.download = `${(holdersToken.ticker || "token").toLowerCase()}.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              }}
+                              className="ml-1 px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                            >
+                              <Download className="h-3 w-3" />
+                              Download Generated img
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2911,6 +2978,24 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                             placeholder="TICKER"
                             maxLength={10}
                           />
+                          {(funImagePreview || funToken.imageUrl) && (
+                            <button
+                              onClick={() => {
+                                const imageUrl = funImagePreview || funToken.imageUrl;
+                                if (!imageUrl) return;
+                                const a = document.createElement("a");
+                                a.href = imageUrl;
+                                a.download = `${(funToken.ticker || "token").toLowerCase()}.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              }}
+                              className="ml-1 px-2 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                            >
+                              <Download className="h-3 w-3" />
+                              Download Generated img
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
