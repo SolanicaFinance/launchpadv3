@@ -16,6 +16,7 @@ export interface ProfitCardData {
   outputAmount?: number;
   pnlPercent?: number;
   signature?: string;
+  tokenImageUrl?: string;
 }
 
 interface ProfitCardModalProps {
