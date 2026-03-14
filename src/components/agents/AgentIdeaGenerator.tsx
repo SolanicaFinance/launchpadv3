@@ -118,7 +118,7 @@ export function AgentIdeaGenerator() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${generatedMeme.ticker || "claw-meme"}.png`;
+      a.download = `${generatedMeme.ticker || "saturn-meme"}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -155,8 +155,8 @@ export function AgentIdeaGenerator() {
             </h2>
           </div>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Generate viral Claw-themed meme concepts for your AI agent. 
-            Each meme features our iconic lobster mascot with unique variations!
+            Generate viral Saturn-themed meme concepts for your AI agent. 
+            Each meme features our iconic mascot with unique variations!
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export function AgentIdeaGenerator() {
               </Label>
               <Textarea
                 id="prompt"
-                placeholder="e.g., 'Claw astronaut on the moon', 'Claw lobster at a pool party', 'cyberpunk Claw hacker'..."
+                placeholder="e.g., 'Saturn astronaut on the moon', 'Saturn at a pool party', 'cyberpunk Saturn hacker'..."
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 className="min-h-[80px] bg-background border-border"
@@ -189,7 +189,7 @@ export function AgentIdeaGenerator() {
               {isGenerating ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Generating Claw Meme...
+                  Generating Saturn Meme...
                 </>
               ) : (
                 <>
@@ -216,7 +216,7 @@ export function AgentIdeaGenerator() {
                   {/* Saturn watermark */}
                   <div className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                     <img src={clawLogo} alt="" className="w-4 h-4 rounded-full" />
-                    <span className="text-xs font-medium text-foreground">CLAW</span>
+                    <span className="text-xs font-medium text-foreground">SATURN</span>
                   </div>
                 </div>
                 
@@ -366,7 +366,7 @@ export function AgentIdeaGenerator() {
                   Post this on X with the command to launch:
                 </p>
                 <code className="block bg-background p-3 rounded text-xs font-mono text-foreground">
-                  <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
+                  <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!launch</span> {generatedMeme.name}<br/>
                   <span className="text-muted-foreground">+ optionally attach the downloaded image</span>
                 </code>
               </div>
@@ -382,10 +382,10 @@ export function AgentIdeaGenerator() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { prompt: "Claw astronaut", bg: "from-blue-500/20 to-purple-500/20" },
-                { prompt: "Cyber Claw", bg: "from-pink-500/20 to-cyan-500/20" },
-                { prompt: "King Claw", bg: "from-yellow-500/20 to-orange-500/20" },
-                { prompt: "Ninja Claw", bg: "from-gray-500/20 to-red-500/20" },
+                { prompt: "Saturn astronaut", bg: "from-blue-500/20 to-purple-500/20" },
+                { prompt: "Cyber Saturn", bg: "from-pink-500/20 to-cyan-500/20" },
+                { prompt: "King Saturn", bg: "from-yellow-500/20 to-orange-500/20" },
+                { prompt: "Ninja Saturn", bg: "from-gray-500/20 to-red-500/20" },
               ].map((example) => (
                 <button
                   key={example.prompt}

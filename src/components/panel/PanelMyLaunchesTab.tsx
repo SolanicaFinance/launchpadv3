@@ -222,7 +222,7 @@ export default function PanelMyLaunchesTab() {
             Link Your X Account
           </h3>
           <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-            Connect your X (Twitter) account to see tokens you've launched via !clawmode and claim your trading fees.
+            Connect your X (Twitter) account to see tokens you've launched and claim your trading fees.
           </p>
           <LinkXButton />
         </div>
@@ -314,7 +314,7 @@ export default function PanelMyLaunchesTab() {
           </div>
           <p className="text-sm font-medium text-[#CBD5E1] mb-1">No tokens launched yet</p>
           <p className="text-xs text-[#64748B] mb-4 max-w-xs mx-auto leading-relaxed">
-            Reply to any post on X with <code className="text-[#F97316] font-mono text-[11px]">${BRAND.twitterHandle} !clawmode</code> followed by your token idea
+            Reply to any post on X with <code className="text-[#F97316] font-mono text-[11px]">${BRAND.twitterHandle}</code> followed by your token idea
           </p>
           <a
             href="https://x.com/clawmode"
