@@ -271,21 +271,71 @@ export function useLaunchpad() {
     });
   };
 
-  // Fetch user's tokens (created by them)
+  // Fetch user's tokens (created by them) — merges tokens + fun_tokens tables
   const useUserTokens = (walletAddress: string | undefined) => {
     return useQuery({
       queryKey: ['user-tokens', walletAddress],
       queryFn: async () => {
         if (!walletAddress) return [];
         
-        const { data, error } = await supabase
-          .from('tokens')
-          .select('*')
-          .eq('creator_wallet', walletAddress)
-          .order('created_at', { ascending: false });
+        const [tokensResult, funTokensResult] = await Promise.all([
+          supabase
+            .from('tokens')
+            .select('*')
+            .eq('creator_wallet', walletAddress)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('fun_tokens')
+            .select('*')
+            .eq('creator_wallet', walletAddress)
+            .order('created_at', { ascending: false }),
+        ]);
 
-        if (error) throw error;
-        return data as Token[];
+        if (tokensResult.error) throw tokensResult.error;
+
+        const normalTokens = (tokensResult.data || []) as Token[];
+        
+        // Normalize fun_tokens to Token shape, excluding any already in tokens table
+        const tokenMints = new Set(normalTokens.map(t => t.mint_address));
+        const funMapped = (funTokensResult.data || [])
+          .filter((ft: any) => ft.mint_address && !tokenMints.has(ft.mint_address))
+          .map((ft: any) => ({
+            id: ft.id,
+            mint_address: ft.mint_address || '',
+            name: ft.name,
+            ticker: ft.ticker,
+            description: ft.description,
+            image_url: ft.image_url,
+            website_url: ft.website_url,
+            twitter_url: ft.twitter_url,
+            telegram_url: ft.telegram_url,
+            discord_url: ft.discord_url,
+            creator_wallet: ft.creator_wallet,
+            creator_id: null,
+            dbc_pool_address: ft.dbc_pool_address,
+            damm_pool_address: null,
+            virtual_sol_reserves: 30,
+            virtual_token_reserves: 1_000_000_000,
+            real_sol_reserves: 0,
+            real_token_reserves: 0,
+            total_supply: 1_000_000_000,
+            bonding_curve_progress: ft.bonding_progress || 0,
+            graduation_threshold_sol: 85,
+            price_sol: ft.price_sol || 0,
+            market_cap_sol: ft.market_cap_sol || 0,
+            volume_24h_sol: ft.volume_24h_sol || 0,
+            status: ft.status === 'active' ? 'bonding' : (ft.status || 'bonding'),
+            migration_status: 'pending',
+            holder_count: ft.holder_count || 0,
+            created_at: ft.created_at,
+            updated_at: ft.updated_at,
+            graduated_at: null,
+          } as Token));
+
+        // Merge and sort by created_at descending
+        return [...normalTokens, ...funMapped].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       },
       enabled: !!walletAddress,
     });
