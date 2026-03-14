@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Connection, VersionedTransaction } from '@solana/web3.js';
-import { getRpcUrl } from '@/hooks/useSolanaWallet';
+import { VersionedTransaction } from '@solana/web3.js';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
-const JUPITER_QUOTE_API = 'https://api.jup.ag/swap/v1';
+const JUPITER_PRO_API = 'https://api.jup.ag/swap/v1';
+const JUPITER_LITE_API = 'https://lite-api.jup.ag/swap/v1';
 
 interface QuoteResponse {
   inputMint: string;
@@ -23,21 +22,86 @@ interface SwapResult {
   priceImpact: number;
 }
 
+interface JupiterEndpoint {
+  baseUrl: string;
+  includeApiKey: boolean;
+  name: 'pro' | 'lite';
+}
+
+async function parseJupiterError(response: Response): Promise<string> {
+  try {
+    const data = await response.json();
+    if (typeof data?.error === 'string') return data.error;
+    if (typeof data?.message === 'string') return data.message;
+    return JSON.stringify(data);
+  } catch {
+    const text = await response.text();
+    return text || response.statusText || 'Unknown Jupiter error';
+  }
+}
+
+function buildJupiterEndpoints(hasApiKey: boolean): JupiterEndpoint[] {
+  if (hasApiKey) {
+    return [
+      { baseUrl: JUPITER_PRO_API, includeApiKey: true, name: 'pro' },
+      { baseUrl: JUPITER_LITE_API, includeApiKey: false, name: 'lite' },
+    ];
+  }
+
+  return [{ baseUrl: JUPITER_LITE_API, includeApiKey: false, name: 'lite' }];
+}
+
+async function requestJupiterWithFallback(
+  path: string,
+  init: RequestInit,
+  jupApiKey?: string,
+): Promise<Response> {
+  const endpoints = buildJupiterEndpoints(Boolean(jupApiKey));
+  let lastErrorMessage = 'Jupiter request failed';
+
+  for (let i = 0; i < endpoints.length; i += 1) {
+    const endpoint = endpoints[i];
+    const headers = new Headers(init.headers ?? {});
+
+    if (endpoint.includeApiKey && jupApiKey) {
+      headers.set('x-api-key', jupApiKey);
+    }
+
+    const response = await fetch(`${endpoint.baseUrl}${path}`, {
+      ...init,
+      headers,
+    });
+
+    if (response.ok) {
+      if (i > 0) {
+        console.warn(`[Jupiter] Recovered via ${endpoint.name} endpoint fallback.`);
+      }
+      return response;
+    }
+
+    const endpointError = await parseJupiterError(response);
+    lastErrorMessage = `[${endpoint.name}] ${endpointError} (${response.status})`;
+
+    if (i < endpoints.length - 1) {
+      console.warn(`[Jupiter] ${endpoint.name} request failed (${response.status}), trying fallback...`);
+    }
+  }
+
+  throw new Error(lastErrorMessage);
+}
+
 export function useJupiterSwap() {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get a quote for swapping tokens
   const getQuote = useCallback(async (
     inputMint: string,
     outputMint: string,
     amount: number,
     inputDecimals: number = 9,
-    slippageBps: number = 500
+    slippageBps: number = 500,
   ): Promise<QuoteResponse | null> => {
     try {
       const amountLamports = Math.floor(amount * (10 ** inputDecimals));
-      
       const params = new URLSearchParams({
         inputMint,
         outputMint,
@@ -45,23 +109,8 @@ export function useJupiterSwap() {
         slippageBps: slippageBps.toString(),
       });
 
-      const headers: Record<string, string> = {};
       const jupApiKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
-      if (jupApiKey) headers['x-api-key'] = jupApiKey;
-
-      let response = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`, { headers });
-      
-      // If 401 (API key issue), retry without the key (free tier)
-      if (response.status === 401 && headers['x-api-key']) {
-        console.warn('[Jupiter] API key rejected (401), retrying without key...');
-        delete headers['x-api-key'];
-        response = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`, { headers });
-      }
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get quote');
-      }
+      const response = await requestJupiterWithFallback(`/quote?${params}`, { method: 'GET' }, jupApiKey);
 
       return await response.json();
     } catch (error) {
@@ -70,7 +119,6 @@ export function useJupiterSwap() {
     }
   }, []);
 
-  // Execute swap via Jupiter using signAndSendTransaction (Privy compatible)
   const executeSwap = useCallback(async (
     inputMint: string,
     outputMint: string,
@@ -78,42 +126,22 @@ export function useJupiterSwap() {
     userWallet: string,
     inputDecimals: number = 9,
     slippageBps: number = 500,
-    signAndSendTx: (tx: VersionedTransaction) => Promise<{ signature: string; confirmed: boolean }>
+    signAndSendTx: (tx: VersionedTransaction) => Promise<{ signature: string; confirmed: boolean }>,
   ): Promise<SwapResult> => {
     setIsLoading(true);
-    
+
     try {
-      // Step 1: Get quote
       const quote = await getQuote(inputMint, outputMint, amount, inputDecimals, slippageBps);
-      
       if (!quote) {
         throw new Error('Failed to get swap quote');
       }
 
-      // Step 2: Get swap transaction
-      const swapHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-      const jupKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
-      if (jupKey) swapHeaders['x-api-key'] = jupKey;
-
-      let swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
-        method: 'POST',
-        headers: swapHeaders,
-        body: JSON.stringify({
-          quoteResponse: quote,
-          userPublicKey: userWallet,
-          wrapAndUnwrapSol: true,
-          dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 'auto',
-        }),
-      });
-
-      // If 401, retry without API key
-      if (swapResponse.status === 401 && swapHeaders['x-api-key']) {
-        console.warn('[Jupiter] Swap API key rejected (401), retrying without key...');
-        delete swapHeaders['x-api-key'];
-        swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
+      const jupApiKey = (import.meta as any).env?.VITE_JUPITER_API_KEY;
+      const swapResponse = await requestJupiterWithFallback(
+        '/swap',
+        {
           method: 'POST',
-          headers: swapHeaders,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             quoteResponse: quote,
             userPublicKey: userWallet,
@@ -121,25 +149,18 @@ export function useJupiterSwap() {
             dynamicComputeUnitLimit: true,
             prioritizationFeeLamports: 'auto',
           }),
-        });
-      }
-
-      if (!swapResponse.ok) {
-        const error = await swapResponse.json();
-        throw new Error(error.error || 'Failed to create swap transaction');
-      }
+        },
+        jupApiKey,
+      );
 
       const { swapTransaction } = await swapResponse.json();
 
-      // Step 3: Deserialize transaction
-      const txBytes = Uint8Array.from(atob(swapTransaction), c => c.charCodeAt(0));
+      const txBytes = Uint8Array.from(atob(swapTransaction), (c) => c.charCodeAt(0));
       const transaction = VersionedTransaction.deserialize(txBytes);
-
-      // Step 4: Sign and send via Privy embedded wallet
       const { signature } = await signAndSendTx(transaction);
 
-      const inputAmount = parseInt(quote.inAmount) / (10 ** inputDecimals);
-      const outputAmount = parseInt(quote.outAmount) / (10 ** 9);
+      const inputAmount = parseInt(quote.inAmount, 10) / (10 ** inputDecimals);
+      const outputAmount = parseInt(quote.outAmount, 10) / (10 ** 9);
       const priceImpact = parseFloat(quote.priceImpactPct);
 
       return {
@@ -149,7 +170,6 @@ export function useJupiterSwap() {
         outputAmount,
         priceImpact,
       };
-
     } catch (error) {
       console.error('Jupiter swap error:', error);
       throw error;
@@ -158,44 +178,40 @@ export function useJupiterSwap() {
     }
   }, [getQuote]);
 
-  // Helper: Buy token with SOL
   const buyToken = useCallback(async (
     tokenMint: string,
     solAmount: number,
     userWallet: string,
     signAndSendTx: (tx: VersionedTransaction) => Promise<{ signature: string; confirmed: boolean }>,
-    slippageBps: number = 500
+    slippageBps: number = 500,
   ): Promise<SwapResult> => {
     return executeSwap(SOL_MINT, tokenMint, solAmount, userWallet, 9, slippageBps, signAndSendTx);
   }, [executeSwap]);
 
-  // Helper: Sell token for SOL
   const sellToken = useCallback(async (
     tokenMint: string,
     tokenAmount: number,
     tokenDecimals: number,
     userWallet: string,
     signAndSendTx: (tx: VersionedTransaction) => Promise<{ signature: string; confirmed: boolean }>,
-    slippageBps: number = 500
+    slippageBps: number = 500,
   ): Promise<SwapResult> => {
     return executeSwap(tokenMint, SOL_MINT, tokenAmount, userWallet, tokenDecimals, slippageBps, signAndSendTx);
   }, [executeSwap]);
 
-  // Get buy quote (SOL -> Token)
   const getBuyQuote = useCallback(async (
     tokenMint: string,
     solAmount: number,
-    slippageBps: number = 500
+    slippageBps: number = 500,
   ) => {
     return getQuote(SOL_MINT, tokenMint, solAmount, 9, slippageBps);
   }, [getQuote]);
 
-  // Get sell quote (Token -> SOL)
   const getSellQuote = useCallback(async (
     tokenMint: string,
     tokenAmount: number,
     tokenDecimals: number = 9,
-    slippageBps: number = 500
+    slippageBps: number = 500,
   ) => {
     return getQuote(tokenMint, SOL_MINT, tokenAmount, tokenDecimals, slippageBps);
   }, [getQuote]);
