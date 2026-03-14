@@ -1157,9 +1157,17 @@ export default function PanelUnifiedDashboard() {
       <DepositDialog
         open={depositOpen}
         onOpenChange={setDepositOpen}
-        address={activeAddress || ""}
+        address={walletAddr || activeAddress || ""}
         chain={isBnb ? "bnb" : "solana"}
         getBalance={isSolana ? getBalance : undefined}
+        onDepositDetected={() => {
+          // Immediately refresh balance
+          if (isSolana && isWalletReady) {
+            getBalance().then(bal => setBalance(bal)).catch(() => {});
+          }
+          // Invalidate holdings queries
+          queryClient.invalidateQueries({ queryKey: ['user-holdings', walletAddr] });
+        }}
       />
 
       {/* Floating mobile deposit CTA — always visible on mobile when balance is low */}
