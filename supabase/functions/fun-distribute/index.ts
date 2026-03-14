@@ -480,96 +480,22 @@ serve(async (req) => {
       const isAgentToken = group.recipientType === "agent";
       const isApiToken = group.recipientType === "api_user";
 
-      // Calculate fee splits based on token type
-      let recipientAmount: number;
-      let platformAmount: number;
+      // Unified fee split: always use creator_fee_bps / trading_fee_bps
+      const { creatorSol, platformSol } = calculateCreatorShare(claimedSol, token.creator_fee_bps, token.trading_fee_bps);
+      let recipientAmount = creatorSol;
+      let platformAmount = platformSol;
       let partnerAmount = 0;
 
-      if (isAgentToken) {
-        // Agent tokens: 30% creator / 30% agent trading / 40% system
-        const isTradingAgent = !!group.tradingAgentId;
-        recipientAmount = claimedSol * AGENT_TRADING_FEE_SHARE; // 30% to agent/trading wallet
-        platformAmount = claimedSol * AGENT_PLATFORM_FEE_SHARE; // 40% to platform
-        // Creator 30% is handled separately below (held if no wallet linked yet)
-        const creatorAmount = claimedSol * AGENT_CREATOR_FEE_SHARE; // 30% to X creator
-        
-        // Partner split from platform share
-        if (isTokenEligibleForPartnerSplit(token.created_at)) {
-          partnerAmount = platformAmount * 0.5;
-          platformAmount = platformAmount * 0.5;
-        }
-        
-        // Store creator amount for later distribution
-        (group as any)._creatorAmount = creatorAmount;
-        
-        console.log(
-          `[fun-distribute] ${isTradingAgent ? 'Trading' : 'Standard'} Agent Token ${token.ticker}: ${claimedSol} SOL → Agent 30% (${recipientAmount.toFixed(6)}), Creator 30% (${creatorAmount.toFixed(6)}), Platform 40% (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-        );
-      } else if (isApiToken) {
-        // API tokens: 50/50 split between API user and platform
-        recipientAmount = claimedSol * API_USER_FEE_SHARE;
-        platformAmount = claimedSol * API_PLATFORM_FEE_SHARE;
-        
-        // Partner split from platform share
-        if (isTokenEligibleForPartnerSplit(token.created_at)) {
-          partnerAmount = platformAmount * 0.5;
-          platformAmount = platformAmount * 0.5;
-        }
-        
-        console.log(
-          `[fun-distribute] API Token ${token.ticker}: ${claimedSol} SOL → API User ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-        );
-      } else {
-        // Check if this is a punch token (70/30 split)
-        const isPunchToken = token.launchpad_type === 'punch';
-        
-        if (isPunchToken) {
-          // Punch tokens: 70% creator, 30% platform
-          const PUNCH_CREATOR_FEE_SHARE = 0.7;
-          const PUNCH_SYSTEM_FEE_SHARE = 0.3;
-          recipientAmount = claimedSol * PUNCH_CREATOR_FEE_SHARE;
-          platformAmount = claimedSol * PUNCH_SYSTEM_FEE_SHARE;
-          
-          // Partner split from platform share if eligible
-          if (isTokenEligibleForPartnerSplit(token.created_at)) {
-            partnerAmount = platformAmount * 0.5;
-            platformAmount = platformAmount * 0.5;
-          }
-          
-          console.log(
-            `[fun-distribute] Punch Token ${token.ticker}: ${claimedSol} SOL → Creator 70% (${recipientAmount.toFixed(6)}), Platform 30% (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-          );
-        } else {
-          // Regular/Phantom tokens
-          const isPhantom = token.launchpad_type === 'phantom';
-          
-          // Phantom tokens with stored fee breakdown: use creator_fee_bps / trading_fee_bps ratio
-          if (isPhantom && token.trading_fee_bps && token.creator_fee_bps != null) {
-            const creatorShare = token.creator_fee_bps / token.trading_fee_bps;
-            const platformShare = 1 - creatorShare;
-            recipientAmount = claimedSol * creatorShare;
-            platformAmount = claimedSol * platformShare;
-            
-            console.log(
-              `[fun-distribute] Phantom Token ${token.ticker}: ${claimedSol} SOL → Creator ${(creatorShare * 100).toFixed(1)}% (${recipientAmount.toFixed(6)}), Platform ${(platformShare * 100).toFixed(1)}% (${platformAmount.toFixed(6)}) [${token.creator_fee_bps}/${token.trading_fee_bps} bps]`
-            );
-          } else {
-            // Legacy regular tokens: creator gets 50%, rest for buyback/system
-            recipientAmount = claimedSol * CREATOR_FEE_SHARE;
-            platformAmount = claimedSol * (BUYBACK_FEE_SHARE + SYSTEM_FEE_SHARE);
-            
-            // Partner split from platform share - EXCLUDE Phantom mode tokens
-            if (!isPhantom && isTokenEligibleForPartnerSplit(token.created_at)) {
-              partnerAmount = platformAmount * 0.5;
-              platformAmount = platformAmount * 0.5;
-            }
-            
-            console.log(
-              `[fun-distribute] ${isPhantom ? 'Phantom (legacy)' : 'Regular'} Token ${token.ticker}: ${claimedSol} SOL → Creator ${recipientAmount.toFixed(6)}, Platform ${platformAmount.toFixed(6)}${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''}`
-            );
-          }
-        }
+      // Partner split from platform share
+      if (isTokenEligibleForPartnerSplit(token.created_at)) {
+        partnerAmount = platformAmount * 0.5;
+        platformAmount = platformAmount * 0.5;
       }
+
+      const creatorPct = token.trading_fee_bps ? ((token.creator_fee_bps || 0) / token.trading_fee_bps * 100).toFixed(1) : '0';
+      console.log(
+        `[fun-distribute] ${isAgentToken ? 'Agent' : isApiToken ? 'API' : token.launchpad_type === 'punch' ? 'Punch' : 'Regular'} Token ${token.ticker}: ${claimedSol.toFixed(6)} SOL → Creator ${creatorPct}% (${recipientAmount.toFixed(6)}), Platform (${platformAmount.toFixed(6)})${partnerAmount > 0 ? `, Partner ${partnerAmount.toFixed(6)}` : ''} [${token.creator_fee_bps || 0}/${token.trading_fee_bps || 0} bps]`
+      );
 
       // Send partner fee if applicable
       if (partnerAmount > 0) {
