@@ -34,8 +34,19 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errText = await resp.text();
       console.error('RugCheck API error:', resp.status, errText);
-      return new Response(JSON.stringify({ error: 'RugCheck API error', status: resp.status }), {
-        status: 502,
+      // Return a safe default instead of 502 so the UI doesn't break
+      const fallback = {
+        mintAuthorityRevoked: false,
+        freezeAuthorityRevoked: false,
+        liquidityLocked: false,
+        liquidityLockedPct: 0,
+        topHolderPct: 0,
+        riskLevel: 'unknown',
+        riskScore: 0,
+        warnings: ['RugCheck data unavailable for this token'],
+      };
+      cache.set(mintAddress, { data: fallback, ts: Date.now() });
+      return new Response(JSON.stringify(fallback), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
