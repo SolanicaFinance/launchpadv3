@@ -268,7 +268,7 @@ serve(async (req) => {
           trader_display_name: traderDisplayName,
           trader_avatar_url: traderAvatarUrl,
           chain: 'solana',
-        });
+        }, { onConflict: "tx_hash" });
       } catch (alphaErr) {
         console.warn("[launchpad-swap] alpha_trades insert failed (non-fatal):", alphaErr);
       }
