@@ -147,7 +147,7 @@ serve(async (req) => {
 
           // Record fee claim in fun_fee_claims table
           if (claimedSol > 0 && signature) {
-            const { error: insertError } = await supabase
+            const { data: insertedClaim, error: insertError } = await supabase
               .from("fun_fee_claims")
               .insert({
                 fun_token_id: token.id,
@@ -155,10 +155,39 @@ serve(async (req) => {
                 claimed_sol: claimedSol,
                 signature,
                 claimed_at: new Date().toISOString(),
-              });
+              })
+              .select("id")
+              .single();
 
             if (insertError) {
               console.error(`[fun-claim-fees] Failed to record claim for ${token.ticker}:`, insertError);
+            }
+
+            // Insert into creator_fee_ledger for deterministic fee tracking
+            const creatorFeeBps = token.creator_fee_bps || 0;
+            const tradingFeeBps = token.trading_fee_bps || 200;
+            const creatorRatio = tradingFeeBps > 0 ? creatorFeeBps / tradingFeeBps : 0;
+            const creatorShareSol = Math.floor(claimedSol * creatorRatio * 1e9) / 1e9;
+            const platformShareSol = claimedSol - creatorShareSol;
+
+            const { error: ledgerError } = await supabase
+              .from("creator_fee_ledger")
+              .insert({
+                fun_token_id: token.id,
+                fee_claim_id: insertedClaim?.id || null,
+                fee_claim_table: "fun_fee_claims",
+                total_claimed_sol: claimedSol,
+                creator_share_sol: creatorShareSol,
+                platform_share_sol: platformShareSol,
+                creator_fee_bps: creatorFeeBps,
+                trading_fee_bps: tradingFeeBps,
+                status: "pending",
+              });
+
+            if (ledgerError) {
+              console.error(`[fun-claim-fees] Failed to record ledger for ${token.ticker}:`, ledgerError);
+            } else {
+              console.log(`[fun-claim-fees] 📝 Ledger: ${token.ticker} - creator ${creatorShareSol.toFixed(6)} SOL (${creatorFeeBps}/${tradingFeeBps} bps), platform ${platformShareSol.toFixed(6)} SOL`);
             }
 
             // Update token with total fees earned

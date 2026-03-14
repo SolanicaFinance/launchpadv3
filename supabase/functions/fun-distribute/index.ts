@@ -987,9 +987,12 @@ serve(async (req) => {
           continue;
         }
 
-        // Pump.fun tokens use 80/20 split (creator/platform)
-        const creatorAmount = claimedSol * 0.8;
-        let platformAmount = claimedSol * 0.2;
+        // Pump.fun tokens: use bps if available, fallback to 80/20
+        const pumpCreatorBps = token.creator_fee_bps || 800;
+        const pumpTradingBps = token.trading_fee_bps || 1000;
+        const { creatorSol: pumpCreatorSol, platformSol: pumpPlatformSol } = calculateCreatorShare(claimedSol, pumpCreatorBps, pumpTradingBps);
+        const creatorAmount = pumpCreatorSol;
+        let platformAmount = pumpPlatformSol;
         let partnerAmount = 0;
         
         // Partner split from platform share

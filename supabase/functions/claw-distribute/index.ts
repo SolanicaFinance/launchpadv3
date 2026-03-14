@@ -109,8 +109,7 @@ serve(async (req) => {
     let successCount = 0;
 
     for (const group of groups.values()) {
-      const feeShare = group.isTradingAgent ? TRADING_AGENT_FEE_SHARE : AGENT_FEE_SHARE;
-      const recipientAmount = group.claimedSol * feeShare;
+      const { creatorSol: recipientAmount } = calculateCreatorShare(group.claimedSol, group.token.creator_fee_bps, group.token.trading_fee_bps);
 
       if (recipientAmount < MIN_DISTRIBUTION_SOL) {
         // Mark as distributed but skip payment
