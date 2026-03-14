@@ -11,6 +11,7 @@ import { Wallet, Ghost, LogOut, Copy, Check, ExternalLink, Terminal } from "luci
 import saturnLogo from "@/assets/saturn-logo.png";
 import { copyToClipboard } from "@/lib/clipboard";
 import { BRAND } from "@/config/branding";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 
 const PanelUnifiedDashboard = lazy(() => import("@/components/panel/PanelUnifiedDashboard"));
 const PanelPhantomTab = lazy(() => import("@/components/panel/PanelPhantomTab"));

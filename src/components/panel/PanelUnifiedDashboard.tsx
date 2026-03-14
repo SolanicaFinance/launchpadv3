@@ -211,7 +211,7 @@ export default function PanelUnifiedDashboard() {
 
   const isBnb = chain === 'bnb';
   const isSolana = chain === 'solana';
-  const activeAddress = isBnb ? evmAddress : solanaAddress;
+  const activeAddress = isBnb ? evmAddress : (solWalletAddress || solanaAddress);
   const walletAddr = isSolana ? solWalletAddress : evmAddress;
   const currencySymbol = chainConfig.nativeCurrency.symbol;
   const explorerUrl = chainConfig.explorerUrl;
