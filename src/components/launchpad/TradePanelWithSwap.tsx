@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRealSwap } from "@/hooks/useRealSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
 
 interface TradePanelWithSwapProps {
   token: Token;
