@@ -1,8 +1,12 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const SOLANA_NETWORK_ID = 1399811149;
 export const BSC_NETWORK_ID = 56;
+
+const NEW_PAIRS_MAX_AGE_HOURS = 24;
+const NEW_PAIRS_MAX_AGE_MS = NEW_PAIRS_MAX_AGE_HOURS * 60 * 60 * 1000;
 
 export interface CodexPairToken {
   address: string | null;
@@ -28,6 +32,22 @@ export interface CodexPairToken {
   telegramUrl: string | null;
   discordUrl: string | null;
   launchpadIconUrl: string | null;
+}
+
+function toTimestampMs(raw: string | number | null): number | null {
+  if (raw == null) return null;
+
+  if (typeof raw === "number") {
+    return raw < 1e12 ? raw * 1000 : raw;
+  }
+
+  const asNumber = Number(raw);
+  if (!Number.isNaN(asNumber)) {
+    return asNumber < 1e12 ? asNumber * 1000 : asNumber;
+  }
+
+  const parsed = new Date(raw).getTime();
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 async function fetchCodexTokens(column: "new" | "completing" | "completed", limit = 50, networkId = SOLANA_NETWORK_ID): Promise<CodexPairToken[]> {
@@ -65,11 +85,25 @@ export function useCodexNewPairs(networkId: number = SOLANA_NETWORK_ID) {
     staleTime: 15_000,
   });
 
+  const recentNewPairs = useMemo(() => {
+    const now = Date.now();
+
+    return (newPairsQuery.data ?? [])
+      .filter((token) => {
+        const createdMs = toTimestampMs(token.createdAt);
+        if (createdMs == null) return false;
+        const ageMs = now - createdMs;
+        return ageMs >= 0 && ageMs <= NEW_PAIRS_MAX_AGE_MS;
+      })
+      .sort((a, b) => (toTimestampMs(b.createdAt) ?? 0) - (toTimestampMs(a.createdAt) ?? 0));
+  }, [newPairsQuery.data]);
+
   return {
-    newPairs: newPairsQuery.data ?? [],
+    newPairs: recentNewPairs,
     completing: completingQuery.data ?? [],
     graduated: completedQuery.data ?? [],
     isLoading: newPairsQuery.isLoading || completingQuery.isLoading || completedQuery.isLoading,
     error: newPairsQuery.error || completingQuery.error || completedQuery.error,
   };
 }
+
