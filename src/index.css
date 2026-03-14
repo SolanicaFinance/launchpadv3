@@ -938,12 +938,12 @@
 }
 
 .trade-tab-active {
-  background: linear-gradient(180deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--primary) / 0.06) 100%);
-  color: hsl(var(--primary));
-  font-weight: 700;
+  background: hsl(222 20% 14% / 0.6);
+  color: hsl(var(--foreground));
+  font-weight: 600;
   border-bottom: 2px solid hsl(var(--primary));
-  box-shadow: 0 2px 20px hsl(var(--primary) / 0.25), inset 0 -1px 0 hsl(var(--primary) / 0.12);
-  text-shadow: 0 0 12px hsl(var(--primary) / 0.3);
+  box-shadow: none;
+  text-shadow: none;
 }
 
 .trade-detail-row {
