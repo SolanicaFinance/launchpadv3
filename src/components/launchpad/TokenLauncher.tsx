@@ -2184,6 +2184,9 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     <span>0.1%</span>
                     <span>10%</span>
                   </div>
+                  <div className="text-[10px] text-white/30 text-center">
+                    Total on-chain fee: <span className="text-white/50 font-medium">{((phantomTradingFee + 100) / 100).toFixed(1)}%</span> <span className="text-white/20">(incl. 1% platform)</span>
+                  </div>
 
                   {phantomTradingFee >= 600 && (
                     <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 phantom-warning-card">
