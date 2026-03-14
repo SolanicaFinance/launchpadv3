@@ -125,6 +125,7 @@ export function useFastSwap() {
     amount: number,
     isBuy: boolean,
     slippageBps: number = 500,
+    tokenDecimals?: number,
   ): Promise<FastSwapResult> => {
     if (!walletAddress) throw new Error('Wallet not connected');
     if (!token.dbc_pool_address) throw new Error('Token has no DBC pool address');
@@ -138,9 +139,22 @@ export function useFastSwap() {
     const poolAddress = new PublicKey(token.dbc_pool_address);
     const ownerPubkey = new PublicKey(walletAddress);
 
+    // Resolve decimals dynamically for sells
+    let resolvedDecimals = tokenDecimals ?? DEFAULT_TOKEN_DECIMALS;
+    if (!isBuy && !tokenDecimals) {
+      // Fetch real decimals from on-chain token account
+      try {
+        const raw = await getTokenBalanceRaw(token.mint_address);
+        resolvedDecimals = raw.decimals;
+        console.log(`[FastSwap] Resolved token decimals from chain: ${resolvedDecimals}`);
+      } catch (e) {
+        console.warn('[FastSwap] Failed to resolve decimals, using default:', DEFAULT_TOKEN_DECIMALS);
+      }
+    }
+
     const amountIn = isBuy
       ? new BN(Math.floor(amount * 10 ** SOL_DECIMALS))
-      : new BN(Math.floor(amount * 10 ** TOKEN_DECIMALS));
+      : new BN(Math.floor(amount * 10 ** resolvedDecimals));
 
     const minimumAmountOut = new BN(0);
 
