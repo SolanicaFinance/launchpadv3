@@ -844,19 +844,19 @@ export default function FunTokenDetailPage() {
 
           {/* ──── BONDING PROGRESS ──── */}
           {isBonding && (
-            <div className="trade-glass-panel-glow flex items-center gap-3 px-4 py-3 md:py-2.5 lg:py-2">
-              <Zap className="h-4 w-4 md:h-3.5 md:w-3.5 lg:h-3 lg:w-3 text-primary shrink-0" />
-              <span className="text-[10px] md:text-[9px] font-mono text-muted-foreground/70 uppercase tracking-wider shrink-0">Bonding</span>
+            <div className="trade-glass-panel-glow flex items-center gap-2.5 px-3 py-2 md:py-2 lg:py-2">
+              <Zap className="h-3.5 w-3.5 md:h-3.5 md:w-3.5 lg:h-3 lg:w-3 text-primary shrink-0" />
+              <span className="text-[9px] md:text-[9px] font-mono text-muted-foreground/70 uppercase tracking-wider shrink-0">Bonding</span>
               <div className="flex-1 min-w-[80px]">
                 <div className="trade-bonding-bar">
                   <div className="trade-bonding-fill" style={{ width: `${Math.max(Math.min(bondingProgress, 100), 1)}%` }} />
                 </div>
               </div>
-              <span className="text-xs md:text-[11px] lg:text-[10px] font-mono font-bold text-primary shrink-0 hidden md:inline">{bondingProgress.toFixed(1)}%</span>
-              <span className="text-xs md:text-[10px] lg:text-[9px] font-mono text-muted-foreground/60 shrink-0">{realSolReserves.toFixed(1)}/{GRADUATION_THRESHOLD} SOL</span>
+              <span className="text-[11px] md:text-[11px] lg:text-[10px] font-mono font-bold text-primary shrink-0 hidden md:inline">{bondingProgress.toFixed(1)}%</span>
+              <span className="text-[10px] md:text-[10px] lg:text-[9px] font-mono text-muted-foreground/60 shrink-0">{realSolReserves.toFixed(1)}/{GRADUATION_THRESHOLD} SOL</span>
               {livePoolState && (
-                <span className="flex items-center gap-1 text-[10px] md:text-[9px] lg:text-[8px] font-mono text-red-400 shrink-0">
-                  <span className="h-2 w-2 md:h-1.5 md:w-1.5 lg:h-1 lg:w-1 rounded-full bg-red-400 animate-pulse" />LIVE
+                <span className="flex items-center gap-1 text-[9px] md:text-[9px] lg:text-[8px] font-mono text-red-400 shrink-0">
+                  <span className="h-1.5 w-1.5 md:h-1.5 md:w-1.5 lg:h-1 lg:w-1 rounded-full bg-red-400 animate-pulse" />LIVE
                 </span>
               )}
             </div>
