@@ -431,6 +431,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       toast({ title: "No meme to launch", description: "Click Randomize first", variant: "destructive" });
       return;
     }
+    if (!meme.name.trim() || !meme.ticker.trim()) {
+      toast({ title: "Name & ticker required", description: "Enter your own token name and ticker before launching", variant: "destructive" });
+      return;
+    }
     await performLaunch(meme);
   }, [meme, performLaunch, toast]);
 
