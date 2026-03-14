@@ -222,8 +222,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
                          cursor-pointer flex-shrink-0"
             >
               <img src={saturnLogo} alt="" className="h-4 w-4 rounded-sm" />
-              <span className="sm:hidden">Launch App</span>
-              <span className="hidden sm:inline">Panel</span>
+              <span>Launch App</span>
             </button>
 
             <Link
