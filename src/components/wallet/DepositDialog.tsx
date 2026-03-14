@@ -16,7 +16,7 @@ interface DepositDialogProps {
 
 import { fetchBnbBalance } from "@/lib/bscRpc";
 
-export function DepositDialog({ open, onOpenChange, address, chain, getBalance }: DepositDialogProps) {
+export function DepositDialog({ open, onOpenChange, address, chain, getBalance, onDepositDetected }: DepositDialogProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [depositDetected, setDepositDetected] = useState(false);
