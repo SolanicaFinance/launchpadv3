@@ -78,26 +78,54 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
   }, [isAuthenticated, solanaAddress, getBalance, isLoading]);
 
   // Fetch on-chain SPL token balance
-  useEffect(() => {
-    if (!isAuthenticated || !solanaAddress || !token.mint_address) {
+  // Use embedded wallet address (actual signer) for balance reads
+  const { walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy } = useSolanaWalletWithPrivy();
+  const effectiveWallet = embeddedWallet || solanaAddress;
+
+  const refreshTokenBalance = useCallback(async () => {
+    if (!isAuthenticated || !effectiveWallet || !token.mint_address) {
       setOnChainTokenBalance(null);
       return;
     }
-    const fetchTokenBal = async () => {
-      try {
-        const connection = new Connection(HELIUS_RPC);
-        const owner = new PublicKey(solanaAddress);
-        const mint = new PublicKey(token.mint_address);
-        const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
-        const account = resp.value[0];
-        const bal = account?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
-        setOnChainTokenBalance(bal);
-      } catch {
-        setOnChainTokenBalance(0);
-      }
+    try {
+      const connection = new Connection(HELIUS_RPC);
+      const owner = new PublicKey(effectiveWallet);
+      const mint = new PublicKey(token.mint_address);
+      const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+      // Sum ALL token accounts for this mint
+      const bal = resp.value.reduce((sum, acc) => {
+        const ta = acc.account?.data?.parsed?.info?.tokenAmount;
+        const v = typeof ta?.uiAmount === 'number' ? ta.uiAmount : (ta?.uiAmountString ? parseFloat(ta.uiAmountString) : 0);
+        return sum + (isFinite(v) ? v : 0);
+      }, 0);
+      setOnChainTokenBalance(bal);
+    } catch {
+      // Keep previous value on transient errors
+    }
+  }, [isAuthenticated, effectiveWallet, token.mint_address]);
+
+  // Initial fetch + refresh on trade completion
+  useEffect(() => {
+    void refreshTokenBalance();
+  }, [refreshTokenBalance, isLoading]);
+
+  // Continuous polling every 3s + focus/visibility refresh
+  useEffect(() => {
+    if (!isAuthenticated || !effectiveWallet || !token.mint_address) return;
+
+    const interval = window.setInterval(() => void refreshTokenBalance(), 3000);
+    const onFocus = () => void refreshTokenBalance();
+    const onVisibility = () => { if (document.visibilityState === 'visible') void refreshTokenBalance(); };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
-    fetchTokenBal();
-  }, [isAuthenticated, solanaAddress, token.mint_address, isLoading]);
+  }, [isAuthenticated, effectiveWallet, token.mint_address, refreshTokenBalance]);
 
   // Fetch Jupiter quotes for graduated tokens
   useEffect(() => {

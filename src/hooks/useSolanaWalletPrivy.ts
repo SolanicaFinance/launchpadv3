@@ -182,8 +182,11 @@ export function useSolanaWalletWithPrivy() {
 
       // Sum all token accounts for this mint (ATA + auxiliary accounts)
       const balance = accounts.value.reduce((sum, account) => {
-        const uiAmount = (account.account.data as any)?.parsed?.info?.tokenAmount?.uiAmount;
-        return sum + (typeof uiAmount === "number" ? uiAmount : 0);
+        const tokenAmount = (account.account.data as any)?.parsed?.info?.tokenAmount;
+        const uiAmount = tokenAmount?.uiAmount;
+        const uiAmountStr = tokenAmount?.uiAmountString;
+        const val = typeof uiAmount === "number" ? uiAmount : (uiAmountStr ? parseFloat(uiAmountStr) : 0);
+        return sum + (isFinite(val) ? val : 0);
       }, 0);
 
       console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… on-chain (summed): ${balance}`);

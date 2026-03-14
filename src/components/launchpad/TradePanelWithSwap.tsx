@@ -51,23 +51,27 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
   }, [isAuthenticated, solanaAddress, getBalance, isLoading]);
 
   // Fetch and keep refreshing real on-chain token balance for sells
+  // Use embedded wallet address (actual signer) for balance reads
+  const { walletAddress: embeddedWallet } = useSolanaWalletWithPrivy();
+  const effectiveWallet = embeddedWallet || solanaAddress;
+
   const refreshTokenBalance = useCallback(async () => {
-    if (!isAuthenticated || !solanaAddress || !token.mint_address) return;
+    if (!isAuthenticated || !effectiveWallet || !token.mint_address) return;
     try {
       const bal = await getTokenBalance(token.mint_address);
-      console.log(`[TradePanelWithSwap] On-chain token balance: ${bal}`);
+      console.log(`[TradePanelWithSwap] On-chain token balance (wallet=${effectiveWallet?.slice(0,8)}): ${bal}`);
       setOnChainTokenBalance(bal);
     } catch {
       // Keep previous known value on transient RPC errors
     }
-  }, [isAuthenticated, solanaAddress, token.mint_address, getTokenBalance]);
+  }, [isAuthenticated, effectiveWallet, token.mint_address, getTokenBalance]);
 
   useEffect(() => {
     void refreshTokenBalance();
   }, [refreshTokenBalance, isLoading, tradeType]);
 
   useEffect(() => {
-    if (!isAuthenticated || !solanaAddress || !token.mint_address) return;
+    if (!isAuthenticated || !effectiveWallet || !token.mint_address) return;
 
     const interval = window.setInterval(() => {
       void refreshTokenBalance();
@@ -76,14 +80,19 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
     const onFocus = () => {
       void refreshTokenBalance();
     };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshTokenBalance();
+    };
 
     window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [isAuthenticated, solanaAddress, token.mint_address, refreshTokenBalance]);
+  }, [isAuthenticated, effectiveWallet, token.mint_address, refreshTokenBalance]);
 
   const virtualSol = (token.virtual_sol_reserves || 30) + (token.real_sol_reserves || 0);
   const virtualToken = (token.virtual_token_reserves || 1_000_000_000) - (token.real_token_reserves || 0);
