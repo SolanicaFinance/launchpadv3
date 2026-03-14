@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getRpcUrl } from '@/hooks/useSolanaWallet';
 import { startBlockhashPoller, getCachedBlockhash } from '@/lib/blockhashCache';
 import { sendRawToAllEndpoints } from '@/lib/jitoBundle';
+import { recordAlphaTrade } from '@/lib/recordAlphaTrade';
 import type { Token } from '@/hooks/useLaunchpad';
 import { useQueryClient } from '@tanstack/react-query';
 
