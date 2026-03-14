@@ -523,14 +523,9 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || "Generation failed");
       if (data?.meme) {
-        setRealisticToken(data.meme);
-        setBannerTextName(data.meme.name);
-        setBannerTextTicker(data.meme.ticker);
+        setRealisticToken({ ...data.meme, name: "", ticker: "" });
         setBannerImageUrl(data.meme.imageUrl);
-        if (data.meme.imageUrl) {
-          await generateBanner({ imageUrl: data.meme.imageUrl, tokenName: data.meme.name, ticker: data.meme.ticker });
-        }
-        toast({ title: "Realistic Image Generated! 📸", description: `${data.meme.name} ($${data.meme.ticker}) created!` });
+        toast({ title: "Realistic Image Generated! 📸", description: "Image ready — enter your token name & ticker!" });
       }
     } catch (error) {
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
