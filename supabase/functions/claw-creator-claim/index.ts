@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
     }
 
     // Calculate claimable
-    const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds);
+    const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
 
     console.log(`[saturn-creator-claim] @${normalizedUsername}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
 
