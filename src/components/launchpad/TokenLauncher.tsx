@@ -949,9 +949,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
         imageUrl,
         onChainSuccess: true,
         solscanUrl: lastSig ? `https://solscan.io/tx/${lastSig}` : undefined,
-        tradeUrl: data.dbcPoolAddress 
-          ? `https://axiom.trade/meme/${data.dbcPoolAddress}` 
-          : (data.mintAddress ? `https://jup.ag/swap/SOL-${data.mintAddress}` : undefined),
+        tradeUrl: data.mintAddress ? `/trade/${data.mintAddress}` : undefined,
         message: "Holder Rewards Token launched successfully!",
       });
 
