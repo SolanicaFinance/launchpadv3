@@ -26,10 +26,17 @@ export interface UseAuthReturn {
   logout: () => Promise<void>;
 }
 
-// Real auth using Privy
-function useAuthPrivy(): UseAuthReturn {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+// Real auth using Privy — always called (hooks cannot be conditional)
+function useAuthPrivy(privyAvailable: boolean): UseAuthReturn {
+  const privy = usePrivy();
   const { wallets } = useWallets();
+
+  const ready = privyAvailable ? privy.ready : true;
+  const authenticated = privyAvailable ? privy.authenticated : false;
+  const user = privyAvailable ? privy.user : null;
+  const login = privyAvailable ? privy.login : () => console.warn("Privy not available");
+  const logout = privyAvailable ? privy.logout : async () => {};
+
   const [profileId, setProfileId] = useState<string | null>(null);
 
   // Convert Privy DID to deterministic UUID (must match server-side sync-privy-user)
