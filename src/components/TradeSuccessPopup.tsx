@@ -10,8 +10,11 @@ import {
   TrendingDown,
   Coins,
   ImagePlus,
+  BarChart3,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTradeSuccessStore } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 
