@@ -38,7 +38,21 @@ export function AddKolDialog() {
       });
 
       if (error) {
-        setResult({ error: "Failed to check user. Please try again." });
+        // supabase.functions.invoke treats non-2xx as error, but the body still has useful info
+        // Try to parse the error context for a meaningful message
+        const errMsg = (error as any)?.context?.body 
+          ? await (error as any).context.json().catch(() => null)
+          : null;
+        if (errMsg?.error) {
+          setResult({ 
+            error: errMsg.error, 
+            follower_count: errMsg.follower_count,
+            display_name: errMsg.display_name,
+            profile_image_url: errMsg.profile_image_url,
+          });
+        } else {
+          setResult({ error: "Failed to check user. Please try again." });
+        }
       } else if (data?.error) {
         setResult(data as AddResult);
       } else if (data?.success) {
