@@ -12,7 +12,7 @@ import { SaturnForumSection } from "@/components/saturn/SaturnForumSection";
 import "@/styles/saturn-theme.css";
 import { MatrixContentCard } from "@/components/layout/MatrixContentCard";
 
-export default function MoonDexoModePage() {
+export default function SaturnModePage() {
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
     const original = link?.getAttribute("href");
