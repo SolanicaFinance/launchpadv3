@@ -41,7 +41,7 @@ export default function PanelPage() {
   }, []);
 
   const isBnb = chain === 'bnb';
-  const displayAddress = isBnb ? evmWallet.address : solanaAddress;
+  const displayAddress = isBnb ? evmWallet.address : (embeddedSolAddress || solanaAddress);
   const explorerUrl = isBnb
     ? `https://bscscan.com/address/${displayAddress}`
     : `https://solscan.io/account/${displayAddress}`;
