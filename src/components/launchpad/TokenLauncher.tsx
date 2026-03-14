@@ -539,6 +539,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       toast({ title: "No token generated", description: "Generate first", variant: "destructive" });
       return;
     }
+    if (!realisticToken.name.trim() || !realisticToken.ticker.trim()) {
+      toast({ title: "Name & ticker required", description: "Enter your own token name and ticker before launching", variant: "destructive" });
+      return;
+    }
     await performLaunch(realisticToken);
   }, [realisticToken, performLaunch, toast]);
 
