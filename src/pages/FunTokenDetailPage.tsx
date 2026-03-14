@@ -918,13 +918,12 @@ export default function FunTokenDetailPage() {
                 <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
               </>
             )}
-            {mobileTab === 'comments' && (
+            {mobileTab === 'info' && (
               <>
                 <TokenDetailsSection />
                 <ContractSection />
                 <DescriptionSection />
                 <PnlSimulator />
-                <CommentsSection />
               </>
             )}
           </div>
