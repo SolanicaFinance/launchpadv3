@@ -4,8 +4,18 @@ import { useChain } from "@/contexts/ChainContext";
 import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { useState, useMemo } from "react";
-import { timeAgo, formatTokenAmt, formatMcap } from "@/lib/tradeUtils";
+import { useState, useMemo, useEffect } from "react";
+import { formatTokenAmt, formatMcap } from "@/lib/tradeUtils";
+
+/** Live-updating time ago — re-renders driven by parent tick */
+function liveTimeAgo(dateStr: string, _tick: number) {
+  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (s < 0) return "now";
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
 
 function StatusPill({ status }: { status: PositionSummary["status"] }) {
   const c = {
