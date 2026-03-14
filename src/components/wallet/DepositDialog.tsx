@@ -126,7 +126,7 @@ export function DepositDialog({ open, onOpenChange, address, chain, getBalance, 
           >
             <span className="text-xs font-mono text-foreground truncate flex-1 text-left">{address}</span>
             {copied ? (
-              <Check className="w-4 h-4 text-green-400 shrink-0" />
+              <Check className="w-4 h-4 text-success shrink-0" />
             ) : (
               <Copy className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
             )}
