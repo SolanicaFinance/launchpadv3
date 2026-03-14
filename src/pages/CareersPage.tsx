@@ -373,7 +373,7 @@ export default function CareersPage() {
       {/* Why Join Section */}
       <section className="px-4 pb-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">Why Join MoonDexo?</h2>
+          <h2 className="text-3xl font-bold mb-8">Why Join {BRAND.name}?</h2>
           <div className="grid sm:grid-cols-3 gap-6">
             <Card className="bg-card/50 border-border">
               <CardContent className="p-6 text-center">
