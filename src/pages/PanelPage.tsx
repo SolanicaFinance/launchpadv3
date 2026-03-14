@@ -25,7 +25,7 @@ function TabLoader() {
 }
 
 export default function PanelPage() {
-  const { isAuthenticated, login, logout, user, solanaAddress } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, login, logout, user, solanaAddress } = useAuth();
   const { isAdmin } = useIsAdmin(solanaAddress);
   const { chain, chainConfig } = useChain();
   const evmWallet = useEvmWallet();
