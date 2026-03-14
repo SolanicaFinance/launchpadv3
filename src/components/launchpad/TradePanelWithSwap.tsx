@@ -381,9 +381,9 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
 
         {/* Input Field */}
         <div>
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              {isBuy ? 'Amount to buy' : `Amount of ${token.ticker} to sell`}
+          <div className="flex justify-between items-center mb-1.5 gap-2 min-w-0">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground truncate shrink min-w-0">
+              {isBuy ? 'Amount to buy' : `Sell ${token.ticker}`}
             </span>
             <span className="text-[10px] font-mono text-muted-foreground">
               Bal: {isBuy
