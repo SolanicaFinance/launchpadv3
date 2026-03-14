@@ -2635,7 +2635,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
               </div>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/30">Launch Fee</span>
+                  <span className="text-white/30">Fee</span>
                   <span className="font-bold font-mono text-primary">~0.02 SOL</span>
                 </div>
                 <div className="h-px bg-white/[0.04]" />
