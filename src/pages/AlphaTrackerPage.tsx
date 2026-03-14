@@ -141,8 +141,8 @@ export default function AlphaTrackerPage() {
         )}
 
         {/* Table Header */}
-        <div className="grid grid-cols-[32px_1fr_60px_70px_72px_80px_64px_56px_60px] gap-1.5 px-4 py-1.5 border-b border-border/20 text-[8px] text-muted-foreground/50 uppercase tracking-widest font-medium sticky top-0 z-20 bg-background">
-          <span></span>
+        <div className="grid grid-cols-[1fr_1fr_60px_70px_72px_80px_64px_56px_60px] gap-1.5 px-4 py-1.5 border-b border-border/20 text-[8px] text-muted-foreground/50 uppercase tracking-widest font-medium sticky top-0 z-20 bg-background">
+          <span>Token</span>
           <span>Trader</span>
           <span>Type</span>
           <span className="text-right">Amount</span>
@@ -178,37 +178,44 @@ export default function AlphaTrackerPage() {
               return (
                 <div
                   key={trade.id}
-                  className="grid grid-cols-[32px_1fr_60px_70px_72px_80px_64px_56px_60px] gap-1.5 px-4 py-1.5 items-center hover:bg-muted/20 transition-colors group"
+                  className="grid grid-cols-[1fr_1fr_60px_70px_72px_80px_64px_56px_60px] gap-1.5 px-4 py-1.5 items-center hover:bg-muted/20 transition-colors group"
                 >
-                  {/* Token Logo */}
-                  <div className="h-6 w-6 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
-                    {trade.token_image_url ? (
-                      <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-[7px] font-bold text-muted-foreground">
-                        {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                  {/* Token: icon + ticker */}
+                  <div className="min-w-0 flex items-center gap-1.5">
+                    <div className="h-6 w-6 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {trade.token_image_url ? (
+                        <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[7px] font-bold text-muted-foreground">
+                          {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <Link
+                      to={`/trade/${trade.token_mint}`}
+                      className="text-[10px] font-semibold text-primary/90 hover:text-primary hover:underline leading-none truncate font-mono"
+                    >
+                      ${trade.token_ticker || trade.token_mint?.slice(0, 6)}
+                    </Link>
                   </div>
 
-                  {/* Trader + Token */}
+                  {/* Trader: avatar + name/address */}
                   <div className="min-w-0 flex items-center gap-1.5">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <Link
-                          to={`/profile/${trade.wallet_address}`}
-                          className="text-[10px] font-semibold text-foreground truncate leading-none hover:text-primary hover:underline transition-colors"
-                        >
-                          {trade.trader_display_name || `${trade.wallet_address.slice(0, 4)}..${trade.wallet_address.slice(-3)}`}
-                        </Link>
-                      </div>
-                      <Link
-                        to={`/trade/${trade.token_mint}`}
-                        className="text-[9px] font-mono text-primary/80 hover:text-primary hover:underline leading-none"
-                      >
-                        ${trade.token_ticker || trade.token_mint?.slice(0, 6)}
-                      </Link>
+                    <div className="h-5 w-5 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {trade.trader_avatar_url ? (
+                        <img src={trade.trader_avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[7px] font-bold text-muted-foreground">
+                          {(trade.trader_display_name || trade.wallet_address).slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
                     </div>
+                    <Link
+                      to={`/profile/${trade.wallet_address}`}
+                      className="text-[10px] font-medium text-foreground/80 truncate leading-none hover:text-primary hover:underline transition-colors"
+                    >
+                      {trade.trader_display_name || trade.wallet_address.slice(0, 5)}
+                    </Link>
                   </div>
 
                   {/* Type Badge */}
