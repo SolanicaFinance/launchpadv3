@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealSwap } from "@/hooks/useRealSwap";
@@ -8,7 +7,7 @@ import { usePumpFunSwap } from "@/hooks/usePumpFunSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wallet, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2 } from "lucide-react";
 import { AdvancedSettingsSheet } from "./AdvancedSettingsSheet";
 import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
 import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
@@ -19,9 +18,7 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 const SOL_LOGO = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png";
 
 interface MobileTradePanelV2Props {
-  /** For bonding curve tokens — full Token object */
   bondingToken?: Token;
-  /** For graduated/external tokens — lightweight info */
   externalToken?: {
     mint_address: string;
     ticker: string;
@@ -46,7 +43,6 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     return await signAndSendTransaction(tx);
   }, [signAndSendTransaction]);
 
-  // Determine mode
   const isBondingMode = !!bondingToken;
   const tokenInfo = bondingToken
     ? { mint_address: bondingToken.mint_address, ticker: bondingToken.ticker, name: bondingToken.name, decimals: 6, price_sol: bondingToken.price_sol, imageUrl: bondingToken.image_url || undefined }
@@ -73,8 +69,6 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
   const numericAmount = parseFloat(amount) || 0;
   const effectiveWallet = embeddedWallet || solanaAddress;
   const userTokenBalance = onChainTokenBalance ?? externalBalance;
-
-  // Jupiter routing for graduated tokens
   const useJupiterRoute = !isBondingMode && !jupiterQuoteFailed;
 
   // SOL balance
@@ -117,7 +111,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     return () => { window.clearInterval(interval); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
   }, [isAuthenticated, effectiveWallet, mintAddress, refreshTokenBalance]);
 
-  // Jupiter quotes for graduated tokens
+  // Jupiter quotes
   useEffect(() => {
     if (isBondingMode) { setQuote(null); return; }
     const fetchQuote = async () => {
@@ -141,13 +135,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     if (isBondingMode && bondingToken) {
       const virtualSol = (bondingToken.virtual_sol_reserves || 30) + (bondingToken.real_sol_reserves || 0);
       const virtualToken = (bondingToken.virtual_token_reserves || 1_000_000_000) - (bondingToken.real_token_reserves || 0);
-      if (isBuy) {
-        const q = calculateBuyQuote(numericAmount, virtualSol, virtualToken);
-        return q.tokensOut;
-      } else {
-        const q = calculateSellQuote(numericAmount, virtualSol, virtualToken);
-        return q.solOut;
-      }
+      return isBuy ? calculateBuyQuote(numericAmount, virtualSol, virtualToken).tokensOut : calculateSellQuote(numericAmount, virtualSol, virtualToken).solOut;
     }
     if (useJupiterRoute && quote) return parseInt(quote.outAmount) / 10 ** (isBuy ? tokenDecimals : 9);
     if (!useJupiterRoute && numericAmount > 0 && tokenInfo.price_sol && tokenInfo.price_sol > 0) {
@@ -160,11 +148,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     if (isBondingMode && bondingToken && numericAmount > 0) {
       const virtualSol = (bondingToken.virtual_sol_reserves || 30) + (bondingToken.real_sol_reserves || 0);
       const virtualToken = (bondingToken.virtual_token_reserves || 1_000_000_000) - (bondingToken.real_token_reserves || 0);
-      if (isBuy) {
-        return calculateBuyQuote(numericAmount, virtualSol, virtualToken).priceImpact;
-      } else {
-        return calculateSellQuote(numericAmount, virtualSol, virtualToken).priceImpact;
-      }
+      return isBuy ? calculateBuyQuote(numericAmount, virtualSol, virtualToken).priceImpact : calculateSellQuote(numericAmount, virtualSol, virtualToken).priceImpact;
     }
     return quote ? parseFloat(quote.priceImpactPct) : 0;
   })();
@@ -217,7 +201,6 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           resultOutputAmount = result.outputAmount;
         }
 
-        // Record in DB (non-fatal)
         if (signature) {
           supabase.functions.invoke("launchpad-swap", {
             body: { mintAddress, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature, outputAmount: resultOutputAmount ?? null, tokenName: tokenInfo.name, tokenTicker: tokenInfo.ticker, mode: "alpha_only" },
@@ -271,25 +254,26 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
   return (
     <>
-      <div className="flex flex-col gap-4">
-        {/* ── BUY / SELL Toggle ── */}
-        <div className="grid grid-cols-2 gap-2">
+      <div className="flex flex-col gap-2.5">
+        {/* ── Segmented BUY / SELL ── */}
+        <div className="flex h-9 rounded-lg bg-secondary/30 border border-border/30 p-0.5 relative">
+          <div
+            className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-md transition-all duration-200 ${
+              isBuy ? "left-0.5 bg-green-500/15 border border-green-500/30" : "left-[calc(50%+2px)] bg-destructive/15 border border-destructive/30"
+            }`}
+          />
           <button
             onClick={() => { setTradeType("buy"); setSelectedPreset(null); setQuote(null); }}
-            className={`h-14 rounded-2xl font-mono text-base font-bold uppercase tracking-widest transition-all active:scale-[0.97] ${
-              isBuy
-                ? "bg-green-500/15 text-green-400 border-2 border-green-500/40 shadow-[0_0_20px_hsl(142_70%_45%/0.15)]"
-                : "bg-secondary/50 text-muted-foreground border border-border/30 hover:bg-secondary/80"
+            className={`flex-1 relative z-10 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${
+              isBuy ? "text-green-400" : "text-muted-foreground"
             }`}
           >
             Buy
           </button>
           <button
             onClick={() => { setTradeType("sell"); setSelectedPreset(null); setQuote(null); }}
-            className={`h-14 rounded-2xl font-mono text-base font-bold uppercase tracking-widest transition-all active:scale-[0.97] ${
-              !isBuy
-                ? "bg-destructive/15 text-destructive border-2 border-destructive/40 shadow-[0_0_20px_hsl(0_62%_50%/0.15)]"
-                : "bg-secondary/50 text-muted-foreground border border-border/30 hover:bg-secondary/80"
+            className={`flex-1 relative z-10 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${
+              !isBuy ? "text-destructive" : "text-muted-foreground"
             }`}
           >
             Sell
@@ -297,72 +281,70 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Amount Input ── */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center px-1">
-            <span className="text-sm font-mono text-muted-foreground">
-              {isBuy ? "You pay" : `You sell`}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center px-0.5">
+            <span className="text-[11px] font-mono text-muted-foreground">
+              {isBuy ? "You pay" : "You sell"}
             </span>
-            <span className="text-sm font-mono text-muted-foreground">
+            <span className="text-[11px] font-mono text-muted-foreground">
               {isBuy
                 ? solBalance !== null ? `${solBalance.toFixed(4)} SOL` : "—"
                 : `${formatAmount(userTokenBalance)} ${tokenInfo.ticker}`}
             </span>
           </div>
           <div className="relative">
-            <Input
+            <input
               type="number"
               inputMode="decimal"
               placeholder="0.00"
               value={amount}
               onChange={(e) => { setAmount(e.target.value); setSelectedPreset(null); }}
-              className="h-16 text-2xl font-mono font-bold pr-28 rounded-2xl border-border/40 bg-secondary/30 focus-visible:ring-primary/30 placeholder:text-muted-foreground/20"
+              className="w-full h-10 text-sm font-mono font-bold pl-3 pr-24 rounded-lg border border-border/40 bg-secondary/30 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/30 transition-all"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               <button
                 onClick={handleMaxClick}
-                className="h-8 px-3 rounded-xl font-mono text-xs font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                className="h-6 px-2 rounded-md font-mono text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
               >
                 MAX
               </button>
-              <span className="text-sm font-mono font-bold text-muted-foreground flex items-center gap-1.5">
-                {isBuy ? (
-                  <img src={SOL_LOGO} alt="SOL" className="w-5 h-5 rounded-full" />
-                ) : tokenInfo.imageUrl ? (
-                  <img src={tokenInfo.imageUrl} alt={tokenInfo.ticker} className="w-5 h-5 rounded-full" />
-                ) : null}
-              </span>
+              {isBuy ? (
+                <img src={SOL_LOGO} alt="SOL" className="w-4 h-4 rounded-full" />
+              ) : tokenInfo.imageUrl ? (
+                <img src={tokenInfo.imageUrl} alt={tokenInfo.ticker} className="w-4 h-4 rounded-full" />
+              ) : null}
             </div>
           </div>
         </div>
 
         {/* ── Quick Amount Chips ── */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`flex-1 h-12 rounded-2xl font-mono text-sm font-bold border transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+              className={`flex-1 h-8 rounded-md font-mono text-[11px] font-semibold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
                 selectedPreset === i
                   ? isBuy
                     ? "border-green-500/40 bg-green-500/10 text-green-400"
                     : "border-destructive/40 bg-destructive/10 text-destructive"
-                  : "border-border/30 text-muted-foreground bg-secondary/30 hover:bg-secondary/60"
+                  : "border-border/30 text-muted-foreground bg-secondary/20 hover:bg-secondary/40"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-4 h-4 rounded-full" />}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full" />}
               {isBuy ? v : `${v}%`}
             </button>
           ))}
         </div>
 
-        {/* ── Live Preview ── */}
+        {/* ── Compact Preview ── */}
         {numericAmount > 0 && (
-          <div className="rounded-2xl bg-secondary/40 border border-border/30 p-4 space-y-2">
+          <div className="rounded-lg bg-secondary/30 border border-border/20 px-3 py-2 space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-mono text-muted-foreground">You get ≈</span>
-              <span className="text-lg font-mono font-bold text-foreground">
+              <span className="text-[11px] font-mono text-muted-foreground">You get ≈</span>
+              <span className="text-sm font-mono font-bold text-foreground">
                 {quoteLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin inline" />
+                  <Loader2 className="h-3 w-3 animate-spin inline" />
                 ) : (
                   `${formatAmount(outputAmount)} ${isBuy ? tokenInfo.ticker : "SOL"}`
                 )}
@@ -370,82 +352,82 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             </div>
             {priceImpact > 0.01 && (
               <div className="flex justify-between items-center">
-                <span className="text-sm font-mono text-muted-foreground">Price impact</span>
-                <span className={`text-sm font-mono font-semibold ${priceImpact > 5 ? "text-destructive" : "text-muted-foreground"}`}>
+                <span className="text-[10px] font-mono text-muted-foreground">Impact</span>
+                <span className={`text-[10px] font-mono font-semibold ${priceImpact > 5 ? "text-destructive" : "text-muted-foreground"}`}>
                   {priceImpact.toFixed(2)}%
                 </span>
               </div>
             )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-mono text-muted-foreground">Slippage</span>
-              <span className="text-sm font-mono text-muted-foreground">{slippage}%</span>
-            </div>
           </div>
         )}
 
         {/* ── Price Impact Warning ── */}
         {priceImpact > 5 && numericAmount > 0 && (
-          <div className="flex items-center gap-3 p-4 bg-destructive/10 rounded-2xl text-destructive border border-destructive/20">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-mono font-semibold">High price impact: {priceImpact.toFixed(2)}%</span>
+          <div className="flex items-center gap-2 px-3 py-2 bg-destructive/10 rounded-lg text-destructive border border-destructive/20">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] font-mono font-semibold">High impact: {priceImpact.toFixed(2)}%</span>
           </div>
         )}
 
-        {/* ── Action Row: Settings + Trade Button ── */}
-        <div className="flex gap-3">
-          <AdvancedSettingsSheet
-            slippage={slippage}
-            onSlippageChange={setSlippage}
-            instaBuy={instaBuy}
-            onInstaBuyChange={setInstaBuy}
-            isBuy={isBuy}
-            safetyChecks={safetyChecks}
-            onGeneratePnl={() => {
-              setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: numericAmount, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name });
-              setShowProfitCard(true);
-            }}
-          />
-
-          {!isAuthenticated ? (
-            <Button
-              className="flex-1 h-14 rounded-2xl font-mono text-base font-bold uppercase tracking-wider bg-green-500 hover:bg-green-600 text-black"
-              onClick={() => login()}
-            >
-              <Wallet className="h-5 w-5 mr-2" />
-              Connect Wallet
-            </Button>
-          ) : (
-            <button
-              onClick={handleTrade}
-              disabled={tradingDisabled || !numericAmount || (!isBondingMode && useJupiterRoute && quoteLoading)}
-              className={`flex-1 h-14 rounded-2xl font-mono text-base font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] flex items-center justify-center gap-2 ${
-                isBuy
-                  ? "bg-green-500 hover:bg-green-600 text-black shadow-[0_0_24px_hsl(142_70%_45%/0.25)]"
-                  : "bg-destructive hover:bg-destructive/90 text-white shadow-[0_0_24px_hsl(0_62%_50%/0.25)]"
-              }`}
-            >
-              {tradingDisabled ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : isBuy ? (
-                <>
-                  BUY
-                  {numericAmount > 0 && <img src={SOL_LOGO} alt="" className="w-5 h-5 rounded-full" />}
-                  {numericAmount > 0 && <span>{numericAmount}</span>}
-                </>
-              ) : (
-                <>
-                  SELL {tokenInfo.ticker}
-                </>
-              )}
-            </button>
-          )}
+        {/* ── Inline Indicators + Settings ── */}
+        <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />MEV
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />Anti-SW
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono text-muted-foreground/60">{slippage}% slp</span>
+            <AdvancedSettingsSheet
+              slippage={slippage}
+              onSlippageChange={setSlippage}
+              instaBuy={instaBuy}
+              onInstaBuyChange={setInstaBuy}
+              isBuy={isBuy}
+              safetyChecks={safetyChecks}
+              onGeneratePnl={() => {
+                setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: numericAmount, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name });
+                setShowProfitCard(true);
+              }}
+            />
+          </div>
         </div>
 
-        {/* Subtle indicator */}
-        <div className="flex items-center justify-center gap-2 text-xs font-mono text-muted-foreground/50">
-          <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-          <span>MEV Protected · Anti-Sandwich</span>
-        </div>
+        {/* ── Action Button ── */}
+        {!isAuthenticated ? (
+          <button
+            onClick={() => login()}
+            className="w-full h-11 rounded-lg font-mono text-sm font-bold bg-green-500 hover:bg-green-600 text-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <Wallet className="h-4 w-4" />
+            Connect Wallet
+          </button>
+        ) : (
+          <button
+            onClick={handleTrade}
+            disabled={tradingDisabled || !numericAmount || (!isBondingMode && useJupiterRoute && quoteLoading)}
+            className={`w-full h-11 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 ${
+              isBuy
+                ? "bg-green-500 hover:bg-green-600 text-black"
+                : "bg-destructive hover:bg-destructive/90 text-white"
+            }`}
+          >
+            {tradingDisabled ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isBuy ? (
+              <>
+                BUY
+                {numericAmount > 0 && <img src={SOL_LOGO} alt="" className="w-4 h-4 rounded-full" />}
+                {numericAmount > 0 && <span>{numericAmount}</span>}
+              </>
+            ) : (
+              <>SELL {tokenInfo.ticker}</>
+            )}
+          </button>
+        )}
       </div>
 
       <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
