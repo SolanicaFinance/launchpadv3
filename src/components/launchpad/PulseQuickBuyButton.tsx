@@ -317,6 +317,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
               showTradeSuccess({
                 type: 'buy',
                 ticker,
+                tokenName: funToken?.name ?? codexToken?.name ?? ticker,
                 amount: `${quickBuyAmount} SOL`,
                 signature: result.signature,
                 executionMs: result.totalMs || lastLatencyMs || undefined,
