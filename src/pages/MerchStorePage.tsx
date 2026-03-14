@@ -97,8 +97,8 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "tshirt-dev",
-    name: "MoonDexo Dev Tee",
-    description: '"I build on MoonDexo" limited edition tee',
+    name: `${BRAND.shortName} Dev Tee`,
+    description: `"I build on ${BRAND.shortName}" limited edition tee`,
     priceSol: 0.3,
     category: "apparel",
     sizes: ["S", "M", "L", "XL", "2XL"],

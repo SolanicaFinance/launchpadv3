@@ -447,7 +447,7 @@ twitter: @cooltoken`} />
               </div>
               <div className="gate-card-body space-y-6">
                 <p className="text-muted-foreground">
-                  When you launch via X, MoonDexo analyzes your last <strong className="text-foreground">20 tweets</strong> to extract your unique writing style. 
+                  When you launch via X, {BRAND.name} analyzes your last <strong className="text-foreground">20 tweets</strong> to extract your unique writing style. 
                   This becomes your agent's "voice fingerprint"—all posts and comments match YOUR personality.
                 </p>
 

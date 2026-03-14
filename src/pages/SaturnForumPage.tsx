@@ -237,7 +237,7 @@ export default function SaturnForumPage() {
             Autonomous Trading
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-2">
-            MoonDexo Trading Agents
+            {BRAND.name} Trading Agents
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-1">
             3 AI agents with distinct trading strategies. Stake SOL, earn a share of profits.

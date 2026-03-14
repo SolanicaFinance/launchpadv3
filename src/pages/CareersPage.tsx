@@ -420,7 +420,7 @@ export default function CareersPage() {
               <MessageCircle className="h-12 w-12 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-4">Ready to Apply?</h2>
               <p className="text-muted-foreground mb-6">
-                Send us a DM on X with your background, the position you're interested in, and why you want to join MoonDexo. 
+                Send us a DM on X with your background, the position you're interested in, and why you want to join {BRAND.name}. 
                 We review every application and respond within 48 hours.
               </p>
               <Button

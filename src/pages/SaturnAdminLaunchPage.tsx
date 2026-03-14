@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { BRAND } from "@/config/branding";
 
-export default function MoonDexoAdminLaunchPage() {
+export default function SaturnAdminLaunchPage() {
   const [authorized, setAuthorized] = useState(false);
   const [password, setPassword] = useState("");
   const navigate = useNavigate();

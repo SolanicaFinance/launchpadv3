@@ -111,7 +111,7 @@ export default function PanelPage() {
             />
             <div className="flex-1 min-w-0">
               <h1 className="text-sm font-black text-foreground tracking-wider font-mono uppercase">
-                MoonDexo Panel
+                {BRAND.shortName} Panel
               </h1>
               {displayAddress && (
                 <div className="flex items-center gap-1.5 mt-0.5">
