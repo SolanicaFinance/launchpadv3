@@ -11,7 +11,7 @@ import { BRAND } from "@/config/branding";
 
 const LOGO_SRC = saturnLogo;
 
-const NAV_LINKS = [
+const NAV_LINKS: { to: string; label: string; icon: any; exact?: boolean; neonGreen?: boolean }[] = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/trade", label: "Pulse", icon: Zap },
   { to: "/tokens", label: "Tokens", icon: Coins },
