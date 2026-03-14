@@ -157,11 +157,11 @@ Deno.serve(async (req) => {
       const fallbackMetadata = {
         name: 'New Token',
         symbol: 'TOKEN',
-        description: 'Token launching on CLAW #CLAW',
+        description: 'Token launching on Saturn #STRN',
         image: '',
-        tags: ['Meme', 'CLAW'],
+        tags: ['Meme', 'STRN'],
         attributes: [
-          { trait_type: 'Platform', value: 'CLAW' },
+          { trait_type: 'Platform', value: 'Saturn' },
           { trait_type: 'Status', value: 'launching' },
         ],
         properties: {
@@ -228,11 +228,11 @@ Deno.serve(async (req) => {
 
     // Build Metaplex-standard metadata JSON
     // See: https://docs.metaplex.com/programs/token-metadata/token-standard
-    // Append #CLAW hashtag for Solscan visibility
+    // Append #STRN hashtag for Solscan visibility
     const baseDescription = token.description || `${token.name} token`;
-    const descriptionWithTag = baseDescription.includes('#CLAW') 
+    const descriptionWithTag = baseDescription.includes('#STRN') 
       ? baseDescription 
-      : `${baseDescription} #CLAW`;
+      : `${baseDescription} #STRN`;
 
     // IMPORTANT: if socials are blank, keep them blank (no defaults)
     const website = typeof token.website_url === 'string' ? token.website_url.trim() : '';
@@ -248,11 +248,11 @@ Deno.serve(async (req) => {
       // NOTE: JSON.stringify omits undefined values, so this disappears when website is blank.
       external_url: website || undefined,
       // Tags array for Solscan tag chips
-      tags: ['Meme', 'CLAW'],
+      tags: ['Meme', 'STRN'],
       attributes: [
         {
           trait_type: 'Platform',
-          value: 'CLAW',
+          value: 'Saturn',
         },
         {
           trait_type: 'Status',

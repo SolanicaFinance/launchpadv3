@@ -37,9 +37,9 @@ function hexToBytes(hex: string): Uint8Array {
   return bytes;
 }
 
-// Try to get a pre-mined vanity keypair — prefer pnch suffix, fallback to claw
+// Try to get a pre-mined vanity keypair — STRN suffix (case-sensitive uppercase)
 async function getVanityKeypair(supabase: any, encryptionKey: string): Promise<{ keypair: Keypair; publicKey: string; id: string } | null> {
-  const suffixes = ['pnch', 'claw'];
+  const suffixes = ['STRN'];
   for (const suffix of suffixes) {
     try {
       const { data, error } = await supabase.rpc('backend_reserve_vanity_address', {

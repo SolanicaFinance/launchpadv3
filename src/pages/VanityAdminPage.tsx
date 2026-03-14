@@ -68,12 +68,12 @@ const VanityAdminPage = () => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 500;
   });
 
-  // Configurable suffix - defaults to 'CLAW' (case-insensitive matching)
+  // Configurable suffix - defaults to 'STRN' (case-sensitive matching, uppercase only)
   const [targetSuffix, setTargetSuffix] = useState<string>(() => {
     const stored = localStorage.getItem('vanity_target_suffix');
-    // Force CLAW as default, override any legacy TUNA value
-    if (!stored || stored.toUpperCase() === 'TUNA') return 'CLAW';
-    return stored.toUpperCase();
+    // Force STRN as default
+    if (!stored || stored === 'CLAW' || stored === 'TUNA') return 'STRN';
+    return stored;
   });
 
   // Refs to avoid stale closures in long-running auto-run loops

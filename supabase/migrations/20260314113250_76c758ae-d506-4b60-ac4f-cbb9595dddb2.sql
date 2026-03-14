@@ -1,0 +1,1 @@
+DELETE FROM vanity_keypairs WHERE status IN ('available', 'reserved');

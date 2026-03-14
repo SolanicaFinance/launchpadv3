@@ -9,11 +9,11 @@ const corsHeaders = {
 };
 
 // Configuration
-const TARGET_SUFFIX = 'CLAW'; // Displayed uppercase, matched case-insensitively
+const TARGET_SUFFIX = 'STRN'; // Case-sensitive matching, uppercase only
 const TARGET_AVAILABLE = 500; // Keep at least 500 available
 const MAX_DURATION_MS = 8000; // 8 seconds (edge functions have limited CPU)
 const BATCH_SIZE = 10; // Small batches for edge function CPU limits
-const CASE_SENSITIVE = false; // Case-insensitive matching for ~60x faster generation
+const CASE_SENSITIVE = true; // Case-sensitive matching — STRN uppercase only
 const YIELD_EVERY = 1; // Yield CPU every attempt to avoid compute limit
 
 // XOR encryption for secret key storage
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     const { count: availableCount, error: countError } = await supabase
       .from('vanity_keypairs')
       .select('*', { count: 'exact', head: true })
-      .eq('suffix', TARGET_SUFFIX.toLowerCase())
+      .eq('suffix', TARGET_SUFFIX)
       .eq('status', 'available');
     
     if (countError) {
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
           const { error: insertError } = await supabase
             .from('vanity_keypairs')
             .insert({
-              suffix: TARGET_SUFFIX.toLowerCase(),
+              suffix: TARGET_SUFFIX,
               public_key: keypair.address,
               secret_key_encrypted: encryptedSecretKey,
               status: 'available',
