@@ -7,6 +7,9 @@ export interface TradeSuccessData {
   signature?: string;
   executionMs?: number;
   agentName?: string;
+  tokenImageUrl?: string;
+  pnlSol?: number;
+  pnlPercent?: number;
 }
 
 interface TradeSuccessStore {

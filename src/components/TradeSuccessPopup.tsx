@@ -7,6 +7,9 @@ import {
   Clock,
   Copy,
   CheckCheck,
+  TrendingUp,
+  TrendingDown,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
 import { useTradeSuccessStore } from "@/stores/tradeSuccessStore";
@@ -93,16 +96,29 @@ export function TradeSuccessPopup() {
                 {subtitle}
               </p>
 
-              {/* Main row: check + headline */}
+              {/* Main row: token icon + check + headline */}
               <div className="flex items-center gap-3 mb-4">
+                {/* Token icon */}
+                {data.tokenImageUrl ? (
+                  <img
+                    src={data.tokenImageUrl}
+                    alt={data.ticker}
+                    className="w-10 h-10 rounded-full border border-white/[0.08] flex-shrink-0 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                    <Coins className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
                 {/* Animated check */}
                 <motion.div
-                  className="w-11 h-11 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0"
+                  className="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0"
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15, type: "spring", damping: 12 }}
                 >
-                  <Check className="h-5 w-5 text-emerald-400" strokeWidth={3} />
+                  <Check className="h-4 w-4 text-emerald-400" strokeWidth={3} />
                 </motion.div>
                 <h2 className="text-lg font-bold text-foreground leading-tight">
                   {headline}
@@ -161,6 +177,28 @@ export function TradeSuccessPopup() {
                     <span className="text-xs text-muted-foreground">Agent</span>
                     <span className="text-xs font-medium text-foreground/70">
                       {data.agentName}
+                    </span>
+                  </div>
+                )}
+
+                {/* PnL (sell only) */}
+                {isSell && data.pnlSol != null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">PnL</span>
+                    <span className={`flex items-center gap-1.5 text-xs font-mono font-semibold ${
+                      data.pnlSol >= 0 ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {data.pnlSol >= 0 ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3" />
+                      )}
+                      {data.pnlSol >= 0 ? '+' : ''}{data.pnlSol.toFixed(4)} SOL
+                      {data.pnlPercent != null && (
+                        <span className="text-[10px] opacity-70">
+                          ({data.pnlPercent >= 0 ? '+' : ''}{data.pnlPercent.toFixed(1)}%)
+                        </span>
+                      )}
                     </span>
                   </div>
                 )}

@@ -108,7 +108,8 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
 
   // For BNB tokens, use the BNB quick buy flow
   if (isBnb && mintAddress) {
-    return <BnbQuickBuy mintAddress={mintAddress} ticker={funToken?.ticker ?? codexToken?.symbol ?? ''} quickBuyAmount={quickBuyAmount} isCompact={isCompact} />;
+    const imageUrl = funToken?.image_url ?? codexToken?.imageUrl ?? undefined;
+    return <BnbQuickBuy mintAddress={mintAddress} ticker={funToken?.ticker ?? codexToken?.symbol ?? ''} quickBuyAmount={quickBuyAmount} isCompact={isCompact} tokenImageUrl={imageUrl} />;
   }
 
   // Solana swap path
@@ -121,11 +122,13 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
   ticker,
   quickBuyAmount,
   isCompact,
+  tokenImageUrl,
 }: {
   mintAddress: string;
   ticker: string;
   quickBuyAmount?: number;
   isCompact?: boolean;
+  tokenImageUrl?: string;
 }) {
   const { executeBnbSwap, isLoading } = useBnbSwap();
   const { isAuthenticated, solanaAddress } = useAuth();
@@ -161,6 +164,7 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
           ticker,
           amount: `${amount} BNB`,
           signature: result.txHash,
+          tokenImageUrl,
         });
       } else {
         toast.error("❌ BNB Trade Failed", { id: toastId, description: result.error?.slice(0, 80) });
@@ -315,6 +319,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
                 amount: `${quickBuyAmount} SOL`,
                 signature: result.signature,
                 executionMs: result.totalMs || lastLatencyMs || undefined,
+                tokenImageUrl: funToken?.image_url ?? codexToken?.imageUrl ?? undefined,
               });
               // Optimistic balance set to flip button to "Sell 100%" instantly
               queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
@@ -361,6 +366,7 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
             amount: `${amount} SOL`,
             signature: result.signature,
             executionMs: result.totalMs || lastLatencyMs || undefined,
+            tokenImageUrl: funToken?.image_url ?? codexToken?.imageUrl ?? undefined,
           });
           // Optimistic balance set to flip button to "Sell 100%" instantly
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 1);
@@ -438,6 +444,8 @@ const SolanaQuickBuy = memo(function SolanaQuickBuy({
             signature: result.signature,
             executionMs: result.totalMs || lastLatencyMs || undefined,
             agentName: name || undefined,
+            tokenImageUrl: funToken?.image_url ?? codexToken?.imageUrl ?? undefined,
+            pnlSol: result.outputAmount ?? undefined,
           });
           // Optimistic: set balance to 0 so button flips back to Buy
           queryClient.setQueryData(["quick-sell-balance", walletAddress, mintAddress], 0);
