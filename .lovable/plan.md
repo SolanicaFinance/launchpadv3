@@ -1,4 +1,46 @@
 
+## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
+
+### Problem
+TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
+Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+
+### Architecture
+1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
+   - Privy embedded wallet handles all on-chain signing (same as trading)
+   - Users logged in via Privy can launch directly — no Phantom popup
+   - Logged-out users can still generate memes, prompted to login on Launch
+
+2. **Simplify the "phantom" mode → "launch" mode**
+   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
+   - Rename to generic wallet references since Privy handles everything
+   - Keep all sub-modes (random, describe, realistic, custom)
+
+3. **On-chain flow change:**
+   ```
+   Before: Phantom popup → user signs → broadcast
+   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
+   ```
+
+4. **Auth gate on launch:**
+   - Check `useAuth()` / `usePrivy()` for logged-in state
+   - If not logged in → trigger Privy login modal
+   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
+
+### Files to modify:
+- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
+- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
+- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
+- `src/components/launchpad/CreateTokenModal.tsx` — same
+- `src/pages/FunLauncherPage.tsx` — same
+
+### Dependencies:
+- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
+- `src/hooks/useAuth.ts` (already exists)
+- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+
+---
+
 ## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
 
 ### What was built:
