@@ -95,23 +95,8 @@ function useAuthPrivy(privyAvailable: boolean): UseAuthReturn {
   };
 }
 
-// Main hook that switches between implementations
+// Main hook — always calls useAuthPrivy to satisfy React's rules of hooks
 export function useAuth(): UseAuthReturn {
   const privyAvailable = usePrivyAvailable();
-
-  // When Privy is not available, return fallback immediately
-  if (!privyAvailable) {
-    return {
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      solanaAddress: null,
-      profileId: null,
-      login: () => console.warn("Privy not available - check PRIVY_APP_ID secret"),
-      logout: async () => {},
-    };
-  }
-
-  // When Privy IS available, use the real hooks
-  return useAuthPrivy();
+  return useAuthPrivy(privyAvailable);
 }
