@@ -47,8 +47,10 @@ export default function WhitepaperPage() {
                   { id: "alpha-tracker", title: "6. Alpha Tracker" },
                   { id: "x-tracker", title: "7. X Tracker" },
                   { id: "leverage", title: "8. Leverage Trading" },
-                  { id: "fee-architecture", title: "9. Fee Architecture" },
-                  { id: "infrastructure", title: "10. Infrastructure & Security" },
+                  { id: "portfolio", title: "9. Portfolio & PnL Cards" },
+                  { id: "staking", title: "10. Staking (Coming Soon)" },
+                  { id: "fee-architecture", title: "11. Fee Architecture" },
+                  { id: "infrastructure", title: "12. Infrastructure & Security" },
                 ].map((item) => (
                   <a
                     key={item.id}
