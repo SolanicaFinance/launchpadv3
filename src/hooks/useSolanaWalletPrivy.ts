@@ -181,16 +181,17 @@ export function useSolanaWalletWithPrivy() {
       const accounts = await connection.getParsedTokenAccountsByOwner(owner, { mint });
       if (accounts.value.length === 0) return 0;
 
-      // Sum all token accounts for this mint (ATA + auxiliary accounts)
-      const balance = accounts.value.reduce((sum, account) => {
-        const tokenAmount = (account.account.data as any)?.parsed?.info?.tokenAmount;
-        const uiAmount = tokenAmount?.uiAmount;
-        const uiAmountStr = tokenAmount?.uiAmountString;
-        const val = typeof uiAmount === "number" ? uiAmount : (uiAmountStr ? parseFloat(uiAmountStr) : 0);
-        return sum + (isFinite(val) ? val : 0);
-      }, 0);
+      // Sum raw integer amounts via BigInt to avoid floating-point precision loss
+      const rawTotal = accounts.value.reduce((sum, acc) => {
+        const raw = (acc.account.data as any)?.parsed?.info?.tokenAmount?.amount;
+        return sum + BigInt(raw || '0');
+      }, BigInt(0));
 
-      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… on-chain (summed): ${balance}`);
+      const decimals = (accounts.value[0]?.account.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
+      // Convert to number only at the end — preserves exact integer for amounts < 2^53
+      const balance = Number(rawTotal) / (10 ** decimals);
+
+      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… raw: ${rawTotal.toString()}, decimals: ${decimals}, balance: ${balance}`);
       return balance;
     } catch (err) {
       console.error("[getTokenBalance] Error:", err);

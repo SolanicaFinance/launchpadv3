@@ -1,46 +1,104 @@
 
+## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-# Plan: Fix "Sell 100%" Leaving Dust Behind
+### Problem
+TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
+Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
 
-## Root Cause
+### Architecture
+1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
+   - Privy embedded wallet handles all on-chain signing (same as trading)
+   - Users logged in via Privy can launch directly — no Phantom popup
+   - Logged-out users can still generate memes, prompted to login on Launch
 
-The sell flow converts between floating-point and raw integers, causing precision loss:
+2. **Simplify the "phantom" mode → "launch" mode**
+   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
+   - Rename to generic wallet references since Privy handles everything
+   - Keep all sub-modes (random, describe, realistic, custom)
 
-1. **Balance fetch** reads `uiAmount` (float, e.g. `15234.123456`)
-2. **Swap execution** converts back: `Math.floor(15234.123456 * 1_000_000)` 
-3. Floating-point math can produce `15234123455` instead of `15234123456` → **1 raw unit left behind**
+3. **On-chain flow change:**
+   ```
+   Before: Phantom popup → user signs → broadcast
+   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
+   ```
 
-This is why "Sell 100%" sells *almost* everything but leaves dust.
+4. **Auth gate on launch:**
+   - Check `useAuth()` / `usePrivy()` for logged-in state
+   - If not logged in → trigger Privy login modal
+   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
 
-## Fix
+### Files to modify:
+- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
+- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
+- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
+- `src/components/launchpad/CreateTokenModal.tsx` — same
+- `src/pages/FunLauncherPage.tsx` — same
 
-Two changes needed:
+### Dependencies:
+- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
+- `src/hooks/useAuth.ts` (already exists)
+- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
 
-### 1. `PulseQuickBuyButton.tsx` — Fetch raw balance alongside UI balance
-In `handleSell100`, change the balance fetch to also sum the **raw** `tokenAmount.amount` (string, no float loss). Pass a new flag or raw amount to the swap function so it can use the exact on-chain value.
+---
 
-Simplest approach: sum the raw amounts as integers, then pass `rawAmount / 10^decimals` using integer division to avoid float errors. OR pass the raw lamport amount separately.
+## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
 
-### 2. `useFastSwap.ts` — Accept optional raw amount for exact sells
-In `swapBondingCurve`, when selling, if a raw amount (in smallest units) is provided, use it directly as `amountIn` instead of doing `Math.floor(amount * 10^TOKEN_DECIMALS)`.
+### What was built:
+1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
+   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
+   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
+   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
+   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
+   - Records trade in DB + alpha_trades (non-blocking)
+   - Returns signature immediately with timing breakdown
 
-Alternatively (simpler, less invasive): In `PulseQuickBuyButton.handleSell100`, compute the raw sum from `tokenAmount.amount` strings, and pass `rawSum / 10^6` as the amount — but use a BigInt-safe division to avoid float. Since the pipeline only accepts a `number`, we can just do:
+2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
+   - Single `supabase.functions.invoke('turbo-trade')` call
+   - No client-side tx building or signing
+   - Background query invalidation after 500ms
+   - Logs client roundtrip vs server execution time
 
-```typescript
-// Sum raw amounts (integers, no precision loss)
-const rawTotal = resp.value.reduce((sum, acc) => {
-  const raw = acc.account?.data?.parsed?.info?.tokenAmount?.amount;
-  return sum + BigInt(raw || '0');
-}, BigInt(0));
-const decimals = resp.value[0]?.account?.data?.parsed?.info?.tokenAmount?.decimals ?? 6;
-// Convert back to number with no precision loss for amounts < 2^53
-freshBalance = Number(rawTotal) / (10 ** decimals);
+3. **Wired into trade components:**
+   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
+   - `PortfolioModal.tsx` — uses `useTurboSwap`
+
+### Expected latency:
+```
+Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
+After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
 ```
 
-This ensures the raw integer is preserved and `Math.floor(freshBalance * 10^6)` reconstructs the exact original value.
+---
 
-### Files to edit
-- `src/components/launchpad/PulseQuickBuyButton.tsx` — Fix balance computation in `handleSell100` (lines 436-446)
-- `src/components/portfolio/PortfolioModal.tsx` — Same fix for portfolio sell
-- `src/hooks/useSolanaWalletPrivy.ts` — Fix `getTokenBalance` to use raw amounts (fixes all consumers)
+## 6-Phase Axiom Feature Integration Plan (SAVED)
 
+### Phase 1: Copy Trade Execution
+- New `copy-trade-execute` edge function
+- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
+- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
+- New `copy_trade_log` table
+
+### Phase 2: Limit Orders (SL/TP)
+- Jupiter limit order program integration
+- `limit-order-create` edge function
+- `limit_orders` DB table
+- Limit order tab in trade panel
+
+### Phase 3: Real-Time WebSocket Token Feed
+- Helius WebSocket for sub-1s new pair detection
+- Replace Codex polling (~30s) 
+- Edge function → Supabase Realtime channel
+
+### Phase 4: DCA (Dollar Cost Averaging)
+- `dca_orders` DB table
+- `dca-execute` cron edge function
+- DCA tab in trade panel
+
+### Phase 5: Enhanced Token Safety
+- LP lock status, mint authority, honeypot detection
+- Safety score badge on Pulse cards
+
+### Phase 6: Wallet PnL Analytics
+- `wallet-pnl-calculate` edge function
+- Per-wallet realized/unrealized PnL
+- Rank tracked wallets by performance
