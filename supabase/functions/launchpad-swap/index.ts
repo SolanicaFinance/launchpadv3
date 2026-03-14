@@ -72,7 +72,7 @@ serve(async (req) => {
         const solAmount = isBuy ? amount : (outputAmount || 0);
         const tokensAmount = isBuy ? (outputAmount || 0) : amount;
 
-        await supabase.from("alpha_trades").insert({
+        await supabase.from("alpha_trades").upsert({
           wallet_address: userWallet,
           token_mint: mintAddress,
           token_name: tokenName || null,
