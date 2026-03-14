@@ -366,7 +366,7 @@ export function AgentIdeaGenerator() {
                   Post this on X with the command to launch:
                 </p>
                 <code className="block bg-background p-3 rounded text-xs font-mono text-foreground">
-                  <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!clawmode</span> {generatedMeme.name}<br/>
+                  <span className="text-[#1DA1F2]">{BRAND.twitterHandle}</span> <span className="text-primary">!launch</span> {generatedMeme.name}<br/>
                   <span className="text-muted-foreground">+ optionally attach the downloaded image</span>
                 </code>
               </div>
