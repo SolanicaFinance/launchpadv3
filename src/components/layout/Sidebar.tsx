@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Zap, Bot, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag, CandlestickChart, Radar, Rocket, Coins } from "lucide-react";
+import { Home, Zap, Bot, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag, CandlestickChart, Radar, Rocket, Coins, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
