@@ -1186,8 +1186,18 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
           (tx as any).message.recentBlockhash = blockhash;
         }
         
-         // Phantom signs FIRST — does NOT send (keeps Lighthouse protection)
-         const signedTx = await phantomWallet.signTransaction(tx as any);
+         // Sign transaction — Phantom or Privy embedded wallet
+         let signedTx: Transaction | VersionedTransaction | null;
+         if (usePrivy) {
+           // Privy embedded wallet: auto-sign (no popup with showWalletUIs: false)
+           // For Privy, we need to use signAndSendTransaction from the Privy hook
+           // But since the launch flow needs sign-only + ephemeral sign + manual send,
+           // we use phantomWallet.signTransaction as fallback for now
+           // TODO: implement Privy sign-only flow
+           signedTx = await phantomWallet.signTransaction(tx as any);
+         } else {
+           signedTx = await phantomWallet.signTransaction(tx as any);
+         }
          if (!signedTx) throw new Error(`${label} was cancelled or failed`);
          
          // Apply ephemeral sigs AFTER Phantom (cross-realm safe via duck-typing)
