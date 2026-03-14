@@ -33,6 +33,7 @@ async function calculateClaimable(
   targetTokenIds: string[],
   funTokenIds: string[],
   clawTokenIds: string[],
+  tokenBpsMap: Map<string, { creator_fee_bps: number; trading_fee_bps: number }>,
 ) {
   let totalCreatorEarned = 0;
   const tokenEarnings: Record<string, number> = {};
