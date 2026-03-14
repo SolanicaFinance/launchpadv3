@@ -495,18 +495,50 @@ export function StickyStatsFooter() {
   return createPortal(footer, document.body);
 }
 
+const FOOTER_PRICES_CACHE_KEY = 'saturn_footer_crypto_prices';
+const FOOTER_PRICES_CACHE_TTL = 60000;
+
 function FooterCryptoPrices() {
-  const [prices, setPrices] = useState<Record<string, { price: number; change24h: number }> | null>(null);
+  const [prices, setPrices] = useState<Record<string, { price: number; change24h: number }> | null>(() => {
+    try {
+      const cached = localStorage.getItem(FOOTER_PRICES_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < FOOTER_PRICES_CACHE_TTL * 2) {
+          return parsed.data;
+        }
+      }
+    } catch {}
+    return null;
+  });
 
   useEffect(() => {
     const fetchPrices = async () => {
       try {
         const { data, error } = await supabase.functions.invoke("crypto-prices");
-        if (!error && data?.btc) setPrices(data);
+        if (!error && data?.btc) {
+          setPrices(data);
+          localStorage.setItem(FOOTER_PRICES_CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+        }
       } catch {}
     };
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 60000);
+
+    // Skip initial fetch if cache is fresh
+    const cached = localStorage.getItem(FOOTER_PRICES_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < FOOTER_PRICES_CACHE_TTL) {
+          // Cache is fresh, skip immediate fetch
+        } else {
+          fetchPrices();
+        }
+      } catch { fetchPrices(); }
+    } else {
+      fetchPrices();
+    }
+
+    const interval = setInterval(fetchPrices, FOOTER_PRICES_CACHE_TTL);
     return () => clearInterval(interval);
   }, []);
 
