@@ -47,7 +47,9 @@ async function calculateClaimable(
       .in("fun_token_id", funTargetIds);
 
     for (const fc of feeClaims || []) {
-      const earned = (fc.claimed_sol || 0) * CREATOR_SHARE;
+      const bps = tokenBpsMap.get(fc.fun_token_id) || { creator_fee_bps: 100, trading_fee_bps: 200 };
+      const ratio = getCreatorRatio(bps.creator_fee_bps, bps.trading_fee_bps);
+      const earned = Math.floor((fc.claimed_sol || 0) * ratio * 1e9) / 1e9;
       tokenEarnings[fc.fun_token_id] = (tokenEarnings[fc.fun_token_id] || 0) + earned;
       totalCreatorEarned += earned;
     }
