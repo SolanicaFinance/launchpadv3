@@ -107,7 +107,7 @@ export default function CreateTokenPage() {
                 ) : (
                   <>
                     <span className="launch-trust-badge">
-                      <img src="/phantom-icon.png" alt="" className="w-3.5 h-3.5 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <img src="/phantom-logo.png" alt="" className="w-3.5 h-3.5 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       Phantom
                     </span>
                     <span className="launch-trust-badge">
