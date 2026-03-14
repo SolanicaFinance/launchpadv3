@@ -168,11 +168,25 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
         showTradeSuccess({
           type: 'buy',
           ticker,
-          tokenName: ticker,
+          tokenName,
           amount: `${amount} BNB`,
           signature: result.txHash,
           tokenImageUrl,
         });
+
+        if (result.txHash) {
+          recordAlphaTradeInBackground({
+            walletAddress: userWallet,
+            tokenMint: mintAddress,
+            tokenName,
+            tokenTicker: ticker,
+            tradeType: 'buy',
+            amountSol: amount,
+            amountTokens: result.estimatedOutput ? Number(result.estimatedOutput) : 0,
+            txHash: result.txHash,
+            chain: 'bnb',
+          });
+        }
       } else {
         toast.error("❌ BNB Trade Failed", { id: toastId, description: result.error?.slice(0, 80) });
       }
