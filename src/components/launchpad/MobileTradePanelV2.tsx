@@ -416,8 +416,8 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             </div>
             {priceImpact > 0.01 && (
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-mono text-muted-foreground/40">Impact</span>
-                <span className={`text-[11px] font-mono font-bold ${priceImpact > 5 ? "text-destructive" : "text-muted-foreground/55"}`}>
+                <span className="text-[11px] font-mono text-foreground/50">Impact</span>
+                <span className={`text-[11px] font-mono font-bold ${priceImpact > 5 ? "text-destructive" : "text-foreground/65"}`}>
                   {priceImpact.toFixed(2)}%
                 </span>
               </div>
