@@ -24,6 +24,7 @@ const DeployerDustAdminPage = lazy(() => import("./DeployerDustAdminPage"));
 const SaturnForumAdminPage = lazy(() => import("./SaturnForumAdminPage"));
 const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
+const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
