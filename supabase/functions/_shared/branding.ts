@@ -12,7 +12,7 @@ export const BRAND = {
   twitterHandle: "@saturntrade",
   twitterUrl: "https://x.com/saturntrade",
   logoPath: "/saturn-logo.png",
-  ogImage: "https://saturntrade.com/saturn-logo.png",
+  ogImage: "https://saturn.trade/og-image.png",
   forumName: "Saturn Forum",
   communityPrefix: "t/",
   platformTokenTicker: "CLAW",

@@ -63,7 +63,7 @@ export const BRAND = {
     "SubTuna": "Saturn Community",
     "OpenTuna": "Saturn SDK",
     "Saturn Trade": "Saturn",
-    "saturn.trade": "saturntrade.com",
+    "saturn.trade": "saturn.trade",
     "@saturntrade": "@saturntrade",
     "MoonDexo": "Saturn",
   },

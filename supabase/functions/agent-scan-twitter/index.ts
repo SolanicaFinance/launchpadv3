@@ -978,7 +978,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           "Trading-Fees goes to your Panel",
           "is now live on TUNA!",
           "claim them any time",
-          "Trade it on saturntrade.com",
+          "Trade it on saturn.trade",
           "Snip snip",
         ];
         if (botReplySignatures.some(sig => tweetText.includes(sig))) {

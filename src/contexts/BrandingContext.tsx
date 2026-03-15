@@ -110,7 +110,7 @@ const DEFAULT_CONFIG: BrandingConfig = {
   telegramUrl: null,
   logoUrl: "/saturn-logo.png",
   faviconUrl: "/favicon.png",
-  ogImageUrl: "https://saturntrade.com/saturn-logo.png",
+  ogImageUrl: "https://saturn.trade/og-image.png",
   iconEmoji: BRAND.iconEmoji,
   forumName: BRAND.forumName,
   communityPrefix: BRAND.communityPrefix,
