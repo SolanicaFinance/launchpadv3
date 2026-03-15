@@ -39,17 +39,6 @@ export default function XBotAdminPage() {
     runReply,
   } = useXBotAccounts();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setAuthenticated(true);
-      sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
-      setError("");
-    } else {
-      setError("Invalid password");
-    }
-  };
-
   const handleAddAccount = () => {
     setSelectedAccount(null);
     setShowAccountForm(true);
@@ -119,37 +108,6 @@ export default function XBotAdminPage() {
 
   const activeAccounts = accounts.filter((a) => a.is_active);
   const totalActiveRules = accounts.filter((a) => a.is_active && a.rules?.enabled).length;
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Shield className="w-12 h-12 mx-auto text-primary mb-2" />
-            <CardTitle>X Bot Admin</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Admin Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                />
-              </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full">
-                Access Admin Panel
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
