@@ -196,11 +196,13 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
             {priceChange !== 0 && (
               <>
                 {priceChange > 0 ? (
-                  <ArrowUpRight className="h-2.5 w-2.5 text-success" />
+                  <ArrowUpRight className="h-2.5 w-2.5" style={{ color: "hsl(180 80% 55%)" }} />
                 ) : (
-                  <ArrowDownRight className="h-2.5 w-2.5 text-destructive" />
+                  <ArrowDownRight className="h-2.5 w-2.5" style={{ color: "hsl(0 72% 60%)" }} />
                 )}
-                <span className={`text-[9px] font-mono font-bold ${priceChange > 0 ? "text-success" : "text-destructive"}`}>
+                <span className="text-[9px] font-mono font-bold" style={{
+                  color: priceChange > 0 ? "hsl(180 80% 55%)" : "hsl(0 72% 60%)",
+                }}>
                   {priceChange > 0 ? "+" : ""}{priceChange.toFixed(0)}%
                 </span>
               </>

@@ -203,11 +203,13 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
             {token.change24h !== 0 && (
               <>
                 {token.change24h > 0 ? (
-                  <ArrowUpRight className="h-2.5 w-2.5 text-success" />
+                  <ArrowUpRight className="h-2.5 w-2.5" style={{ color: "hsl(180 80% 55%)" }} />
                 ) : (
-                  <ArrowDownRight className="h-2.5 w-2.5 text-destructive" />
+                  <ArrowDownRight className="h-2.5 w-2.5" style={{ color: "hsl(0 72% 60%)" }} />
                 )}
-                <span className={`text-[9px] font-mono font-bold ${token.change24h > 0 ? "text-success" : "text-destructive"}`}>
+                <span className={`text-[9px] font-mono font-bold`} style={{
+                  color: token.change24h > 0 ? "hsl(180 80% 55%)" : "hsl(0 72% 60%)",
+                }}>
                   {formatChange24h(token.change24h)}
                 </span>
               </>
