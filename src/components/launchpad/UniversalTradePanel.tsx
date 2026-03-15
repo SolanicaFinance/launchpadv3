@@ -339,7 +339,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-primary/8 text-primary/80 hover:bg-primary/12 transition-colors border border-primary/15">
                 MAX
               </button>
-              <span className="text-[13px] font-mono text-muted-foreground/50 flex items-center gap-1">
+              <span className="text-[13px] font-mono text-foreground/60 flex items-center gap-1">
                 {isBuy
                   ? <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="SOL" className="w-4 h-4 rounded-full" />
                   : token.imageUrl && <img src={token.imageUrl} alt={token.ticker} className="w-4 h-4 rounded-full" />}
