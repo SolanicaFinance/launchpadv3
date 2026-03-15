@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User, Zap, ArrowDownToLine } from "lucide-react";
+import { Copy, Check, Wallet, LogOut, ChevronDown, Settings, Crosshair, Shield, User, Zap, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import defaultAvatar from "@/assets/saturn-logo.png";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { SettingsModal } from "@/components/settings/SettingsModal";
 import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 import { PortfolioModal } from "@/components/portfolio/PortfolioModal";
 import { DepositDialog } from "@/components/wallet/DepositDialog";
+import { WithdrawDialog } from "@/components/wallet/WithdrawDialog";
 import { useChain } from "@/contexts/ChainContext";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
@@ -32,6 +33,7 @@ function HeaderWalletBalanceInner() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null; evm_wallet_address?: string | null } | null>(null);
 
@@ -218,6 +220,11 @@ function HeaderWalletBalanceInner() {
                 onClick={() => { setMenuOpen(false); setDepositOpen(true); }}
               />
               <MenuItem
+                icon={<ArrowUpFromLine className="h-4 w-4" />}
+                label="Withdraw"
+                onClick={() => { setMenuOpen(false); setWithdrawOpen(true); }}
+              />
+              <MenuItem
                 icon={<Zap className="h-4 w-4" />}
                 label="Pulse"
                 onClick={() => { setMenuOpen(false); navigate("/trade"); }}
@@ -252,6 +259,10 @@ function HeaderWalletBalanceInner() {
         address={displayAddress}
         chain={isBnb ? "bnb" : "solana"}
         getBalance={isBnb ? undefined : getBalance}
+      />
+      <WithdrawDialog
+        open={withdrawOpen}
+        onOpenChange={setWithdrawOpen}
       />
     </>
   );
