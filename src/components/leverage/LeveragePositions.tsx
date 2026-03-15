@@ -1,16 +1,16 @@
 import { cn } from "@/lib/utils";
-import type { AsterPosition, AsterOpenOrder, AsterOrderHistory, AsterTradeHistory, AsterAccountInfo } from "@/hooks/useAsterAccount";
+import type { HlPosition, HlOpenOrder, HlOrderHistory, HlTradeHistory, HlAccountInfo } from "@/hooks/useHyperliquidAccount";
 import { useState } from "react";
-import { ExternalLink, RefreshCw, Settings } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 type BottomTab = "positions" | "orders" | "order_history" | "trade_history" | "assets";
 
 interface Props {
-  positions: AsterPosition[];
-  openOrders: AsterOpenOrder[];
-  orderHistory: AsterOrderHistory[];
-  tradeHistory: AsterTradeHistory[];
-  account: AsterAccountInfo | null;
+  positions: HlPosition[];
+  openOrders: HlOpenOrder[];
+  orderHistory: HlOrderHistory[];
+  tradeHistory: HlTradeHistory[];
+  account: HlAccountInfo | null;
   onCancelOrder: (symbol: string, orderId: number) => void;
   onFetchOrderHistory: (symbol?: string) => void;
   onFetchTradeHistory: (symbol?: string) => void;
@@ -35,7 +35,7 @@ export function LeveragePositions({
   if (!hasApiKey) {
     return (
       <div className="flex items-center justify-center h-full text-xs text-muted-foreground py-6">
-        Connect API key to view positions & account
+        Connect wallet to view positions & account
       </div>
     );
   }
@@ -43,9 +43,8 @@ export function LeveragePositions({
   const tabs: { key: BottomTab; label: string; count?: number }[] = [
     { key: "positions", label: "Positions", count: activePositions.length },
     { key: "orders", label: "Open Orders", count: openOrders.length },
-    { key: "order_history", label: "Order History" },
     { key: "trade_history", label: "Trade History" },
-    { key: "assets", label: "Assets" },
+    { key: "assets", label: "Account" },
   ];
 
   return (
@@ -59,8 +58,7 @@ export function LeveragePositions({
               key={t.key}
               onClick={() => {
                 setTab(t.key);
-                if (t.key === "order_history") onFetchOrderHistory(symbol);
-                if (t.key === "trade_history") onFetchTradeHistory(symbol);
+                if (t.key === "trade_history") onFetchTradeHistory();
               }}
               className={cn(
                 "py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap",
@@ -76,9 +74,8 @@ export function LeveragePositions({
         <div className="flex-1 overflow-auto">
           {tab === "positions" && <PositionsTable positions={activePositions} />}
           {tab === "orders" && <OrdersTable orders={openOrders} onCancel={onCancelOrder} />}
-          {tab === "order_history" && <OrderHistoryTable orders={orderHistory} />}
           {tab === "trade_history" && <TradeHistoryTable trades={tradeHistory} />}
-          {tab === "assets" && <AssetsTable account={account} />}
+          {tab === "assets" && <AccountSummary account={account} />}
         </div>
       </div>
 
@@ -86,49 +83,25 @@ export function LeveragePositions({
       <div className="w-[240px] flex-shrink-0 border-l border-border bg-card/30 p-3 overflow-y-auto hidden lg:block">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-bold text-foreground">Account</span>
-          <div className="flex items-center gap-1.5">
-            <button onClick={onRefreshAccount} className="p-1 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors">
-              <RefreshCw className="h-3 w-3" />
-            </button>
-            <a href="https://www.asterdex.com/en/futures/BTCUSDT" target="_blank" rel="noopener noreferrer"
-              className="p-1 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors">
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        </div>
-
-        {/* Deposit/Withdraw/Transfer links */}
-        <div className="grid grid-cols-3 gap-1 mb-3">
-          {["Deposit", "Withdraw", "Transfer"].map((label) => (
-            <a
-              key={label}
-              href="https://www.asterdex.com/en/assets/overview"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                "py-1.5 text-center text-[10px] font-medium rounded-sm transition-colors border border-border",
-                label === "Deposit" ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-surface-hover"
-              )}
-            >
-              {label}
-            </a>
-          ))}
+          <button onClick={onRefreshAccount} className="p-1 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors">
+            <RefreshCw className="h-3 w-3" />
+          </button>
         </div>
 
         {/* Account Equity */}
         <div className="space-y-0.5 mb-3">
           <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Account Equity</span>
-          <AccountRow label="Wallet Balance" value={account?.totalWalletBalance} suffix=" USDT" />
+          <AccountRow label="Account Value" value={account?.totalWalletBalance} suffix=" USDC" />
           <AccountRow label="Unrealized PnL" value={account?.totalUnrealizedProfit} isPnl />
-          <AccountRow label="Margin Balance" value={account?.totalMarginBalance} suffix=" USDT" />
-          <AccountRow label="Available" value={account?.availableBalance} suffix=" USDT" highlight />
+          <AccountRow label="Margin Balance" value={account?.totalMarginBalance} suffix=" USDC" />
+          <AccountRow label="Available" value={account?.availableBalance} suffix=" USDC" highlight />
         </div>
 
         {/* Margin */}
         <div className="space-y-0.5">
           <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Margin</span>
-          <AccountRow label="Initial Margin" value={account?.totalInitialMargin} suffix=" USDT" />
-          <AccountRow label="Maint. Margin" value={account?.totalMaintMargin} suffix=" USDT" />
+          <AccountRow label="Initial Margin" value={account?.totalInitialMargin} suffix=" USDC" />
+          <AccountRow label="Withdrawable" value={account?.withdrawable} suffix=" USDC" highlight />
           {account?.totalMarginBalance && account?.totalMaintMargin && (
             <div className="flex justify-between text-[10px] py-0.5">
               <span className="text-muted-foreground">Margin Ratio</span>
@@ -162,7 +135,7 @@ function AccountRow({ label, value, suffix, isPnl, highlight }: { label: string;
   );
 }
 
-function PositionsTable({ positions }: { positions: AsterPosition[] }) {
+function PositionsTable({ positions }: { positions: HlPosition[] }) {
   if (positions.length === 0) return <div className="flex items-center justify-center py-8 text-muted-foreground">No open positions</div>;
   return (
     <table className="w-full">
@@ -185,7 +158,7 @@ function PositionsTable({ positions }: { positions: AsterPosition[] }) {
           return (
             <tr key={p.symbol + p.positionSide} className="border-b border-border/30 hover:bg-surface-hover/50">
               <td className="px-3 py-2">
-                <span className="font-medium text-foreground">{p.symbol.replace("USDT", "")}</span>
+                <span className="font-medium text-foreground">{p.symbol}</span>
                 <span className={cn("ml-1 text-[10px] font-bold", isLong ? "text-green-400" : "text-red-400")}>
                   {isLong ? "LONG" : "SHORT"}
                 </span>
@@ -206,7 +179,7 @@ function PositionsTable({ positions }: { positions: AsterPosition[] }) {
   );
 }
 
-function OrdersTable({ orders, onCancel }: { orders: AsterOpenOrder[]; onCancel: (symbol: string, orderId: number) => void }) {
+function OrdersTable({ orders, onCancel }: { orders: HlOpenOrder[]; onCancel: (symbol: string, orderId: number) => void }) {
   if (orders.length === 0) return <div className="flex items-center justify-center py-8 text-muted-foreground">No open orders</div>;
   return (
     <table className="w-full">
@@ -224,7 +197,7 @@ function OrdersTable({ orders, onCancel }: { orders: AsterOpenOrder[]; onCancel:
       <tbody>
         {orders.map((o) => (
           <tr key={o.orderId} className="border-b border-border/30 hover:bg-surface-hover/50">
-            <td className="px-3 py-2 font-medium text-foreground">{o.symbol.replace("USDT", "")}</td>
+            <td className="px-3 py-2 font-medium text-foreground">{o.symbol}</td>
             <td className="px-2 py-2 text-muted-foreground">{o.type}</td>
             <td className={cn("px-2 py-2 font-medium", o.side === "BUY" ? "text-green-400" : "text-red-400")}>{o.side}</td>
             <td className="text-right px-2 py-2 text-foreground tabular-nums">${parseFloat(o.price).toLocaleString()}</td>
@@ -240,45 +213,7 @@ function OrdersTable({ orders, onCancel }: { orders: AsterOpenOrder[]; onCancel:
   );
 }
 
-function OrderHistoryTable({ orders }: { orders: AsterOrderHistory[] }) {
-  if (orders.length === 0) return <div className="flex items-center justify-center py-8 text-muted-foreground">No order history</div>;
-  return (
-    <table className="w-full">
-      <thead>
-        <tr className="text-[10px] text-muted-foreground uppercase border-b border-border/50">
-          <th className="text-left px-3 py-1.5">Symbol</th>
-          <th className="text-left px-2 py-1.5">Type</th>
-          <th className="text-left px-2 py-1.5">Side</th>
-          <th className="text-right px-2 py-1.5">Price</th>
-          <th className="text-right px-2 py-1.5">Filled/Qty</th>
-          <th className="text-left px-2 py-1.5">Status</th>
-          <th className="text-right px-3 py-1.5">Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        {orders.map((o) => (
-          <tr key={o.orderId} className="border-b border-border/30 hover:bg-surface-hover/50">
-            <td className="px-3 py-2 font-medium text-foreground">{o.symbol.replace("USDT", "")}</td>
-            <td className="px-2 py-2 text-muted-foreground">{o.type}</td>
-            <td className={cn("px-2 py-2 font-medium", o.side === "BUY" ? "text-green-400" : "text-red-400")}>{o.side}</td>
-            <td className="text-right px-2 py-2 text-foreground tabular-nums">${parseFloat(o.avgPrice || o.price).toLocaleString()}</td>
-            <td className="text-right px-2 py-2 text-foreground/70 tabular-nums">{o.executedQty}/{o.origQty}</td>
-            <td className="px-2 py-2">
-              <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded",
-                o.status === "FILLED" ? "bg-green-500/10 text-green-400" :
-                o.status === "CANCELED" ? "bg-red-500/10 text-red-400" :
-                "bg-muted text-muted-foreground"
-              )}>{o.status}</span>
-            </td>
-            <td className="text-right px-3 py-2 text-muted-foreground tabular-nums">{formatTime(o.time)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function TradeHistoryTable({ trades }: { trades: AsterTradeHistory[] }) {
+function TradeHistoryTable({ trades }: { trades: HlTradeHistory[] }) {
   if (trades.length === 0) return <div className="flex items-center justify-center py-8 text-muted-foreground">No trade history</div>;
   return (
     <table className="w-full">
@@ -298,7 +233,7 @@ function TradeHistoryTable({ trades }: { trades: AsterTradeHistory[] }) {
           const pnl = parseFloat(t.realizedPnl);
           return (
             <tr key={t.id} className="border-b border-border/30 hover:bg-surface-hover/50">
-              <td className="px-3 py-2 font-medium text-foreground">{t.symbol.replace("USDT", "")}</td>
+              <td className="px-3 py-2 font-medium text-foreground">{t.symbol}</td>
               <td className={cn("px-2 py-2 font-medium", t.side === "BUY" ? "text-green-400" : "text-red-400")}>{t.side}</td>
               <td className="text-right px-2 py-2 text-foreground tabular-nums">${parseFloat(t.price).toLocaleString()}</td>
               <td className="text-right px-2 py-2 text-foreground/70 tabular-nums">{t.qty}</td>
@@ -315,33 +250,15 @@ function TradeHistoryTable({ trades }: { trades: AsterTradeHistory[] }) {
   );
 }
 
-function AssetsTable({ account }: { account: AsterAccountInfo | null }) {
-  const assets = (account?.assets || []).filter((a) => parseFloat(a.walletBalance) > 0);
-  if (assets.length === 0) return <div className="flex items-center justify-center py-8 text-muted-foreground">No assets</div>;
+function AccountSummary({ account }: { account: HlAccountInfo | null }) {
+  if (!account) return <div className="flex items-center justify-center py-8 text-muted-foreground">No account data</div>;
   return (
-    <table className="w-full">
-      <thead>
-        <tr className="text-[10px] text-muted-foreground uppercase border-b border-border/50">
-          <th className="text-left px-3 py-1.5">Asset</th>
-          <th className="text-right px-2 py-1.5">Wallet Balance</th>
-          <th className="text-right px-2 py-1.5">Unrealized PnL</th>
-          <th className="text-right px-2 py-1.5">Margin Balance</th>
-          <th className="text-right px-3 py-1.5">Available</th>
-        </tr>
-      </thead>
-      <tbody>
-        {assets.map((a) => (
-          <tr key={a.asset} className="border-b border-border/30 hover:bg-surface-hover/50">
-            <td className="px-3 py-2 font-medium text-foreground">{a.asset}</td>
-            <td className="text-right px-2 py-2 text-foreground tabular-nums">{parseFloat(a.walletBalance).toFixed(4)}</td>
-            <td className={cn("text-right px-2 py-2 tabular-nums", parseFloat(a.unrealizedProfit) >= 0 ? "text-green-400" : "text-red-400")}>
-              {parseFloat(a.unrealizedProfit).toFixed(4)}
-            </td>
-            <td className="text-right px-2 py-2 text-foreground/70 tabular-nums">{parseFloat(a.marginBalance).toFixed(4)}</td>
-            <td className="text-right px-3 py-2 text-primary font-medium tabular-nums">{parseFloat(a.availableBalance).toFixed(4)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="p-4 space-y-2">
+      <AccountRow label="Account Value" value={account.totalWalletBalance} suffix=" USDC" highlight />
+      <AccountRow label="Unrealized PnL" value={account.totalUnrealizedProfit} isPnl />
+      <AccountRow label="Available Balance" value={account.availableBalance} suffix=" USDC" />
+      <AccountRow label="Withdrawable" value={account.withdrawable} suffix=" USDC" />
+      <AccountRow label="Margin Used" value={account.totalInitialMargin} suffix=" USDC" />
+    </div>
   );
 }

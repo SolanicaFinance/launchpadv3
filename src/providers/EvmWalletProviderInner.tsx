@@ -1,15 +1,16 @@
 import { ReactNode } from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { base, mainnet, bsc } from 'wagmi/chains';
+import { base, mainnet, bsc, arbitrum } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Configure wagmi with Base, Ethereum mainnet, and BSC
+// Configure wagmi with Base, Ethereum mainnet, BSC, and Arbitrum (for Hyperliquid deposits)
 const config = createConfig({
-  chains: [base, mainnet, bsc],
+  chains: [base, mainnet, bsc, arbitrum],
   transports: {
     [base.id]: http('https://mainnet.base.org'),
     [mainnet.id]: http('https://eth.llamarpc.com'),
     [bsc.id]: http(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
   },
 });
 

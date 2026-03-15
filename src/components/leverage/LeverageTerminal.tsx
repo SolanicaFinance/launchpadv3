@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
-import { useAsterMarkets } from "@/hooks/useAsterMarkets";
-import { useAsterKlines, type KlineInterval } from "@/hooks/useAsterKlines";
-import { useAsterOrderbook } from "@/hooks/useAsterOrderbook";
-import { useAsterAccount } from "@/hooks/useAsterAccount";
+import { useHyperliquidMarkets } from "@/hooks/useHyperliquidMarkets";
+import { useHyperliquidKlines, type KlineInterval } from "@/hooks/useHyperliquidKlines";
+import { useHyperliquidOrderbook } from "@/hooks/useHyperliquidOrderbook";
+import { useHyperliquidAccount } from "@/hooks/useHyperliquidAccount";
 import { LeverageMarketSelector } from "./LeverageMarketSelector";
 import { LeverageChart } from "./LeverageChart";
 import { LeverageOrderbook } from "./LeverageOrderbook";
@@ -12,25 +12,27 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function LeverageTerminal() {
-  const [symbol, setSymbol] = useState("BTCUSDT");
+  const [symbol, setSymbol] = useState("BTC");
   const [interval, setInterval] = useState<KlineInterval>("5m");
   const isMobile = useIsMobile();
 
-  const { markets, allMarkets, loading: marketsLoading, search, setSearch } = useAsterMarkets();
-  const { bars, loading: klinesLoading } = useAsterKlines(symbol, interval);
-  const orderbook = useAsterOrderbook(symbol);
+  const { markets, allMarkets, loading: marketsLoading, search, setSearch } = useHyperliquidMarkets();
+  const { bars, loading: klinesLoading } = useHyperliquidKlines(symbol, interval);
+  const orderbook = useHyperliquidOrderbook(symbol);
   const {
-    account, openOrders, orderHistory, tradeHistory, hasApiKey,
+    account, openOrders, orderHistory, tradeHistory, isConnected,
     placeOrder, cancelOrder, changeLeverage,
     fetchAccount, fetchOpenOrders, fetchOrderHistory, fetchTradeHistory,
-  } = useAsterAccount();
+  } = useHyperliquidAccount();
 
   const selectedMarket = allMarkets.find((m) => m.symbol === symbol);
 
   const handleCancelOrder = useCallback(async (sym: string, orderId: number) => {
-    await cancelOrder(sym, orderId);
-    await fetchOpenOrders(sym);
-  }, [cancelOrder, fetchOpenOrders]);
+    const market = allMarkets.find(m => m.symbol === sym);
+    if (!market) return;
+    await cancelOrder(sym, orderId, market.assetIndex);
+    await fetchOpenOrders();
+  }, [cancelOrder, fetchOpenOrders, allMarkets]);
 
   const positionsProps = {
     positions: account?.positions || [],
@@ -42,7 +44,7 @@ export function LeverageTerminal() {
     onFetchOrderHistory: fetchOrderHistory,
     onFetchTradeHistory: fetchTradeHistory,
     onRefreshAccount: fetchAccount,
-    hasApiKey: hasApiKey ?? false,
+    hasApiKey: isConnected,
     symbol,
   };
 
@@ -62,7 +64,7 @@ export function LeverageTerminal() {
           <LeverageChart bars={bars} loading={klinesLoading} interval={interval} onIntervalChange={setInterval} symbol={symbol} />
         </div>
         <div className="border-b border-border bg-card">
-          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel market={selectedMarket} isConnected={isConnected} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
         </div>
         <div className="h-[300px] border-b border-border bg-card">
           <LeverageOrderbook orderbook={orderbook} />
@@ -90,6 +92,7 @@ export function LeverageTerminal() {
             <div className="h-4 w-px bg-border" />
             <span className="text-[10px] text-muted-foreground">24h Vol: <span className="text-foreground">${parseFloat(selectedMarket.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
             <span className="text-[10px] text-muted-foreground">Funding: <span className={cn(parseFloat(selectedMarket.fundingRate) >= 0 ? "text-green-400" : "text-red-400")}>{(parseFloat(selectedMarket.fundingRate) * 100).toFixed(4)}%</span></span>
+            <span className="text-[10px] text-muted-foreground">OI: <span className="text-foreground">${parseFloat(selectedMarket.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
           </>
         )}
       </div>
@@ -105,7 +108,7 @@ export function LeverageTerminal() {
           <LeverageOrderbook orderbook={orderbook} />
         </div>
         <div className="w-[240px] flex-shrink-0 bg-card/50 overflow-y-auto">
-          <LeverageTradePanel market={selectedMarket} hasApiKey={hasApiKey} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel market={selectedMarket} isConnected={isConnected} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
         </div>
       </div>
 

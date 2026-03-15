@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
-import type { AsterMarket } from "@/hooks/useAsterMarkets";
+import type { HyperliquidMarket } from "@/hooks/useHyperliquidMarkets";
 
 interface Props {
-  market: AsterMarket | undefined;
-  hasApiKey: boolean | null;
+  market: HyperliquidMarket | undefined;
+  isConnected: boolean;
   onPlaceOrder: (params: any) => Promise<any>;
   onChangeLeverage: (symbol: string, leverage: number) => Promise<any>;
 }
 
-export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLeverage }: Props) {
+export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChangeLeverage }: Props) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
   const [leverage, setLeverage] = useState(10);
@@ -18,7 +18,7 @@ export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLe
   const [price, setPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const maxLeverage = market?.maxLeverage || 125;
+  const maxLeverage = market?.maxLeverage || 50;
   const currentPrice = parseFloat(market?.lastPrice || "0");
 
   const handleSubmit = async () => {
@@ -26,12 +26,19 @@ export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLe
     setSubmitting(true);
     try {
       await onChangeLeverage(market.symbol, leverage);
+      
+      const limitPx = orderType === "LIMIT" ? parseFloat(price) : currentPrice;
       await onPlaceOrder({
-        symbol: market.symbol,
-        side,
-        type: orderType,
-        quantity,
-        ...(orderType === "LIMIT" ? { price, timeInForce: "GTC" } : {}),
+        coin: market.symbol,
+        isBuy: side === "BUY",
+        sz: parseFloat(quantity),
+        limitPx,
+        orderType: orderType === "MARKET" 
+          ? { limit: { tif: "Ioc" } }  // Market orders use IOC
+          : { limit: { tif: "Gtc" } },
+        reduceOnly: false,
+        assetIndex: market.assetIndex,
+        szDecimals: market.szDecimals,
       });
       setQuantity("");
       setPrice("");
@@ -42,10 +49,10 @@ export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLe
     }
   };
 
-  if (hasApiKey === false) {
+  if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 p-4">
-        <p className="text-sm text-muted-foreground text-center">Aster DEX API not configured. Contact admin to set up trading credentials.</p>
+        <p className="text-sm text-muted-foreground text-center">Connect your wallet to start trading on Hyperliquid.</p>
       </div>
     );
   }
@@ -115,7 +122,7 @@ export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLe
       {/* Price (limit only) */}
       {orderType === "LIMIT" && (
         <div>
-          <label className="text-muted-foreground mb-1 block">Price (USDT)</label>
+          <label className="text-muted-foreground mb-1 block">Price (USDC)</label>
           <input
             type="number"
             value={price}
@@ -192,6 +199,10 @@ export function LeverageTradePanel({ market, hasApiKey, onPlaceOrder, onChangeLe
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">24h Volume</span>
             <span className="text-foreground">${parseFloat(market.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+          </div>
+          <div className="flex justify-between text-[10px]">
+            <span className="text-muted-foreground">Open Interest</span>
+            <span className="text-foreground">${parseFloat(market.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           </div>
         </div>
       )}
