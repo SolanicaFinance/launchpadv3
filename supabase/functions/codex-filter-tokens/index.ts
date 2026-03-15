@@ -70,21 +70,22 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
 }
 
 async function fetchPumpFunImageUri(address: string): Promise<string | null> {
-  // Try multiple Pump.fun API endpoints — frontend-api frequently returns 530
-  const apis = [
-    `https://client-api-2-74b1891ee9f9.herokuapp.com/coins/${address}`,
+  // Strategy 1: Try Pump.fun APIs (multiple endpoints for redundancy)
+  const pumpApis = [
+    `https://frontend-api-v3.pump.fun/coins/${address}`,
     `https://frontend-api.pump.fun/coins/${address}`,
+    `https://client-api-2-74b1891ee9f9.herokuapp.com/coins/${address}`,
   ];
 
-  for (const url of apis) {
+  for (const url of pumpApis) {
     try {
       const response = await fetch(url, {
         headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(4000),
       });
 
       if (!response.ok) {
-        const host = url.includes("herokuapp") ? "client-api" : "frontend-api";
+        const host = new URL(url).hostname.split('.')[0];
         console.log(`[pump-image] ${address.slice(0,8)}… ${host} HTTP ${response.status}`);
         continue;
       }
@@ -101,11 +102,33 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
         return normalizeImageUrl(imageUri);
       }
     } catch {
-      // Try next API
+      // Try next
     }
   }
 
-  console.log(`[pump-image] ${address.slice(0,8)}… all APIs failed`);
+  // Strategy 2: Try DexScreener token info API (often has image before CDN does)
+  try {
+    const dsRes = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${address}`, {
+      headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(4000),
+    });
+
+    if (dsRes.ok) {
+      const dsData = await dsRes.json();
+      const pairs = Array.isArray(dsData) ? dsData : dsData?.pairs ?? [];
+      for (const pair of pairs) {
+        const img = pair?.info?.imageUrl || pair?.baseToken?.info?.imageUrl;
+        if (img) {
+          console.log(`[pump-image] ${address.slice(0,8)}… got image from DexScreener API`);
+          return normalizeImageUrl(img);
+        }
+      }
+    }
+  } catch {
+    // Fallback exhausted
+  }
+
+  console.log(`[pump-image] ${address.slice(0,8)}… all sources failed`);
   return null;
 }
 
