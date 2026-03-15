@@ -45,6 +45,43 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
   const mintAddress = tokenInfo.mint_address;
   const tokenDecimals = tokenInfo.decimals || 9;
 
+  // Build a Token object for useTurboSwap (same bridge pattern as Pulse)
+  const turboToken: Token = useMemo(() => {
+    if (bondingToken) return bondingToken;
+    return {
+      id: externalToken?.mint_address ?? "",
+      mint_address: externalToken?.mint_address ?? "",
+      name: externalToken?.name ?? "",
+      ticker: externalToken?.ticker ?? "",
+      description: null,
+      image_url: externalToken?.imageUrl ?? null,
+      website_url: null,
+      twitter_url: null,
+      telegram_url: null,
+      discord_url: null,
+      creator_wallet: "",
+      creator_id: null,
+      dbc_pool_address: null,
+      damm_pool_address: null,
+      virtual_sol_reserves: 0,
+      virtual_token_reserves: 0,
+      real_sol_reserves: 0,
+      real_token_reserves: 0,
+      total_supply: 0,
+      bonding_curve_progress: 0,
+      graduation_threshold_sol: 0,
+      price_sol: externalToken?.price_sol ?? 0,
+      market_cap_sol: 0,
+      volume_24h_sol: 0,
+      status: (externalToken?.graduated !== false ? "graduated" : "bonding") as Token["status"],
+      migration_status: "",
+      holder_count: 0,
+      created_at: "",
+      updated_at: "",
+      graduated_at: null,
+    };
+  }, [bondingToken, externalToken]);
+
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
