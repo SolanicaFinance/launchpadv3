@@ -42,12 +42,16 @@ export function showTradeNotification(data: TradeToastData) {
   const mcapStr = formatMcap(data.marketCapUsd);
   const duration = type === "launch" ? 6000 : 5000;
 
-  // Token image sources
+  // Build robust token image fallback chain
   const dexChain = data.chain === "bnb" ? "bsc" : "solana";
   const tokenSources: string[] = [];
   if (data.tokenImageUrl) tokenSources.push(data.tokenImageUrl);
   if (data.tokenMint) {
     tokenSources.push(`https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${data.tokenMint}.png`);
+    if (dexChain === "bsc") {
+      tokenSources.push(`https://tokens.1inch.io/56/${data.tokenMint.toLowerCase()}.png`);
+      tokenSources.push(`https://tokens.pancakeswap.finance/images/${data.tokenMint.toLowerCase()}.png`);
+    }
   }
   tokenSources.push(`https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(data.tokenMint || data.tokenTicker)}`);
 
@@ -91,12 +95,13 @@ export function showTradeNotification(data: TradeToastData) {
             }}
           >
             <OptimizedTokenImage
-              src={tokenSources[0]}
+              src={tokenSources[0] ?? null}
               fallbackSrc={tokenSources.slice(1)}
               fallbackText={data.tokenTicker}
               alt={data.tokenTicker}
               size={34}
-              style={{ width: 34, height: 34, objectFit: "cover", display: "block" }}
+              className="rounded-full"
+              style={{ width: 34, height: 34, objectFit: "cover", display: "block", borderRadius: "50%" }}
             />
           </div>
           {/* Status dot */}
