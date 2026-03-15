@@ -1,19 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
-import { usePumpFunSwap } from "@/hooks/usePumpFunSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRugCheck } from "@/hooks/useRugCheck";
-import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
-import { supabase } from "@/integrations/supabase/client";
-import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import type { Token } from "@/hooks/useLaunchpad";
 
 interface TokenInfo {
   mint_address: string;
@@ -35,13 +35,43 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: swapLoading } = useJupiterSwap();
-  const { swap: pumpFunSwap } = usePumpFunSwap();
-  const { signAndSendTransaction, isWalletReady, getBalance } = useSolanaWalletWithPrivy();
+  const { getBuyQuote, getSellQuote } = useJupiterSwap();
+  const { executeTurboSwap, isLoading: turboLoading } = useTurboSwap();
+  const { isWalletReady, getBalance } = useSolanaWalletWithPrivy();
 
-  const signAndSendTx = useCallback(async (tx: VersionedTransaction): Promise<{ signature: string; confirmed: boolean }> => {
-    return await signAndSendTransaction(tx);
-  }, [signAndSendTransaction]);
+  // Build Token object for TurboSwap
+  const turboToken: Token = useMemo(() => ({
+    id: token.mint_address,
+    mint_address: token.mint_address,
+    name: token.name,
+    ticker: token.ticker,
+    description: null,
+    image_url: token.imageUrl ?? null,
+    website_url: null,
+    twitter_url: null,
+    telegram_url: null,
+    discord_url: null,
+    creator_wallet: "",
+    creator_id: null,
+    dbc_pool_address: null,
+    damm_pool_address: null,
+    virtual_sol_reserves: 0,
+    virtual_token_reserves: 0,
+    real_sol_reserves: 0,
+    real_token_reserves: 0,
+    total_supply: 0,
+    bonding_curve_progress: 0,
+    graduation_threshold_sol: 0,
+    price_sol: token.price_sol ?? 0,
+    market_cap_sol: 0,
+    volume_24h_sol: 0,
+    status: (token.graduated !== false ? "graduated" : "bonding") as Token["status"],
+    migration_status: "",
+    holder_count: 0,
+    created_at: "",
+    updated_at: "",
+    graduated_at: null,
+  }), [token]);
 
   const preferJupiterRoute = token.graduated !== false;
   const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
