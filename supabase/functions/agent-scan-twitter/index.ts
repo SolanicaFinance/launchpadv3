@@ -918,7 +918,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           return take;
         } catch (e) {
           console.error("[agent-scan-twitter] AI viral take exception:", e);
-          return "🦞 Snip snip. Trade it on saturntrade.com";
+          return "🪐 Trade it on saturn.trade";
         }
       }
 
