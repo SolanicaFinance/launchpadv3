@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useXBotAccounts, type XBotAccountWithRules, type XBotAccountRules } from "@/hooks/useXBotAccounts";
 import { XBotAccountsPanel } from "@/components/admin/XBotAccountsPanel";
 import { XBotAccountForm } from "@/components/admin/XBotAccountForm";
@@ -12,15 +10,7 @@ import { Play, RefreshCw, Shield, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const ADMIN_PASSWORD = "claw";
-const AUTH_STORAGE_KEY = "xbot-admin-auth";
-
 export default function XBotAdminPage() {
-  const [authenticated, setAuthenticated] = useState(() => {
-    return sessionStorage.getItem(AUTH_STORAGE_KEY) === "true";
-  });
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   const [showAccountForm, setShowAccountForm] = useState(false);
   const [showRulesForm, setShowRulesForm] = useState(false);
@@ -46,17 +36,6 @@ export default function XBotAdminPage() {
     runScan,
     runReply,
   } = useXBotAccounts();
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setAuthenticated(true);
-      sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
-      setError("");
-    } else {
-      setError("Invalid password");
-    }
-  };
 
   const handleAddAccount = () => {
     setSelectedAccount(null);
@@ -127,37 +106,6 @@ export default function XBotAdminPage() {
 
   const activeAccounts = accounts.filter((a) => a.is_active);
   const totalActiveRules = accounts.filter((a) => a.is_active && a.rules?.enabled).length;
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Shield className="w-12 h-12 mx-auto text-primary mb-2" />
-            <CardTitle>X Bot Admin</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Admin Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                />
-              </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full">
-                Access Admin Panel
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
