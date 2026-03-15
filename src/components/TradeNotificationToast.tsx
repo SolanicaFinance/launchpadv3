@@ -7,10 +7,11 @@ interface TradeToastData {
   traderAvatar: string | null;
   tokenTicker: string;
   tokenMint: string;
-  tradeType: "buy" | "sell";
+  tradeType: "buy" | "sell" | "launch";
   amountSol: number;
   marketCapUsd: number | null;
   chain: string;
+  tokenImageUrl?: string | null;
 }
 
 function formatMcap(usd: number | null): string {
