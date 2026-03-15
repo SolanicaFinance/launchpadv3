@@ -307,10 +307,10 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         {/* ── Amount Input ── */}
         <div>
           <div className="flex justify-between items-center mb-2.5 gap-2">
-            <span className="text-[12px] font-mono uppercase tracking-wider text-muted-foreground/50">
+            <span className="text-[12px] font-mono uppercase tracking-wider text-foreground/60">
               {isBuy ? 'Amount to buy' : `Sell ${token.ticker}`}
             </span>
-            <span className="text-[12px] font-mono text-muted-foreground/45 truncate">
+            <span className="text-[12px] font-mono text-foreground/50 truncate">
               Bal: {isBuy
                 ? (solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—')
                 : `${formatAmount(userTokenBalance)} ${token.ticker.length > 6 ? token.ticker.slice(0, 5) + '…' : token.ticker}`}
