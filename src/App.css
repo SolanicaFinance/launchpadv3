@@ -47,6 +47,48 @@ html, body, #root {
   bottom: 52px !important;
   right: 12px !important;
 }
+
+/* Toast slide-in / slide-out animations */
+@keyframes toast-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-4%) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(110%) scale(0.9);
+  }
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards !important;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out 0.3s cubic-bezier(0.06, 0.71, 0.55, 1) forwards !important;
+}
+
+/* Stacked toasts: smooth gap between them */
+[data-sonner-toaster] [data-sonner-toast] {
+  transition: transform 0.3s cubic-bezier(0.21, 1.02, 0.73, 1),
+              opacity 0.3s ease !important;
+}
+
 @media (max-width: 767px) {
   [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] {
     bottom: 48px !important;
