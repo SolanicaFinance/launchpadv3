@@ -116,7 +116,7 @@ export function TokenTable({ solPrice, promotedTokenIds, onPromote }: TokenTable
           <div className="flex items-center gap-1 mt-px">
             <span className="text-[9px] font-mono text-muted-foreground">${token.ticker}</span>
             <span className="text-[9px] text-muted-foreground/40">·</span>
-            <LiveAge createdAt={token.created_at} className="text-[9px] text-muted-foreground/50" />
+            <LiveAge createdAt={token.created_at} className="text-[9px]" />
           </div>
           {/* Ultra-thin progress bar */}
           <div className="h-px w-full bg-border/50 mt-1 rounded-full overflow-hidden">
