@@ -140,11 +140,17 @@ export function useTradeSounds() {
     playSellSound();
   }, []);
 
+  const playLaunch = useCallback(() => {
+    if (!enabledRef.current) return;
+    playLaunchSound();
+  }, []);
+
   return {
     enabled: enabledRef.current,
     toggle,
     playBuy,
     playSell,
+    playLaunch,
     isEnabled: () => enabledRef.current,
   };
 }
