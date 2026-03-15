@@ -365,10 +365,14 @@ Deno.serve(async (req) => {
           currentImage.includes("dicebear.com");
 
         if (launchpad.includes("pump") && needsPumpImage) {
+          console.log(`[pump-enrich] Fetching image for ${token.symbol} (${token.address.slice(0,8)}…) — current: ${token.imageUrl?.slice(0,60) ?? 'null'}`);
           const pumpImage = await fetchPumpFunImageUri(token.address);
           if (pumpImage && pumpImage !== token.imageUrl) {
+            console.log(`[pump-enrich] ✓ Got image for ${token.symbol}: ${pumpImage.slice(0,80)}`);
             token.fallbackImageUrl = token.imageUrl || token.fallbackImageUrl || null;
             token.imageUrl = pumpImage;
+          } else if (!pumpImage) {
+            console.log(`[pump-enrich] ✗ No image for ${token.symbol} (${token.address.slice(0,8)}…)`);
           }
         }
       }
