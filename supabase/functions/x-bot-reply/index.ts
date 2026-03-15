@@ -123,6 +123,12 @@ async function generateReply(
     // Strip hashtags
     reply = reply.replace(/#\w+/g, "").trim();
 
+    // Strip banned words as hard safety net
+    reply = stripBannedWords(reply);
+
+    // If after stripping the reply is too short or empty, discard
+    if (reply.length < 5) return "";
+
     // Clean up double spaces left behind
     reply = reply.replace(/\s{2,}/g, " ").trim();
 
