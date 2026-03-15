@@ -213,7 +213,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
       </div>
 
       {/* Row 2: Bottom bar */}
-      <div className="relative z-10 flex items-center justify-between mt-2 pt-2 border-t border-border">
+      <div className="relative z-10 flex items-center justify-between mt-2.5 pt-2.5" style={{ borderTop: "1px solid hsl(200 30% 50% / 0.08)" }}>
         <div className="flex items-center gap-1.5">
           {/* Progress % */}
           <div className="flex items-center gap-1">
