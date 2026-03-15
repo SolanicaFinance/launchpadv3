@@ -424,20 +424,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
             {numericAmount > 0 && (
               <div className="space-y-2 text-[12px] font-mono border-t border-white/[0.05] pt-3">
                 {outputAmount > 0 && (
-                  <div className="flex justify-between text-muted-foreground/50">
+                  <div className="flex justify-between text-foreground/55">
                     <span>You Receive</span>
-                    <span className="text-foreground/70 font-semibold">{formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}</span>
+                    <span className="text-foreground/80 font-semibold">{formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}</span>
                   </div>
                 )}
                 {quote && (
-                  <div className="flex justify-between text-muted-foreground/50">
+                  <div className="flex justify-between text-foreground/55">
                     <span>Price Impact</span>
-                    <span className={priceImpact > 5 ? 'text-destructive' : 'text-foreground/70'}>{priceImpact.toFixed(2)}%</span>
+                    <span className={priceImpact > 5 ? 'text-destructive' : 'text-foreground/80'}>{priceImpact.toFixed(2)}%</span>
                   </div>
                 )}
-                <div className="flex justify-between text-muted-foreground/50">
+                <div className="flex justify-between text-foreground/55">
                   <span>Slippage</span>
-                  <span className="text-foreground/70">{slippage}%</span>
+                  <span className="text-foreground/80">{slippage}%</span>
                 </div>
               </div>
             )}
