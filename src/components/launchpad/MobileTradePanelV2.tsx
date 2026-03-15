@@ -37,14 +37,11 @@ interface MobileTradePanelV2Props {
 export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalance: externalBalance = 0 }: MobileTradePanelV2Props) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
   const { executeRealSwap, isLoading: bondingSwapLoading, getBalance } = useRealSwap();
-  const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: jupiterLoading } = useJupiterSwap();
+  const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { swap: pumpFunSwap } = usePumpFunSwap();
+  const { executeTurboSwap, isLoading: turboLoading, lastLatencyMs: turboLatencyMs } = useTurboSwap();
   const { signAndSendTransaction, isWalletReady, walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
-
-  const signAndSendTx = useCallback(async (tx: VersionedTransaction): Promise<{ signature: string; confirmed: boolean }> => {
-    return await signAndSendTransaction(tx);
-  }, [signAndSendTransaction]);
 
   const isBondingMode = !!bondingToken;
   const tokenInfo = bondingToken
