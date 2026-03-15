@@ -233,59 +233,11 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
     setIsLoading(true);
     try {
-      let signature = "";
-      let resultOutputAmount: number | undefined;
+      // Use the same TurboSwap pipeline as Pulse quick buy
+      const result = await executeTurboSwap(turboToken, numericAmount, isBuy, slippage * 100);
 
-      if (isBondingMode && bondingToken) {
-        const result = await executeRealSwap(bondingToken, numericAmount, isBuy, slippage * 100);
-        signature = result.signature;
-
-        // Record bonding curve trade to alpha tracker (was previously skipped)
-        if (signature) {
-          await recordAlphaTrade({
-            walletAddress: solanaAddress!,
-            tokenMint: mintAddress,
-            tokenName: tokenInfo.name,
-            tokenTicker: tokenInfo.ticker,
-            tradeType: isBuy ? 'buy' : 'sell',
-            amountSol: numericAmount,
-            txHash: signature,
-            chain: 'solana',
-          });
-        }
-      } else {
-        if (useJupiterRoute) {
-          const result = isBuy
-            ? await buyToken(mintAddress, numericAmount, solanaAddress, signAndSendTx, slippage * 100)
-            : await sellToken(mintAddress, numericAmount, tokenDecimals, solanaAddress, signAndSendTx, slippage * 100);
-          signature = result.signature || "";
-          resultOutputAmount = result.outputAmount;
-        } else {
-          const result = await pumpFunSwap(mintAddress, numericAmount, isBuy, slippage);
-          signature = result.signature;
-          resultOutputAmount = result.outputAmount;
-        }
-
-        if (signature) {
-          // Client-side direct insert — awaited
-          await recordAlphaTrade({
-            walletAddress: solanaAddress!,
-            tokenMint: mintAddress,
-            tokenName: tokenInfo.name,
-            tokenTicker: tokenInfo.ticker,
-            tradeType: isBuy ? 'buy' : 'sell',
-            amountSol: numericAmount,
-            amountTokens: resultOutputAmount ?? undefined,
-            txHash: signature,
-            chain: 'solana',
-          });
-
-          // Edge function (secondary, non-blocking)
-          supabase.functions.invoke("launchpad-swap", {
-            body: { mintAddress, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature, outputAmount: resultOutputAmount ?? null, tokenName: tokenInfo.name, tokenTicker: tokenInfo.ticker, mode: "alpha_only" },
-          }).catch(() => {});
-        }
-      }
+      const signature = result.signature;
+      const resultOutputAmount = result.outputAmount;
 
       setAmount("");
       setQuote(null);
@@ -295,23 +247,23 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
       window.setTimeout(() => void refreshTokenBalance(), 1500);
       window.setTimeout(() => void refreshTokenBalance(), 5000);
 
+      // Show global trade success notification (same as Pulse)
+      showTradeSuccess({
+        type: isBuy ? 'buy' : 'sell',
+        ticker: tokenInfo.ticker,
+        tokenName: tokenInfo.name,
+        mintAddress,
+        amount: isBuy ? `${numericAmount} SOL` : `${formatAmount(numericAmount)} ${tokenInfo.ticker}`,
+        signature,
+        executionMs: result.totalMs || undefined,
+        tokenImageUrl: tokenInfo.imageUrl,
+      });
+
+      // Also show PNL card
       const solValue = !isBuy ? (resultOutputAmount ?? numericAmount * (tokenInfo.price_sol || 0)) : numericAmount;
       setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: solValue, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name, outputAmount: resultOutputAmount, signature, tokenImageUrl: tokenInfo.imageUrl });
       setShowProfitCard(true);
 
-      toast({
-        title: `${isBuy ? "Buy" : "Sell"} successful!`,
-        description: (
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span>{isBuy ? `Bought ${tokenInfo.ticker}` : `Sold ${tokenInfo.ticker}`}</span>
-            {signature && (
-              <a href={`https://solscan.io/tx/${signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
-          </div>
-        ),
-      });
     } catch (error) {
       console.error("Trade error:", error);
       toast({ title: "Trade failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" });
@@ -330,7 +282,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     { label: "Top 10 <30%", passed: rugCheck ? rugCheck.topHolderPct < 30 : null, loading: rugLoading },
   ];
 
-  const tradingDisabled = isLoading || bondingSwapLoading || jupiterLoading;
+  const tradingDisabled = isLoading || turboLoading;
 
   // Truncate ticker for display on small screens
   const shortTicker = tokenInfo.ticker.length > 8 ? tokenInfo.ticker.slice(0, 7) + '…' : tokenInfo.ticker;
