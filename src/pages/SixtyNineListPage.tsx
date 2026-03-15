@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
-import { Crown, Trophy, TrendingUp, Shield, Gem, ExternalLink, RefreshCw, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight, ChevronLeft, ChevronRight, Wallet, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Crown, Trophy, TrendingUp, Shield, Gem, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight, Wallet, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SATURN_TOKEN_CA } from "@/hooks/useSaturnTokenData";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
