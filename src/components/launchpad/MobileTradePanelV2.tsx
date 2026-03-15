@@ -203,7 +203,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     setIsLoading(true);
     try {
       // Build a Token object for useTurboSwap (same shape as Pulse uses)
-      const turboToken: Token = isBondingMode && bondingToken
+      const turboToken = (isBondingMode && bondingToken
         ? bondingToken
         : {
             id: '',
@@ -211,7 +211,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             ticker: tokenInfo.ticker,
             mint_address: mintAddress,
             image_url: tokenInfo.imageUrl || null,
-            status: 'graduated',
+            status: 'graduated' as const,
             price_sol: tokenInfo.price_sol || 0,
             virtual_sol_reserves: 0,
             virtual_token_reserves: 0,
@@ -223,7 +223,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             holder_count: 0,
             volume_24h_sol: 0,
             dbc_pool_address: null,
-          } as Token;
+          }) as unknown as Token;
 
       const result = await executeTurboSwap(turboToken, numericAmount, isBuy, slippage * 100);
 
