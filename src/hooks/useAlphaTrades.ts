@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { computePositions, PositionSummary } from "@/lib/tradeUtils";
 
@@ -21,12 +21,30 @@ export interface AlphaTrade {
   trader_avatar_url: string | null;
   chain?: string | null;
   token_image_url?: string | null;
+  token_image_fallbacks?: string[];
+}
+
+// Persistent cross-render cache so polling doesn't re-fetch known mints
+const imageCache = new Map<string, { primary: string; fallbacks: string[] }>();
+
+function buildFallbacks(mint: string, chain?: string | null): string[] {
+  const c = chain === "bnb" ? "bsc" : "solana";
+  const fallbacks: string[] = [];
+  fallbacks.push(`https://dd.dexscreener.com/ds-data/tokens/${c}/${mint}.png`);
+  if (c === "bsc") {
+    fallbacks.push(`https://tokens.1inch.io/${mint.toLowerCase()}.png`);
+    fallbacks.push(`https://tokens.pancakeswap.finance/images/${mint}.png`);
+  }
+  fallbacks.push(`https://api.dicebear.com/7.x/identicon/svg?seed=${mint}&size=32`);
+  return fallbacks;
 }
 
 export function useAlphaTrades(limit = 50) {
   const [trades, setTrades] = useState<AlphaTrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [tokenImages, setTokenImages] = useState<Map<string, string>>(new Map());
+  const [metadataImages, setMetadataImages] = useState<Map<string, string>>(new Map());
+  const pendingMetadata = useRef<Set<string>>(new Set());
 
   const fetchTrades = useCallback(async () => {
     const { data, error } = await (supabase as any)
@@ -58,7 +76,7 @@ export function useAlphaTrades(limit = 50) {
           }
         }
 
-        // Check fun_tokens table for any mints not yet resolved
+        // Check fun_tokens table
         const unresolvedMints = mints.filter((m) => !imgMap.has(m));
         if (unresolvedMints.length > 0) {
           const { data: funData } = await supabase
@@ -72,7 +90,7 @@ export function useAlphaTrades(limit = 50) {
           }
         }
 
-        // Check claw_tokens table for any remaining
+        // Check claw_tokens table
         const stillUnresolved = mints.filter((m) => !imgMap.has(m));
         if (stillUnresolved.length > 0) {
           const { data: clawData } = await supabase
@@ -87,6 +105,45 @@ export function useAlphaTrades(limit = 50) {
         }
 
         setTokenImages(imgMap);
+
+        // Fetch metadata for still-unresolved Solana mints via edge function
+        const needMetadata = mints.filter(
+          (m) => !imgMap.has(m) && !imageCache.has(m) && !pendingMetadata.current.has(m)
+        );
+        // Only fetch for Solana mints (non-bnb)
+        const solanaMints = needMetadata.filter((m) => {
+          const trade = tradesData.find((t) => t.token_mint === m);
+          return !trade?.chain || trade.chain === "solana";
+        });
+
+        if (solanaMints.length > 0) {
+          solanaMints.forEach((m) => pendingMetadata.current.add(m));
+          try {
+            const { data: metaResp } = await supabase.functions.invoke("fetch-token-metadata", {
+              body: { mints: solanaMints },
+            });
+            const metadata = metaResp?.metadata ?? {};
+            const newMetaImages = new Map<string, string>();
+            for (const [mint, meta] of Object.entries(metadata)) {
+              const m = meta as { image?: string };
+              if (m.image) {
+                newMetaImages.set(mint, m.image);
+                imageCache.set(mint, { primary: m.image, fallbacks: buildFallbacks(mint) });
+              }
+            }
+            if (newMetaImages.size > 0) {
+              setMetadataImages((prev) => {
+                const next = new Map(prev);
+                newMetaImages.forEach((v, k) => next.set(k, v));
+                return next;
+              });
+            }
+          } catch (err) {
+            console.error("[useAlphaTrades] Metadata fetch failed:", err);
+          } finally {
+            solanaMints.forEach((m) => pendingMetadata.current.delete(m));
+          }
+        }
       }
     }
     setLoading(false);
@@ -129,14 +186,23 @@ export function useAlphaTrades(limit = 50) {
   const enrichedTrades = useMemo(() => {
     return trades.map((t) => {
       const dbImage = tokenImages.get(t.token_mint);
-      const chain = t.chain === 'bnb' ? 'bsc' : 'solana';
+      const metaImage = metadataImages.get(t.token_mint);
+      const cached = imageCache.get(t.token_mint);
+      const chain = t.chain === "bnb" ? "bsc" : "solana";
       const dexScreenerFallback = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${t.token_mint}.png`;
+
+      const primary = dbImage || metaImage || cached?.primary || dexScreenerFallback;
+      const fallbacks = buildFallbacks(t.token_mint, t.chain);
+      // Remove primary from fallbacks to avoid duplication
+      const uniqueFallbacks = fallbacks.filter((f) => f !== primary);
+
       return {
         ...t,
-        token_image_url: dbImage || dexScreenerFallback,
+        token_image_url: primary,
+        token_image_fallbacks: uniqueFallbacks,
       };
     });
-  }, [trades, tokenImages]);
+  }, [trades, tokenImages, metadataImages]);
 
   return { trades: enrichedTrades, loading, positions };
 }

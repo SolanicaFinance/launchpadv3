@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { timeAgo, formatTokenAmt } from "@/lib/tradeUtils";
+import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 
 /* ── Status Pill ── */
 function StatusPill({ status }: { status: "HOLDING" | "PARTIAL" | "SOLD" }) {
@@ -30,13 +31,14 @@ function AlphaTradeRow({ trade, position }: { trade: AlphaTrade; position?: Posi
     >
       <div className="h-8 w-8 rounded-full bg-muted/50 border border-border/30 overflow-hidden flex items-center justify-center shrink-0
                        group-hover:ring-1 group-hover:ring-primary/20 transition-all">
-        {trade.token_image_url ? (
-          <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-[7px] font-bold text-muted-foreground">
-            {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
-          </span>
-        )}
+        <OptimizedTokenImage
+          src={trade.token_image_url}
+          fallbackSrc={trade.token_image_fallbacks}
+          fallbackText={(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
+          alt=""
+          size={32}
+          className="h-full w-full object-cover"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
