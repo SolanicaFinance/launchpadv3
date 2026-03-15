@@ -112,10 +112,10 @@ async function calculateClaimable(
 
   // Merge and deduplicate by id (prefix fun_ IDs to avoid collision)
   const allDists = new Map<string, any>();
-  for (const d of [...(distByToken || []), ...(distByUsername || [])]) {
+  for (const d of [...(distByToken || []), ...(distByKey || [])]) {
     allDists.set(d.id, d);
   }
-  for (const d of [...(funDistByToken || []), ...(funDistByUsername || [])]) {
+  for (const d of [...(funDistByToken || []), ...(funDistByKey || [])]) {
     allDists.set("fun_" + d.id, d);
   }
 
