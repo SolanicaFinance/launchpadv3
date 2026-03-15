@@ -35,7 +35,7 @@ function getAudioCtx() {
 type SoundPreset = "arcade" | "subtle" | "cash-register" | "custom-file";
 
 // Change this to switch sound styles globally:
-const ACTIVE_PRESET: SoundPreset = "arcade";
+const ACTIVE_PRESET: SoundPreset = "custom-file";
 
 // ─── Tone presets (WebAudio oscillator) ───
 const TONE_PRESETS: Record<string, { buy: [number, number, number, OscillatorType]; sell: [number, number, number, OscillatorType]; launch: [number, number, number, OscillatorType] }> = {
