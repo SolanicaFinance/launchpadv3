@@ -308,9 +308,23 @@ export function StickyStatsFooter() {
               {isOnline ? "Stable" : "Offline"}
             </span>
           </div>
-          {/* Desktop-only quick nav icons */}
-          {!isMobile && (
-            <>
+          </div>
+        {/* CENTER: Crypto Prices — hidden on mobile */}
+        {!isMobile && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            flex: "1 1 0%",
+            justifyContent: "center",
+            minWidth: 0,
+            overflowX: "auto",
+            overflowY: "hidden",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}>
+            <FooterCryptoPrices />
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginLeft: "10px", flexShrink: 0 }}>
               <Link to="/docs" style={{
                 display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
@@ -347,24 +361,7 @@ export function StickyStatsFooter() {
                 <Activity style={{ width: "11px", height: "11px" }} />
                 <span>Pulse</span>
               </Link>
-            </>
-          )}
-          </div>
-        {/* CENTER: Crypto Prices — hidden on mobile */}
-        {!isMobile && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            flex: "1 1 0%",
-            justifyContent: "center",
-            minWidth: 0,
-            overflowX: "auto",
-            overflowY: "hidden",
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}>
-            <FooterCryptoPrices />
+            </div>
           </div>
         )}
 
