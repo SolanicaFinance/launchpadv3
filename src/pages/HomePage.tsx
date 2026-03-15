@@ -359,7 +359,7 @@ export default function HomePage() {
               {/* Dark vignette overlay */}
               <div className="absolute inset-0 z-10 pointer-events-none"
                 style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, hsl(0 0% 0% / 0.35) 100%)" }} />
-              <img src={heroTerminalMockup} alt="" className="w-full h-auto relative" loading="eager" />
+              <img src={heroTerminalMockup} alt="" className="w-full h-full object-cover relative" loading="eager" />
             </div>
           </div>
 
