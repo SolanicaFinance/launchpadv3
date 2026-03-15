@@ -299,7 +299,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           />
           <button
             onClick={() => { setTradeType("buy"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
+            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors flex items-center justify-center ${
               isBuy ? "text-green-400" : "text-muted-foreground/35"
             }`}
           >
@@ -307,7 +307,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           </button>
           <button
             onClick={() => { setTradeType("sell"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
+            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors flex items-center justify-center ${
               !isBuy ? "text-red-400" : "text-muted-foreground/35"
             }`}
           >
