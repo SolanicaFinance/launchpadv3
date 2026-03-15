@@ -405,8 +405,8 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {numericAmount > 0 && (
           <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 space-y-1.5">
             <div className="flex justify-between items-center min-w-0 gap-2">
-              <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">You get ≈</span>
-              <span className="text-[14px] font-mono font-bold text-foreground/90 truncate">
+              <span className="text-[12px] font-mono text-foreground/60 shrink-0">You get ≈</span>
+              <span className="text-[14px] font-mono font-bold text-foreground truncate">
                 {quoteLoading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin inline" />
                 ) : (
