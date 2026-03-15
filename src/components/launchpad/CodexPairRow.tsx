@@ -83,14 +83,8 @@ export const CodexPairRow = memo(function CodexPairRow({ token, quickBuyAmount, 
       ]
     : [];
 
-  // Pump.fun direct image CDN — works even when their API is down (HTTP 530)
-  const pumpImageCdn = !isBnb && token.address
-    ? `https://pump.mypinata.cloud/ipfs/${token.address}?img-width=128`
-    : null;
-
   const imageFallbacks = [
     token.fallbackImageUrl,
-    pumpImageCdn,
     ...bscFallbackCandidates,
     identiconFallback,
   ].filter((url, index, arr): url is string => !!url && arr.indexOf(url) === index);
