@@ -332,7 +332,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 const raw = e.target.value.replace(/[KMBkmb]/g, '');
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) { setAmount(raw); setSelectedPreset(null); }
               }}
-              className="w-full border-0 bg-transparent font-mono h-14 pl-5 pr-28 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/20 text-foreground text-[16px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full border-0 bg-transparent font-mono h-12 pl-5 pr-28 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-foreground/25 text-foreground text-[16px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 shrink-0">
               <button onClick={handleMaxClick}
