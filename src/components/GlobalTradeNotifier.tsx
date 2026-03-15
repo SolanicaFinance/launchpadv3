@@ -18,12 +18,15 @@ export function GlobalTradeNotifier() {
   playSellRef.current = playSell;
 
   useEffect(() => {
+    console.log("[GlobalTradeNotifier] Subscribing to alpha_trades realtime...");
+    
     const channel = supabase
-      .channel("global-trade-notifier")
+      .channel("global-trade-notifier-v2")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "alpha_trades" },
         (payload) => {
+          console.log("[GlobalTradeNotifier] Received trade:", payload.new);
           const trade = payload.new as any;
           if (!trade) return;
 
@@ -33,27 +36,32 @@ export function GlobalTradeNotifier() {
           const amount = formatAmount(trade.amount_sol);
           const chain = trade.chain === "bnb" ? "BNB" : "SOL";
 
-          // Play sound
-          if (isBuy) {
-            playBuyRef.current();
-          } else {
-            playSellRef.current();
+          // Play sound — always attempt (useTradeSounds checks enabled internally)
+          try {
+            if (isBuy) {
+              playBuyRef.current();
+            } else {
+              playSellRef.current();
+            }
+          } catch (e) {
+            console.warn("[GlobalTradeNotifier] Sound error:", e);
           }
 
           // Show toast notification
           toast(
-            `${name} ${isBuy ? "bought" : "sold"} ${ticker}`,
+            `${name} ${isBuy ? "bought" : "sold"} $${ticker}`,
             {
               description: `${amount} ${chain}`,
               duration: 4000,
               icon: isBuy ? "🟢" : "🔴",
               position: "bottom-right",
-              className: "global-trade-toast",
             }
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[GlobalTradeNotifier] Channel status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
