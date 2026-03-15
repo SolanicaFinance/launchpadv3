@@ -56,12 +56,6 @@ const TONE_PRESETS: Record<string, { buy: [number, number, number, OscillatorTyp
   },
 };
 
-// ─── Custom audio file paths (used when ACTIVE_PRESET = "custom-file") ───
-// Place your .mp3 or .wav files in /public/sounds/ and update paths here:
-const CUSTOM_BUY_SOUND = "/sounds/buy.mp3";
-const CUSTOM_SELL_SOUND = "/sounds/sell.mp3";
-const CUSTOM_LAUNCH_SOUND = "/sounds/launch.mp3";
-
 function playTone(freqStart: number, freqEnd: number, duration: number, waveType: OscillatorType = "square") {
   try {
     const ctx = getAudioCtx();
@@ -81,12 +75,66 @@ function playTone(freqStart: number, freqEnd: number, duration: number, waveType
   }
 }
 
+// ─── Custom audio file paths (used when ACTIVE_PRESET = "custom-file") ───
+// Place your .mp3 or .wav files in /public/sounds/ and update paths here:
+const CUSTOM_BUY_SOUND = "/sounds/buy.mp3";
+const CUSTOM_SELL_SOUND = "/sounds/sell.mp3";
+const CUSTOM_LAUNCH_SOUND = "/sounds/launch.mp3";
+
+// ─── Pre-loaded audio pool for reliable playback ───
+// Browsers require user gesture before Audio.play(). We pre-load on first interaction.
+let audioUnlocked = false;
+const audioPool: Record<string, HTMLAudioElement[]> = {};
+
+function getPooledAudio(src: string): HTMLAudioElement {
+  if (!audioPool[src]) audioPool[src] = [];
+  // Find a non-playing instance or create new
+  let audio = audioPool[src].find(a => a.paused || a.ended);
+  if (!audio) {
+    audio = new Audio(src);
+    audio.volume = 0.5;
+    audioPool[src].push(audio);
+  }
+  return audio;
+}
+
+function preloadAudioFiles() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  [CUSTOM_BUY_SOUND, CUSTOM_SELL_SOUND, CUSTOM_LAUNCH_SOUND].forEach(src => {
+    const a = new Audio(src);
+    a.volume = 0;
+    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 0.5; }).catch(() => {});
+    if (!audioPool[src]) audioPool[src] = [];
+    audioPool[src].push(a);
+  });
+}
+
+// Unlock audio on first user interaction
+if (typeof window !== "undefined") {
+  const unlockHandler = () => {
+    preloadAudioFiles();
+    try { getAudioCtx(); } catch {}
+    window.removeEventListener("click", unlockHandler);
+    window.removeEventListener("touchstart", unlockHandler);
+    window.removeEventListener("keydown", unlockHandler);
+  };
+  window.addEventListener("click", unlockHandler, { once: false });
+  window.addEventListener("touchstart", unlockHandler, { once: false });
+  window.addEventListener("keydown", unlockHandler, { once: false });
+}
+
 function playAudioFile(src: string) {
   try {
-    const audio = new Audio(src);
+    const audio = getPooledAudio(src);
+    audio.currentTime = 0;
     audio.volume = 0.5;
-    audio.play().catch(() => {});
-  } catch {}
+    audio.play().catch((e) => {
+      console.warn("[TradeSounds] Audio play blocked:", e?.message);
+    });
+  } catch (e) {
+    console.warn("[TradeSounds] playAudioFile error:", e);
+  }
 }
 
 function playBuySound() {
@@ -112,7 +160,6 @@ function playLaunchSound() {
     playAudioFile(CUSTOM_LAUNCH_SOUND);
   } else {
     const [f1, f2, dur, wave] = TONE_PRESETS[ACTIVE_PRESET]?.launch ?? TONE_PRESETS.arcade.launch;
-    // Play a two-tone fanfare for launches
     playTone(f1, f2, dur, wave);
     setTimeout(() => playTone(f2, f2 + 200, dur * 0.8, wave), dur * 1000 + 30);
   }

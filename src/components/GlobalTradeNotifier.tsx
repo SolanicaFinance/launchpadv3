@@ -43,27 +43,7 @@ export function GlobalTradeNotifier() {
     return () => clearInterval(iv);
   }, []);
 
-  // Auto-unlock AudioContext on first user interaction
-  useEffect(() => {
-    const unlock = () => {
-      try {
-        const ctx = new AudioContext();
-        if (ctx.state === "suspended") ctx.resume();
-        ctx.close();
-      } catch {}
-      window.removeEventListener("click", unlock);
-      window.removeEventListener("touchstart", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-    window.addEventListener("click", unlock, { once: true });
-    window.addEventListener("touchstart", unlock, { once: true });
-    window.addEventListener("keydown", unlock, { once: true });
-    return () => {
-      window.removeEventListener("click", unlock);
-      window.removeEventListener("touchstart", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-  }, []);
+  // Audio unlock is now handled globally in useTradeSounds module
 
   // Subscribe to alpha_trades
   useEffect(() => {
