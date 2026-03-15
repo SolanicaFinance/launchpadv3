@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 
 export interface XBotAccount {
   id: string;
@@ -33,20 +32,21 @@ export interface XBotAccountRules {
   author_cooldown_hours: number;
   max_replies_per_thread: number;
   enabled: boolean;
-  created_at: string;
+  persona_prompt: string | null;
+  tracked_keywords: string[] | null;
+  author_cooldown_minutes: number | null;
 }
 
 export interface XBotAccountReply {
   id: string;
   account_id: string;
   tweet_id: string;
-  tweet_author: string | null;
-  tweet_author_id: string | null;
-  tweet_text: string | null;
-  conversation_id: string | null;
+  tweet_author: string;
+  tweet_content: string;
+  tweet_text: string;
+  reply_content: string;
+  reply_text: string;
   reply_id: string | null;
-  reply_text: string | null;
-  reply_type: string;
   status: string;
   error_message: string | null;
   created_at: string;
@@ -56,22 +56,20 @@ export interface XBotQueueItem {
   id: string;
   account_id: string;
   tweet_id: string;
-  tweet_author: string | null;
-  tweet_author_id: string | null;
-  tweet_text: string | null;
-  conversation_id: string | null;
+  tweet_author: string;
+  tweet_content: string;
+  tweet_text: string;
+  tweet_author_followers: number | null;
+  tweet_author_verified: boolean | null;
   follower_count: number | null;
-  is_verified: boolean | null;
   match_type: string | null;
   status: string;
   created_at: string;
-  processed_at: string | null;
 }
 
 export interface XBotAccountLog {
   id: string;
-  account_id: string;
-  log_type: string;
+  account_id: string | null;
   level: string;
   message: string;
   details: Record<string, unknown> | null;
@@ -82,8 +80,14 @@ export interface XBotAccountWithRules extends XBotAccount {
   rules?: XBotAccountRules;
 }
 
+// Get admin password from localStorage (set by admin panel login)
+function getAdminPassword(): string {
+  return localStorage.getItem("admin_panel_auth_v2") || "";
+}
+
 // Helper to call the x-bot-admin edge function
-async function callAdmin(action: string, adminWallet: string, params: Record<string, any> = {}) {
+async function callAdmin(action: string, params: Record<string, any> = {}) {
+  const adminPassword = getAdminPassword();
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/x-bot-admin`,
     {
@@ -92,7 +96,7 @@ async function callAdmin(action: string, adminWallet: string, params: Record<str
         "Content-Type": "application/json",
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
-      body: JSON.stringify({ action, adminWallet, ...params }),
+      body: JSON.stringify({ action, adminPassword, ...params }),
     }
   );
   const data = await response.json();
@@ -107,16 +111,15 @@ export function useXBotAccounts() {
   const [logs, setLogs] = useState<XBotAccountLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { solanaAddress } = useAuth();
 
-  const adminWallet = solanaAddress || "";
+  const isAuthed = !!getAdminPassword();
 
   const fetchAccounts = useCallback(async () => {
-    if (!adminWallet) return;
+    if (!isAuthed) return;
     try {
       const [accountsResult, rulesResult] = await Promise.all([
-        callAdmin("list_accounts", adminWallet),
-        callAdmin("list_rules", adminWallet),
+        callAdmin("list_accounts"),
+        callAdmin("list_rules"),
       ]);
 
       const accountsWithRules = (accountsResult.accounts || []).map((account: XBotAccount) => ({
@@ -128,41 +131,41 @@ export function useXBotAccounts() {
     } catch (error) {
       console.error("Error fetching accounts:", error);
     }
-  }, [adminWallet]);
+  }, [isAuthed]);
 
-  const fetchReplies = useCallback(async (accountId?: string) => {
-    if (!adminWallet) return;
+  const fetchReplies = useCallback(async () => {
+    if (!isAuthed) return;
     try {
-      const data = await callAdmin("list_replies", adminWallet, { limit: 100 });
+      const data = await callAdmin("list_replies", { limit: 100 });
       setReplies(data.replies || []);
     } catch (error) {
       console.error("Error fetching replies:", error);
     }
-  }, [adminWallet]);
+  }, [isAuthed]);
 
-  const fetchQueue = useCallback(async (accountId?: string) => {
-    if (!adminWallet) return;
+  const fetchQueue = useCallback(async () => {
+    if (!isAuthed) return;
     try {
-      const data = await callAdmin("list_queue", adminWallet, { limit: 50 });
+      const data = await callAdmin("list_queue", { limit: 50 });
       setQueue(data.queue || []);
     } catch (error) {
       console.error("Error fetching queue:", error);
     }
-  }, [adminWallet]);
+  }, [isAuthed]);
 
-  const fetchLogs = useCallback(async (accountId?: string) => {
-    if (!adminWallet) return;
+  const fetchLogs = useCallback(async () => {
+    if (!isAuthed) return;
     try {
-      const data = await callAdmin("list_logs", adminWallet, { limit: 200 });
+      const data = await callAdmin("list_logs", { limit: 200 });
       setLogs((data.logs || []) as XBotAccountLog[]);
     } catch (error) {
       console.error("Error fetching logs:", error);
     }
-  }, [adminWallet]);
+  }, [isAuthed]);
 
   const createAccount = async (account: Partial<XBotAccount>, rules?: Partial<XBotAccountRules>) => {
     try {
-      await callAdmin("create_account", adminWallet, { account, rules });
+      await callAdmin("create_account", { account, rules });
       toast({ title: "Account created successfully" });
       await fetchAccounts();
     } catch (error) {
@@ -174,7 +177,7 @@ export function useXBotAccounts() {
 
   const updateAccount = async (id: string, account: Partial<XBotAccount>, rules?: Partial<XBotAccountRules>) => {
     try {
-      await callAdmin("update_account", adminWallet, { id, account, rules });
+      await callAdmin("update_account", { id, account, rules });
       toast({ title: "Account updated successfully" });
       await fetchAccounts();
     } catch (error) {
@@ -186,7 +189,7 @@ export function useXBotAccounts() {
 
   const deleteAccount = async (id: string) => {
     try {
-      await callAdmin("delete_account", adminWallet, { id });
+      await callAdmin("delete_account", { id });
       toast({ title: "Account deleted successfully" });
       await fetchAccounts();
     } catch (error) {
@@ -198,7 +201,7 @@ export function useXBotAccounts() {
 
   const toggleAccountActive = async (id: string, isActive: boolean) => {
     try {
-      await callAdmin("toggle_active", adminWallet, { id, is_active: isActive });
+      await callAdmin("toggle_active", { id, is_active: isActive });
       toast({ title: isActive ? "Account enabled" : "Account disabled" });
       await fetchAccounts();
     } catch (error) {
@@ -260,7 +263,7 @@ export function useXBotAccounts() {
   };
 
   useEffect(() => {
-    if (!adminWallet) {
+    if (!isAuthed) {
       setLoading(false);
       return;
     }
@@ -270,7 +273,7 @@ export function useXBotAccounts() {
       setLoading(false);
     };
     loadAll();
-  }, [adminWallet, fetchAccounts, fetchReplies, fetchQueue, fetchLogs]);
+  }, [isAuthed, fetchAccounts, fetchReplies, fetchQueue, fetchLogs]);
 
   return {
     accounts,
