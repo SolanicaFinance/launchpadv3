@@ -1,6 +1,6 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { createChart, CandlestickSeries, HistogramSeries, type IChartApi, type ISeriesApi } from "lightweight-charts";
-import type { KlineBar, KlineInterval } from "@/hooks/useAsterKlines";
+import type { KlineBar, KlineInterval } from "@/hooks/useHyperliquidKlines";
 import { cn } from "@/lib/utils";
 
 const INTERVALS: { label: string; value: KlineInterval }[] = [
@@ -139,7 +139,7 @@ export function LeverageChart({ bars, loading, interval, onIntervalChange, symbo
             {iv.label}
           </button>
         ))}
-        <span className="ml-auto text-[10px] text-muted-foreground">{symbol}</span>
+        <span className="ml-auto text-[10px] text-muted-foreground">{symbol}/USDC</span>
       </div>
 
       {/* Chart container */}

@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
-import { useAsterMarkets, type AsterMarket } from "@/hooks/useAsterMarkets";
+import { useHyperliquidMarkets, type HyperliquidMarket } from "@/hooks/useHyperliquidMarkets";
 import { SparklineCanvas } from "@/components/launchpad/SparklineCanvas";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-function LeverageCard({ market }: { market: AsterMarket }) {
+function LeverageCard({ market }: { market: HyperliquidMarket }) {
   const change = parseFloat(market.priceChangePercent);
   const isPositive = change >= 0;
   const vol = parseFloat(market.quoteVolume);
@@ -23,7 +23,7 @@ function LeverageCard({ market }: { market: AsterMarket }) {
         <SparklineCanvas data={[1, 1]} seed={market.symbol} />
       </div>
       <div className="relative z-10 flex items-center justify-between">
-        <span className="text-sm font-bold text-foreground">{market.baseAsset}/{market.quoteAsset}</span>
+        <span className="text-sm font-bold text-foreground">{market.baseAsset}/USDC</span>
         <span className="text-[10px] text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded">{market.maxLeverage}x</span>
       </div>
       <div className="relative z-10 flex items-center justify-between">
@@ -42,7 +42,7 @@ function LeverageCard({ market }: { market: AsterMarket }) {
 }
 
 export default function LeverageSection() {
-  const { markets: leverageMarkets, loading: leverageLoading } = useAsterMarkets();
+  const { markets: leverageMarkets, loading: leverageLoading } = useHyperliquidMarkets();
 
   const topLeverage = useMemo(() => {
     if (!leverageMarkets.length) return [];

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { OrderbookData } from "@/hooks/useAsterOrderbook";
+import type { OrderbookData } from "@/hooks/useHyperliquidOrderbook";
 
 interface Props {
   orderbook: OrderbookData;

@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AsterMarket } from "@/hooks/useAsterMarkets";
+import type { HyperliquidMarket } from "@/hooks/useHyperliquidMarkets";
 
 interface Props {
-  markets: AsterMarket[];
+  markets: HyperliquidMarket[];
   selected: string;
   onSelect: (symbol: string) => void;
   search: string;
@@ -32,7 +32,7 @@ export function LeverageMarketSelector({ markets, selected, onSelect, search, on
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-sm bg-secondary hover:bg-surface-hover transition-colors border border-border"
       >
-        <span className="text-sm font-bold text-foreground">{selected.replace("USDT", "/USDT")}</span>
+        <span className="text-sm font-bold text-foreground">{selected}/USDC</span>
         <span className={cn("text-xs font-medium", priceChange >= 0 ? "text-green-400" : "text-red-400")}>
           {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
         </span>
@@ -70,7 +70,7 @@ export function LeverageMarketSelector({ markets, selected, onSelect, search, on
                     m.symbol === selected && "bg-primary/10"
                   )}
                 >
-                  <span className="text-left font-medium text-foreground">{m.baseAsset}<span className="text-muted-foreground">/USDT</span></span>
+                  <span className="text-left font-medium text-foreground">{m.baseAsset}<span className="text-muted-foreground">/USDC</span></span>
                   <span className="text-right text-foreground tabular-nums">${parseFloat(m.lastPrice).toLocaleString()}</span>
                   <span className={cn("text-right tabular-nums", change >= 0 ? "text-green-400" : "text-red-400")}>
                     {change >= 0 ? "+" : ""}{change.toFixed(2)}%
