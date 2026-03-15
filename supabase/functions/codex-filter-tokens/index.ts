@@ -70,34 +70,43 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
 }
 
 async function fetchPumpFunImageUri(address: string): Promise<string | null> {
-  try {
-    const response = await fetch(`https://frontend-api.pump.fun/coins/${address}`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(6000),
-    });
+  // Try multiple Pump.fun API endpoints — frontend-api frequently returns 530
+  const apis = [
+    `https://client-api-2-74b1891ee9f9.herokuapp.com/coins/${address}`,
+    `https://frontend-api.pump.fun/coins/${address}`,
+  ];
 
-    if (!response.ok) {
-      console.log(`[pump-image] ${address.slice(0,8)}… HTTP ${response.status}`);
-      return null;
+  for (const url of apis) {
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (!response.ok) {
+        const host = url.includes("herokuapp") ? "client-api" : "frontend-api";
+        console.log(`[pump-image] ${address.slice(0,8)}… ${host} HTTP ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const imageUri =
+        data?.image_uri ||
+        data?.imageUrl ||
+        data?.image ||
+        data?.metadata?.image ||
+        null;
+
+      if (imageUri) {
+        return normalizeImageUrl(imageUri);
+      }
+    } catch {
+      // Try next API
     }
-
-    const data = await response.json();
-    const imageUri =
-      data?.image_uri ||
-      data?.imageUrl ||
-      data?.image ||
-      data?.metadata?.image ||
-      null;
-
-    if (!imageUri) {
-      console.log(`[pump-image] ${address.slice(0,8)}… no image field in response (keys: ${Object.keys(data || {}).join(",")})`);
-    }
-
-    return normalizeImageUrl(imageUri);
-  } catch (err) {
-    console.log(`[pump-image] ${address.slice(0,8)}… fetch failed: ${err}`);
-    return null;
   }
+
+  console.log(`[pump-image] ${address.slice(0,8)}… all APIs failed`);
+  return null;
 }
 
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
