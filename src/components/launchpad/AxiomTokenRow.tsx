@@ -180,7 +180,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0 min-w-[72px]">
           <div className="flex items-center gap-1">
             <span className="pulse-metric-label">MC</span>
-            <span className="text-[14px] font-mono font-bold text-foreground leading-tight">{mcap}</span>
+            <span className="text-[14px] font-mono font-bold leading-tight pulse-metric-gold">{mcap}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="pulse-metric-label">V</span>
