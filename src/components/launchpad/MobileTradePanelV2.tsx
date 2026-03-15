@@ -1,18 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import { useRealSwap } from "@/hooks/useRealSwap";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
-import { usePumpFunSwap } from "@/hooks/usePumpFunSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2 } from "lucide-react";
 import { AdvancedSettingsSheet } from "./AdvancedSettingsSheet";
 import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
-import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
-import { supabase } from "@/integrations/supabase/client";
-import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { Token, calculateBuyQuote, calculateSellQuote, formatTokenAmount, formatSolAmount } from "@/hooks/useLaunchpad";
 
 const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : "https://mainnet.helius-rpc.com");
@@ -34,15 +32,10 @@ interface MobileTradePanelV2Props {
 
 export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalance: externalBalance = 0 }: MobileTradePanelV2Props) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { executeRealSwap, isLoading: bondingSwapLoading, getBalance } = useRealSwap();
-  const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: jupiterLoading } = useJupiterSwap();
-  const { swap: pumpFunSwap } = usePumpFunSwap();
-  const { signAndSendTransaction, isWalletReady, walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy } = useSolanaWalletWithPrivy();
+  const { getBuyQuote, getSellQuote } = useJupiterSwap();
+  const { executeTurboSwap, isLoading: turboLoading, walletAddress: turboWallet } = useTurboSwap();
+  const { isWalletReady, walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy, getBalance } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
-
-  const signAndSendTx = useCallback(async (tx: VersionedTransaction): Promise<{ signature: string; confirmed: boolean }> => {
-    return await signAndSendTransaction(tx);
-  }, [signAndSendTransaction]);
 
   const isBondingMode = !!bondingToken;
   const tokenInfo = bondingToken
@@ -51,6 +44,43 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
   const mintAddress = tokenInfo.mint_address;
   const tokenDecimals = tokenInfo.decimals || 9;
+
+  // Build a Token object for useTurboSwap (same bridge pattern as Pulse)
+  const turboToken: Token = useMemo(() => {
+    if (bondingToken) return bondingToken;
+    return {
+      id: externalToken?.mint_address ?? "",
+      mint_address: externalToken?.mint_address ?? "",
+      name: externalToken?.name ?? "",
+      ticker: externalToken?.ticker ?? "",
+      description: null,
+      image_url: externalToken?.imageUrl ?? null,
+      website_url: null,
+      twitter_url: null,
+      telegram_url: null,
+      discord_url: null,
+      creator_wallet: "",
+      creator_id: null,
+      dbc_pool_address: null,
+      damm_pool_address: null,
+      virtual_sol_reserves: 0,
+      virtual_token_reserves: 0,
+      real_sol_reserves: 0,
+      real_token_reserves: 0,
+      total_supply: 0,
+      bonding_curve_progress: 0,
+      graduation_threshold_sol: 0,
+      price_sol: externalToken?.price_sol ?? 0,
+      market_cap_sol: 0,
+      volume_24h_sol: 0,
+      status: (externalToken?.graduated !== false ? "graduated" : "bonding") as Token["status"],
+      migration_status: "",
+      holder_count: 0,
+      created_at: "",
+      updated_at: "",
+      graduated_at: null,
+    };
+  }, [bondingToken, externalToken]);
 
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -203,59 +233,11 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
     setIsLoading(true);
     try {
-      let signature = "";
-      let resultOutputAmount: number | undefined;
+      // Use the same TurboSwap pipeline as Pulse quick buy
+      const result = await executeTurboSwap(turboToken, numericAmount, isBuy, slippage * 100);
 
-      if (isBondingMode && bondingToken) {
-        const result = await executeRealSwap(bondingToken, numericAmount, isBuy, slippage * 100);
-        signature = result.signature;
-
-        // Record bonding curve trade to alpha tracker (was previously skipped)
-        if (signature) {
-          await recordAlphaTrade({
-            walletAddress: solanaAddress!,
-            tokenMint: mintAddress,
-            tokenName: tokenInfo.name,
-            tokenTicker: tokenInfo.ticker,
-            tradeType: isBuy ? 'buy' : 'sell',
-            amountSol: numericAmount,
-            txHash: signature,
-            chain: 'solana',
-          });
-        }
-      } else {
-        if (useJupiterRoute) {
-          const result = isBuy
-            ? await buyToken(mintAddress, numericAmount, solanaAddress, signAndSendTx, slippage * 100)
-            : await sellToken(mintAddress, numericAmount, tokenDecimals, solanaAddress, signAndSendTx, slippage * 100);
-          signature = result.signature || "";
-          resultOutputAmount = result.outputAmount;
-        } else {
-          const result = await pumpFunSwap(mintAddress, numericAmount, isBuy, slippage);
-          signature = result.signature;
-          resultOutputAmount = result.outputAmount;
-        }
-
-        if (signature) {
-          // Client-side direct insert — awaited
-          await recordAlphaTrade({
-            walletAddress: solanaAddress!,
-            tokenMint: mintAddress,
-            tokenName: tokenInfo.name,
-            tokenTicker: tokenInfo.ticker,
-            tradeType: isBuy ? 'buy' : 'sell',
-            amountSol: numericAmount,
-            amountTokens: resultOutputAmount ?? undefined,
-            txHash: signature,
-            chain: 'solana',
-          });
-
-          // Edge function (secondary, non-blocking)
-          supabase.functions.invoke("launchpad-swap", {
-            body: { mintAddress, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature, outputAmount: resultOutputAmount ?? null, tokenName: tokenInfo.name, tokenTicker: tokenInfo.ticker, mode: "alpha_only" },
-          }).catch(() => {});
-        }
-      }
+      const signature = result.signature;
+      const resultOutputAmount = result.outputAmount;
 
       setAmount("");
       setQuote(null);
@@ -265,23 +247,23 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
       window.setTimeout(() => void refreshTokenBalance(), 1500);
       window.setTimeout(() => void refreshTokenBalance(), 5000);
 
+      // Show global trade success notification (same as Pulse)
+      showTradeSuccess({
+        type: isBuy ? 'buy' : 'sell',
+        ticker: tokenInfo.ticker,
+        tokenName: tokenInfo.name,
+        mintAddress,
+        amount: isBuy ? `${numericAmount} SOL` : `${formatAmount(numericAmount)} ${tokenInfo.ticker}`,
+        signature,
+        executionMs: result.totalMs || undefined,
+        tokenImageUrl: tokenInfo.imageUrl,
+      });
+
+      // Also show PNL card
       const solValue = !isBuy ? (resultOutputAmount ?? numericAmount * (tokenInfo.price_sol || 0)) : numericAmount;
       setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: solValue, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name, outputAmount: resultOutputAmount, signature, tokenImageUrl: tokenInfo.imageUrl });
       setShowProfitCard(true);
 
-      toast({
-        title: `${isBuy ? "Buy" : "Sell"} successful!`,
-        description: (
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span>{isBuy ? `Bought ${tokenInfo.ticker}` : `Sold ${tokenInfo.ticker}`}</span>
-            {signature && (
-              <a href={`https://solscan.io/tx/${signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
-          </div>
-        ),
-      });
     } catch (error) {
       console.error("Trade error:", error);
       toast({ title: "Trade failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" });
@@ -300,7 +282,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
     { label: "Top 10 <30%", passed: rugCheck ? rugCheck.topHolderPct < 30 : null, loading: rugLoading },
   ];
 
-  const tradingDisabled = isLoading || bondingSwapLoading || jupiterLoading;
+  const tradingDisabled = isLoading || turboLoading;
 
   // Truncate ticker for display on small screens
   const shortTicker = tokenInfo.ticker.length > 8 ? tokenInfo.ticker.slice(0, 7) + '…' : tokenInfo.ticker;
