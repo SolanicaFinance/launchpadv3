@@ -43,7 +43,10 @@ export interface XBotAccountReply {
   tweet_id: string;
   tweet_author: string;
   tweet_content: string;
+  tweet_text: string;
   reply_content: string;
+  reply_text: string;
+  reply_id: string | null;
   status: string;
   error_message: string | null;
   created_at: string;
