@@ -76,7 +76,10 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
       signal: AbortSignal.timeout(6000),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log(`[pump-image] ${address.slice(0,8)}… HTTP ${response.status}`);
+      return null;
+    }
 
     const data = await response.json();
     const imageUri =
@@ -86,8 +89,13 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
       data?.metadata?.image ||
       null;
 
+    if (!imageUri) {
+      console.log(`[pump-image] ${address.slice(0,8)}… no image field in response (keys: ${Object.keys(data || {}).join(",")})`);
+    }
+
     return normalizeImageUrl(imageUri);
-  } catch {
+  } catch (err) {
+    console.log(`[pump-image] ${address.slice(0,8)}… fetch failed: ${err}`);
     return null;
   }
 }
