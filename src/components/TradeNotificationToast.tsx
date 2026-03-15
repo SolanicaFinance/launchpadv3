@@ -95,12 +95,13 @@ export function showTradeNotification(data: TradeToastData) {
             }}
           >
             <OptimizedTokenImage
-              src={tokenSources[0]}
+              src={tokenSources[0] ?? null}
               fallbackSrc={tokenSources.slice(1)}
               fallbackText={data.tokenTicker}
               alt={data.tokenTicker}
               size={34}
-              style={{ width: 34, height: 34, objectFit: "cover", display: "block" }}
+              className="rounded-full"
+              style={{ width: 34, height: 34, objectFit: "cover", display: "block", borderRadius: "50%" }}
             />
           </div>
           {/* Status dot */}
