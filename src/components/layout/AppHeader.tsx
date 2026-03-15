@@ -196,7 +196,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
               <XIcon className="h-3.5 w-3.5" />
             </a>
             <a
-              href="https://t.me/saturntrade"
+              href="https://t.me/saturnterminal"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
