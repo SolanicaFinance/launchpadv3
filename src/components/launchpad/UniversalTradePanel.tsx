@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { useAuth } from "@/hooks/useAuth";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { usePumpFunSwap } from "@/hooks/usePumpFunSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +14,9 @@ import { useRugCheck } from "@/hooks/useRugCheck";
 import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
 import { supabase } from "@/integrations/supabase/client";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import { Token, formatTokenAmount } from "@/hooks/useLaunchpad";
 
 interface TokenInfo {
   mint_address: string;
@@ -35,13 +38,10 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: swapLoading } = useJupiterSwap();
+  const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { swap: pumpFunSwap } = usePumpFunSwap();
+  const { executeTurboSwap, isLoading: turboLoading, lastLatencyMs: turboLatencyMs } = useTurboSwap();
   const { signAndSendTransaction, isWalletReady, getBalance } = useSolanaWalletWithPrivy();
-
-  const signAndSendTx = useCallback(async (tx: VersionedTransaction): Promise<{ signature: string; confirmed: boolean }> => {
-    return await signAndSendTransaction(tx);
-  }, [signAndSendTransaction]);
 
   const preferJupiterRoute = token.graduated !== false;
   const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
@@ -172,47 +172,69 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     setIsLoading(true);
     const t0 = performance.now();
     try {
-      let result: { signature?: string; outputAmount?: number };
-      if (useJupiterRoute) {
-        if (!signAndSendTx) { toast({ title: "Wallet not ready", variant: "destructive" }); return; }
-        result = isBuy
-          ? await buyToken(token.mint_address, numericAmount, solanaAddress, signAndSendTx, slippage * 100)
-          : await sellToken(token.mint_address, numericAmount, tokenDecimals, solanaAddress, signAndSendTx, slippage * 100);
-      } else {
-        const pumpResult = await pumpFunSwap(token.mint_address, numericAmount, isBuy, slippage);
-        result = { signature: pumpResult.signature, outputAmount: pumpResult.outputAmount };
-      }
+      // Build Token object for useTurboSwap (same flow as Pulse quick buy)
+      const turboToken = {
+        id: '',
+        name: token.name,
+        ticker: token.ticker,
+        mint_address: token.mint_address,
+        image_url: token.imageUrl || null,
+        status: token.graduated === false ? 'active' : 'graduated',
+        price_sol: token.price_sol || 0,
+        virtual_sol_reserves: 0,
+        virtual_token_reserves: 0,
+        real_sol_reserves: 0,
+        real_token_reserves: 0,
+        created_at: '',
+        market_cap_sol: 0,
+        reply_count: 0,
+        holder_count: 0,
+        volume_24h_sol: 0,
+        dbc_pool_address: null,
+      } as unknown as Token;
+
+      const result = await executeTurboSwap(turboToken, numericAmount, isBuy, slippage * 100);
 
       const latency = Math.round(performance.now() - t0);
       setLastLatencyMs(latency);
       setShowLatency(true);
       setTimeout(() => setShowLatency(false), 5000);
 
-      if (result.signature) {
-        recordAlphaTrade({ walletAddress: solanaAddress!, tokenMint: token.mint_address, tokenName: token.name, tokenTicker: token.ticker, tradeType: isBuy ? 'buy' : 'sell', amountSol: numericAmount, amountTokens: result.outputAmount, txHash: result.signature, chain: 'solana' });
-        supabase.functions.invoke('launchpad-swap', { body: { mintAddress: token.mint_address, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature: result.signature, outputAmount: result.outputAmount ?? null, tokenName: token.name, tokenTicker: token.ticker, mode: 'alpha_only' } }).catch(() => {});
+      if (result.success) {
+        // Show global trade success notification (same as Pulse)
+        showTradeSuccess({
+          type: isBuy ? 'buy' : 'sell',
+          ticker: token.ticker,
+          tokenName: token.name,
+          mintAddress: token.mint_address,
+          amount: isBuy ? `${numericAmount} SOL` : `${formatAmount(numericAmount)} ${token.ticker}`,
+          signature: result.signature,
+          executionMs: result.totalMs || turboLatencyMs || undefined,
+          tokenImageUrl: token.imageUrl,
+          pnlSol: !isBuy ? result.outputAmount : undefined,
+        });
+
+        setAmount(''); setQuote(null); setSelectedPreset(null);
+        setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
+        setShowProfitCard(true);
+
+        toast({
+          title: `${isBuy ? 'Buy' : 'Sell'} successful!`,
+          description: (
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span>{result.outputAmount ? (isBuy ? `Bought ${formatAmount(result.outputAmount)} ${token.ticker}` : `Sold for ${formatAmount(result.outputAmount)} SOL`) : `${isBuy ? 'Buy' : 'Sell'} confirmed`}</span>
+              {result.signature && <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"><ExternalLink className="h-3 w-3" /></a>}
+            </div>
+          ),
+        });
       }
-
-      setAmount(''); setQuote(null); setSelectedPreset(null);
-      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
-      setShowProfitCard(true);
-
-      toast({
-        title: `${isBuy ? 'Buy' : 'Sell'} successful!`,
-        description: (
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span>{result.outputAmount ? (isBuy ? `Bought ${formatAmount(result.outputAmount)} ${token.ticker}` : `Sold for ${formatAmount(result.outputAmount)} SOL`) : `${isBuy ? 'Buy' : 'Sell'} confirmed`}</span>
-            {result.signature && <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"><ExternalLink className="h-3 w-3" /></a>}
-          </div>
-        ),
-      });
     } catch (error) {
       console.error('Trade error:', error);
       toast({ title: "Trade failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" });
     } finally { setIsLoading(false); }
   };
 
-  const buttonLoading = isLoading || swapLoading;
+  const buttonLoading = isLoading || turboLoading;
   const { data: rugCheck, isLoading: rugLoading } = useRugCheck(token.mint_address);
 
   const safetyChecks = [
