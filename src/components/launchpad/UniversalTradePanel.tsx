@@ -415,8 +415,8 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                   {check.loading ? <Loader2 className="h-5 w-5 text-muted-foreground/30 animate-spin" />
                     : check.passed === true ? <CheckCircle2 className="h-5 w-5 text-green-500/80" />
                     : check.passed === false ? <XCircle className="h-5 w-5 text-destructive/80" />
-                    : <HelpCircle className="h-5 w-5 text-muted-foreground/30" />}
-                  <span className="text-[9px] font-mono text-muted-foreground/40 text-center leading-tight">{check.label}</span>
+                    : <HelpCircle className="h-5 w-5 text-foreground/30" />}
+                  <span className="text-[10px] font-mono text-foreground/50 text-center leading-tight">{check.label}</span>
                 </div>
               ))}
             </div>
