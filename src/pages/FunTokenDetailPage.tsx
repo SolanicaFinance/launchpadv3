@@ -110,7 +110,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
 
   return (
     <LaunchpadLayout>
-      <div className="trade-page-bg -m-4 p-4 md:-m-4 md:p-5 lg:p-6">
+      <div className="trade-page-bg -m-4 p-4 md:m-0 md:p-4 lg:p-6">
         <div className="max-w-[1600px] mx-auto flex flex-col gap-4 pb-32 md:pb-24">
 
           {/* ── TOP BAR ── */}
