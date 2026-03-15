@@ -435,16 +435,16 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Indicators + Settings ── */}
         <div className="flex items-center justify-between px-1 min-w-0">
-          <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/40 shrink min-w-0">
+          <div className="flex items-center gap-2.5 text-[11px] font-mono text-foreground/50 shrink min-w-0">
             <span className="flex items-center gap-1 shrink-0">
-              <span className="h-2 w-2 rounded-full bg-green-500/60" />MEV
+              <span className="h-2 w-2 rounded-full bg-green-500/70" />MEV
             </span>
             <span className="flex items-center gap-1 shrink-0">
-              <span className="h-2 w-2 rounded-full bg-primary/50" />Anti-SW
+              <span className="h-2 w-2 rounded-full bg-primary/60" />Anti-SW
             </span>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">
-            <span className="text-[11px] font-mono text-muted-foreground/40">{slippage}% slp</span>
+            <span className="text-[11px] font-mono text-foreground/50">{slippage}% slp</span>
             <AdvancedSettingsSheet
               slippage={slippage}
               onSlippageChange={setSlippage}

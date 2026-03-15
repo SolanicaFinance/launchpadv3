@@ -387,7 +387,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
               <p className="text-[11px] font-mono text-primary/50 text-center animate-in fade-in duration-300">⚡ {lastLatencyMs}ms</p>
             )}
             {isBuy && !showLatency && (
-              <p className="text-[10px] font-mono text-muted-foreground/35 text-center">Once you click Quick Buy, your transaction is sent immediately</p>
+              <p className="text-[10px] font-mono text-foreground/40 text-center">Once you click Quick Buy, your transaction is sent immediately</p>
             )}
           </div>
         )}
