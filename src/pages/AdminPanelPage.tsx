@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Skull, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2
+  Users, Shield, Loader2, Wand2
 } from "lucide-react";
 
 const ADMIN_PASSWORD = "saturn";
