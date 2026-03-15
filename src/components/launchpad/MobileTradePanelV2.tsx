@@ -362,7 +362,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
                   setSelectedPreset(null);
                 }
               }}
-              className="w-full h-13 font-mono font-semibold pl-4 pr-[92px] bg-transparent text-foreground placeholder:text-muted-foreground/20 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
+              className="w-full h-11 font-mono font-semibold pl-4 pr-[92px] bg-transparent text-foreground placeholder:text-foreground/25 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
               style={{ fontSize: 'clamp(15px, 4vw, 17px)' }}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 shrink-0">
