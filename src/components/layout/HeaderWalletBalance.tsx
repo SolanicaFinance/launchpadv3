@@ -220,6 +220,11 @@ function HeaderWalletBalanceInner() {
                 onClick={() => { setMenuOpen(false); setDepositOpen(true); }}
               />
               <MenuItem
+                icon={<ArrowUpFromLine className="h-4 w-4" />}
+                label="Withdraw"
+                onClick={() => { setMenuOpen(false); setWithdrawOpen(true); }}
+              />
+              <MenuItem
                 icon={<Zap className="h-4 w-4" />}
                 label="Pulse"
                 onClick={() => { setMenuOpen(false); navigate("/trade"); }}
