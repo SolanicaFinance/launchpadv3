@@ -230,20 +230,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       <div className="grid grid-cols-2">
         <button
           onClick={() => { setTradeType('buy'); setQuote(null); setSelectedPreset(null); }}
-          className={`py-3.5 text-[13px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
+          className={`py-3.5 text-[14px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
             isBuy
-              ? 'text-green-400 border-green-400/70 bg-green-400/[0.04]'
-              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-transparent'
+              ? 'text-[#00C4B4] border-[#00C4B4] bg-[#00C4B4]/[0.06]'
+              : 'text-[#6E6E80] hover:text-[#A0A0B0] border-transparent'
           }`}
         >
           Buy
         </button>
         <button
           onClick={() => { setTradeType('sell'); setQuote(null); setSelectedPreset(null); }}
-          className={`py-3.5 text-[13px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
+          className={`py-3.5 text-[14px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
             !isBuy
-              ? 'text-red-400 border-red-400/70 bg-red-400/[0.04]'
-              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-transparent'
+              ? 'text-[#FF4D4D] border-[#FF4D4D] bg-[#FF4D4D]/[0.06]'
+              : 'text-[#6E6E80] hover:text-[#A0A0B0] border-transparent'
           }`}
         >
           Sell
@@ -252,17 +252,17 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
       <div className="p-5 space-y-5">
         {/* ── Slippage ── */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground/50">Slippage Tolerance</span>
+        <div className="space-y-2.5">
+          <span className="text-[12px] font-mono uppercase tracking-wider text-[#6E6E80]">Slippage Tolerance</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {SLIPPAGE_PRESETS.map((v) => (
               <button
                 key={v}
                 onClick={() => handleSlippagePreset(v)}
-                className={`text-[12px] font-mono font-semibold px-3 py-1.5 rounded-lg border transition-all ${
+                className={`text-[13px] font-mono font-semibold px-3 py-1.5 rounded-md border transition-all ${
                   slippage === v && !showCustomSlippage
-                    ? 'border-primary/30 bg-primary/8 text-primary'
-                    : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                    ? 'border-[#F0B90B]/40 bg-[#F0B90B]/8 text-[#F0B90B]'
+                    : 'border-[#1A1A3A]/50 text-[#6E6E80] hover:border-[#1A1A3A] hover:text-[#A0A0B0]'
                 }`}
               >
                 {v}%
@@ -274,22 +274,22 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 placeholder="Custom"
                 value={customSlippage}
                 onChange={(e) => handleCustomSlippage(e.target.value)}
-                className={`h-7 text-[12px] font-mono pr-5 rounded-lg bg-transparent ${
+                className={`h-7 text-[13px] font-mono pr-5 rounded-md bg-transparent ${
                   customSlippage && !SLIPPAGE_PRESETS.includes(slippage)
-                    ? 'border-primary/30 bg-primary/5 text-primary'
-                    : 'border-white/[0.08]'
+                    ? 'border-[#F0B90B]/40 bg-[#F0B90B]/5 text-[#F0B90B]'
+                    : 'border-[#1A1A3A]/50'
                 }`}
               />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/30 font-mono">%</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-[#6E6E80] font-mono">%</span>
             </div>
           </div>
         </div>
 
         {/* ── MEV Protection ── */}
-        <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/50">
-          <span className="w-2 h-2 rounded-full bg-green-500/70" />
+        <div className="flex items-center gap-2.5 text-[12px] font-mono text-[#6E6E80]">
+          <span className="w-2 h-2 rounded-full bg-[#00C4B4]" />
           <span>Jito MEV Protection</span>
-          <span className="text-muted-foreground/25">•</span>
+          <span className="text-[#1A1A3A]">•</span>
           <span>Anti-sandwich</span>
         </div>
 
@@ -298,9 +298,9 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           <Switch
             checked={instaBuy}
             onCheckedChange={setInstaBuy}
-            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-green-500' : 'data-[state=checked]:bg-destructive'}`}
+            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-[#00C4B4]' : 'data-[state=checked]:bg-[#FF4D4D]'}`}
           />
-          <span className={`text-[13px] font-mono font-bold tracking-wider ${isBuy ? 'text-green-400/90' : 'text-destructive/90'}`}>
+          <span className={`text-[14px] font-mono font-bold tracking-wider ${isBuy ? 'text-[#00C4B4]' : 'text-[#FF4D4D]'}`}>
             {isBuy ? 'INSTA BUY' : 'INSTA SELL'}
           </span>
         </div>
@@ -310,20 +310,20 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           {isBuy
             ? quickBuyAmounts.map((v, i) => (
                 <button key={v} onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
+                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-md border transition-all ${
                     selectedPreset === i
-                      ? 'border-green-500/25 bg-green-500/8 text-green-400'
-                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                      ? 'border-[#00C4B4]/30 bg-[#00C4B4]/8 text-[#00C4B4]'
+                      : 'border-[#1A1A3A]/50 text-[#6E6E80] hover:border-[#1A1A3A] hover:text-[#A0A0B0]'
                   }`}>
                   <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-4 h-4 rounded-full inline-block mr-1 -mt-0.5" /> {v}
                 </button>
               ))
             : quickSellPct.map((v, i) => (
                 <button key={v} onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
+                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-md border transition-all ${
                     selectedPreset === i
-                      ? 'border-destructive/25 bg-destructive/8 text-destructive'
-                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                      ? 'border-[#FF4D4D]/30 bg-[#FF4D4D]/8 text-[#FF4D4D]'
+                      : 'border-[#1A1A3A]/50 text-[#6E6E80] hover:border-[#1A1A3A] hover:text-[#A0A0B0]'
                   }`}>
                   {v}%
                 </button>
@@ -333,16 +333,16 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         {/* ── Amount Input ── */}
         <div>
           <div className="flex justify-between items-center mb-2.5 gap-2">
-            <span className="text-[12px] font-mono uppercase tracking-wider text-muted-foreground/50">
+            <span className="text-[13px] font-mono uppercase tracking-wider text-[#6E6E80]">
               {isBuy ? 'Amount to buy' : `Sell ${token.ticker}`}
             </span>
-            <span className="text-[12px] font-mono text-muted-foreground/45 truncate">
+            <span className="text-[13px] font-mono text-[#6E6E80] truncate">
               Bal: {isBuy
                 ? (solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—')
                 : `${formatAmount(userTokenBalance)} ${token.ticker.length > 6 ? token.ticker.slice(0, 5) + '…' : token.ticker}`}
             </span>
           </div>
-          <div className="relative border border-white/[0.08] rounded-xl hover:border-white/[0.14] focus-within:border-green-500/30 focus-within:ring-1 focus-within:ring-green-500/10 transition-all overflow-hidden bg-white/[0.02]">
+          <div className="relative border border-[#1A1A3A]/50 rounded-lg hover:border-[#1A1A3A] focus-within:border-[#00C4B4]/30 focus-within:ring-1 focus-within:ring-[#00C4B4]/10 transition-all overflow-hidden bg-[#0A0A1A]">
             <input
               type="text"
               inputMode="decimal"
@@ -358,14 +358,14 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 const raw = e.target.value.replace(/[KMBkmb]/g, '');
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) { setAmount(raw); setSelectedPreset(null); }
               }}
-              className="w-full border-0 bg-transparent font-mono h-14 pl-5 pr-28 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/20 text-foreground text-[16px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full border-0 bg-transparent font-mono h-14 pl-5 pr-28 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#1A1A3A] text-white text-[16px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 shrink-0">
               <button onClick={handleMaxClick}
-                className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-primary/8 text-primary/80 hover:bg-primary/12 transition-colors border border-primary/15">
+                className="text-[12px] font-mono font-bold px-2.5 py-1 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] hover:bg-[#00C4B4]/15 transition-colors border border-[#00C4B4]/20">
                 MAX
               </button>
-              <span className="text-[13px] font-mono text-muted-foreground/50 flex items-center gap-1">
+              <span className="text-[13px] font-mono text-[#6E6E80] flex items-center gap-1">
                 {isBuy
                   ? <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="SOL" className="w-4 h-4 rounded-full" />
                   : token.imageUrl && <img src={token.imageUrl} alt={token.ticker} className="w-4 h-4 rounded-full" />}
@@ -377,14 +377,14 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Price Display ── */}
         <div className="py-1">
-          <span className="text-[12px] font-mono text-muted-foreground/45">
+          <span className="text-[13px] font-mono text-[#6E6E80]">
             1 {token.name} = {token.price_sol ? token.price_sol.toFixed(6) : '—'} SOL
           </span>
         </div>
 
         {/* ── Price Impact Warning ── */}
         {priceImpact > 5 && (
-          <div className="flex items-center gap-2.5 p-3 bg-destructive/8 rounded-xl text-destructive text-[13px] font-mono border border-destructive/15">
+          <div className="flex items-center gap-2.5 p-3 bg-[#FF4D4D]/8 rounded-lg text-[#FF4D4D] text-[13px] font-mono border border-[#FF4D4D]/15">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>High price impact: {priceImpact.toFixed(2)}%</span>
           </div>
@@ -392,14 +392,14 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
-          <Button className="w-full h-13 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => login()}>
+          <Button className="w-full h-13 font-mono text-[14px] uppercase tracking-widest bg-[#00C4B4] hover:bg-[#00D4C4] text-black rounded-lg font-bold" onClick={() => login()}>
             <Wallet className="h-4 w-4 mr-2" /> Connect Wallet
           </Button>
         ) : (
           <div className="space-y-2">
             <button onClick={handleTrade} disabled={buttonLoading || !numericAmount || (useJupiterRoute && !jupiterQuoteFailed && quoteLoading) || !isWalletReady}
-              className={`w-full h-13 rounded-xl font-mono text-[14px] font-bold uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                isBuy ? 'bg-green-500 hover:bg-green-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
+              className={`w-full h-13 rounded-lg font-mono text-[14px] font-bold uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] ${
+                isBuy ? 'bg-[#00C4B4] hover:bg-[#00D4C4] text-black' : 'bg-[#FF4D4D] hover:bg-[#FF5C5C] text-white'
               }`}>
               {buttonLoading ? <Loader2 className="h-4 w-4 animate-spin" />
                 : useJupiterRoute && !jupiterQuoteFailed && quoteLoading ? 'Getting quote...'
@@ -410,27 +410,27 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 )}
             </button>
             {showLatency && lastLatencyMs !== null && (
-              <p className="text-[11px] font-mono text-primary/50 text-center animate-in fade-in duration-300">⚡ {lastLatencyMs}ms</p>
+              <p className="text-[12px] font-mono text-[#00C4B4]/60 text-center animate-in fade-in duration-300">⚡ {lastLatencyMs}ms</p>
             )}
             {isBuy && !showLatency && (
-              <p className="text-[10px] font-mono text-muted-foreground/35 text-center">Once you click Quick Buy, your transaction is sent immediately</p>
+              <p className="text-[11px] font-mono text-[#6E6E80]/60 text-center">Once you click Quick Buy, your transaction is sent immediately</p>
             )}
           </div>
         )}
 
         {/* ── Share P&L ── */}
-        <div className="flex items-center justify-between py-2.5 border-t border-white/[0.06]">
-          <span className="text-[11px] font-mono text-muted-foreground/40">Share your P&L</span>
+        <div className="flex items-center justify-between py-2.5 border-t border-[#1A1A3A]/30">
+          <span className="text-[12px] font-mono text-[#6E6E80]">Share your P&L</span>
           <button
             onClick={() => { setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: numericAmount || 0, tokenTicker: token.ticker, tokenName: token.name }); setShowProfitCard(true); }}
-            className="text-[11px] font-mono font-bold text-primary/80 hover:text-primary flex items-center gap-1.5 transition-colors bg-primary/6 px-3 py-1.5 rounded-lg hover:bg-primary/10">
+            className="text-[12px] font-mono font-bold text-[#00C4B4] hover:text-[#00D4C4] flex items-center gap-1.5 transition-colors bg-[#00C4B4]/8 px-3 py-1.5 rounded-md hover:bg-[#00C4B4]/12">
             🪐 Generate PNL Card
           </button>
         </div>
 
         {/* ── Advanced Settings ── */}
         <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-          <CollapsibleTrigger className="flex items-center justify-center w-full text-[12px] font-mono font-bold uppercase tracking-widest text-primary/70 hover:text-primary transition-colors py-2.5">
+          <CollapsibleTrigger className="flex items-center justify-center w-full text-[13px] font-mono font-bold uppercase tracking-widest text-[#6E6E80] hover:text-[#A0A0B0] transition-colors py-2.5">
             <span>Advanced Settings</span>
             <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
           </CollapsibleTrigger>
@@ -438,32 +438,32 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
               {safetyChecks.map((check) => (
                 <div key={check.label} className="flex flex-col items-center gap-1.5 py-2.5">
-                  {check.loading ? <Loader2 className="h-5 w-5 text-muted-foreground/30 animate-spin" />
-                    : check.passed === true ? <CheckCircle2 className="h-5 w-5 text-green-500/80" />
-                    : check.passed === false ? <XCircle className="h-5 w-5 text-destructive/80" />
-                    : <HelpCircle className="h-5 w-5 text-muted-foreground/30" />}
-                  <span className="text-[9px] font-mono text-muted-foreground/40 text-center leading-tight">{check.label}</span>
+                  {check.loading ? <Loader2 className="h-5 w-5 text-[#6E6E80] animate-spin" />
+                    : check.passed === true ? <CheckCircle2 className="h-5 w-5 text-[#00C4B4]" />
+                    : check.passed === false ? <XCircle className="h-5 w-5 text-[#FF4D4D]" />
+                    : <HelpCircle className="h-5 w-5 text-[#6E6E80]/50" />}
+                  <span className="text-[10px] font-mono text-[#6E6E80] text-center leading-tight">{check.label}</span>
                 </div>
               ))}
             </div>
 
             {numericAmount > 0 && (
-              <div className="space-y-2 text-[12px] font-mono border-t border-white/[0.05] pt-3">
+              <div className="space-y-2 text-[13px] font-mono border-t border-[#1A1A3A]/30 pt-3">
                 {outputAmount > 0 && (
-                  <div className="flex justify-between text-muted-foreground/50">
+                  <div className="flex justify-between text-[#6E6E80]">
                     <span>You Receive</span>
-                    <span className="text-foreground/70 font-semibold">{formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}</span>
+                    <span className="text-[#E0E0E0] font-semibold">{formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}</span>
                   </div>
                 )}
                 {quote && (
-                  <div className="flex justify-between text-muted-foreground/50">
+                  <div className="flex justify-between text-[#6E6E80]">
                     <span>Price Impact</span>
-                    <span className={priceImpact > 5 ? 'text-destructive' : 'text-foreground/70'}>{priceImpact.toFixed(2)}%</span>
+                    <span className={priceImpact > 5 ? 'text-[#FF4D4D]' : 'text-[#E0E0E0]'}>{priceImpact.toFixed(2)}%</span>
                   </div>
                 )}
-                <div className="flex justify-between text-muted-foreground/50">
+                <div className="flex justify-between text-[#6E6E80]">
                   <span>Slippage</span>
-                  <span className="text-foreground/70">{slippage}%</span>
+                  <span className="text-[#E0E0E0]">{slippage}%</span>
                 </div>
               </div>
             )}
