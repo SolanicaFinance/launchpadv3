@@ -73,8 +73,12 @@ export default function WalletTransactionHistory({ walletAddress, pageSize }: Pr
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
                 {tx.tokenName
-                  ? `${tx.tokenName}`
-                  : tx.description?.slice(0, 60) || tx.signature.slice(0, 16) + "…"}
+                  ? tx.tokenName
+                  : tx.type === "swap"
+                    ? "SWAP"
+                    : tx.counterparty
+                      ? `${tx.counterparty.slice(0, 4)}…${tx.counterparty.slice(-4)}`
+                      : tx.signature.slice(0, 4) + "…" + tx.signature.slice(-4)}
               </p>
             </div>
             <div className="text-right flex items-center gap-1.5">
