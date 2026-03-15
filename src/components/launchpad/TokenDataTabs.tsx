@@ -21,19 +21,14 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
   const { data, isLoading } = useCodexTokenEvents(tokenAddress);
   const isHoldersTab = activeTab === "holders";
   const { data: allTradesData, isLoading: allTradesLoading } = useAllTokenTrades(tokenAddress, isHoldersTab);
-  const { data: holdersData, isLoading: holdersLoading } = useTokenHolders(
-    tokenAddress,
-    !isBsc // disable Helius fetch for BSC addresses
-  );
+  const { data: holdersData, isLoading: holdersLoading } = useTokenHolders(tokenAddress, !isBsc);
 
   const liveHolderCount = holdersData?.count ?? holderCount;
 
-  // Build set of all user wallet addresses for matching
   const allUserAddresses = new Set<string>();
   if (userWallet) allUserAddresses.add(userWallet.toLowerCase());
   if (userWallets) userWallets.forEach(w => allUserAddresses.add(w.toLowerCase()));
 
-  // Filter trades for YOUR TRADES tab — match against ALL user wallets
   const userTrades = allUserAddresses.size > 0
     ? (data?.events || []).filter(e => allUserAddresses.has(e.maker.toLowerCase()))
     : [];
@@ -45,14 +40,14 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
   ];
 
   return (
-    <div className="rounded-xl overflow-hidden min-w-0 border border-white/[0.06]" style={{ backgroundColor: 'hsl(228 18% 7%)' }}>
-      {/* Tab bar */}
-      <div className="flex items-center gap-0 border-b border-white/[0.04] px-1 overflow-x-auto scrollbar-none w-full min-w-0">
+    <div className="rounded-xl overflow-hidden min-w-0 border border-white/[0.06]" style={{ backgroundColor: 'hsl(225 15% 7%)' }}>
+      {/* Tab bar — cleaner, more visible */}
+      <div className="flex items-center gap-0 border-b border-white/[0.05] px-2 overflow-x-auto scrollbar-none w-full min-w-0">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-3 sm:px-4 py-3 text-[9px] sm:text-[10px] font-mono font-semibold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
+            className={`px-4 sm:px-5 py-3.5 text-[11px] sm:text-[12px] font-mono font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
               activeTab === tab.key
                 ? "text-foreground/90"
                 : "text-muted-foreground/35 hover:text-muted-foreground/55"
@@ -60,12 +55,10 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="ml-1 text-[9px] text-muted-foreground/25">({tab.count})</span>
+              <span className="ml-1.5 text-[10px] text-muted-foreground/30">({tab.count})</span>
             )}
             {activeTab === tab.key && (
-              <span
-                className="absolute bottom-0 left-3 right-3 h-[1.5px] rounded-full bg-primary/80"
-              />
+              <span className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-primary/80" />
             )}
           </button>
         ))}

@@ -43,9 +43,9 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     return await signAndSendTransaction(tx);
   }, [signAndSendTransaction]);
 
-   const preferJupiterRoute = token.graduated !== false;
-   const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
-   const useJupiterRoute = preferJupiterRoute && !jupiterQuoteFailed;
+  const preferJupiterRoute = token.graduated !== false;
+  const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
+  const useJupiterRoute = preferJupiterRoute && !jupiterQuoteFailed;
 
   const { toast } = useToast();
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
@@ -78,57 +78,37 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     }
   }, [isAuthenticated, solanaAddress, getBalance, isLoading]);
 
-  // Fetch on-chain SPL token balance
-  // Use embedded wallet address (actual signer) for balance reads
   const { walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy } = useSolanaWalletWithPrivy();
   const effectiveWallet = embeddedWallet || solanaAddress;
 
   const refreshTokenBalance = useCallback(async () => {
-    if (!isAuthenticated || !effectiveWallet || !token.mint_address) {
-      setOnChainTokenBalance(null);
-      return;
-    }
+    if (!isAuthenticated || !effectiveWallet || !token.mint_address) { setOnChainTokenBalance(null); return; }
     try {
       const connection = new Connection(HELIUS_RPC);
       const owner = new PublicKey(effectiveWallet);
       const mint = new PublicKey(token.mint_address);
       const resp = await connection.getParsedTokenAccountsByOwner(owner, { mint });
-      // Sum ALL token accounts for this mint
       const bal = resp.value.reduce((sum, acc) => {
         const ta = acc.account?.data?.parsed?.info?.tokenAmount;
         const v = typeof ta?.uiAmount === 'number' ? ta.uiAmount : (ta?.uiAmountString ? parseFloat(ta.uiAmountString) : 0);
         return sum + (isFinite(v) ? v : 0);
       }, 0);
       setOnChainTokenBalance(bal);
-    } catch {
-      // Keep previous value on transient errors
-    }
+    } catch { /* keep previous */ }
   }, [isAuthenticated, effectiveWallet, token.mint_address]);
 
-  // Initial fetch + refresh on trade completion
-  useEffect(() => {
-    void refreshTokenBalance();
-  }, [refreshTokenBalance, isLoading]);
-
-  // Continuous polling every 3s + focus/visibility refresh
+  useEffect(() => { void refreshTokenBalance(); }, [refreshTokenBalance, isLoading]);
   useEffect(() => {
     if (!isAuthenticated || !effectiveWallet || !token.mint_address) return;
-
     const interval = window.setInterval(() => void refreshTokenBalance(), 3000);
     const onFocus = () => void refreshTokenBalance();
     const onVisibility = () => { if (document.visibilityState === 'visible') void refreshTokenBalance(); };
-
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
+    return () => { window.clearInterval(interval); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisibility); };
   }, [isAuthenticated, effectiveWallet, token.mint_address, refreshTokenBalance]);
 
-  // Fetch Jupiter quotes for graduated tokens
+  // Jupiter quotes
   useEffect(() => {
     if (!preferJupiterRoute) { setQuote(null); setQuoteLoading(false); setJupiterQuoteFailed(false); return; }
     const fetchQuote = async () => {
@@ -138,18 +118,10 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         const result = isBuy
           ? await getBuyQuote(token.mint_address, numericAmount, slippage * 100)
           : await getSellQuote(token.mint_address, numericAmount, tokenDecimals, slippage * 100);
-        if (result) {
-          setQuote({ outAmount: result.outAmount, priceImpactPct: result.priceImpactPct });
-          setJupiterQuoteFailed(false);
-        } else {
-          setQuote(null);
-          setJupiterQuoteFailed(true); // Fallback to PumpPortal
-          console.log('[UniversalTradePanel] Jupiter quote failed, falling back to PumpPortal');
-        }
-      } catch {
-        setQuote(null);
-        setJupiterQuoteFailed(true);
-      } finally { setQuoteLoading(false); }
+        if (result) { setQuote({ outAmount: result.outAmount, priceImpactPct: result.priceImpactPct }); setJupiterQuoteFailed(false); }
+        else { setQuote(null); setJupiterQuoteFailed(true); }
+      } catch { setQuote(null); setJupiterQuoteFailed(true); }
+      finally { setQuoteLoading(false); }
     };
     const t = setTimeout(fetchQuote, 500);
     return () => clearTimeout(t);
@@ -180,18 +152,12 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
   };
 
   const handleMaxClick = () => {
-    if (isBuy && solBalance !== null) {
-      setAmount(Math.max(0, solBalance - 0.005).toFixed(4));
-    } else if (!isBuy) {
-      setAmount(userTokenBalance.toString());
-    }
+    if (isBuy && solBalance !== null) { setAmount(Math.max(0, solBalance - 0.005).toFixed(4)); }
+    else if (!isBuy) { setAmount(userTokenBalance.toString()); }
     setSelectedPreset(null);
   };
 
-  const handleSlippagePreset = (val: number) => {
-    setSlippage(val); setShowCustomSlippage(false); setCustomSlippage('');
-  };
-
+  const handleSlippagePreset = (val: number) => { setSlippage(val); setShowCustomSlippage(false); setCustomSlippage(''); };
   const handleCustomSlippage = (val: string) => {
     setCustomSlippage(val);
     const num = parseFloat(val);
@@ -199,21 +165,14 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
   };
 
   const handleTrade = async () => {
-    if (!numericAmount || numericAmount <= 0) {
-      toast({ title: "Invalid amount", variant: "destructive" }); return;
-    }
-    if (!isBuy && numericAmount > userTokenBalance) {
-      toast({ title: "Insufficient token balance", variant: "destructive" }); return;
-    }
-    if (!solanaAddress) {
-      toast({ title: "Please connect your wallet", variant: "destructive" }); return;
-    }
+    if (!numericAmount || numericAmount <= 0) { toast({ title: "Invalid amount", variant: "destructive" }); return; }
+    if (!isBuy && numericAmount > userTokenBalance) { toast({ title: "Insufficient token balance", variant: "destructive" }); return; }
+    if (!solanaAddress) { toast({ title: "Please connect your wallet", variant: "destructive" }); return; }
 
     setIsLoading(true);
     const t0 = performance.now();
     try {
       let result: { signature?: string; outputAmount?: number };
-
       if (useJupiterRoute) {
         if (!signAndSendTx) { toast({ title: "Wallet not ready", variant: "destructive" }); return; }
         result = isBuy
@@ -230,217 +189,160 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       setTimeout(() => setShowLatency(false), 5000);
 
       if (result.signature) {
-        // Client-side direct insert — ironclad fallback
-        recordAlphaTrade({
-          walletAddress: solanaAddress!,
-          tokenMint: token.mint_address,
-          tokenName: token.name,
-          tokenTicker: token.ticker,
-          tradeType: isBuy ? 'buy' : 'sell',
-          amountSol: numericAmount,
-          amountTokens: result.outputAmount,
-          txHash: result.signature,
-          chain: 'solana',
-        });
-
-        // Edge function (secondary, non-blocking)
-        supabase.functions.invoke('launchpad-swap', {
-          body: {
-            mintAddress: token.mint_address,
-            userWallet: solanaAddress,
-            amount: numericAmount,
-            isBuy,
-            profileId: profileId || undefined,
-            signature: result.signature,
-            outputAmount: result.outputAmount ?? null,
-            tokenName: token.name,
-            tokenTicker: token.ticker,
-            mode: 'alpha_only',
-          },
-        }).catch((err) => console.warn('[UniversalTradePanel] alpha record failed (non-fatal):', err));
+        recordAlphaTrade({ walletAddress: solanaAddress!, tokenMint: token.mint_address, tokenName: token.name, tokenTicker: token.ticker, tradeType: isBuy ? 'buy' : 'sell', amountSol: numericAmount, amountTokens: result.outputAmount, txHash: result.signature, chain: 'solana' });
+        supabase.functions.invoke('launchpad-swap', { body: { mintAddress: token.mint_address, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature: result.signature, outputAmount: result.outputAmount ?? null, tokenName: token.name, tokenTicker: token.ticker, mode: 'alpha_only' } }).catch(() => {});
       }
 
       setAmount(''); setQuote(null); setSelectedPreset(null);
-
-      // Show profit card modal with live PnL data
-      const solReceived = !isBuy ? (result.outputAmount ?? outputAmount) : undefined;
-      const solSpent = isBuy ? numericAmount : undefined;
-      // For sells, compute PnL: compare SOL received vs what was paid (estimated from current price)
-      // Since we don't have cost basis, show the SOL value received
-      setProfitCardData({
-        action: isBuy ? 'buy' : 'sell',
-        amountSol: isBuy ? numericAmount : (solReceived ?? numericAmount * (token.price_sol || 0)),
-        tokenTicker: token.ticker,
-        tokenName: token.name,
-        outputAmount: result.outputAmount,
-        signature: result.signature,
-        tokenImageUrl: token.imageUrl,
-      });
+      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
       setShowProfitCard(true);
 
       toast({
         title: `${isBuy ? 'Buy' : 'Sell'} successful!`,
         description: (
           <div className="flex items-center gap-2 font-mono text-xs">
-            <span>
-              {result.outputAmount
-                ? (isBuy ? `Bought ${formatAmount(result.outputAmount)} ${token.ticker}` : `Sold for ${formatAmount(result.outputAmount)} SOL`)
-                : `${isBuy ? 'Buy' : 'Sell'} confirmed`}
-            </span>
-            {result.signature && (
-              <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
+            <span>{result.outputAmount ? (isBuy ? `Bought ${formatAmount(result.outputAmount)} ${token.ticker}` : `Sold for ${formatAmount(result.outputAmount)} SOL`) : `${isBuy ? 'Buy' : 'Sell'} confirmed`}</span>
+            {result.signature && <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"><ExternalLink className="h-3 w-3" /></a>}
           </div>
         ),
       });
     } catch (error) {
       console.error('Trade error:', error);
       toast({ title: "Trade failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const buttonLoading = isLoading || swapLoading;
-
   const { data: rugCheck, isLoading: rugLoading } = useRugCheck(token.mint_address);
 
   const safetyChecks = [
     { label: "Launched", passed: token.graduated !== false, loading: false },
-    { label: "Mint authority revoked", passed: rugCheck?.mintAuthorityRevoked ?? null, loading: rugLoading },
-    { label: "Freeze authority revoked", passed: rugCheck?.freezeAuthorityRevoked ?? null, loading: rugLoading },
-    { label: "Liquidity locked", passed: rugCheck?.liquidityLocked ?? null, loading: rugLoading },
+    { label: "Mint revoked", passed: rugCheck?.mintAuthorityRevoked ?? null, loading: rugLoading },
+    { label: "Freeze revoked", passed: rugCheck?.freezeAuthorityRevoked ?? null, loading: rugLoading },
+    { label: "Liq locked", passed: rugCheck?.liquidityLocked ?? null, loading: rugLoading },
     { label: "Top 10 < 30%", passed: rugCheck ? rugCheck.topHolderPct < 30 : null, loading: rugLoading },
   ];
 
   return (
     <>
-    <div className="border border-white/[0.06] rounded-xl overflow-hidden bg-[hsl(228_18%_8%/0.6)]">
-      {/* Buy / Sell Toggle — lighter, cleaner */}
-      <div className="grid grid-cols-2 border-b border-white/[0.04]">
+    <div className="trade-glass-panel overflow-hidden">
+      {/* ── Buy / Sell Toggle ── */}
+      <div className="grid grid-cols-2">
         <button
           onClick={() => { setTradeType('buy'); setQuote(null); setSelectedPreset(null); }}
-          className={`py-3 text-[13px] font-semibold font-mono uppercase tracking-widest transition-all ${
+          className={`py-3.5 text-[13px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
             isBuy
-              ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
-              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-b-2 border-transparent'
+              ? 'text-green-400 border-green-400/70 bg-green-400/[0.04]'
+              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-transparent'
           }`}
         >
           Buy
         </button>
         <button
           onClick={() => { setTradeType('sell'); setQuote(null); setSelectedPreset(null); }}
-          className={`py-3 text-[13px] font-semibold font-mono uppercase tracking-widest transition-all ${
+          className={`py-3.5 text-[13px] font-bold font-mono uppercase tracking-widest transition-all border-b-2 ${
             !isBuy
-              ? 'text-destructive border-b-2 border-destructive'
-              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-b-2 border-transparent'
+              ? 'text-red-400 border-red-400/70 bg-red-400/[0.04]'
+              : 'text-muted-foreground/40 hover:text-muted-foreground/60 border-transparent'
           }`}
         >
           Sell
         </button>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Slippage Tolerance — clean pills */}
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/40">Slippage</span>
-          <div className="flex items-center gap-1">
+      <div className="p-5 space-y-5">
+        {/* ── Slippage ── */}
+        <div className="space-y-2">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground/50">Slippage Tolerance</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
             {SLIPPAGE_PRESETS.map((v) => (
               <button
                 key={v}
                 onClick={() => handleSlippagePreset(v)}
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border transition-all ${
+                className={`text-[12px] font-mono font-semibold px-3 py-1.5 rounded-lg border transition-all ${
                   slippage === v && !showCustomSlippage
-                    ? 'border-primary/30 bg-primary/6 text-primary/90'
-                    : 'border-white/[0.06] text-muted-foreground/40 hover:border-white/[0.1] hover:text-muted-foreground/60'
+                    ? 'border-primary/30 bg-primary/8 text-primary'
+                    : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
                 }`}
               >
                 {v}%
               </button>
             ))}
-            <div className="relative w-16">
+            <div className="relative w-20">
               <Input
                 type="number"
                 placeholder="Custom"
                 value={customSlippage}
                 onChange={(e) => handleCustomSlippage(e.target.value)}
-                className={`h-5 text-[10px] font-mono pr-4 rounded-full bg-transparent ${
+                className={`h-7 text-[12px] font-mono pr-5 rounded-lg bg-transparent ${
                   customSlippage && !SLIPPAGE_PRESETS.includes(slippage)
                     ? 'border-primary/30 bg-primary/5 text-primary'
-                    : 'border-white/[0.06]'
+                    : 'border-white/[0.08]'
                 }`}
               />
-              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground/30 font-mono">%</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/30 font-mono">%</span>
             </div>
           </div>
         </div>
 
-        {/* MEV Protection indicator */}
-        <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground/35">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
+        {/* ── MEV Protection ── */}
+        <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/50">
+          <span className="w-2 h-2 rounded-full bg-green-500/70" />
           <span>Jito MEV Protection</span>
-          <span className="text-muted-foreground/20">•</span>
+          <span className="text-muted-foreground/25">•</span>
           <span>Anti-sandwich</span>
         </div>
 
-        {/* Insta Buy Toggle */}
-        <div className="flex items-center gap-2">
+        {/* ── Insta Buy Toggle ── */}
+        <div className="flex items-center gap-2.5">
           <Switch
             checked={instaBuy}
             onCheckedChange={setInstaBuy}
-            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-[hsl(var(--primary))]' : 'data-[state=checked]:bg-destructive'}`}
+            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-green-500' : 'data-[state=checked]:bg-destructive'}`}
           />
-          <span className={`text-xs font-mono font-semibold tracking-wider ${isBuy ? 'text-primary/80' : 'text-destructive/80'}`}>
+          <span className={`text-[13px] font-mono font-bold tracking-wider ${isBuy ? 'text-green-400/90' : 'text-destructive/90'}`}>
             {isBuy ? 'INSTA BUY' : 'INSTA SELL'}
           </span>
         </div>
 
-        {/* Quick Amount Presets — lighter styling */}
-        <div className="flex gap-1.5">
+        {/* ── Quick Presets ── */}
+        <div className="flex gap-2">
           {isBuy
             ? quickBuyAmounts.map((v, i) => (
-                <button
-                  key={v}
-                  onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[11px] font-mono font-semibold py-2 rounded-lg border transition-all ${
+                <button key={v} onClick={() => handleQuickAmount(v, i)}
+                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
                     selectedPreset === i
-                      ? 'border-primary/25 bg-primary/6 text-primary/90'
-                      : 'border-white/[0.06] text-muted-foreground/40 hover:border-white/[0.1] hover:text-muted-foreground/60'
-                  }`}
-                >
-                  <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-3.5 h-3.5 rounded-full inline-block mr-0.5 -mt-px" /> {v}
+                      ? 'border-green-500/25 bg-green-500/8 text-green-400'
+                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                  }`}>
+                  <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-4 h-4 rounded-full inline-block mr-1 -mt-0.5" /> {v}
                 </button>
               ))
             : quickSellPct.map((v, i) => (
-                <button
-                  key={v}
-                  onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[11px] font-mono font-semibold py-2 rounded-lg border transition-all ${
+                <button key={v} onClick={() => handleQuickAmount(v, i)}
+                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
                     selectedPreset === i
-                      ? 'border-destructive/25 bg-destructive/6 text-destructive/90'
-                      : 'border-white/[0.06] text-muted-foreground/40 hover:border-white/[0.1] hover:text-muted-foreground/60'
-                  }`}
-                >
+                      ? 'border-destructive/25 bg-destructive/8 text-destructive'
+                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                  }`}>
                   {v}%
                 </button>
               ))}
         </div>
 
-        {/* Input — clean, airy */}
+        {/* ── Amount Input ── */}
         <div>
-          <div className="flex justify-between items-center mb-2 gap-2 min-w-0">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/40 truncate shrink min-w-0">
+          <div className="flex justify-between items-center mb-2.5 gap-2">
+            <span className="text-[12px] font-mono uppercase tracking-wider text-muted-foreground/50">
               {isBuy ? 'Amount to buy' : `Sell ${token.ticker}`}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground/35 truncate shrink-0 max-w-[50%] text-right">
+            <span className="text-[12px] font-mono text-muted-foreground/45 truncate">
               Bal: {isBuy
                 ? (solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—')
                 : `${formatAmount(userTokenBalance)} ${token.ticker.length > 6 ? token.ticker.slice(0, 5) + '…' : token.ticker}`}
             </span>
           </div>
-          <div className="relative border border-white/[0.06] rounded-xl hover:border-white/[0.1] focus-within:border-primary/25 transition-colors overflow-hidden bg-white/[0.02]">
+          <div className="relative border border-white/[0.08] rounded-xl hover:border-white/[0.14] focus-within:border-green-500/30 focus-within:ring-1 focus-within:ring-green-500/10 transition-all overflow-hidden bg-white/[0.02]">
             <input
               type="text"
               inputMode="decimal"
@@ -454,22 +356,16 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
               })()}
               onChange={(e) => {
                 const raw = e.target.value.replace(/[KMBkmb]/g, '');
-                if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-                  setAmount(raw);
-                  setSelectedPreset(null);
-                }
+                if (raw === '' || /^\d*\.?\d*$/.test(raw)) { setAmount(raw); setSelectedPreset(null); }
               }}
-              className="w-full border-0 bg-transparent font-mono h-14 pl-4 pr-24 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/20 text-ellipsis overflow-hidden [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-foreground/90"
-              style={{ fontSize: 'clamp(14px, 3vw, 18px)' }}
+              className="w-full border-0 bg-transparent font-mono h-14 pl-5 pr-28 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/20 text-foreground text-[16px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={handleMaxClick}
-                className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-primary/6 text-primary/70 hover:bg-primary/10 transition-colors border border-primary/12"
-              >
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 shrink-0">
+              <button onClick={handleMaxClick}
+                className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-primary/8 text-primary/80 hover:bg-primary/12 transition-colors border border-primary/15">
                 MAX
               </button>
-              <span className="text-xs font-mono text-muted-foreground/40 flex items-center gap-1">
+              <span className="text-[13px] font-mono text-muted-foreground/50 flex items-center gap-1">
                 {isBuy
                   ? <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="SOL" className="w-4 h-4 rounded-full" />
                   : token.imageUrl && <img src={token.imageUrl} alt={token.ticker} className="w-4 h-4 rounded-full" />}
@@ -479,138 +375,103 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           </div>
         </div>
 
-        {/* Price Display */}
-        <div className="py-0.5">
-          <span className="text-[11px] font-mono text-muted-foreground/35">
+        {/* ── Price Display ── */}
+        <div className="py-1">
+          <span className="text-[12px] font-mono text-muted-foreground/45">
             1 {token.name} = {token.price_sol ? token.price_sol.toFixed(6) : '—'} SOL
           </span>
         </div>
 
-        {/* Price Impact Warning */}
+        {/* ── Price Impact Warning ── */}
         {priceImpact > 5 && (
-          <div className="flex items-center gap-2 p-2.5 bg-destructive/6 rounded-lg text-destructive/80 text-xs font-mono border border-destructive/12">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-2.5 p-3 bg-destructive/8 rounded-xl text-destructive text-[13px] font-mono border border-destructive/15">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>High price impact: {priceImpact.toFixed(2)}%</span>
           </div>
         )}
 
-        {/* Action Button — cleaner */}
+        {/* ── Action Button ── */}
         {!isAuthenticated ? (
-          <Button className="w-full h-12 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => login()}>
-            <Wallet className="h-4 w-4 mr-2" />
-            Connect Wallet
+          <Button className="w-full h-13 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => login()}>
+            <Wallet className="h-4 w-4 mr-2" /> Connect Wallet
           </Button>
         ) : (
-          <div className="space-y-1.5">
-            <button
-              onClick={handleTrade}
-              disabled={buttonLoading || !numericAmount || (useJupiterRoute && !jupiterQuoteFailed && quoteLoading) || !isWalletReady}
-              className={`w-full h-12 rounded-xl font-mono text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                isBuy
-                  ? 'bg-green-500/90 hover:bg-green-500 text-black'
-                  : 'bg-destructive/90 hover:bg-destructive text-white'
-              }`}
-            >
-              {buttonLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : useJupiterRoute && !jupiterQuoteFailed && quoteLoading ? (
-                'Getting quote...'
-              ) : isBuy ? (
-                <span className="flex items-center gap-1.5">QUICK BUY <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-4 h-4 rounded-full" /> {numericAmount || ''}</span>
-              ) : (
-                <span className="flex items-center gap-1.5">SELL {token.imageUrl && <img src={token.imageUrl} alt={token.ticker} className="w-4 h-4 rounded-full" />} {token.ticker}</span>
-              )}
+          <div className="space-y-2">
+            <button onClick={handleTrade} disabled={buttonLoading || !numericAmount || (useJupiterRoute && !jupiterQuoteFailed && quoteLoading) || !isWalletReady}
+              className={`w-full h-13 rounded-xl font-mono text-[14px] font-bold uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                isBuy ? 'bg-green-500 hover:bg-green-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
+              }`}>
+              {buttonLoading ? <Loader2 className="h-4 w-4 animate-spin" />
+                : useJupiterRoute && !jupiterQuoteFailed && quoteLoading ? 'Getting quote...'
+                : isBuy ? (
+                  <span className="flex items-center gap-2">QUICK BUY <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-4 h-4 rounded-full" /> {numericAmount || ''}</span>
+                ) : (
+                  <span className="flex items-center gap-2">SELL {token.imageUrl && <img src={token.imageUrl} alt={token.ticker} className="w-4 h-4 rounded-full" />} {token.ticker}</span>
+                )}
             </button>
             {showLatency && lastLatencyMs !== null && (
-              <p className="text-[10px] font-mono text-primary/40 text-center animate-in fade-in duration-300">
-                ⚡ {lastLatencyMs}ms
-              </p>
+              <p className="text-[11px] font-mono text-primary/50 text-center animate-in fade-in duration-300">⚡ {lastLatencyMs}ms</p>
             )}
             {isBuy && !showLatency && (
-              <p className="text-[9px] font-mono text-muted-foreground/30 text-center">
-                Once you click on Quick Buy, your transaction is sent immediately
-              </p>
+              <p className="text-[10px] font-mono text-muted-foreground/35 text-center">Once you click Quick Buy, your transaction is sent immediately</p>
             )}
           </div>
         )}
 
-        {/* Share P&L */}
-        <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-          <span className="text-[10px] font-mono text-muted-foreground/35">Share your P&L</span>
+        {/* ── Share P&L ── */}
+        <div className="flex items-center justify-between py-2.5 border-t border-white/[0.06]">
+          <span className="text-[11px] font-mono text-muted-foreground/40">Share your P&L</span>
           <button
-            onClick={() => {
-              setProfitCardData({
-                action: isBuy ? 'buy' : 'sell',
-                amountSol: numericAmount || 0,
-                tokenTicker: token.ticker,
-                tokenName: token.name,
-              });
-              setShowProfitCard(true);
-            }}
-            className="text-[10px] font-mono font-semibold text-primary/70 hover:text-primary/90 flex items-center gap-1.5 transition-colors bg-primary/5 px-2.5 py-1 rounded-lg hover:bg-primary/8"
-          >
+            onClick={() => { setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: numericAmount || 0, tokenTicker: token.ticker, tokenName: token.name }); setShowProfitCard(true); }}
+            className="text-[11px] font-mono font-bold text-primary/80 hover:text-primary flex items-center gap-1.5 transition-colors bg-primary/6 px-3 py-1.5 rounded-lg hover:bg-primary/10">
             🪐 Generate PNL Card
           </button>
         </div>
 
-        {/* Advanced Settings */}
+        {/* ── Advanced Settings ── */}
         <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-          <CollapsibleTrigger className="flex items-center justify-center w-full text-xs font-mono font-semibold uppercase tracking-widest text-primary/60 hover:text-primary/80 transition-colors py-2">
+          <CollapsibleTrigger className="flex items-center justify-center w-full text-[12px] font-mono font-bold uppercase tracking-widest text-primary/70 hover:text-primary transition-colors py-2.5">
             <span>Advanced Settings</span>
-            <ChevronDown className={`h-3.5 w-3.5 ml-1.5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 pt-2">
-            {/* Safety Checks */}
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <CollapsibleContent className="space-y-4 pt-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
               {safetyChecks.map((check) => (
-                <div key={check.label} className="flex flex-col items-center gap-1 py-2">
-                  {check.loading ? (
-                    <Loader2 className="h-5 w-5 text-muted-foreground/30 animate-spin" />
-                  ) : check.passed === true ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500/70" />
-                  ) : check.passed === false ? (
-                    <XCircle className="h-5 w-5 text-destructive/70" />
-                  ) : (
-                    <HelpCircle className="h-5 w-5 text-muted-foreground/25" />
-                  )}
-                  <span className="text-[8px] font-mono text-muted-foreground/35 text-center leading-tight">{check.label}</span>
+                <div key={check.label} className="flex flex-col items-center gap-1.5 py-2.5">
+                  {check.loading ? <Loader2 className="h-5 w-5 text-muted-foreground/30 animate-spin" />
+                    : check.passed === true ? <CheckCircle2 className="h-5 w-5 text-green-500/80" />
+                    : check.passed === false ? <XCircle className="h-5 w-5 text-destructive/80" />
+                    : <HelpCircle className="h-5 w-5 text-muted-foreground/30" />}
+                  <span className="text-[9px] font-mono text-muted-foreground/40 text-center leading-tight">{check.label}</span>
                 </div>
               ))}
             </div>
 
-            {/* Trade Info */}
             {numericAmount > 0 && (
-              <div className="space-y-1.5 text-[10px] font-mono border-t border-white/[0.04] pt-2.5">
+              <div className="space-y-2 text-[12px] font-mono border-t border-white/[0.05] pt-3">
                 {outputAmount > 0 && (
-                  <div className="flex justify-between text-muted-foreground/40">
+                  <div className="flex justify-between text-muted-foreground/50">
                     <span>You Receive</span>
-                    <span className="text-foreground/60">
-                      {formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}
-                    </span>
+                    <span className="text-foreground/70 font-semibold">{formatAmount(outputAmount)} {isBuy ? token.ticker : 'SOL'}</span>
                   </div>
                 )}
                 {quote && (
-                  <div className="flex justify-between text-muted-foreground/40">
+                  <div className="flex justify-between text-muted-foreground/50">
                     <span>Price Impact</span>
-                    <span className={priceImpact > 5 ? 'text-destructive/70' : 'text-foreground/60'}>{priceImpact.toFixed(2)}%</span>
+                    <span className={priceImpact > 5 ? 'text-destructive' : 'text-foreground/70'}>{priceImpact.toFixed(2)}%</span>
                   </div>
                 )}
-                <div className="flex justify-between text-muted-foreground/40">
+                <div className="flex justify-between text-muted-foreground/50">
                   <span>Slippage</span>
-                  <span className="text-foreground/60">{slippage}%</span>
+                  <span className="text-foreground/70">{slippage}%</span>
                 </div>
               </div>
             )}
           </CollapsibleContent>
         </Collapsible>
-
       </div>
     </div>
-      <ProfitCardModal
-        open={showProfitCard}
-        onClose={() => setShowProfitCard(false)}
-        data={profitCardData}
-      />
+    <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
     </>
   );
 }
