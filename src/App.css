@@ -44,7 +44,7 @@ html, body, #root {
 
 /* Trade notification toasts: position above sticky footer */
 [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] {
-  bottom: 52px !important;
+  bottom: 80px !important;
   right: 12px !important;
 }
 
@@ -91,7 +91,7 @@ html, body, #root {
 
 @media (max-width: 767px) {
   [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] {
-    bottom: 48px !important;
+    bottom: 72px !important;
     right: 8px !important;
     left: 8px !important;
     width: calc(100% - 16px) !important;

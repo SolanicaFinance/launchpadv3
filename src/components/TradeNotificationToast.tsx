@@ -41,9 +41,16 @@ export function showTradeNotification(data: TradeToastData) {
   const isLaunch = data.tradeType === "launch";
   const chainLabel = data.chain === "bnb" ? "BNB" : "SOL";
   const mcapStr = formatMcap(data.marketCapUsd);
-  const tokenFallbacks = data.tokenImageUrl
-    ? [data.tokenImageUrl, ...getTokenImageFallbacks(data.tokenMint, data.chain)]
-    : getTokenImageFallbacks(data.tokenMint, data.chain);
+
+  // Build token image sources array
+  const dexChain = data.chain === "bnb" ? "bsc" : "solana";
+  const tokenSources: string[] = [];
+  if (data.tokenImageUrl) tokenSources.push(data.tokenImageUrl);
+  if (data.tokenMint) {
+    tokenSources.push(`https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${data.tokenMint}.png`);
+  }
+  tokenSources.push(`https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(data.tokenMint || data.tokenTicker)}`);
+
   const avatarImg = data.traderAvatar || DEFAULT_AVATAR;
 
   const bgClass = isLaunch
@@ -91,8 +98,7 @@ export function showTradeNotification(data: TradeToastData) {
         {/* Token icon with cascading fallback */}
         <div className="relative flex-shrink-0">
           <TokenImg
-            src={tokenFallbacks[0]}
-            fallbacks={tokenFallbacks.slice(1)}
+            sources={tokenSources}
             alt={data.tokenTicker}
             className="w-10 h-10 rounded-full object-cover bg-white/5"
           />
@@ -106,13 +112,10 @@ export function showTradeNotification(data: TradeToastData) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             {/* User avatar */}
-            <img
+            <AvatarImg
               src={avatarImg}
               alt={data.traderName}
               className="w-4 h-4 rounded-full object-cover flex-shrink-0 bg-white/10"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
-              }}
             />
             <span className="text-[13px] font-semibold text-white/90 truncate">
               {data.traderName}
@@ -164,19 +167,34 @@ export function showTradeNotification(data: TradeToastData) {
   );
 }
 
-/** Image with cascading onError fallbacks */
-function TokenImg({ src, fallbacks, alt, className }: { src: string; fallbacks: string[]; alt: string; className?: string }) {
+/** Image with index-based cascading fallbacks */
+function TokenImg({ sources, alt, className }: { sources: string[]; alt: string; className?: string }) {
+  const fallbackIndex = { current: 0 };
+  return (
+    <img
+      src={sources[0] || ""}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        fallbackIndex.current += 1;
+        const img = e.target as HTMLImageElement;
+        if (fallbackIndex.current < sources.length) {
+          img.src = sources[fallbackIndex.current];
+        }
+      }}
+    />
+  );
+}
+
+/** Avatar with fallback to default */
+function AvatarImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
     <img
       src={src}
       alt={alt}
       className={className}
       onError={(e) => {
-        const img = e.target as HTMLImageElement;
-        const nextFallback = fallbacks.shift();
-        if (nextFallback) {
-          img.src = nextFallback;
-        }
+        (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
       }}
     />
   );
