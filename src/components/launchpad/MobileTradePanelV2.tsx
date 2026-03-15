@@ -364,21 +364,22 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Quick Amount Chips ── */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-[6px]">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`h-8 rounded-md font-mono text-[11px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
+              aria-label={isBuy ? `Select ${v} SOL` : `Select ${v}%`}
+              className={`h-[34px] rounded-[10px] font-mono text-[clamp(11px,3vw,12px)] font-bold border transition-all duration-150 flex items-center justify-center gap-[5px] active:scale-[0.96] ${
                 selectedPreset === i
                   ? isBuy
-                    ? "border-green-500/25 bg-green-500/8 text-green-400"
-                    : "border-destructive/25 bg-destructive/8 text-destructive"
-                  : "border-white/[0.12] text-foreground/55 hover:text-foreground/75 hover:border-white/[0.2]"
+                    ? "border-[#00C4B4]/40 bg-[#00C4B4]/15 text-[#00C4B4] shadow-[0_0_6px_rgba(0,196,180,0.2)]"
+                    : "border-destructive/40 bg-destructive/15 text-destructive shadow-[0_0_6px_rgba(255,77,77,0.15)]"
+                  : "border-[#2A2A4A] bg-[#1A1A3A] text-[#A0A0B8] hover:border-[#3A3A5A] hover:text-foreground/75"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full shrink-0" />}
-              {isBuy ? v : `${v}%`}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-[14px] h-[14px] rounded-full shrink-0" />}
+              <span>{isBuy ? v : `${v}%`}</span>
             </button>
           ))}
         </div>
