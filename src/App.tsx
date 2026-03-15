@@ -64,7 +64,6 @@ const PanelPage = lazyWithRetry(() => import("./pages/PanelPage"));
 const MerchStorePage = lazyWithRetry(() => import("./pages/MerchStorePage"));
 const LeveragePage = lazyWithRetry(() => import("./pages/LeveragePage"));
 const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
-const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
 const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"));
 const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
 const SixtyNineListPage = lazyWithRetry(() => import("./pages/SixtyNineListPage"));
