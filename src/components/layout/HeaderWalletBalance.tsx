@@ -260,6 +260,10 @@ function HeaderWalletBalanceInner() {
         chain={isBnb ? "bnb" : "solana"}
         getBalance={isBnb ? undefined : getBalance}
       />
+      <WithdrawDialog
+        open={withdrawOpen}
+        onOpenChange={setWithdrawOpen}
+      />
     </>
   );
 }
