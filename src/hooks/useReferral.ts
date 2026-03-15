@@ -29,6 +29,9 @@ export function useReferralCode() {
         const { data, error } = await supabase.rpc("get_or_create_referral_code", {
           p_profile_id: profileId,
         });
+        if (error) {
+          console.warn("[Referral] get_or_create_referral_code error:", error.message);
+        }
         if (!error && data && !cancelled) {
           setReferralCode(data as string);
           try { localStorage.setItem(REF_CODE_CACHE_KEY, data as string); } catch {}
@@ -142,29 +145,21 @@ export function useTrackReferral() {
 
     (async () => {
       try {
-        // Look up referrer from code
-        const { data: codeRow } = await supabase
-          .from("referral_codes")
-          .select("profile_id")
-          .eq("code", storedCode)
-          .maybeSingle();
+        // Use SECURITY DEFINER RPC to bypass RLS
+        const { data, error } = await supabase.rpc("record_referral", {
+          p_referral_code: storedCode,
+          p_referred_id: profileId,
+          p_referred_wallet: solanaAddress || null,
+        });
 
-        if (!codeRow || codeRow.profile_id === profileId) {
-          localStorage.removeItem(REF_STORAGE_KEY);
+        if (error) {
+          console.warn("[Referral] record_referral error:", error.message);
+          // Keep in localStorage to retry next time
           return;
         }
 
-        // Insert referral (unique constraint prevents duplicates)
-        const { error } = await supabase.from("referrals").insert({
-          referrer_id: codeRow.profile_id,
-          referred_id: profileId,
-          referred_wallet: solanaAddress || null,
-        });
-
-        if (!error || error.code === "23505") {
-          // Success or already referred - clear storage either way
-          localStorage.removeItem(REF_STORAGE_KEY);
-        }
+        // Success or self-referral — clear storage either way
+        localStorage.removeItem(REF_STORAGE_KEY);
       } catch {
         // Keep in localStorage to retry next time
       }

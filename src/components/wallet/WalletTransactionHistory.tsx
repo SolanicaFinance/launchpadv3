@@ -85,7 +85,11 @@ export default function WalletTransactionHistory({ walletAddress, pageSize }: Pr
               {tx.amount !== undefined && (
                 <span className={`text-xs font-mono font-semibold ${cfg.color}`}>
                   {tx.type === "send" ? "-" : tx.type === "receive" ? "+" : ""}
-                  {tx.amount < 0.001 ? tx.amount.toExponential(1) : tx.amount.toFixed(4)}
+                  {tx.amount < 0.000001
+                    ? "<0.000001"
+                    : tx.amount < 0.001
+                      ? tx.amount.toFixed(6)
+                      : tx.amount.toFixed(4)}
                 </span>
               )}
               <span className="text-[10px] text-muted-foreground">{formatTime(tx.timestamp)}</span>

@@ -10193,6 +10193,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_ip_banned: { Args: { _ip_address: string }; Returns: boolean }
       is_user_banned: { Args: { _user_id: string }; Returns: boolean }
+      record_referral: {
+        Args: {
+          p_referral_code: string
+          p_referred_id: string
+          p_referred_wallet?: string
+        }
+        Returns: boolean
+      }
       release_claim_lock: { Args: { p_token_id: string }; Returns: undefined }
       release_claw_creator_claim_lock: {
         Args: { p_twitter_username: string }
