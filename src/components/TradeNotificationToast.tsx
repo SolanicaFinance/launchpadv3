@@ -1,5 +1,7 @@
 import { toast } from "sonner";
 
+const DEFAULT_AVATAR = "/saturn-logo.png";
+
 interface TradeToastData {
   traderName: string;
   traderAvatar: string | null;
@@ -25,31 +27,23 @@ function formatSol(amount: number): string {
   return amount.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
-function getTokenImage(mint: string, chain: string): string {
-  if (chain === "bnb") {
-    return `https://dd.dexscreener.com/ds-data/tokens/bsc/${mint}.png`;
-  }
-  return `https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`;
-}
-
-function getIdenticonUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
-}
-
-function getAvatarFallback(name: string): string {
-  return `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${encodeURIComponent(name)}`;
+function getTokenImageFallbacks(mint: string, chain: string): string[] {
+  const dexChain = chain === "bnb" ? "bsc" : "solana";
+  return [
+    `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${mint}.png`,
+    `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(mint)}`,
+  ];
 }
 
 export function showTradeNotification(data: TradeToastData) {
   const isBuy = data.tradeType === "buy";
   const chainLabel = data.chain === "bnb" ? "BNB" : "SOL";
   const mcapStr = formatMcap(data.marketCapUsd);
-  const tokenImg = getTokenImage(data.tokenMint, data.chain);
-  const tokenFallback = getIdenticonUrl(data.tokenMint);
-  const avatarImg = data.traderAvatar || getAvatarFallback(data.traderName);
+  const tokenFallbacks = getTokenImageFallbacks(data.tokenMint, data.chain);
+  const avatarImg = data.traderAvatar || DEFAULT_AVATAR;
 
   toast.custom(
-    (id) => (
+    () => (
       <div
         className={`
           flex items-center gap-3 w-full max-w-[380px] px-4 py-3 rounded-xl border backdrop-blur-xl
@@ -59,17 +53,14 @@ export function showTradeNotification(data: TradeToastData) {
             : "bg-red-950/80 border-red-500/25"
           }
         `}
-        style={{ fontFamily: "inherit" }}
       >
-        {/* Token icon */}
+        {/* Token icon with cascading fallback */}
         <div className="relative flex-shrink-0">
-          <img
-            src={tokenImg}
+          <TokenImg
+            src={tokenFallbacks[0]}
+            fallbacks={tokenFallbacks.slice(1)}
             alt={data.tokenTicker}
             className="w-10 h-10 rounded-full object-cover bg-white/5"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = tokenFallback;
-            }}
           />
           {/* Buy/Sell indicator dot */}
           <div
@@ -88,13 +79,13 @@ export function showTradeNotification(data: TradeToastData) {
               alt={data.traderName}
               className="w-4 h-4 rounded-full object-cover flex-shrink-0 bg-white/10"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = getAvatarFallback(data.traderName);
+                (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
               }}
             />
             <span className="text-[13px] font-semibold text-white/90 truncate">
               {data.traderName}
             </span>
-            <span className={`text-[12px] font-medium ${isBuy ? "text-emerald-400" : "text-red-400"}`}>
+            <span className={`text-[12px] font-medium flex-shrink-0 ${isBuy ? "text-emerald-400" : "text-red-400"}`}>
               {isBuy ? "bought" : "sold"}
             </span>
             <span className="text-[13px] font-bold text-white truncate">
@@ -133,6 +124,25 @@ export function showTradeNotification(data: TradeToastData) {
       duration: 5000,
       position: "bottom-right",
       unstyled: true,
+      className: "trade-notification-toast",
     }
+  );
+}
+
+/** Image with cascading onError fallbacks */
+function TokenImg({ src, fallbacks, alt, className }: { src: string; fallbacks: string[]; alt: string; className?: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={(e) => {
+        const img = e.target as HTMLImageElement;
+        const nextFallback = fallbacks.shift();
+        if (nextFallback) {
+          img.src = nextFallback;
+        }
+      }}
+    />
   );
 }
