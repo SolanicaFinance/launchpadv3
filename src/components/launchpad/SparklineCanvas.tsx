@@ -119,8 +119,13 @@ export const SparklineCanvas = memo(function SparklineCanvas({
       ctx.lineTo(last.x, last.y);
     }
 
-    ctx.strokeStyle = `rgba(${lineColor}, 0.45)`;
-    ctx.lineWidth = 1.5;
+    // Gradient stroke for premium look
+    const strokeGrad = ctx.createLinearGradient(0, 0, chartWidth, 0);
+    strokeGrad.addColorStop(0, `rgba(${lineColorRgb}, 0.2)`);
+    strokeGrad.addColorStop(0.5, `rgba(${lineColorRgb}, 0.5)`);
+    strokeGrad.addColorStop(1, `rgba(${glowColorRgb}, 0.65)`);
+    ctx.strokeStyle = strokeGrad;
+    ctx.lineWidth = 2;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.stroke();
@@ -131,8 +136,9 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     ctx.closePath();
 
     const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, `rgba(${lineColor}, 0.15)`);
-    gradient.addColorStop(1, `rgba(${lineColor}, 0.01)`);
+    gradient.addColorStop(0, `rgba(${glowColorRgb}, 0.12)`);
+    gradient.addColorStop(0.6, `rgba(${glowColorRgb}, 0.03)`);
+    gradient.addColorStop(1, `rgba(${glowColorRgb}, 0.0)`);
     ctx.fillStyle = gradient;
     ctx.fill();
   }, [data, seed]);
