@@ -20,8 +20,6 @@ function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | n
   if (bps <= 0) return 0;
   return cBps / bps;
 }
-const CLAIM_LOCK_SECONDS = 60;
-const TREASURY_RESERVE_SOL = 0.05;
 
 /**
  * Calculate claimable amount for a twitter user.
