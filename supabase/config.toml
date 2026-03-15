@@ -447,3 +447,6 @@ verify_jwt = false
 
 [functions.turbo-trade]
 verify_jwt = false
+
+[functions.fetch-token-prices]
+verify_jwt = false
