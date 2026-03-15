@@ -12,6 +12,7 @@ const typeConfig: Record<string, { icon: typeof ArrowUpRight; label: string; col
   send: { icon: ArrowUpRight, label: "Sent", color: "text-destructive" },
   receive: { icon: ArrowDownLeft, label: "Received", color: "text-emerald-400" },
   swap: { icon: Repeat, label: "Swap", color: "text-primary" },
+  fee_payout: { icon: Coins, label: "Fee Payout", color: "text-amber-400" },
   unknown: { icon: HelpCircle, label: "Transaction", color: "text-muted-foreground" },
 };
 
