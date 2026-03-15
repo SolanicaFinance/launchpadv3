@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useWalletTransactions, WalletTransaction } from "@/hooks/useWalletTransactions";
-import { ArrowUpRight, ArrowDownLeft, Repeat, HelpCircle, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Repeat, HelpCircle, ExternalLink, Loader2, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
