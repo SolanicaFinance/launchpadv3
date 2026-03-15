@@ -41,13 +41,17 @@ function buildLoginCookiesBase64(account: any): string | null {
 
 // Generate reply text using AI
 async function generateReply(
-  supabaseUrl: string,
-  supabaseKey: string,
   tweetText: string,
   tweetAuthor: string,
   personaPrompt: string | null,
   accountName: string
 ): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.error("[x-bot-reply] LOVABLE_API_KEY not configured");
+    return "";
+  }
+
   const systemPrompt = personaPrompt || 
     `You are a friendly, knowledgeable crypto community member named ${accountName}. ` +
     `Reply naturally to tweets about crypto, tokens, and blockchain. ` +
@@ -58,11 +62,11 @@ async function generateReply(
   const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nWrite a natural, engaging reply (under 240 characters):`;
 
   try {
-    const response = await fetch(`${supabaseUrl}/functions/v1/ai-gateway`, {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${supabaseKey}`,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
