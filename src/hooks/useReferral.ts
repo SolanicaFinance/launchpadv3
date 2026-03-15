@@ -29,6 +29,9 @@ export function useReferralCode() {
         const { data, error } = await supabase.rpc("get_or_create_referral_code", {
           p_profile_id: profileId,
         });
+        if (error) {
+          console.warn("[Referral] get_or_create_referral_code error:", error.message);
+        }
         if (!error && data && !cancelled) {
           setReferralCode(data as string);
           try { localStorage.setItem(REF_CODE_CACHE_KEY, data as string); } catch {}
