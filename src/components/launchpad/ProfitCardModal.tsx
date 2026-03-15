@@ -93,8 +93,11 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   };
 
   const handleShareX = async () => {
-    const pnlText = hasPnl ? ` | P&L: ${isPositive ? "+" : ""}${pnl.toFixed(2)}%` : "";
-    const text = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker}${pnlText} | ${data.amountSol.toFixed(4)} SOL\n\nTrade on ${BRAND.twitterHandle} 🪐\n${qrLink}`;
+    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} SOL`;
+    const pnlLine = hasPnl ? `\nPNL - ${isPositive ? "+" : ""}${pnl.toFixed(2)}%` : "";
+    const truncSig = data.signature ? `${data.signature.slice(0, 6)}...${data.signature.slice(-6)}` : "";
+    const txLine = truncSig ? `\nTX - ${truncSig}` : "";
+    const text = `${headline}${pnlLine}${txLine}\n\n🪐Trade on @saturnterminal 🪐\n\n${qrLink}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
       "_blank"
