@@ -64,6 +64,18 @@ function formatHolders(n: number): string {
 export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quickBuyAmount, proTraders = 0, sparklineData }: AxiomTokenRowProps) {
   const [copiedCA, setCopiedCA] = useState(false);
   const bondingProgress = token.bonding_progress ?? 0;
+
+  // Build image fallback chain: DexScreener → identicon
+  const imageFallbacks = (() => {
+    const urls: string[] = [];
+    if (token.mint_address) {
+      urls.push(`https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png`);
+    }
+    if (token.mint_address) {
+      urls.push(`https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(token.mint_address)}`);
+    }
+    return urls;
+  })();
   const isAgent = !!token.agent_id;
   const xUsername = extractXUsername(token.twitter_url);
   const mcap = formatUsd(token.market_cap_sol, solPrice);
@@ -102,6 +114,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
           <div className="pulse-avatar">
             <OptimizedTokenImage
               src={token.image_url}
+              fallbackSrc={imageFallbacks}
               fallbackText={token.ticker}
               size={48}
               loading="eager"
