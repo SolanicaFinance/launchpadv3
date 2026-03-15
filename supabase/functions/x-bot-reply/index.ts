@@ -12,7 +12,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const stripQuotes = (v: string) => v.replace(/^['"]+|['"]+$/g, "").trim();
+// Banned words — never reply TO tweets containing these, and never OUTPUT them
+const BANNED_WORDS = ["rug", "rugpull", "rug pull", "scam", "scammer", "ponzi", "fraud", "honeypot", "honey pot"];
+const BANNED_REGEX = new RegExp(`\\b(${BANNED_WORDS.join("|")})\\b`, "gi");
+
+function containsBannedWords(text: string): boolean {
+  return BANNED_REGEX.test(text);
+}
+
+function stripBannedWords(text: string): string {
+  return text.replace(BANNED_REGEX, "").replace(/\s{2,}/g, " ").trim();
+}
+
 
 function parseCookieString(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -59,6 +70,7 @@ async function generateReply(
     `STRICT RULES:\n` +
     `- NEVER use emojis. Zero emojis. Not a single one.\n` +
     `- NEVER use hashtags.\n` +
+    `- NEVER use the words: rug, rugpull, scam, scammer, ponzi, fraud, honeypot. These words are completely banned.\n` +
     `- Keep it under 200 characters. Shorter is better.\n` +
     `- Sound like a real person, not a chatbot or customer service rep.\n` +
     `- Use lowercase when it feels natural. Don't over-capitalize.\n` +
@@ -69,9 +81,10 @@ async function generateReply(
     `- Vary your style: sometimes a quick one-liner, sometimes a short take with reasoning.\n` +
     `- Never start with "Great point" or "Interesting" or any generic opener.\n` +
     `- Never sound promotional or like you're trying to sell something.\n` +
+    `- Stay positive or neutral about crypto projects. Never spread FUD or negativity.\n` +
     `- Write like you're texting a friend who's also in crypto, not writing a blog post.`;
 
-  const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nReply as a real crypto KOL would. No emojis. Keep it raw and authentic:`;
+  const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nReply as a real crypto KOL would. No emojis. No negativity. Keep it raw and authentic:`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -109,6 +122,12 @@ async function generateReply(
 
     // Strip hashtags
     reply = reply.replace(/#\w+/g, "").trim();
+
+    // Strip banned words as hard safety net
+    reply = stripBannedWords(reply);
+
+    // If after stripping the reply is too short or empty, discard
+    if (reply.length < 5) return "";
 
     // Clean up double spaces left behind
     reply = reply.replace(/\s{2,}/g, " ").trim();
@@ -321,6 +340,15 @@ Deno.serve(async (req) => {
 
       if (!claimedItem) {
         console.log(`[x-bot-reply] Queue item ${item.id} already claimed by another run`);
+        continue;
+      }
+
+      // Skip tweets containing banned/toxic words — don't engage with negativity
+      if (containsBannedWords(item.tweet_text || "")) {
+        console.log(`[x-bot-reply] 🚫 Skipping toxic tweet from @${item.tweet_author}`);
+        await supabase.from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("id", item.id);
         continue;
       }
 
