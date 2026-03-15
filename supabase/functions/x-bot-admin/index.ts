@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
@@ -10,6 +11,7 @@ const corsHeaders = {
 const ADMIN_WALLETS = [
   "4yx8MdBLv75YpBJhqjz2zMsoyN4WEwjc8VSfoLiUGdTX",
   "89mkEFstQcBoZhmujjQtwM9mKQYyy9W13nMFwPZp52DY",
+  "DrWkWu7Mhv9V7Dt2iqxpjuwPfehmQq1DrkEQ39sqX8jV",
 ];
 
 Deno.serve(async (req) => {

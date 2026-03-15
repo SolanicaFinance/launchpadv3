@@ -453,3 +453,6 @@ verify_jwt = false
 
 [functions.x-post-restyle]
 verify_jwt = false
+
+[functions.x-bot-admin]
+verify_jwt = false
