@@ -174,8 +174,15 @@ export default function AlphaTrackerPage() {
               const isBuy = trade.trade_type === "buy";
               const posKey = `${trade.wallet_address}::${trade.token_mint}`;
               const position = positions.get(posKey);
-              const mcapSol = trade.price_sol != null ? trade.price_sol * 1_000_000_000 : null;
-              const mcapUsd = trade.price_usd != null ? trade.price_usd * 1_000_000_000 : (mcapSol != null && solPrice ? mcapSol * solPrice : null);
+              // Derive price from trade data when explicit price is missing
+              const derivedPriceSol = (trade.amount_tokens > 0 && trade.amount_sol > 0) 
+                ? (trade.amount_sol / trade.amount_tokens) 
+                : null;
+              const effectivePriceSol = trade.price_sol ?? derivedPriceSol;
+              const mcapSol = effectivePriceSol != null ? effectivePriceSol * 1_000_000_000 : null;
+              const mcapUsd = trade.price_usd != null 
+                ? trade.price_usd * 1_000_000_000 
+                : (mcapSol != null && solPrice ? mcapSol * solPrice : null);
               const nativeSymbol = trade.chain === 'bnb' ? 'BNB' : 'SOL';
 
               return (
