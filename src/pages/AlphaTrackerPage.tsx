@@ -102,6 +102,13 @@ export default function AlphaTrackerPage() {
               {filteredTrades.length}/{trades.length}
             </span>
             <button
+              onClick={() => { const next = toggleSounds(); setSoundsOn(next); }}
+              className={`p-1 rounded transition-colors ${soundsOn ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              title={soundsOn ? "Mute trade sounds" : "Enable trade sounds"}
+            >
+              {soundsOn ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+            </button>
+            <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-1 rounded transition-colors ${showFilters || hasActiveFilters ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
