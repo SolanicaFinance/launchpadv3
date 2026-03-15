@@ -22,15 +22,6 @@ export function DomainRouter() {
       navigate("/sdk", { replace: true });
     }
 
-    // punchlaunch.fun → show punch page at root
-    const isPunchDomain = hostname === "punchlaunch.fun" || hostname === "www.punchlaunch.fun";
-    if (isPunchDomain) {
-      const allowed = ["/", "/trade/"];
-      const isAllowed = allowed.some(p => location.pathname === p || (p.endsWith("/") && location.pathname.startsWith(p)));
-      if (!isAllowed) {
-        navigate("/", { replace: true });
-      }
-    }
   }, [location.pathname, navigate]);
 
   return null;

@@ -165,8 +165,6 @@ export function StickyStatsFooter() {
   };
 
 
-  const isPunchDomain = typeof window !== "undefined" && (window.location.hostname === "punchlaunch.fun" || window.location.hostname === "www.punchlaunch.fun");
-  if (pathname.startsWith("/punch") || pathname.startsWith("/punch-test") || isPunchDomain) return null;
 
   const currentPing = pings[selectedRegion] ?? 0;
 

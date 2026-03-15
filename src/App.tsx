@@ -63,10 +63,6 @@ const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const PanelPage = lazyWithRetry(() => import("./pages/PanelPage"));
 const MerchStorePage = lazyWithRetry(() => import("./pages/MerchStorePage"));
 const LeveragePage = lazyWithRetry(() => import("./pages/LeveragePage"));
-const PunchPage = lazyWithRetry(() => import("./pages/PunchPage"));
-const PunchTestPage = lazyWithRetry(() => import("./pages/PunchTestPage"));
-const PunchGamesPage = lazyWithRetry(() => import("./pages/PunchGamesPage"));
-const PunchTokenDetailPage = lazyWithRetry(() => import("./pages/PunchTokenDetailPage"));
 const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
 const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"));
 const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
@@ -77,13 +73,7 @@ const PortfolioPage = lazyWithRetry(() => import("./pages/PortfolioPage"));
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
-// Domain-aware root: render PunchTestPage on punchlaunch.fun, HomePage otherwise
 function DomainRoot() {
-  const hostname = window.location.hostname;
-  const isPunch = hostname === "punchlaunch.fun" || hostname === "www.punchlaunch.fun";
-  if (isPunch) {
-    return <Suspense fallback={<RouteLoader />}><PunchTestPage /></Suspense>;
-  }
   return <Suspense fallback={<RouteLoader />}><HomePage /></Suspense>;
 }
 
@@ -198,10 +188,8 @@ const App = () => (
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
                      <Route path="/portfolio" element={<PortfolioPage />} />
                      <Route path="/earnings" element={<Navigate to="/panel?tab=earnings" replace />} />
-                     <Route path="/punch" element={<PunchPage />} />
-                     <Route path="/punch-test" element={<PunchTestPage />} />
-                     <Route path="/punch/token/:mintAddress" element={<PunchTokenDetailPage />} />
-                     <Route path="/punch-games" element={<PunchGamesPage />} />
+                     <Route path="/punch" element={<Navigate to="/" replace />} />
+                     <Route path="/punch-test" element={<Navigate to="/" replace />} />
                      <Route path="/link/:code" element={<ReferralRedirectPage />} />
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="/rewards" element={<RewardsPage />} />
