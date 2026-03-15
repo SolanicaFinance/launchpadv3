@@ -37,10 +37,23 @@ function PulseTokenRow({ token }: { token: CodexPairToken }) {
   return (
     <Link
       to={`/trade/${token.address}`}
-      className="group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all duration-300
-                 bg-card/30 backdrop-blur-sm border-border/20
-                 hover:border-primary/40 hover:bg-card/60 hover:shadow-[0_0_20px_hsl(var(--primary)/0.08)] hover:scale-[1.02]
-                 overflow-hidden"
+      className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300
+                 backdrop-blur-sm overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, hsl(220 25% 8% / 0.95), hsl(225 20% 10% / 0.9))",
+        borderColor: "hsl(200 40% 60% / 0.08)",
+        boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.04), 0 2px 12px -2px rgb(0 0 0 / 0.5)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "hsl(180 80% 55% / 0.25)";
+        e.currentTarget.style.transform = "translateY(-1px) scale(1.012)";
+        e.currentTarget.style.boxShadow = "0 0 30px hsl(180 80% 55% / 0.06), 0 12px 32px -4px rgb(0 0 0 / 0.6), inset 0 0 30px hsl(180 70% 50% / 0.03)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "hsl(200 40% 60% / 0.08)";
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "inset 0 1px 0 0 hsl(0 0% 100% / 0.04), 0 2px 12px -2px rgb(0 0 0 / 0.5)";
+      }}
     >
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
         <SparklineCanvas data={[1, 1]} seed={token.address || token.symbol} />
@@ -49,26 +62,30 @@ function PulseTokenRow({ token }: { token: CodexPairToken }) {
         src={token.imageUrl}
         fallbackSrc={token.fallbackImageUrl || undefined}
         alt={token.name}
-        className="w-8 h-8 rounded-full shrink-0 relative z-10 ring-1 ring-border/30 group-hover:ring-primary/30 transition-all"
+        className="w-9 h-9 rounded-xl shrink-0 relative z-10 transition-all"
+        style={{ border: "1.5px solid hsl(200 40% 50% / 0.12)" }}
       />
       <div className="flex-1 min-w-0 relative z-10">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-foreground truncate">{token.symbol}</span>
           <LiveAge createdAt={token.createdAt} isUnixSeconds className="text-[9px]" />
           {token.graduationPercent > 0 && token.graduationPercent < 100 && (
-            <span className="text-[9px] text-muted-foreground font-mono bg-muted/50 px-1 rounded">{token.graduationPercent.toFixed(0)}%</span>
+            <span className="text-[9px] text-muted-foreground font-mono px-1 rounded" style={{ background: "hsl(220 20% 18% / 0.8)" }}>{token.graduationPercent.toFixed(0)}%</span>
           )}
         </div>
         <span className="text-[10px] text-muted-foreground truncate block">{token.name}</span>
       </div>
       <div className="text-right shrink-0 relative z-10">
-        <div className="text-[11px] font-bold text-foreground font-mono">{formatMcap}</div>
+        <div className="text-[11px] font-bold font-mono" style={{ color: "#FFD700" }}>{formatMcap}</div>
         <div className={cn(
           "text-[10px] font-mono font-bold inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md mt-0.5",
-          isPositive
-            ? "text-emerald-400 bg-emerald-500/10"
-            : "text-red-400 bg-red-500/10"
-        )}>
+        )}
+          style={{
+            color: isPositive ? "hsl(180 80% 55%)" : "hsl(0 72% 60%)",
+            background: isPositive ? "hsl(180 80% 55% / 0.1)" : "hsl(0 72% 60% / 0.1)",
+            border: `1px solid ${isPositive ? "hsl(180 80% 55% / 0.15)" : "hsl(0 72% 60% / 0.15)"}`,
+          }}
+        >
           {isPositive ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
           {formatChange24h(change)}
         </div>

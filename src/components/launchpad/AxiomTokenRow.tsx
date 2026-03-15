@@ -180,7 +180,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0 min-w-[72px]">
           <div className="flex items-center gap-1">
             <span className="pulse-metric-label">MC</span>
-            <span className="text-[14px] font-mono font-bold text-foreground leading-tight">{mcap}</span>
+            <span className="text-[14px] font-mono font-bold leading-tight pulse-metric-gold">{mcap}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="pulse-metric-label">V</span>
@@ -196,11 +196,13 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
             {priceChange !== 0 && (
               <>
                 {priceChange > 0 ? (
-                  <ArrowUpRight className="h-2.5 w-2.5 text-success" />
+                  <ArrowUpRight className="h-2.5 w-2.5" style={{ color: "hsl(180 80% 55%)" }} />
                 ) : (
-                  <ArrowDownRight className="h-2.5 w-2.5 text-destructive" />
+                  <ArrowDownRight className="h-2.5 w-2.5" style={{ color: "hsl(0 72% 60%)" }} />
                 )}
-                <span className={`text-[9px] font-mono font-bold ${priceChange > 0 ? "text-success" : "text-destructive"}`}>
+                <span className="text-[9px] font-mono font-bold" style={{
+                  color: priceChange > 0 ? "hsl(180 80% 55%)" : "hsl(0 72% 60%)",
+                }}>
                   {priceChange > 0 ? "+" : ""}{priceChange.toFixed(0)}%
                 </span>
               </>
@@ -211,7 +213,7 @@ export const AxiomTokenRow = memo(function AxiomTokenRow({ token, solPrice, quic
       </div>
 
       {/* Row 2: Bottom bar */}
-      <div className="relative z-10 flex items-center justify-between mt-2 pt-2 border-t border-border">
+      <div className="relative z-10 flex items-center justify-between mt-2.5 pt-2.5" style={{ borderTop: "1px solid hsl(200 30% 50% / 0.08)" }}>
         <div className="flex items-center gap-1.5">
           {/* Progress % */}
           <div className="flex items-center gap-1">
