@@ -343,6 +343,15 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Skip tweets containing banned/toxic words — don't engage with negativity
+      if (containsBannedWords(item.tweet_text || "")) {
+        console.log(`[x-bot-reply] 🚫 Skipping toxic tweet from @${item.tweet_author}`);
+        await supabase.from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("id", item.id);
+        continue;
+      }
+
       // Generate reply text
       const replyText = await generateReply(
         item.tweet_text || "",
