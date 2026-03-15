@@ -87,7 +87,9 @@ export const SparklineCanvas = memo(function SparklineCanvas({
     const range = max - min || 1;
     const isUp = points[points.length - 1] >= points[0];
 
-    const lineColor = isUp ? "34, 197, 94" : "239, 68, 68";
+    // Premium teal/cyan for up, crimson for down
+    const lineColorRgb = isUp ? "0, 212, 255" : "255, 77, 77";
+    const glowColorRgb = isUp ? "0, 255, 170" : "255, 77, 77";
 
     // Full width
     const chartLeft = 0;
