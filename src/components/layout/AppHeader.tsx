@@ -276,12 +276,13 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           </div>
           {/* Mobile search results */}
           {debouncedQuery.length >= 2 && (
-            <div className="flex-1 overflow-y-auto px-2">
+            <div className="flex-1 overflow-y-auto px-3 pb-[max(env(safe-area-inset-bottom),12px)]">
               <GlobalSearchDropdown
                 results={searchResults}
                 isLoading={searchLoading}
                 query={debouncedQuery}
                 onClose={() => setMobileSearchOpen(false)}
+                inline
               />
             </div>
           )}
