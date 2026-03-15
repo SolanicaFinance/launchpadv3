@@ -313,7 +313,8 @@ export function useFastSwap() {
     try {
       let result: FastSwapResult;
 
-      if (token.status === 'graduated') {
+      // Use Jupiter for graduated tokens OR any token without a DBC pool address
+      if (token.status === 'graduated' || !token.dbc_pool_address) {
         result = await swapGraduated(token, amount, isBuy, slippageBps);
 
         recordTradeForAlphaTracker(
