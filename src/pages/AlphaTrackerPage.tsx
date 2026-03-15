@@ -204,13 +204,7 @@ export default function AlphaTrackerPage() {
                   {/* Trader: avatar + name/address */}
                   <div className="min-w-0 flex items-center gap-1.5">
                     <div className="h-5 w-5 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
-                      {trade.trader_avatar_url ? (
-                        <img src={trade.trader_avatar_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-[7px] font-bold text-muted-foreground">
-                          {(trade.trader_display_name || trade.wallet_address).slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
+                     <img src={trade.trader_avatar_url || "/saturn-logo.png"} alt="" className="h-full w-full object-cover" />
                     </div>
                     <Link
                       to={`/profile/${trade.wallet_address}`}
