@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useWalletTransactions, WalletTransaction } from "@/hooks/useWalletTransactions";
-import { ArrowUpRight, ArrowDownLeft, Repeat, HelpCircle, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Repeat, HelpCircle, ExternalLink, Loader2, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -12,6 +12,7 @@ const typeConfig: Record<string, { icon: typeof ArrowUpRight; label: string; col
   send: { icon: ArrowUpRight, label: "Sent", color: "text-destructive" },
   receive: { icon: ArrowDownLeft, label: "Received", color: "text-emerald-400" },
   swap: { icon: Repeat, label: "Swap", color: "text-primary" },
+  fee_payout: { icon: Coins, label: "Fee Payout", color: "text-amber-400" },
   unknown: { icon: HelpCircle, label: "Transaction", color: "text-muted-foreground" },
 };
 
@@ -67,9 +68,13 @@ export default function WalletTransactionHistory({ walletAddress, pageSize }: Pr
               <Icon className="h-3.5 w-3.5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground">{cfg.label}</p>
+              <p className="text-xs font-medium text-foreground">
+                {tx.label || cfg.label}
+              </p>
               <p className="text-[10px] text-muted-foreground truncate">
-                {tx.description?.slice(0, 60) || tx.signature.slice(0, 16) + "…"}
+                {tx.tokenName
+                  ? `${tx.tokenName}`
+                  : tx.description?.slice(0, 60) || tx.signature.slice(0, 16) + "…"}
               </p>
             </div>
             <div className="text-right flex items-center gap-1.5">

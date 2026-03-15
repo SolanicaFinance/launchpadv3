@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface WalletTransaction {
   signature: string;
-  type: "send" | "receive" | "swap" | "unknown";
+  type: "send" | "receive" | "swap" | "fee_payout" | "unknown";
   timestamp: number;
   fee: number;
   status: "success" | "failed";
@@ -11,6 +11,8 @@ export interface WalletTransaction {
   amount?: number;
   token?: string;
   counterparty?: string;
+  label?: string;
+  tokenName?: string;
 }
 
 export function useWalletTransactions(walletAddress: string | null | undefined, limit = 20) {
