@@ -70,34 +70,66 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
 }
 
 async function fetchPumpFunImageUri(address: string): Promise<string | null> {
+  // Strategy 1: Try Pump.fun APIs (multiple endpoints for redundancy)
+  const pumpApis = [
+    `https://frontend-api-v3.pump.fun/coins/${address}`,
+    `https://frontend-api.pump.fun/coins/${address}`,
+    `https://client-api-2-74b1891ee9f9.herokuapp.com/coins/${address}`,
+  ];
+
+  for (const url of pumpApis) {
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(4000),
+      });
+
+      if (!response.ok) {
+        const host = new URL(url).hostname.split('.')[0];
+        console.log(`[pump-image] ${address.slice(0,8)}… ${host} HTTP ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const imageUri =
+        data?.image_uri ||
+        data?.imageUrl ||
+        data?.image ||
+        data?.metadata?.image ||
+        null;
+
+      if (imageUri) {
+        return normalizeImageUrl(imageUri);
+      }
+    } catch {
+      // Try next
+    }
+  }
+
+  // Strategy 2: Try DexScreener token info API (often has image before CDN does)
   try {
-    const response = await fetch(`https://frontend-api.pump.fun/coins/${address}`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(6000),
+    const dsRes = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${address}`, {
+      headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(4000),
     });
 
-    if (!response.ok) {
-      console.log(`[pump-image] ${address.slice(0,8)}… HTTP ${response.status}`);
-      return null;
+    if (dsRes.ok) {
+      const dsData = await dsRes.json();
+      const pairs = Array.isArray(dsData) ? dsData : dsData?.pairs ?? [];
+      for (const pair of pairs) {
+        const img = pair?.info?.imageUrl || pair?.baseToken?.info?.imageUrl;
+        if (img) {
+          console.log(`[pump-image] ${address.slice(0,8)}… got image from DexScreener API`);
+          return normalizeImageUrl(img);
+        }
+      }
     }
-
-    const data = await response.json();
-    const imageUri =
-      data?.image_uri ||
-      data?.imageUrl ||
-      data?.image ||
-      data?.metadata?.image ||
-      null;
-
-    if (!imageUri) {
-      console.log(`[pump-image] ${address.slice(0,8)}… no image field in response (keys: ${Object.keys(data || {}).join(",")})`);
-    }
-
-    return normalizeImageUrl(imageUri);
-  } catch (err) {
-    console.log(`[pump-image] ${address.slice(0,8)}… fetch failed: ${err}`);
-    return null;
+  } catch {
+    // Fallback exhausted
   }
+
+  console.log(`[pump-image] ${address.slice(0,8)}… all sources failed`);
+  return null;
 }
 
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
