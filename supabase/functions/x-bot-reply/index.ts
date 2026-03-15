@@ -260,8 +260,6 @@ Deno.serve(async (req) => {
 
       // Generate reply text
       const replyText = await generateReply(
-        supabaseUrl,
-        supabaseKey,
         item.tweet_text || "",
         item.tweet_author || "someone",
         accountRules?.persona_prompt || null,
