@@ -71,12 +71,12 @@ async function calculateClaimable(
   }
 
   // Get already-paid distributions — check BOTH claw_distributions AND fun_distributions
-  // This prevents double-claiming across the old and new systems
+  // Search by both token IDs and username/wallet to prevent double-claiming
   const [
     { data: distByToken },
-    { data: distByUsername },
+    { data: distByKey },
     { data: funDistByToken },
-    { data: funDistByUsername },
+    { data: funDistByKey },
   ] = await Promise.all([
     targetTokenIds.length > 0
       ? supabase
@@ -86,10 +86,11 @@ async function calculateClaimable(
           .in("distribution_type", ["creator_claim", "creator"])
           .in("status", ["completed", "pending"])
       : Promise.resolve({ data: [] }),
+    // Search by username OR wallet
     supabase
       .from("claw_distributions")
       .select("amount_sol, fun_token_id, id")
-      .eq("twitter_username", normalizedUsername)
+      .or(`twitter_username.eq.${normalizedUsername},creator_wallet.eq.${normalizedUsername}`)
       .in("distribution_type", ["creator_claim", "creator"])
       .in("status", ["completed", "pending"]),
     // Also check legacy fun_distributions table
@@ -104,7 +105,7 @@ async function calculateClaimable(
     supabase
       .from("fun_distributions")
       .select("amount_sol, fun_token_id, id")
-      .eq("twitter_username", normalizedUsername)
+      .or(`twitter_username.eq.${normalizedUsername},creator_wallet.eq.${normalizedUsername}`)
       .in("distribution_type", ["creator_claim", "creator"])
       .in("status", ["completed", "pending"]),
   ]);
