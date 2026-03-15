@@ -24,6 +24,9 @@ function stripBannedWords(text: string): string {
   return text.replace(BANNED_REGEX, "").replace(/\s{2,}/g, " ").trim();
 }
 
+function stripQuotes(s: string): string {
+  return s.replace(/^["']|["']$/g, "");
+}
 
 function parseCookieString(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
