@@ -22,6 +22,7 @@ export function GlobalTradeNotifier() {
 
   // Cached SOL price for market cap calculation
   const solPriceRef = useRef<number>(0);
+  const tokenImageCacheRef = useRef<Record<string, string | null>>({});
   useEffect(() => {
     try {
       const cached = localStorage.getItem("sol_price_cache");
@@ -94,15 +95,65 @@ export function GlobalTradeNotifier() {
             marketCapUsd = trade.price_usd * TOTAL_SUPPLY;
           }
 
-          showTradeNotification({
-            traderName: trade.trader_display_name || shortenAddr(trade.wallet_address),
-            traderAvatar: trade.trader_avatar_url || null,
-            tokenTicker: trade.token_ticker || trade.token_name || shortenAddr(trade.token_mint),
-            tokenMint: trade.token_mint,
-            tradeType: isBuy ? "buy" : "sell",
-            amountSol: trade.amount_sol || 0,
-            marketCapUsd,
-            chain: trade.chain || "solana",
+          const notify = (tokenImageUrl: string | null) => {
+            showTradeNotification({
+              traderName: trade.trader_display_name || shortenAddr(trade.wallet_address),
+              traderAvatar: trade.trader_avatar_url || null,
+              tokenTicker: trade.token_ticker || trade.token_name || shortenAddr(trade.token_mint),
+              tokenMint: trade.token_mint,
+              tradeType: isBuy ? "buy" : "sell",
+              amountSol: trade.amount_sol || 0,
+              marketCapUsd,
+              chain: trade.chain || "solana",
+              tokenImageUrl,
+            });
+          };
+
+          const mint = trade.token_mint as string | undefined;
+          if (!mint) {
+            notify(null);
+            return;
+          }
+
+          if (Object.prototype.hasOwnProperty.call(tokenImageCacheRef.current, mint)) {
+            notify(tokenImageCacheRef.current[mint]);
+            return;
+          }
+
+          (async () => {
+            let imageUrl: string | null = null;
+
+            const { data: funToken } = await supabase
+              .from("fun_tokens")
+              .select("image_url")
+              .eq("mint_address", mint)
+              .not("image_url", "is", null)
+              .limit(1)
+              .maybeSingle();
+
+            if (funToken?.image_url) {
+              imageUrl = funToken.image_url;
+            }
+
+            if (!imageUrl) {
+              const { data: tokenRow } = await supabase
+                .from("tokens")
+                .select("image_url")
+                .eq("mint_address", mint)
+                .not("image_url", "is", null)
+                .limit(1)
+                .maybeSingle();
+
+              if (tokenRow?.image_url) {
+                imageUrl = tokenRow.image_url;
+              }
+            }
+
+            tokenImageCacheRef.current[mint] = imageUrl;
+            notify(imageUrl);
+          })().catch(() => {
+            tokenImageCacheRef.current[mint] = null;
+            notify(null);
           });
         }
       )

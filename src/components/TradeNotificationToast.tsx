@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 
 const DEFAULT_AVATAR = "/saturn-logo.png";
 
@@ -97,9 +98,12 @@ export function showTradeNotification(data: TradeToastData) {
       >
         {/* Token icon with cascading fallback */}
         <div className="relative flex-shrink-0">
-          <TokenImg
-            sources={tokenSources}
+          <OptimizedTokenImage
+            src={tokenSources[0]}
+            fallbackSrc={tokenSources.slice(1)}
+            fallbackText={data.tokenTicker}
             alt={data.tokenTicker}
+            size={40}
             className="w-10 h-10 rounded-full object-cover bg-white/5"
           />
           {/* Indicator dot */}
@@ -167,24 +171,6 @@ export function showTradeNotification(data: TradeToastData) {
   );
 }
 
-/** Image with index-based cascading fallbacks */
-function TokenImg({ sources, alt, className }: { sources: string[]; alt: string; className?: string }) {
-  const fallbackIndex = { current: 0 };
-  return (
-    <img
-      src={sources[0] || ""}
-      alt={alt}
-      className={className}
-      onError={(e) => {
-        fallbackIndex.current += 1;
-        const img = e.target as HTMLImageElement;
-        if (fallbackIndex.current < sources.length) {
-          img.src = sources[fallbackIndex.current];
-        }
-      }}
-    />
-  );
-}
 
 /** Avatar with fallback to default */
 function AvatarImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
