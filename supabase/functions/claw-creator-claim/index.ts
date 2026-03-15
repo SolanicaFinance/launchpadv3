@@ -163,7 +163,8 @@ Deno.serve(async (req) => {
       try { new PublicKey(payoutWallet); } catch { return new Response(JSON.stringify({ success: false, error: "Invalid wallet address" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
     }
 
-    const normalizedUsername = twitterUsername.replace(/^@/, "").toLowerCase();
+    const normalizedUsername = twitterUsername ? twitterUsername.replace(/^@/, "").toLowerCase() : null;
+    const lockKey = normalizedUsername || creatorWallet;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const treasuryKey = Deno.env.get("TREASURY_PRIVATE_KEY");
@@ -173,41 +174,57 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ===== Find tokens OWNED by this Twitter user =====
-    const { data: socialPosts } = await supabase
-      .from("agent_social_posts")
-      .select("fun_token_id")
-      .ilike("post_author", normalizedUsername)
-      .eq("platform", "twitter")
-      .eq("status", "completed")
-      .not("fun_token_id", "is", null);
-
-    const funTokenIds = [...new Set((socialPosts || []).map((p: any) => p.fun_token_id).filter(Boolean))];
-
+    // ===== Find tokens — wallet-based or twitter-based =====
+    let funTokenIds: string[] = [];
     let clawTokenIds: string[] = [];
-    const { data: matchingAgents } = await supabase
-      .from("claw_agents")
-      .select("id")
-      .ilike("twitter_handle", normalizedUsername);
 
-    if (matchingAgents && matchingAgents.length > 0) {
-      const agentIds = matchingAgents.map((a: any) => a.id);
-      const [{ data: agentClawTokens }, { data: agentTokenLinks }] = await Promise.all([
-        supabase.from("claw_tokens").select("id").in("agent_id", agentIds),
-        supabase.from("claw_agent_tokens").select("fun_token_id").in("agent_id", agentIds),
+    if (isWalletBased) {
+      // Wallet-based: find tokens by creator_wallet
+      const [{ data: funTokenData }, { data: saturnTokenData }] = await Promise.all([
+        supabase.from("fun_tokens").select("id").eq("creator_wallet", creatorWallet),
+        supabase.from("tokens").select("id").eq("creator_wallet", creatorWallet),
       ]);
-      clawTokenIds = [
-        ...(agentClawTokens || []).map((t: any) => t.id),
-        ...(agentTokenLinks || []).map((t: any) => t.fun_token_id),
-      ];
-      clawTokenIds = [...new Set(clawTokenIds)];
+      funTokenIds = (funTokenData || []).map((t: any) => t.id);
+      // Saturn tokens go into funTokenIds for unified processing
+      const saturnIds = (saturnTokenData || []).map((t: any) => t.id);
+      funTokenIds = [...new Set([...funTokenIds, ...saturnIds])];
+    } else {
+      // Twitter-based lookup (legacy)
+      const { data: socialPosts } = await supabase
+        .from("agent_social_posts")
+        .select("fun_token_id")
+        .ilike("post_author", normalizedUsername!)
+        .eq("platform", "twitter")
+        .eq("status", "completed")
+        .not("fun_token_id", "is", null);
+
+      funTokenIds = [...new Set((socialPosts || []).map((p: any) => p.fun_token_id).filter(Boolean))];
+
+      const { data: matchingAgents } = await supabase
+        .from("claw_agents")
+        .select("id")
+        .ilike("twitter_handle", normalizedUsername!);
+
+      if (matchingAgents && matchingAgents.length > 0) {
+        const agentIds = matchingAgents.map((a: any) => a.id);
+        const [{ data: agentClawTokens }, { data: agentTokenLinks }] = await Promise.all([
+          supabase.from("claw_tokens").select("id").in("agent_id", agentIds),
+          supabase.from("claw_agent_tokens").select("fun_token_id").in("agent_id", agentIds),
+        ]);
+        clawTokenIds = [
+          ...(agentClawTokens || []).map((t: any) => t.id),
+          ...(agentTokenLinks || []).map((t: any) => t.fun_token_id),
+        ];
+        clawTokenIds = [...new Set(clawTokenIds)];
+      }
     }
 
     const allTokenIds = [...new Set([...funTokenIds, ...clawTokenIds])];
     const targetTokenIds = tokenIds?.length ? allTokenIds.filter((id: string) => tokenIds.includes(id)) : allTokenIds;
 
     if (targetTokenIds.length === 0) {
-      return new Response(JSON.stringify({ success: false, error: `No tokens found launched by @${normalizedUsername}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const who = isWalletBased ? `wallet ${creatorWallet?.slice(0,8)}...` : `@${normalizedUsername}`;
+      return new Response(JSON.stringify({ success: false, error: `No tokens found launched by ${who}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ===== Fetch token bps for accurate creator share calculation =====
