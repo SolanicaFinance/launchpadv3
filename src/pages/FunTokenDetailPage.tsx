@@ -114,40 +114,40 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
 
   return (
     <LaunchpadLayout>
-      <div className="trade-page-bg -m-4 p-2.5 md:p-4">
-        <div className="max-w-[1600px] mx-auto flex flex-col gap-2.5 pb-32 md:pb-24">
+      <div className="trade-page-bg -m-4 p-3 md:p-5">
+        <div className="max-w-[1600px] mx-auto flex flex-col gap-3 pb-32 md:pb-24">
 
           {/* TOP BAR */}
           <div className="trade-topbar overflow-hidden">
-            <div className="flex items-center gap-2.5 px-3 py-2.5 lg:py-2">
+            <div className="flex items-center gap-3 px-4 py-3 lg:py-2.5">
               <Link to="/trade" className="shrink-0">
-                <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5">
+                <Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.04] rounded-lg">
                   <ArrowLeft className="h-4 w-4 md:h-3.5 md:w-3.5" />
                 </Button>
               </Link>
 
               <Avatar className="h-9 w-9 md:h-8 md:w-8 rounded-lg trade-avatar-glow shrink-0">
                 <AvatarImage src={token.imageUrl || undefined} className="object-cover" />
-                <AvatarFallback className="rounded-lg text-[10px] font-bold bg-primary/10 text-primary font-mono">
+                <AvatarFallback className="rounded-lg text-[10px] font-bold bg-primary/8 text-primary font-mono">
                   {(token.symbol || '??').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex items-center gap-1.5 min-w-0 shrink">
-                <h1 className="text-sm font-bold font-mono tracking-tight truncate max-w-[100px] sm:max-w-[140px] md:max-w-[200px] lg:max-w-none">{token.name}</h1>
-                <span className="text-xs md:text-[11px] font-mono text-muted-foreground shrink-0">${token.symbol}</span>
+              <div className="flex items-center gap-2 min-w-0 shrink">
+                <h1 className="text-sm font-semibold font-mono tracking-tight truncate max-w-[100px] sm:max-w-[160px] md:max-w-[220px] lg:max-w-none">{token.name}</h1>
+                <span className="text-[11px] md:text-[10px] font-mono text-muted-foreground/50 shrink-0">${token.symbol}</span>
                 {token.migrated && (
-                  <span className="hidden sm:inline text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-green-500/12 text-green-400 border border-green-500/20 shrink-0">GRAD</span>
+                  <span className="hidden sm:inline text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-green-500/8 text-green-400/80 border border-green-500/15 shrink-0">GRAD</span>
                 )}
                 {!token.completed && !token.migrated && (
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 flex items-center gap-0.5 shrink-0">
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-primary/6 text-primary/80 border border-primary/12 flex items-center gap-1 shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />LIVE
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 ml-auto sm:ml-2 shrink-0">
-                <span className="text-sm sm:text-xs font-mono font-bold text-foreground">{formatUsdCompact(token.priceUsd)}</span>
+              <div className="flex items-center gap-2 ml-auto sm:ml-3 shrink-0">
+                <span className="text-sm sm:text-xs font-mono font-semibold text-foreground/90">{formatUsdCompact(token.priceUsd)}</span>
                 {token.change24h !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -156,75 +156,69 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                 )}
               </div>
 
-              <div className="hidden lg:flex items-center gap-4 ml-3 min-w-0">
+              <div className="hidden lg:flex items-center gap-5 ml-4 min-w-0">
                 {stats.map((s, i) => (
                   <div key={i} className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider">{s.label}</span>
-                    <span className={`text-[11px] font-mono font-semibold ${s.accent ? 'text-primary' : 'text-foreground/90'}`}>{s.value}</span>
+                    <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                    <span className={`text-[11px] font-mono font-medium ${s.accent ? 'text-primary/90' : 'text-foreground/70'}`}>{s.value}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center gap-0.5 shrink-0 ml-1 sm:ml-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5" onClick={copyAddress}><Copy className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button>
-                <Button variant="ghost" size="icon" className="hidden sm:flex h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5" onClick={shareToken}><Share2 className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button>
+              <div className="flex items-center gap-0.5 shrink-0 ml-2">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.04] rounded-lg" onClick={copyAddress}><Copy className="h-3 w-3" /></Button>
+                <Button variant="ghost" size="icon" className="hidden sm:flex h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.04] rounded-lg" onClick={shareToken}><Share2 className="h-3 w-3" /></Button>
                 <div className="hidden md:flex items-center gap-0.5">
-                  {token.websiteUrl && <a href={token.websiteUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5"><Globe className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
-                  {token.twitterUrl && <a href={token.twitterUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5"><Twitter className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>}
-                  <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground hover:bg-primary/5"><ExternalLink className="h-3.5 w-3.5 lg:h-3 lg:w-3" /></Button></a>
+                  {token.websiteUrl && <a href={token.websiteUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.04] rounded-lg"><Globe className="h-3 w-3" /></Button></a>}
+                  {token.twitterUrl && <a href={token.twitterUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.04] rounded-lg"><Twitter className="h-3 w-3" /></Button></a>}
+                  <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.04] rounded-lg"><ExternalLink className="h-3 w-3" /></Button></a>
                 </div>
-                <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" className="h-8 lg:h-7 px-2.5 text-[9px] font-mono gap-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg">
-                    <ExternalLink className="h-2.5 w-2.5" />
-                    <span className="hidden sm:inline">Explorer</span>
-                  </Button>
-                </a>
               </div>
             </div>
 
-            <div className="hidden sm:flex lg:hidden items-center gap-4 px-3 py-2 overflow-x-auto scrollbar-none border-t border-border/10">
+            <div className="hidden sm:flex lg:hidden items-center gap-5 px-4 py-2 overflow-x-auto scrollbar-none border-t border-white/[0.04]">
               {stats.map((s, i) => (
                 <div key={i} className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider">{s.label}</span>
-                  <span className={`text-[11px] font-mono font-semibold ${s.accent ? 'text-primary' : 'text-foreground/90'}`}>{s.value}</span>
+                  <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                  <span className={`text-[11px] font-mono font-medium ${s.accent ? 'text-primary/90' : 'text-foreground/70'}`}>{s.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Phone stats */}
-          <div className="md:hidden grid grid-cols-3 gap-1.5">
+          <div className="md:hidden grid grid-cols-3 gap-2">
             {stats.slice(0, 3).map((s, i) => (
               <div key={i} className="trade-stat-card">
-                <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-widest">{s.label}</p>
-                <p className={`text-sm font-mono font-bold mt-1 ${s.accent ? 'text-primary' : 'text-foreground'}`}>{s.value}</p>
+                <p className="text-[8px] font-mono text-muted-foreground/40 uppercase tracking-widest">{s.label}</p>
+                <p className={`text-sm font-mono font-semibold mt-1 ${s.accent ? 'text-primary/90' : 'text-foreground/80'}`}>{s.value}</p>
               </div>
             ))}
           </div>
 
           {/* Graduation progress */}
           {token.graduationPercent !== null && !token.completed && !token.migrated && (
-            <div className="trade-glass-panel flex items-center gap-3 px-4 py-3 md:py-2.5 lg:py-2">
-              <Zap className="h-4 w-4 md:h-3.5 md:w-3.5 lg:h-3 lg:w-3 text-primary shrink-0" />
-              <span className="text-[10px] md:text-[9px] font-mono text-muted-foreground uppercase tracking-wider shrink-0">Bonding</span>
+            <div className="trade-glass-panel flex items-center gap-3 px-4 py-2.5">
+              <Zap className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+              <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-wider shrink-0">Bonding</span>
               <div className="flex-1 min-w-[80px]">
                 <div className="trade-bonding-bar">
                   <div className="trade-bonding-fill" style={{ width: `${Math.max(Math.min(token.graduationPercent, 100), 1)}%` }} />
                 </div>
               </div>
-              <span className="text-xs md:text-[11px] lg:text-[10px] font-mono font-bold text-primary shrink-0">{token.graduationPercent.toFixed(1)}%</span>
+              <span className="text-xs font-mono font-semibold text-primary/80 shrink-0">{token.graduationPercent.toFixed(1)}%</span>
             </div>
           )}
 
           {/* Phone tab switcher */}
           <div className="md:hidden">
-            <div className="flex bg-muted/30 rounded-lg p-0.5 border border-border/20">
+            <div className="flex bg-white/[0.02] rounded-lg p-0.5 border border-white/[0.06]">
               {(['trade', 'chart'] as const).map(tab => (
                 <button key={tab} onClick={() => setMobileTab(tab)}
-                  className={`flex-1 py-1.5 text-[11px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-1 rounded-md ${
+                  className={`flex-1 py-2 text-[11px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 rounded-md ${
                     mobileTab === tab
-                      ? 'bg-secondary/80 text-foreground font-semibold border-b-2 border-primary shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-white/[0.05] text-foreground/90 font-semibold'
+                      : 'text-muted-foreground/40 hover:text-muted-foreground/60'
                   }`}>
                   {tab === 'trade' && <Activity className="h-3 w-3" />}
                   {tab === 'chart' && <BarChart3 className="h-3 w-3" />}
@@ -235,7 +229,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           </div>
 
           {/* Phone layout */}
-          <div className="md:hidden flex flex-col gap-2">
+          <div className="md:hidden flex flex-col gap-2.5">
             {mobileTab === 'trade' && (
               <>
                 {privyAvailable && (
@@ -260,22 +254,22 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           </div>
 
           {/* Tablet layout */}
-          <div className="hidden md:grid lg:hidden grid-cols-12 gap-2">
-            <div className="col-span-7 flex flex-col gap-2">
+          <div className="hidden md:grid lg:hidden grid-cols-12 gap-3">
+            <div className="col-span-7 flex flex-col gap-3">
               <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
                 <CodexChart tokenAddress={mintAddress} networkId={networkId} height={420} />
               </div>
               <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} isBsc={isBsc} />
-              <div className="trade-glass-panel p-3 space-y-1.5">
-                <h3 className="text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60">Contract</h3>
+              <div className="trade-glass-panel p-3.5 space-y-1.5">
+                <h3 className="text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40">Contract</h3>
                 <div className="flex items-center gap-2">
-                  <code className="text-[10px] font-mono text-foreground/70 truncate flex-1">{mintAddress.slice(0, 10)}...{mintAddress.slice(-4)}</code>
-                  <button onClick={copyAddress} className="text-muted-foreground hover:text-foreground transition-colors p-1"><Copy className="h-3.5 w-3.5" /></button>
+                  <code className="text-[10px] font-mono text-foreground/50 truncate flex-1">{mintAddress.slice(0, 10)}...{mintAddress.slice(-4)}</code>
+                  <button onClick={copyAddress} className="text-muted-foreground/40 hover:text-foreground transition-colors p-1"><Copy className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             </div>
-            <div className="col-span-5 flex flex-col gap-2">
-              <div className="sticky top-2 flex flex-col gap-2">
+            <div className="col-span-5 flex flex-col gap-3">
+              <div className="sticky top-3 flex flex-col gap-3">
                 {privyAvailable && (
                   isBsc
                     ? <BnbTradePanel tokenAddress={mintAddress} ticker={token.symbol} name={token.name} imageUrl={token.imageUrl} />
@@ -287,22 +281,22 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           </div>
 
           {/* Desktop layout */}
-          <div className="hidden lg:grid grid-cols-12 gap-2 flex-1">
-            <div className="col-span-9 flex flex-col gap-2">
+          <div className="hidden lg:grid grid-cols-12 gap-3 flex-1">
+            <div className="col-span-9 flex flex-col gap-3">
               <div className="trade-glass-panel-glow trade-chart-wrapper overflow-hidden">
                 <CodexChart tokenAddress={mintAddress} networkId={networkId} height={380} />
               </div>
               <TokenDataTabs tokenAddress={mintAddress} holderCount={token.holders} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={token.priceUsd || 0} isBsc={isBsc} />
             </div>
-            <div className="col-span-3 flex flex-col gap-2">
+            <div className="col-span-3 flex flex-col gap-3">
               {privyAvailable && (
                 isBsc
                   ? <BnbTradePanel tokenAddress={mintAddress} ticker={token.symbol} name={token.name} imageUrl={token.imageUrl} />
                   : <UniversalTradePanel token={{ mint_address: mintAddress, ticker: token.symbol, name: token.name, decimals: token.decimals, graduated: token.completed || token.migrated, price_sol: solPrice > 0 ? token.priceUsd / solPrice : 0, imageUrl: token.imageUrl }} userTokenBalance={0} />
               )}
               <EmbeddedWalletCard />
-              <div className="trade-glass-panel p-3 space-y-1.5">
-                <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60 flex items-center gap-1"><Activity className="h-3 w-3" /> Token Details</h3>
+              <div className="trade-glass-panel p-3.5 space-y-1.5">
+                <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40 flex items-center gap-1"><Activity className="h-3 w-3 text-primary/40" /> Token Details</h3>
                 {[
                   { label: 'Price', value: formatUsdCompact(token.priceUsd) },
                   { label: 'Market Cap', value: formatUsdCompact(token.marketCapUsd) },
@@ -311,16 +305,16 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                   { label: 'Liquidity', value: formatUsdCompact(token.liquidity) },
                 ].map((row, i) => (
                   <div key={i} className="trade-detail-row">
-                    <span className="text-[10px] font-mono text-muted-foreground/60">{row.label}</span>
-                    <span className="text-[10px] font-mono text-foreground/85 font-medium">{row.value}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground/40">{row.label}</span>
+                    <span className="text-[10px] font-mono text-foreground/70 font-medium">{row.value}</span>
                   </div>
                 ))}
               </div>
-              <div className="trade-glass-panel p-3 space-y-1.5">
-                <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60">Contract</h3>
+              <div className="trade-glass-panel p-3.5 space-y-1.5">
+                <h3 className="text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40">Contract</h3>
                 <div className="flex items-center gap-2">
-                  <code className="text-[9px] font-mono text-foreground/70 truncate flex-1">{mintAddress.slice(0, 10)}...{mintAddress.slice(-4)}</code>
-                  <button onClick={copyAddress} className="text-muted-foreground hover:text-foreground transition-colors p-1"><Copy className="h-3.5 w-3.5" /></button>
+                  <code className="text-[9px] font-mono text-foreground/50 truncate flex-1">{mintAddress.slice(0, 10)}...{mintAddress.slice(-4)}</code>
+                  <button onClick={copyAddress} className="text-muted-foreground/40 hover:text-foreground transition-colors p-1"><Copy className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             </div>
@@ -330,17 +324,17 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
 
       {/* Phone bottom bar */}
       <div className="md:hidden fixed left-0 right-0 z-50 trade-mobile-bar" style={{ bottom: '40px', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
-        <div className="flex items-center gap-2.5 px-4 py-3">
+        <div className="flex items-center gap-2.5 px-4 py-2.5">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-[10px] font-mono text-muted-foreground truncate">{formatUsdCompact(token.priceUsd)}</span>
+            <span className="text-[10px] font-mono text-muted-foreground/50 truncate">{formatUsdCompact(token.priceUsd)}</span>
             {token.change24h !== 0 && (
-              <span className={`text-[10px] font-mono font-bold ${isPriceUp ? 'text-green-400' : 'text-destructive'}`}>
+              <span className={`text-[10px] font-mono font-semibold ${isPriceUp ? 'text-green-400/80' : 'text-destructive/80'}`}>
                 {formatChange24h(token.change24h)}
               </span>
             )}
           </div>
-          <button onClick={() => setMobileTab('trade')} className="trade-btn-buy font-mono text-xs font-bold px-6 py-2.5 rounded-lg min-h-[44px] active:scale-95">BUY</button>
-          <button onClick={() => setMobileTab('trade')} className="trade-btn-sell font-mono text-xs font-bold px-6 py-2.5 rounded-lg min-h-[44px] active:scale-95">SELL</button>
+          <button onClick={() => setMobileTab('trade')} className="trade-btn-buy font-mono text-xs font-bold px-6 py-2 rounded-lg min-h-[40px] active:scale-95">BUY</button>
+          <button onClick={() => setMobileTab('trade')} className="trade-btn-sell font-mono text-xs font-bold px-6 py-2 rounded-lg min-h-[40px] active:scale-95">SELL</button>
         </div>
       </div>
     </LaunchpadLayout>
