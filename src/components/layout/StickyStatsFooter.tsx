@@ -324,7 +324,13 @@ export function StickyStatsFooter() {
             msOverflowStyle: "none",
           }}>
             <FooterCryptoPrices />
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginLeft: "10px", flexShrink: 0 }}>
+          </div>
+        )}
+
+        {/* RIGHT: Quick Links + Launchpads + Region */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          {!isMobile && (
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginRight: "6px", flexShrink: 0 }}>
               <Link to="/docs" style={{
                 display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
@@ -362,11 +368,7 @@ export function StickyStatsFooter() {
                 <span>Pulse</span>
               </Link>
             </div>
-          </div>
-        )}
-
-        {/* RIGHT: Launchpads + Region */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          )}
           {/* Launchpad selector */}
           <div ref={lpDropdownRef} style={{ position: "relative" }}>
             <button
