@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Skull, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2
+  Users, Shield, Loader2, Wand2
 } from "lucide-react";
 
 const ADMIN_PASSWORD = "saturn";
@@ -24,6 +24,7 @@ const DeployerDustAdminPage = lazy(() => import("./DeployerDustAdminPage"));
 const SaturnForumAdminPage = lazy(() => import("./SaturnForumAdminPage"));
 const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
+const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -48,6 +49,7 @@ const TAB_CONFIG = [
   { value: "forum", label: BRAND.forumName, icon: Shield },
   { value: "saturn-launch", label: "Saturn Launch", icon: Rocket },
   { value: "partner-fees", label: "Partner Fees", icon: Wallet },
+  { value: "x-restyler", label: "X Restyler", icon: Wand2 },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -201,6 +203,12 @@ export default function AdminPanelPage() {
           <TabsContent value="partner-fees" className="mt-6">
             <Suspense fallback={<TabLoader />}>
               <PartnerFeesPage />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="x-restyler" className="mt-6">
+            <Suspense fallback={<TabLoader />}>
+              <XPostRestylerPage />
             </Suspense>
           </TabsContent>
         </Tabs>
