@@ -1,18 +1,39 @@
 import { useState, useEffect, useMemo } from "react";
-import { Crown, Trophy, TrendingUp, Shield, Gem, ExternalLink, RefreshCw, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Crown, Trophy, TrendingUp, Shield, Gem, ExternalLink, RefreshCw, Timer, Sparkles, ChevronUp, Dice5, Lock, ArrowUpRight, ChevronLeft, ChevronRight, Wallet, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SATURN_TOKEN_CA } from "@/hooks/useSaturnTokenData";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+
+const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
+const DISTRIBUTION_THRESHOLD_SOL = 10;
+const HOLDER_SHARE_PERCENT = 69;
 
 interface HolderEntry {
   address: string;
   tokenAmount: number;
   percentage: number;
   solBalance: number;
+}
+
+/** Live treasury SOL balance */
+function useTreasuryBalance() {
+  return useQuery({
+    queryKey: ["treasury-balance-69", TREASURY_WALLET],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-sol-balances", {
+        body: { wallets: [TREASURY_WALLET] },
+      });
+      if (error) throw error;
+      return (data?.balances?.[TREASURY_WALLET] ?? 0) as number;
+    },
+    refetchInterval: 15_000,
+    staleTime: 10_000,
+  });
 }
 
 function useTop69Holders() {
