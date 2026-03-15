@@ -336,12 +336,12 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {/* ── Amount Input ── */}
         <div className="space-y-2">
           <div className="flex justify-between items-center px-0.5 min-w-0 gap-2">
-            <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">
+            <span className="text-[12px] font-mono text-foreground/65 shrink-0">
               {isBuy ? "You pay" : "You sell"}
             </span>
             <button
               onClick={handleMaxClick}
-              className="text-[12px] font-mono text-muted-foreground/45 truncate hover:text-foreground/70 transition-colors"
+              className="text-[12px] font-mono text-foreground/55 truncate hover:text-foreground/80 transition-colors"
               title="Click to use max"
             >
               Bal: {isBuy
@@ -362,7 +362,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
                   setSelectedPreset(null);
                 }
               }}
-              className="w-full h-13 font-mono font-semibold pl-4 pr-[92px] bg-transparent text-foreground placeholder:text-muted-foreground/20 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
+              className="w-full h-11 font-mono font-semibold pl-4 pr-[92px] bg-transparent text-foreground placeholder:text-foreground/25 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
               style={{ fontSize: 'clamp(15px, 4vw, 17px)' }}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 shrink-0">
@@ -382,20 +382,20 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Quick Amount Chips ── */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`h-10 min-h-[44px] rounded-lg font-mono text-[12px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
+              className={`h-8 rounded-md font-mono text-[11px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
                 selectedPreset === i
                   ? isBuy
                     ? "border-green-500/25 bg-green-500/8 text-green-400"
                     : "border-destructive/25 bg-destructive/8 text-destructive"
-                  : "border-white/[0.08] text-muted-foreground/45 hover:text-muted-foreground/65 hover:border-white/[0.14]"
+                  : "border-white/[0.12] text-foreground/55 hover:text-foreground/75 hover:border-white/[0.2]"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-3.5 h-3.5 rounded-full shrink-0 hidden xs:block" />}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full shrink-0" />}
               {isBuy ? v : `${v}%`}
             </button>
           ))}
@@ -405,8 +405,8 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {numericAmount > 0 && (
           <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 space-y-1.5">
             <div className="flex justify-between items-center min-w-0 gap-2">
-              <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">You get ≈</span>
-              <span className="text-[14px] font-mono font-bold text-foreground/90 truncate">
+              <span className="text-[12px] font-mono text-foreground/60 shrink-0">You get ≈</span>
+              <span className="text-[14px] font-mono font-bold text-foreground truncate">
                 {quoteLoading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin inline" />
                 ) : (
@@ -416,8 +416,8 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             </div>
             {priceImpact > 0.01 && (
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-mono text-muted-foreground/40">Impact</span>
-                <span className={`text-[11px] font-mono font-bold ${priceImpact > 5 ? "text-destructive" : "text-muted-foreground/55"}`}>
+                <span className="text-[11px] font-mono text-foreground/50">Impact</span>
+                <span className={`text-[11px] font-mono font-bold ${priceImpact > 5 ? "text-destructive" : "text-foreground/65"}`}>
                   {priceImpact.toFixed(2)}%
                 </span>
               </div>
@@ -435,16 +435,16 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Indicators + Settings ── */}
         <div className="flex items-center justify-between px-1 min-w-0">
-          <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/40 shrink min-w-0">
+          <div className="flex items-center gap-2.5 text-[11px] font-mono text-foreground/50 shrink min-w-0">
             <span className="flex items-center gap-1 shrink-0">
-              <span className="h-2 w-2 rounded-full bg-green-500/60" />MEV
+              <span className="h-2 w-2 rounded-full bg-green-500/70" />MEV
             </span>
             <span className="flex items-center gap-1 shrink-0">
-              <span className="h-2 w-2 rounded-full bg-primary/50" />Anti-SW
+              <span className="h-2 w-2 rounded-full bg-primary/60" />Anti-SW
             </span>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">
-            <span className="text-[11px] font-mono text-muted-foreground/40">{slippage}% slp</span>
+            <span className="text-[11px] font-mono text-foreground/50">{slippage}% slp</span>
             <AdvancedSettingsSheet
               slippage={slippage}
               onSlippageChange={setSlippage}

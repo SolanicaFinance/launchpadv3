@@ -111,16 +111,6 @@ export function AdvancedSettingsSheet({
               <Switch checked={antiSandwich} onCheckedChange={setAntiSandwich} className="data-[state=checked]:bg-primary scale-90" />
             </div>
 
-            <div className="flex items-center justify-between h-10 px-3 rounded-lg bg-secondary/40 border border-border/20">
-              <span className={`text-xs font-mono font-bold ${isBuy ? "text-green-400" : "text-destructive"}`}>
-                {isBuy ? "INSTA BUY" : "INSTA SELL"}
-              </span>
-              <Switch
-                checked={instaBuy}
-                onCheckedChange={onInstaBuyChange}
-                className={`scale-90 ${isBuy ? "data-[state=checked]:bg-green-500" : "data-[state=checked]:bg-destructive"}`}
-              />
-            </div>
           </div>
 
           {/* Safety Checks */}
