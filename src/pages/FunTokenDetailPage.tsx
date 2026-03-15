@@ -923,7 +923,6 @@ export default function FunTokenDetailPage() {
                 <TokenDetailsSection />
                 <ContractSection />
                 <DescriptionSection />
-                <PnlSimulator />
               </>
             )}
           </div>
