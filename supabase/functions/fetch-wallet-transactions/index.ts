@@ -148,6 +148,71 @@ Deno.serve(async (req) => {
   }
 });
 
+/**
+ * Enrich "receive" transactions from the treasury wallet with token info
+ * by cross-referencing claw_distributions table.
+ */
+async function enrichTreasuryPayouts(walletAddress: string, transactions: ParsedTx[]) {
+  const treasuryReceives = transactions.filter(
+    (t) => t.type === "receive" && t.counterparty === TREASURY_WALLET
+  );
+  if (treasuryReceives.length === 0) return;
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) return;
+
+  const sb = createClient(supabaseUrl, serviceKey);
+  const sigs = treasuryReceives.map((t) => t.signature);
+
+  // Query claw_distributions for matching signatures
+  const { data: clawDists } = await sb
+    .from("claw_distributions")
+    .select("signature, fun_token_id")
+    .in("signature", sigs);
+
+  // Collect all fun_token_ids to look up names
+  const tokenIds = new Set<string>();
+  const sigToTokenId: Record<string, string> = {};
+
+  for (const d of clawDists || []) {
+    if (d.signature && d.fun_token_id) {
+      sigToTokenId[d.signature] = d.fun_token_id;
+      tokenIds.add(d.fun_token_id);
+    }
+  }
+
+  // Also check bags_fee_claims (fun_fee_claims) table — uses mint_address not signature
+  // For now, any treasury receive without a distribution match is still marked as fee_payout
+
+  let tokenInfo: Record<string, { name: string; ticker: string }> = {};
+  if (tokenIds.size > 0) {
+    const { data: tokens } = await sb
+      .from("claw_tokens")
+      .select("id, name, ticker")
+      .in("id", [...tokenIds]);
+
+    for (const t of tokens || []) {
+      tokenInfo[t.id] = { name: t.name, ticker: t.ticker };
+    }
+  }
+
+  // Enrich each treasury receive
+  for (const tx of treasuryReceives) {
+    tx.type = "fee_payout";
+    tx.label = "Fee Payout";
+    const tid = sigToTokenId[tx.signature];
+    if (tid && tokenInfo[tid]) {
+      const info = tokenInfo[tid];
+      tx.tokenName = `${info.name} ($${info.ticker})`;
+      tx.description = `Creator fee payout · ${info.name} ($${info.ticker})`;
+    } else {
+      // Still a treasury payout, just unknown token
+      tx.description = "Creator fee payout";
+    }
+  }
+}
+
 function inferTxType(tx: any, wallet: string): "send" | "receive" | "swap" | "unknown" {
   const type = (tx.type || "").toUpperCase();
   if (type === "SWAP") return "swap";
