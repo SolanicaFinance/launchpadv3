@@ -401,6 +401,7 @@ Deno.serve(async (req) => {
           details: { tweet_id: item.tweet_id, reply_id: result.replyId },
         });
 
+        postedThisRun.add(account.id);
         repliesSent++;
         console.log(`[x-bot-reply] ✅ ${account.username} replied to @${item.tweet_author}`);
       } else {
