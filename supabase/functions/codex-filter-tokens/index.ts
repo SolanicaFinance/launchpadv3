@@ -76,7 +76,10 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
       signal: AbortSignal.timeout(6000),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log(`[pump-image] ${address.slice(0,8)}… HTTP ${response.status}`);
+      return null;
+    }
 
     const data = await response.json();
     const imageUri =
@@ -86,8 +89,13 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
       data?.metadata?.image ||
       null;
 
+    if (!imageUri) {
+      console.log(`[pump-image] ${address.slice(0,8)}… no image field in response (keys: ${Object.keys(data || {}).join(",")})`);
+    }
+
     return normalizeImageUrl(imageUri);
-  } catch {
+  } catch (err) {
+    console.log(`[pump-image] ${address.slice(0,8)}… fetch failed: ${err}`);
     return null;
   }
 }
@@ -357,10 +365,14 @@ Deno.serve(async (req) => {
           currentImage.includes("dicebear.com");
 
         if (launchpad.includes("pump") && needsPumpImage) {
+          console.log(`[pump-enrich] Fetching image for ${token.symbol} (${token.address.slice(0,8)}…) — current: ${token.imageUrl?.slice(0,60) ?? 'null'}`);
           const pumpImage = await fetchPumpFunImageUri(token.address);
           if (pumpImage && pumpImage !== token.imageUrl) {
+            console.log(`[pump-enrich] ✓ Got image for ${token.symbol}: ${pumpImage.slice(0,80)}`);
             token.fallbackImageUrl = token.imageUrl || token.fallbackImageUrl || null;
             token.imageUrl = pumpImage;
+          } else if (!pumpImage) {
+            console.log(`[pump-enrich] ✗ No image for ${token.symbol} (${token.address.slice(0,8)}…)`);
           }
         }
       }
