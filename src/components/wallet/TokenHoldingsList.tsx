@@ -52,14 +52,18 @@ export default function TokenHoldingsList({ walletAddress, solBalance, onSendTok
   const handleSell100 = async (h: TokenHolding) => {
     const m = metadata[h.mint];
     const symbol = m?.symbol || "???";
+    const name = m?.name || symbol;
+    const toastId = `sell-${h.mint}-${Date.now()}`;
 
     try {
       setSellingMint(h.mint);
-      await executeTurboSwap(
+      sonnerToast.loading("⚡ Selling...", { id: toastId });
+
+      const result = await executeTurboSwap(
         {
           id: "",
           mint_address: h.mint,
-          name: m?.name || "",
+          name: name,
           ticker: symbol,
           description: null,
           image_url: m?.image || null,
@@ -92,12 +96,33 @@ export default function TokenHoldingsList({ walletAddress, solBalance, onSendTok
         false, // isBuy = false (sell)
         500,
       );
-      toast({ title: "Sold!", description: `Sold 100% of ${symbol}` });
-      // Refresh holdings
-      setTimeout(() => {
+
+      sonnerToast.dismiss(toastId);
+
+      if (result.success) {
+        // Show TradeSuccessPopup with PnL card (same as Pulse)
+        showTradeSuccess({
+          type: 'sell',
+          ticker: symbol,
+          tokenName: name,
+          mintAddress: h.mint,
+          amount: '100%',
+          signature: result.signature,
+          executionMs: result.totalMs || undefined,
+          tokenImageUrl: m?.image ?? undefined,
+          pnlSol: result.outputAmount ?? undefined,
+        });
+
+        // Optimistic: immediately invalidate holdings so token disappears fast
         queryClient.invalidateQueries({ queryKey: ["wallet-holdings", walletAddress] });
-      }, 1500);
+        queryClient.invalidateQueries({ queryKey: ["portfolio-fun-token-prices"] });
+        // Follow-up refresh to catch any RPC lag
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["wallet-holdings", walletAddress] });
+        }, 3000);
+      }
     } catch (err: any) {
+      sonnerToast.dismiss(toastId);
       toast({ title: "Sell failed", description: err?.message || "Unknown error", variant: "destructive" });
     } finally {
       setSellingMint(null);
