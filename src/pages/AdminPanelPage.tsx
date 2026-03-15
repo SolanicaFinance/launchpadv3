@@ -78,7 +78,7 @@ export default function AdminPanelPage() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("admin_panel_auth");
+    localStorage.removeItem("admin_panel_auth_v2");
     localStorage.removeItem("treasury_admin_auth");
   };
 
