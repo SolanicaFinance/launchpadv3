@@ -60,7 +60,7 @@ export default function AdminPanelPage() {
   const activeTab = searchParams.get("tab") || "treasury";
 
   useEffect(() => {
-    if (localStorage.getItem("admin_panel_auth") === "true") {
+    if (localStorage.getItem("admin_panel_auth_v2") === "true") {
       setIsAuthenticated(true);
     }
   }, []);
