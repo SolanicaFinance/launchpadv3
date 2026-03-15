@@ -116,7 +116,7 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
       </div>
 
       {/* Footer: links */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mt-auto">
         {tweet.tweet_url && (
           <a
             href={tweet.tweet_url}
