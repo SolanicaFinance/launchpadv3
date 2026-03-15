@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { HlPosition, HlOpenOrder, HlOrderHistory, HlTradeHistory, HlAccountInfo } from "@/hooks/useHyperliquidAccount";
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ArrowDownUp } from "lucide-react";
 
 type BottomTab = "positions" | "orders" | "order_history" | "trade_history" | "assets";
 
@@ -15,6 +15,7 @@ interface Props {
   onFetchOrderHistory: (symbol?: string) => void;
   onFetchTradeHistory: (symbol?: string) => void;
   onRefreshAccount: () => void;
+  onOpenDeposit: () => void;
   hasApiKey: boolean | null;
   symbol: string;
 }
@@ -25,7 +26,7 @@ function formatTime(ts: number) {
 
 export function LeveragePositions({
   positions, openOrders, orderHistory, tradeHistory, account,
-  onCancelOrder, onFetchOrderHistory, onFetchTradeHistory, onRefreshAccount,
+  onCancelOrder, onFetchOrderHistory, onFetchTradeHistory, onRefreshAccount, onOpenDeposit,
   hasApiKey, symbol,
 }: Props) {
   const [tab, setTab] = useState<BottomTab>("positions");
@@ -83,9 +84,14 @@ export function LeveragePositions({
       <div className="w-[240px] flex-shrink-0 border-l border-border bg-card/30 p-3 overflow-y-auto hidden lg:block">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-bold text-foreground">Account</span>
-          <button onClick={onRefreshAccount} className="p-1 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors">
-            <RefreshCw className="h-3 w-3" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={onOpenDeposit} className="p-1 rounded hover:bg-accent text-primary hover:text-primary/80 transition-colors" title="Deposit/Withdraw">
+              <ArrowDownUp className="h-3 w-3" />
+            </button>
+            <button onClick={onRefreshAccount} className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+              <RefreshCw className="h-3 w-3" />
+            </button>
+          </div>
         </div>
 
         {/* Account Equity */}
@@ -156,7 +162,7 @@ function PositionsTable({ positions }: { positions: HlPosition[] }) {
           const amt = parseFloat(p.positionAmt);
           const isLong = amt > 0;
           return (
-            <tr key={p.symbol + p.positionSide} className="border-b border-border/30 hover:bg-surface-hover/50">
+            <tr key={p.symbol + p.positionSide} className="border-b border-border/30 hover:bg-accent/50">
               <td className="px-3 py-2">
                 <span className="font-medium text-foreground">{p.symbol}</span>
                 <span className={cn("ml-1 text-[10px] font-bold", isLong ? "text-green-400" : "text-red-400")}>
@@ -196,7 +202,7 @@ function OrdersTable({ orders, onCancel }: { orders: HlOpenOrder[]; onCancel: (s
       </thead>
       <tbody>
         {orders.map((o) => (
-          <tr key={o.orderId} className="border-b border-border/30 hover:bg-surface-hover/50">
+          <tr key={o.orderId} className="border-b border-border/30 hover:bg-accent/50">
             <td className="px-3 py-2 font-medium text-foreground">{o.symbol}</td>
             <td className="px-2 py-2 text-muted-foreground">{o.type}</td>
             <td className={cn("px-2 py-2 font-medium", o.side === "BUY" ? "text-green-400" : "text-red-400")}>{o.side}</td>
@@ -232,7 +238,7 @@ function TradeHistoryTable({ trades }: { trades: HlTradeHistory[] }) {
         {trades.map((t) => {
           const pnl = parseFloat(t.realizedPnl);
           return (
-            <tr key={t.id} className="border-b border-border/30 hover:bg-surface-hover/50">
+            <tr key={t.id} className="border-b border-border/30 hover:bg-accent/50">
               <td className="px-3 py-2 font-medium text-foreground">{t.symbol}</td>
               <td className={cn("px-2 py-2 font-medium", t.side === "BUY" ? "text-green-400" : "text-red-400")}>{t.side}</td>
               <td className="text-right px-2 py-2 text-foreground tabular-nums">${parseFloat(t.price).toLocaleString()}</td>

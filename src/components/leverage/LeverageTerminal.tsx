@@ -8,12 +8,14 @@ import { LeverageChart } from "./LeverageChart";
 import { LeverageOrderbook } from "./LeverageOrderbook";
 import { LeverageTradePanel } from "./LeverageTradePanel";
 import { LeveragePositions } from "./LeveragePositions";
+import { LeverageDepositModal } from "./LeverageDepositModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function LeverageTerminal() {
   const [symbol, setSymbol] = useState("BTC");
   const [interval, setInterval] = useState<KlineInterval>("5m");
+  const [depositOpen, setDepositOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const { markets, allMarkets, loading: marketsLoading, search, setSearch } = useHyperliquidMarkets();
@@ -21,7 +23,7 @@ export function LeverageTerminal() {
   const orderbook = useHyperliquidOrderbook(symbol);
   const {
     account, openOrders, orderHistory, tradeHistory, isConnected,
-    placeOrder, cancelOrder, changeLeverage,
+    placeOrder, cancelOrder, changeLeverage, withdraw,
     fetchAccount, fetchOpenOrders, fetchOrderHistory, fetchTradeHistory,
   } = useHyperliquidAccount();
 
@@ -44,8 +46,18 @@ export function LeverageTerminal() {
     onFetchOrderHistory: fetchOrderHistory,
     onFetchTradeHistory: fetchTradeHistory,
     onRefreshAccount: fetchAccount,
+    onOpenDeposit: () => setDepositOpen(true),
     hasApiKey: isConnected,
     symbol,
+  };
+
+  const tradePanelProps = {
+    market: selectedMarket,
+    isConnected,
+    account,
+    onPlaceOrder: placeOrder,
+    onChangeLeverage: changeLeverage,
+    onOpenDeposit: () => setDepositOpen(true),
   };
 
   // Mobile: stacked layout
@@ -64,7 +76,7 @@ export function LeverageTerminal() {
           <LeverageChart bars={bars} loading={klinesLoading} interval={interval} onIntervalChange={setInterval} symbol={symbol} />
         </div>
         <div className="border-b border-border bg-card">
-          <LeverageTradePanel market={selectedMarket} isConnected={isConnected} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel {...tradePanelProps} />
         </div>
         <div className="h-[300px] border-b border-border bg-card">
           <LeverageOrderbook orderbook={orderbook} />
@@ -72,6 +84,13 @@ export function LeverageTerminal() {
         <div className="min-h-[250px] bg-card">
           <LeveragePositions {...positionsProps} />
         </div>
+        <LeverageDepositModal
+          open={depositOpen}
+          onClose={() => setDepositOpen(false)}
+          onWithdraw={withdraw}
+          hlBalance={account?.totalWalletBalance || "0"}
+          hlWithdrawable={account?.withdrawable || "0"}
+        />
       </div>
     );
   }
@@ -108,7 +127,7 @@ export function LeverageTerminal() {
           <LeverageOrderbook orderbook={orderbook} />
         </div>
         <div className="w-[240px] flex-shrink-0 bg-card/50 overflow-y-auto">
-          <LeverageTradePanel market={selectedMarket} isConnected={isConnected} onPlaceOrder={placeOrder} onChangeLeverage={changeLeverage} />
+          <LeverageTradePanel {...tradePanelProps} />
         </div>
       </div>
 
@@ -116,6 +135,14 @@ export function LeverageTerminal() {
       <div className="h-[220px] border-t border-border bg-card/30">
         <LeveragePositions {...positionsProps} />
       </div>
+
+      <LeverageDepositModal
+        open={depositOpen}
+        onClose={() => setDepositOpen(false)}
+        onWithdraw={withdraw}
+        hlBalance={account?.totalWalletBalance || "0"}
+        hlWithdrawable={account?.withdrawable || "0"}
+      />
     </div>
   );
 }

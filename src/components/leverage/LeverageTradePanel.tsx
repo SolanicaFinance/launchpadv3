@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { Wallet } from "lucide-react";
 import type { HyperliquidMarket } from "@/hooks/useHyperliquidMarkets";
+import type { HlAccountInfo } from "@/hooks/useHyperliquidAccount";
+import { toast } from "@/hooks/use-toast";
 
 interface Props {
   market: HyperliquidMarket | undefined;
   isConnected: boolean;
+  account: HlAccountInfo | null;
   onPlaceOrder: (params: any) => Promise<any>;
   onChangeLeverage: (symbol: string, leverage: number) => Promise<any>;
+  onOpenDeposit: () => void;
 }
 
-export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChangeLeverage }: Props) {
+export function LeverageTradePanel({ market, isConnected, account, onPlaceOrder, onChangeLeverage, onOpenDeposit }: Props) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
   const [leverage, setLeverage] = useState(10);
@@ -20,6 +25,17 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
 
   const maxLeverage = market?.maxLeverage || 50;
   const currentPrice = parseFloat(market?.lastPrice || "0");
+  const availableBalance = parseFloat(account?.availableBalance || "0");
+
+  // Calculate max size based on available balance and leverage
+  const effectivePrice = orderType === "LIMIT" && price ? parseFloat(price) : currentPrice;
+  const maxSize = effectivePrice > 0 ? (availableBalance * leverage) / effectivePrice : 0;
+
+  const handleQuickSize = (pct: number) => {
+    if (maxSize <= 0) return;
+    const sz = maxSize * (pct / 100);
+    setQuantity(sz.toFixed(market?.szDecimals || 4));
+  };
 
   const handleSubmit = async () => {
     if (!market || !quantity) return;
@@ -34,7 +50,7 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
         sz: parseFloat(quantity),
         limitPx,
         orderType: orderType === "MARKET" 
-          ? { limit: { tif: "Ioc" } }  // Market orders use IOC
+          ? { limit: { tif: "Ioc" } }
           : { limit: { tif: "Gtc" } },
         reduceOnly: false,
         assetIndex: market.assetIndex,
@@ -44,6 +60,11 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
       setPrice("");
     } catch (err: any) {
       console.error("Order failed:", err);
+      toast({
+        title: "Order failed",
+        description: err.message || "Failed to place order",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -59,6 +80,21 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
 
   return (
     <div className="flex flex-col gap-3 p-3 text-xs">
+      {/* Balance + Deposit */}
+      <div className="flex items-center justify-between p-2 bg-secondary rounded-sm border border-border/50">
+        <div className="flex items-center gap-1.5 text-[10px]">
+          <Wallet className="h-3 w-3 text-primary" />
+          <span className="text-muted-foreground">Available</span>
+          <span className="text-foreground font-medium tabular-nums">{availableBalance.toFixed(2)} USDC</span>
+        </div>
+        <button
+          onClick={onOpenDeposit}
+          className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors"
+        >
+          Deposit
+        </button>
+      </div>
+
       {/* Side toggle */}
       <div className="grid grid-cols-2 gap-1 p-0.5 bg-secondary rounded-sm">
         <button
@@ -110,8 +146,6 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
           max={maxLeverage}
           step={1}
           className="w-full"
-          trackClassName="h-1"
-          thumbClassName="h-3.5 w-3.5"
         />
         <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
           <span>1x</span>
@@ -152,7 +186,8 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
         {[25, 50, 75, 100].map((pct) => (
           <button
             key={pct}
-            className="py-1 text-[10px] font-medium rounded-sm bg-secondary hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors border border-border/50"
+            onClick={() => handleQuickSize(pct)}
+            className="py-1 text-[10px] font-medium rounded-sm bg-secondary hover:bg-accent text-muted-foreground hover:text-foreground transition-colors border border-border/50"
           >
             {pct}%
           </button>
@@ -163,8 +198,8 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
       {quantity && (
         <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Est. Value</span>
-          <span className="text-foreground">
-            ${(parseFloat(quantity || "0") * (orderType === "LIMIT" ? parseFloat(price || "0") : currentPrice)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          <span className="text-foreground tabular-nums">
+            ${(parseFloat(quantity || "0") * effectivePrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </span>
         </div>
       )}
@@ -172,7 +207,7 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
       {/* Submit */}
       <button
         onClick={handleSubmit}
-        disabled={submitting || !quantity}
+        disabled={submitting || !quantity || parseFloat(quantity) <= 0}
         className={cn(
           "w-full py-2.5 rounded-sm font-bold text-xs transition-colors disabled:opacity-40",
           side === "BUY"
@@ -188,7 +223,7 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
         <div className="space-y-1 pt-2 border-t border-border">
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Mark Price</span>
-            <span className="text-foreground">${parseFloat(market.markPrice).toLocaleString()}</span>
+            <span className="text-foreground tabular-nums">${parseFloat(market.markPrice).toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Funding Rate</span>
@@ -198,11 +233,11 @@ export function LeverageTradePanel({ market, isConnected, onPlaceOrder, onChange
           </div>
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">24h Volume</span>
-            <span className="text-foreground">${parseFloat(market.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <span className="text-foreground tabular-nums">${parseFloat(market.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           </div>
           <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Open Interest</span>
-            <span className="text-foreground">${parseFloat(market.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <span className="text-foreground tabular-nums">${parseFloat(market.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           </div>
         </div>
       )}
