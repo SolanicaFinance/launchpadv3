@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useFunTokensPaginated } from "@/hooks/useFunTokensPaginated";
-import { formatDistanceToNow } from "date-fns";
+import { LiveAge } from "@/components/ui/LiveAge";
 import { Link } from "react-router-dom";
 import {
   TrendingUp,

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Rocket, Clock, Bot } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { LiveAge } from "@/components/ui/LiveAge";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { useJustLaunched, type JustLaunchedToken } from "@/hooks/useJustLaunched";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
