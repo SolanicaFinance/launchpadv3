@@ -579,10 +579,10 @@ export default function FunTokenDetailPage() {
     const risk = getRiskLevel(vol, liq, holders);
     
     return (
-      <div className="trade-glass-panel p-4 md:p-3 lg:p-3 space-y-1">
+      <div className="trade-glass-panel p-4 md:p-3.5 space-y-1">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60 flex items-center gap-1.5">
-            <Activity className="h-3 w-3 text-primary/60" /> Token Details
+          <h3 className="text-[10px] md:text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40 flex items-center gap-1.5">
+            <Activity className="h-3 w-3 text-primary/40" /> Token Details
           </h3>
           <span className={`trade-risk-badge ${risk.className}`}>
             <Shield className="h-2.5 w-2.5" />
@@ -599,8 +599,8 @@ export default function FunTokenDetailPage() {
             { label: 'Age', value: formatDistanceToNow(new Date(token.created_at), { addSuffix: false }) },
           ].map((row, i) => (
             <div key={i} className="trade-detail-row">
-              <span className="text-[11px] md:text-[10px] font-mono text-muted-foreground/60">{row.label}</span>
-              <span className="text-[11px] md:text-[10px] font-mono text-foreground/85 font-medium">{row.value}</span>
+              <span className="text-[11px] md:text-[10px] font-mono text-muted-foreground/40">{row.label}</span>
+              <span className="text-[11px] md:text-[10px] font-mono text-foreground/70 font-medium">{row.value}</span>
             </div>
           ))}
         </div>
@@ -611,20 +611,20 @@ export default function FunTokenDetailPage() {
   const ContractSection = () => {
     if (!token.mint_address) return null;
     return (
-      <div className="trade-glass-panel p-4 md:p-3 lg:p-3 space-y-1.5">
-        <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60">Contract</h3>
+      <div className="trade-glass-panel p-4 md:p-3.5 space-y-1.5">
+        <h3 className="text-[10px] md:text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40">Contract</h3>
         <div className="flex items-center gap-2">
-          <code className="text-xs md:text-[10px] lg:text-[9px] font-mono text-foreground/70 truncate flex-1">
+          <code className="text-xs md:text-[10px] font-mono text-foreground/50 truncate flex-1">
             {token.mint_address.slice(0, 10)}...{token.mint_address.slice(-4)}
           </code>
-          <button onClick={copyAddress} className="text-muted-foreground hover:text-primary transition-colors shrink-0 p-2 md:p-1 min-h-[44px] md:min-h-[36px] flex items-center justify-center">
+          <button onClick={copyAddress} className="text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 p-2 md:p-1 min-h-[44px] md:min-h-[36px] flex items-center justify-center">
             <Copy className="h-4 w-4 md:h-3.5 md:w-3.5" />
           </button>
         </div>
         {token.dbc_pool_address && (
           <div>
-            <span className="text-[9px] md:text-[8px] font-mono text-muted-foreground/50 uppercase">Pool</span>
-            <code className="text-xs md:text-[10px] lg:text-[9px] font-mono text-foreground/70 truncate block">
+            <span className="text-[9px] md:text-[8px] font-mono text-muted-foreground/30 uppercase">Pool</span>
+            <code className="text-xs md:text-[10px] font-mono text-foreground/50 truncate block">
               {token.dbc_pool_address.slice(0, 10)}...{token.dbc_pool_address.slice(-4)}
             </code>
           </div>
@@ -636,14 +636,14 @@ export default function FunTokenDetailPage() {
   const DescriptionSection = () => {
     if (!token.description) return null;
     return (
-      <div className="trade-glass-panel p-4 md:p-3 lg:p-3">
-        <p className={`text-xs md:text-[11px] lg:text-[10px] text-muted-foreground/80 font-mono leading-relaxed ${!showFullDesc ? 'line-clamp-2' : ''}`}>
+      <div className="trade-glass-panel p-4 md:p-3.5">
+        <p className={`text-xs md:text-[11px] text-muted-foreground/60 font-mono leading-relaxed ${!showFullDesc ? 'line-clamp-2' : ''}`}>
           {token.description}
         </p>
         {token.description.length > 100 && (
           <button
             onClick={() => setShowFullDesc(!showFullDesc)}
-            className="text-xs md:text-[10px] font-mono text-primary/70 hover:text-primary mt-1 flex items-center gap-0.5 min-h-[44px] md:min-h-[36px] transition-colors"
+            className="text-xs md:text-[10px] font-mono text-primary/50 hover:text-primary/80 mt-1 flex items-center gap-0.5 min-h-[44px] md:min-h-[36px] transition-colors"
           >
             {showFullDesc ? <><ChevronUp className="h-3 w-3" /> Less</> : <><ChevronDown className="h-3 w-3" /> More</>}
           </button>
@@ -654,9 +654,9 @@ export default function FunTokenDetailPage() {
 
 
   const CommentsSection = () => (
-    <div className="trade-glass-panel p-4 md:p-3 lg:p-3 flex-1 min-h-0 overflow-hidden flex flex-col">
-      <h3 className="text-[10px] md:text-[9px] lg:text-[8px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60 flex items-center gap-1.5 mb-2">
-        <MessageCircle className="h-3 w-3 text-primary/60" /> Discussion
+    <div className="trade-glass-panel p-4 md:p-3.5 flex-1 min-h-0 overflow-hidden flex flex-col">
+      <h3 className="text-[10px] md:text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40 flex items-center gap-1.5 mb-2">
+        <MessageCircle className="h-3 w-3 text-primary/40" /> Discussion
       </h3>
       <div className="flex-1 overflow-y-auto scrollbar-thin min-h-0">
         <TokenComments tokenId={token.id} />
