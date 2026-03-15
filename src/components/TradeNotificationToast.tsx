@@ -98,9 +98,12 @@ export function showTradeNotification(data: TradeToastData) {
       >
         {/* Token icon with cascading fallback */}
         <div className="relative flex-shrink-0">
-          <TokenImg
-            sources={tokenSources}
+          <OptimizedTokenImage
+            src={tokenSources[0]}
+            fallbackSrc={tokenSources.slice(1)}
+            fallbackText={data.tokenTicker}
             alt={data.tokenTicker}
+            size={40}
             className="w-10 h-10 rounded-full object-cover bg-white/5"
           />
           {/* Indicator dot */}
