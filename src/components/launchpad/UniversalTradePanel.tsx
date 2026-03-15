@@ -253,7 +253,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       <div className="p-5 space-y-5">
         {/* ── Slippage ── */}
         <div className="space-y-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground/50">Slippage Tolerance</span>
+          <span className="text-[11px] font-mono uppercase tracking-wider text-foreground/60">Slippage Tolerance</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {SLIPPAGE_PRESETS.map((v) => (
               <button
@@ -262,47 +262,21 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
                 className={`text-[12px] font-mono font-semibold px-3 py-1.5 rounded-lg border transition-all ${
                   slippage === v && !showCustomSlippage
                     ? 'border-primary/30 bg-primary/8 text-primary'
-                    : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                    : 'border-white/[0.12] text-foreground/50 hover:border-white/[0.2] hover:text-foreground/70'
                 }`}
               >
                 {v}%
               </button>
             ))}
-            <div className="relative w-20">
-              <Input
-                type="number"
-                placeholder="Custom"
-                value={customSlippage}
-                onChange={(e) => handleCustomSlippage(e.target.value)}
-                className={`h-7 text-[12px] font-mono pr-5 rounded-lg bg-transparent ${
-                  customSlippage && !SLIPPAGE_PRESETS.includes(slippage)
-                    ? 'border-primary/30 bg-primary/5 text-primary'
-                    : 'border-white/[0.08]'
-                }`}
-              />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground/30 font-mono">%</span>
-            </div>
           </div>
         </div>
 
         {/* ── MEV Protection ── */}
-        <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/50">
+        <div className="flex items-center gap-2.5 text-[11px] font-mono text-foreground/55">
           <span className="w-2 h-2 rounded-full bg-green-500/70" />
           <span>Jito MEV Protection</span>
-          <span className="text-muted-foreground/25">•</span>
+          <span className="text-foreground/30">•</span>
           <span>Anti-sandwich</span>
-        </div>
-
-        {/* ── Insta Buy Toggle ── */}
-        <div className="flex items-center gap-2.5">
-          <Switch
-            checked={instaBuy}
-            onCheckedChange={setInstaBuy}
-            className={`h-5 w-9 ${isBuy ? 'data-[state=checked]:bg-green-500' : 'data-[state=checked]:bg-destructive'}`}
-          />
-          <span className={`text-[13px] font-mono font-bold tracking-wider ${isBuy ? 'text-green-400/90' : 'text-destructive/90'}`}>
-            {isBuy ? 'INSTA BUY' : 'INSTA SELL'}
-          </span>
         </div>
 
         {/* ── Quick Presets ── */}
