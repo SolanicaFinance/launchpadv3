@@ -228,19 +228,36 @@ Deno.serve(async (req) => {
     // ===== Fetch token bps for accurate creator share calculation =====
     const tokenBpsMap = new Map<string, { creator_fee_bps: number; trading_fee_bps: number }>();
     
-    const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
-    const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
-    
-    if (funTargetIds.length > 0) {
-      const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
-      for (const t of funTokenData || []) {
+    if (isWalletBased) {
+      // For wallet-based, query both fun_tokens and tokens tables
+      const [{ data: funBps }, { data: saturnBps }] = await Promise.all([
+        targetTokenIds.length > 0 ? supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", targetTokenIds) : Promise.resolve({ data: [] }),
+        targetTokenIds.length > 0 ? supabase.from("tokens").select("id, creator_fee_bps, system_fee_bps").in("id", targetTokenIds) : Promise.resolve({ data: [] }),
+      ]);
+      for (const t of funBps || []) {
         tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
       }
-    }
-    if (clawTargetIds.length > 0) {
-      const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
-      for (const t of clawTokenData || []) {
-        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      for (const t of saturnBps || []) {
+        if (!tokenBpsMap.has(t.id)) {
+          const cBps = t.creator_fee_bps || 100;
+          tokenBpsMap.set(t.id, { creator_fee_bps: cBps, trading_fee_bps: cBps + (t.system_fee_bps || 100) });
+        }
+      }
+    } else {
+      const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
+      const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
+      
+      if (funTargetIds.length > 0) {
+        const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
+        for (const t of funTokenData || []) {
+          tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+        }
+      }
+      if (clawTargetIds.length > 0) {
+        const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
+        for (const t of clawTokenData || []) {
+          tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+        }
       }
     }
 
