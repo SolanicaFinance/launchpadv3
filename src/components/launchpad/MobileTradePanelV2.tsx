@@ -336,12 +336,12 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {/* ── Amount Input ── */}
         <div className="space-y-2">
           <div className="flex justify-between items-center px-0.5 min-w-0 gap-2">
-            <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">
+            <span className="text-[12px] font-mono text-foreground/65 shrink-0">
               {isBuy ? "You pay" : "You sell"}
             </span>
             <button
               onClick={handleMaxClick}
-              className="text-[12px] font-mono text-muted-foreground/45 truncate hover:text-foreground/70 transition-colors"
+              className="text-[12px] font-mono text-foreground/55 truncate hover:text-foreground/80 transition-colors"
               title="Click to use max"
             >
               Bal: {isBuy
