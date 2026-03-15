@@ -149,11 +149,15 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { twitterUsername, tokenIds, checkOnly } = body;
+    const { twitterUsername, tokenIds, checkOnly, creatorWallet } = body;
     const payoutWallet = body.payoutWallet || body.walletAddress;
 
-    if (!twitterUsername) return new Response(JSON.stringify({ success: false, error: "twitterUsername is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Support either twitterUsername or creatorWallet for token lookup
+    if (!twitterUsername && !creatorWallet) return new Response(JSON.stringify({ success: false, error: "twitterUsername or creatorWallet is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (!checkOnly && !payoutWallet) return new Response(JSON.stringify({ success: false, error: "payoutWallet is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Determine if this is a wallet-based or twitter-based claim
+    const isWalletBased = !!creatorWallet && !twitterUsername;
 
     if (payoutWallet) {
       try { new PublicKey(payoutWallet); } catch { return new Response(JSON.stringify({ success: false, error: "Invalid wallet address" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

@@ -27,7 +27,7 @@ function LinkXButton() {
   if (isInIframe()) {
     return (
       <a
-        href="https://clawmode.lovable.app/panel?tab=launches"
+        href={`${BRAND.appUrl}/panel?tab=launches`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-mono text-sm bg-green-500 hover:bg-green-600 text-black font-medium"
