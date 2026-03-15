@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface ParsedTx {
   signature: string;
-  type: "send" | "receive" | "swap" | "unknown";
+  type: "send" | "receive" | "swap" | "fee_payout" | "unknown";
   timestamp: number;
   fee: number;
   status: "success" | "failed";
@@ -16,7 +16,11 @@ interface ParsedTx {
   amount?: number;
   token?: string;
   counterparty?: string;
+  label?: string;
+  tokenName?: string;
 }
+
+const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
