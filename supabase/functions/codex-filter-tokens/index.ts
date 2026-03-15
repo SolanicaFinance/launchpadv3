@@ -52,6 +52,46 @@ function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
   return out;
 }
 
+function normalizeImageUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("ipfs://")) {
+    const ipfsPath = trimmed.replace("ipfs://", "").replace(/^ipfs\//, "");
+    return `https://ipfs.io/ipfs/${ipfsPath}`;
+  }
+
+  if (trimmed.startsWith("//")) {
+    return `https:${trimmed}`;
+  }
+
+  return trimmed;
+}
+
+async function fetchPumpFunImageUri(address: string): Promise<string | null> {
+  try {
+    const response = await fetch(`https://frontend-api.pump.fun/coins/${address}`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const imageUri =
+      data?.image_uri ||
+      data?.imageUrl ||
+      data?.image ||
+      data?.metadata?.image ||
+      null;
+
+    return normalizeImageUrl(imageUri);
+  } catch {
+    return null;
+  }
+}
+
 async function fetchDexScreenerChange24h(address: string, networkId: number): Promise<number | null> {
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
@@ -306,6 +346,24 @@ Deno.serve(async (req) => {
     const normalizedTokens = await Promise.all(tokens.map(async (token: any) => {
       // Filter out tokens with overflow/invalid market caps (2^63 sentinel values)
       if (token.marketCap > 1e15) return null;
+
+      // Solana + Pump.fun: if Codex/Dex image is missing or unreliable, fetch image directly from Pump.fun.
+      if (safeNetworkId === SOLANA_NETWORK_ID && token.address) {
+        const launchpad = String(token.launchpadName ?? "").toLowerCase();
+        const currentImage = String(token.imageUrl ?? "").toLowerCase();
+        const needsPumpImage =
+          !token.imageUrl ||
+          currentImage.includes("dd.dexscreener.com") ||
+          currentImage.includes("dicebear.com");
+
+        if (launchpad.includes("pump") && needsPumpImage) {
+          const pumpImage = await fetchPumpFunImageUri(token.address);
+          if (pumpImage && pumpImage !== token.imageUrl) {
+            token.fallbackImageUrl = token.imageUrl || token.fallbackImageUrl || null;
+            token.imageUrl = pumpImage;
+          }
+        }
+      }
 
       if (Math.abs(token.change24h) <= maxAllowedChange) {
         return token;
