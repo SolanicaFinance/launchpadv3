@@ -340,7 +340,7 @@ export default function HomePage() {
           {/* ── Flanking Product Screenshots — VISIBLE teasers ── */}
           {/* Left: Trading Terminal */}
           <div
-            className="absolute left-[-2%] top-[0%] w-[46%] max-w-[660px] pointer-events-none hidden lg:block"
+            className="absolute left-[-2%] top-[-5%] bottom-0 w-[46%] max-w-[660px] pointer-events-none hidden lg:block"
             style={{
               transform: "perspective(1200px) rotateY(15deg) rotateX(-2deg)",
               opacity: 0.62,
@@ -359,7 +359,7 @@ export default function HomePage() {
               {/* Dark vignette overlay */}
               <div className="absolute inset-0 z-10 pointer-events-none"
                 style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, hsl(0 0% 0% / 0.35) 100%)" }} />
-              <img src={heroTerminalMockup} alt="" className="w-full h-auto relative" loading="eager" />
+              <img src={heroTerminalMockup} alt="" className="w-full h-full object-cover relative" loading="eager" />
             </div>
           </div>
 

@@ -77,7 +77,7 @@ export function CodexTokenTrades({ events, isLoading, holders = [], currentPrice
   }
 
   return (
-    <ScrollArea className="h-[420px]">
+    <ScrollArea className="h-[520px]">
       <table className="w-full text-xs font-mono">
         <thead className="sticky top-0 z-10" style={{ backgroundColor: '#0d0d0d' }}>
           <tr className="text-muted-foreground/50 uppercase tracking-wider text-[10px]">
