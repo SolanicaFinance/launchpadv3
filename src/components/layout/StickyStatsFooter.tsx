@@ -324,6 +324,44 @@ export function StickyStatsFooter() {
             msOverflowStyle: "none",
           }}>
             <FooterCryptoPrices />
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginLeft: "10px", flexShrink: 0 }}>
+              <Link to="/docs" style={{
+                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
+                fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
+                textDecoration: "none", transition: "all 0.15s",
+              }}>
+                <FileText style={{ width: "11px", height: "11px" }} />
+                <span>Docs</span>
+              </Link>
+              <Link to="/leverage" style={{
+                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
+                fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
+                textDecoration: "none", transition: "all 0.15s",
+              }}>
+                <TrendingUp style={{ width: "11px", height: "11px" }} />
+                <span>Leverage</span>
+              </Link>
+              <Link to="/launch" style={{
+                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
+                fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
+                textDecoration: "none", transition: "all 0.15s",
+              }}>
+                <Coins style={{ width: "11px", height: "11px" }} />
+                <span>Launch</span>
+              </Link>
+              <Link to="/tokens" style={{
+                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
+                fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
+                textDecoration: "none", transition: "all 0.15s",
+              }}>
+                <Activity style={{ width: "11px", height: "11px" }} />
+                <span>Pulse</span>
+              </Link>
+            </div>
           </div>
         )}
 
