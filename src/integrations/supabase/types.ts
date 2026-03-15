@@ -9533,6 +9533,10 @@ export type Database = {
         Args: { p_duration_seconds?: number; p_twitter_username: string }
         Returns: boolean
       }
+      acquire_creator_claim_lock_by_wallet: {
+        Args: { p_duration_seconds?: number; p_wallet_address: string }
+        Returns: boolean
+      }
       admin_delete_comment: { Args: { _comment_id: string }; Returns: boolean }
       admin_delete_post: { Args: { _post_id: string }; Returns: boolean }
       admin_resolve_report: {
@@ -10196,6 +10200,10 @@ export type Database = {
       }
       release_creator_claim_lock: {
         Args: { p_twitter_username: string }
+        Returns: undefined
+      }
+      release_creator_claim_lock_by_wallet: {
+        Args: { p_wallet_address: string }
         Returns: undefined
       }
       snapshot_fun_token_prices: { Args: never; Returns: undefined }

@@ -20,8 +20,6 @@ function getCreatorRatio(creatorFeeBps: number | null, tradingFeeBps: number | n
   if (bps <= 0) return 0;
   return cBps / bps;
 }
-const CLAIM_LOCK_SECONDS = 60;
-const TREASURY_RESERVE_SOL = 0.05;
 
 /**
  * Calculate claimable amount for a twitter user.
@@ -73,12 +71,12 @@ async function calculateClaimable(
   }
 
   // Get already-paid distributions — check BOTH claw_distributions AND fun_distributions
-  // This prevents double-claiming across the old and new systems
+  // Search by both token IDs and username/wallet to prevent double-claiming
   const [
     { data: distByToken },
-    { data: distByUsername },
+    { data: distByKey },
     { data: funDistByToken },
-    { data: funDistByUsername },
+    { data: funDistByKey },
   ] = await Promise.all([
     targetTokenIds.length > 0
       ? supabase
@@ -88,10 +86,11 @@ async function calculateClaimable(
           .in("distribution_type", ["creator_claim", "creator"])
           .in("status", ["completed", "pending"])
       : Promise.resolve({ data: [] }),
+    // Search by username OR wallet
     supabase
       .from("claw_distributions")
       .select("amount_sol, fun_token_id, id")
-      .eq("twitter_username", normalizedUsername)
+      .or(`twitter_username.eq.${normalizedUsername},creator_wallet.eq.${normalizedUsername}`)
       .in("distribution_type", ["creator_claim", "creator"])
       .in("status", ["completed", "pending"]),
     // Also check legacy fun_distributions table
@@ -106,17 +105,17 @@ async function calculateClaimable(
     supabase
       .from("fun_distributions")
       .select("amount_sol, fun_token_id, id")
-      .eq("twitter_username", normalizedUsername)
+      .or(`twitter_username.eq.${normalizedUsername},creator_wallet.eq.${normalizedUsername}`)
       .in("distribution_type", ["creator_claim", "creator"])
       .in("status", ["completed", "pending"]),
   ]);
 
   // Merge and deduplicate by id (prefix fun_ IDs to avoid collision)
   const allDists = new Map<string, any>();
-  for (const d of [...(distByToken || []), ...(distByUsername || [])]) {
+  for (const d of [...(distByToken || []), ...(distByKey || [])]) {
     allDists.set(d.id, d);
   }
-  for (const d of [...(funDistByToken || []), ...(funDistByUsername || [])]) {
+  for (const d of [...(funDistByToken || []), ...(funDistByKey || [])]) {
     allDists.set("fun_" + d.id, d);
   }
 
@@ -149,17 +148,22 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { twitterUsername, tokenIds, checkOnly } = body;
+    const { twitterUsername, tokenIds, checkOnly, creatorWallet } = body;
     const payoutWallet = body.payoutWallet || body.walletAddress;
 
-    if (!twitterUsername) return new Response(JSON.stringify({ success: false, error: "twitterUsername is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Support either twitterUsername or creatorWallet for token lookup
+    if (!twitterUsername && !creatorWallet) return new Response(JSON.stringify({ success: false, error: "twitterUsername or creatorWallet is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (!checkOnly && !payoutWallet) return new Response(JSON.stringify({ success: false, error: "payoutWallet is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Determine if this is a wallet-based or twitter-based claim
+    const isWalletBased = !!creatorWallet && !twitterUsername;
 
     if (payoutWallet) {
       try { new PublicKey(payoutWallet); } catch { return new Response(JSON.stringify({ success: false, error: "Invalid wallet address" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
     }
 
-    const normalizedUsername = twitterUsername.replace(/^@/, "").toLowerCase();
+    const normalizedUsername = twitterUsername ? twitterUsername.replace(/^@/, "").toLowerCase() : null;
+    const lockKey = normalizedUsername || creatorWallet;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const treasuryKey = Deno.env.get("TREASURY_PRIVATE_KEY");
@@ -169,72 +173,111 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ===== Find tokens OWNED by this Twitter user =====
-    const { data: socialPosts } = await supabase
-      .from("agent_social_posts")
-      .select("fun_token_id")
-      .ilike("post_author", normalizedUsername)
-      .eq("platform", "twitter")
-      .eq("status", "completed")
-      .not("fun_token_id", "is", null);
-
-    const funTokenIds = [...new Set((socialPosts || []).map((p: any) => p.fun_token_id).filter(Boolean))];
-
+    // ===== Find tokens — wallet-based or twitter-based =====
+    let funTokenIds: string[] = [];
     let clawTokenIds: string[] = [];
-    const { data: matchingAgents } = await supabase
-      .from("claw_agents")
-      .select("id")
-      .ilike("twitter_handle", normalizedUsername);
 
-    if (matchingAgents && matchingAgents.length > 0) {
-      const agentIds = matchingAgents.map((a: any) => a.id);
-      const [{ data: agentClawTokens }, { data: agentTokenLinks }] = await Promise.all([
-        supabase.from("claw_tokens").select("id").in("agent_id", agentIds),
-        supabase.from("claw_agent_tokens").select("fun_token_id").in("agent_id", agentIds),
+    if (isWalletBased) {
+      // Wallet-based: find tokens by creator_wallet
+      const [{ data: funTokenData }, { data: saturnTokenData }] = await Promise.all([
+        supabase.from("fun_tokens").select("id").eq("creator_wallet", creatorWallet),
+        supabase.from("tokens").select("id").eq("creator_wallet", creatorWallet),
       ]);
-      clawTokenIds = [
-        ...(agentClawTokens || []).map((t: any) => t.id),
-        ...(agentTokenLinks || []).map((t: any) => t.fun_token_id),
-      ];
-      clawTokenIds = [...new Set(clawTokenIds)];
+      funTokenIds = (funTokenData || []).map((t: any) => t.id);
+      // Saturn tokens go into funTokenIds for unified processing
+      const saturnIds = (saturnTokenData || []).map((t: any) => t.id);
+      funTokenIds = [...new Set([...funTokenIds, ...saturnIds])];
+    } else {
+      // Twitter-based lookup (legacy)
+      const { data: socialPosts } = await supabase
+        .from("agent_social_posts")
+        .select("fun_token_id")
+        .ilike("post_author", normalizedUsername!)
+        .eq("platform", "twitter")
+        .eq("status", "completed")
+        .not("fun_token_id", "is", null);
+
+      funTokenIds = [...new Set((socialPosts || []).map((p: any) => p.fun_token_id).filter(Boolean))];
+
+      const { data: matchingAgents } = await supabase
+        .from("claw_agents")
+        .select("id")
+        .ilike("twitter_handle", normalizedUsername!);
+
+      if (matchingAgents && matchingAgents.length > 0) {
+        const agentIds = matchingAgents.map((a: any) => a.id);
+        const [{ data: agentClawTokens }, { data: agentTokenLinks }] = await Promise.all([
+          supabase.from("claw_tokens").select("id").in("agent_id", agentIds),
+          supabase.from("claw_agent_tokens").select("fun_token_id").in("agent_id", agentIds),
+        ]);
+        clawTokenIds = [
+          ...(agentClawTokens || []).map((t: any) => t.id),
+          ...(agentTokenLinks || []).map((t: any) => t.fun_token_id),
+        ];
+        clawTokenIds = [...new Set(clawTokenIds)];
+      }
     }
 
     const allTokenIds = [...new Set([...funTokenIds, ...clawTokenIds])];
     const targetTokenIds = tokenIds?.length ? allTokenIds.filter((id: string) => tokenIds.includes(id)) : allTokenIds;
 
     if (targetTokenIds.length === 0) {
-      return new Response(JSON.stringify({ success: false, error: `No tokens found launched by @${normalizedUsername}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const who = isWalletBased ? `wallet ${creatorWallet?.slice(0,8)}...` : `@${normalizedUsername}`;
+      return new Response(JSON.stringify({ success: false, error: `No tokens found launched by ${who}` }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ===== Fetch token bps for accurate creator share calculation =====
     const tokenBpsMap = new Map<string, { creator_fee_bps: number; trading_fee_bps: number }>();
     
-    const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
-    const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
-    
-    if (funTargetIds.length > 0) {
-      const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
-      for (const t of funTokenData || []) {
+    if (isWalletBased) {
+      // For wallet-based, query both fun_tokens and tokens tables
+      const [{ data: funBps }, { data: saturnBps }] = await Promise.all([
+        targetTokenIds.length > 0 ? supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", targetTokenIds) : Promise.resolve({ data: [] }),
+        targetTokenIds.length > 0 ? supabase.from("tokens").select("id, creator_fee_bps, system_fee_bps").in("id", targetTokenIds) : Promise.resolve({ data: [] }),
+      ]);
+      for (const t of funBps || []) {
         tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
       }
-    }
-    if (clawTargetIds.length > 0) {
-      const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
-      for (const t of clawTokenData || []) {
-        tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+      for (const t of saturnBps || []) {
+        if (!tokenBpsMap.has(t.id)) {
+          const cBps = t.creator_fee_bps || 100;
+          tokenBpsMap.set(t.id, { creator_fee_bps: cBps, trading_fee_bps: cBps + (t.system_fee_bps || 100) });
+        }
+      }
+    } else {
+      const funTargetIds = targetTokenIds.filter((id: string) => funTokenIds.includes(id));
+      const clawTargetIds = targetTokenIds.filter((id: string) => clawTokenIds.includes(id) && !funTokenIds.includes(id));
+      
+      if (funTargetIds.length > 0) {
+        const { data: funTokenData } = await supabase.from("fun_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", funTargetIds);
+        for (const t of funTokenData || []) {
+          tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+        }
+      }
+      if (clawTargetIds.length > 0) {
+        const { data: clawTokenData } = await supabase.from("claw_tokens").select("id, creator_fee_bps, trading_fee_bps").in("id", clawTargetIds);
+        for (const t of clawTokenData || []) {
+          tokenBpsMap.set(t.id, { creator_fee_bps: t.creator_fee_bps || 100, trading_fee_bps: t.trading_fee_bps || 200 });
+        }
       }
     }
 
-    // ===== Rate limit check — by twitter_username =====
-    const { data: lastClaim } = await supabase
+    // ===== Rate limit check — by wallet or twitter_username =====
+    let rateLimitQuery = supabase
       .from("claw_distributions")
       .select("created_at")
-      .eq("twitter_username", normalizedUsername)
       .in("distribution_type", ["creator_claim", "creator"])
       .in("status", ["completed", "pending"])
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+
+    if (isWalletBased) {
+      rateLimitQuery = rateLimitQuery.eq("creator_wallet", creatorWallet);
+    } else {
+      rateLimitQuery = rateLimitQuery.eq("twitter_username", normalizedUsername);
+    }
+
+    const { data: lastClaim } = await rateLimitQuery.maybeSingle();
 
     const now = Date.now();
     let canClaim = true;
@@ -251,9 +294,11 @@ Deno.serve(async (req) => {
     }
 
     // Calculate claimable
-    const initialCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
+    const lookupKey = normalizedUsername || creatorWallet;
+    const initialCalc = await calculateClaimable(supabase, lookupKey, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
 
-    console.log(`[saturn-creator-claim] @${normalizedUsername}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
+    const who = isWalletBased ? `wallet:${creatorWallet?.slice(0,8)}` : `@${normalizedUsername}`;
+    console.log(`[saturn-creator-claim] ${who}: earned=${initialCalc.totalCreatorEarned.toFixed(6)}, paid=${initialCalc.totalCreatorPaid.toFixed(6)}, claimable=${initialCalc.claimable.toFixed(6)}, tokens=${targetTokenIds.length}`);
 
     if (checkOnly) {
       return new Response(JSON.stringify({
@@ -276,14 +321,21 @@ Deno.serve(async (req) => {
     }
 
     // ===== Acquire lock =====
-    const { data: lockAcquired } = await supabase.rpc("acquire_claw_creator_claim_lock", { p_twitter_username: normalizedUsername, p_duration_seconds: CLAIM_LOCK_SECONDS });
+    let lockAcquired: boolean;
+    if (isWalletBased) {
+      const { data } = await supabase.rpc("acquire_creator_claim_lock_by_wallet", { p_wallet_address: creatorWallet, p_duration_seconds: CLAIM_LOCK_SECONDS });
+      lockAcquired = !!data;
+    } else {
+      const { data } = await supabase.rpc("acquire_claw_creator_claim_lock", { p_twitter_username: normalizedUsername, p_duration_seconds: CLAIM_LOCK_SECONDS });
+      lockAcquired = !!data;
+    }
     if (!lockAcquired) {
       return new Response(JSON.stringify({ success: false, error: "Another claim in progress", locked: true }), { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     try {
       // Re-verify after lock
-      const verifiedCalc = await calculateClaimable(supabase, normalizedUsername, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
+      const verifiedCalc = await calculateClaimable(supabase, lookupKey, targetTokenIds, funTokenIds, clawTokenIds, tokenBpsMap);
       
       if (verifiedCalc.claimable < MIN_CLAIM_SOL) {
         console.log(`[saturn-creator-claim] ⚠️ Post-lock: claimable=${verifiedCalc.claimable.toFixed(6)} < ${MIN_CLAIM_SOL}`);
@@ -291,15 +343,21 @@ Deno.serve(async (req) => {
       }
 
       // Re-check rate limit after lock
-      const { data: recentClaim } = await supabase
+      let recentRateLimitQuery = supabase
         .from("claw_distributions")
         .select("created_at")
-        .eq("twitter_username", normalizedUsername)
         .in("distribution_type", ["creator_claim", "creator"])
         .in("status", ["completed", "pending"])
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+
+      if (isWalletBased) {
+        recentRateLimitQuery = recentRateLimitQuery.eq("creator_wallet", creatorWallet);
+      } else {
+        recentRateLimitQuery = recentRateLimitQuery.eq("twitter_username", normalizedUsername);
+      }
+
+      const { data: recentClaim } = await recentRateLimitQuery.maybeSingle();
 
       if (recentClaim) {
         const timeSinceRecent = Date.now() - new Date(recentClaim.created_at).getTime();
@@ -325,7 +383,7 @@ Deno.serve(async (req) => {
             distribution_type: "creator_claim",
             signature: null,
             status: "pending",
-            twitter_username: normalizedUsername,
+            twitter_username: normalizedUsername || null,
           }).select("id").single();
 
           if (insertError || !inserted) {
@@ -405,7 +463,11 @@ Deno.serve(async (req) => {
         nextClaimAt: new Date(Date.now() + CLAIM_COOLDOWN_MS).toISOString(),
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } finally {
-      await supabase.rpc("release_claw_creator_claim_lock", { p_twitter_username: normalizedUsername });
+      if (isWalletBased) {
+        await supabase.rpc("release_creator_claim_lock_by_wallet", { p_wallet_address: creatorWallet });
+      } else {
+        await supabase.rpc("release_claw_creator_claim_lock", { p_twitter_username: normalizedUsername });
+      }
     }
   } catch (error) {
     console.error("[saturn-creator-claim] Error:", error);

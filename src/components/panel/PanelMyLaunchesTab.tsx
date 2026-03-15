@@ -27,7 +27,7 @@ function LinkXButton() {
   if (isInIframe()) {
     return (
       <a
-        href="https://clawmode.lovable.app/panel?tab=launches"
+        href={`${BRAND.appUrl}/panel?tab=launches`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-mono text-sm bg-green-500 hover:bg-green-600 text-black font-medium"
@@ -317,13 +317,13 @@ export default function PanelMyLaunchesTab() {
             Reply to any post on X with <code className="text-[#F97316] font-mono text-[11px]">${BRAND.twitterHandle}</code> followed by your token idea
           </p>
           <a
-            href="https://x.com/clawmode"
+            href={BRAND.twitterUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #F97316, #EA580C)" }}
           >
-            Launch via ${BRAND.twitterHandle} →
+            Launch via {BRAND.twitterHandle} →
           </a>
         </div>
       ) : (

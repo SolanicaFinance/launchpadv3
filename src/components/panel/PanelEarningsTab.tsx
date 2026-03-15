@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useLaunchpad, formatSolAmount } from "@/hooks/useLaunchpad";
-import { useAuth } from "@/hooks/useAuth";
 import { useChain } from "@/contexts/ChainContext";
-import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,29 +11,44 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
 export default function PanelEarningsTab() {
-  const { solanaAddress, profileId } = useAuth();
-  const { chain, chainConfig } = useChain();
-  const { address: evmAddress } = usePrivyEvmWallet();
-  const { useUserEarnings, claimFees } = useLaunchpad();
+  const { walletAddress: embeddedWallet } = useSolanaWalletWithPrivy();
+  const { chainConfig } = useChain();
+  const { useUserEarnings } = useLaunchpad();
   const { toast } = useToast();
   const [claimingTokenId, setClaimingTokenId] = useState<string | null>(null);
-  const MIN_CLAIM_SOL = 0.05;
+  const MIN_CLAIM_SOL = 0.01;
 
-  const activeAddress = chain === 'solana' ? solanaAddress : evmAddress;
+  const activeAddress = embeddedWallet;
   const currencySymbol = chainConfig.nativeCurrency.symbol;
   const explorerUrl = chainConfig.explorerUrl;
 
-  const { data: earningsData, isLoading, refetch } = useUserEarnings(activeAddress, profileId);
+  // Pass only wallet — no profileId needed
+  const { data: earningsData, isLoading, refetch } = useUserEarnings(activeAddress || undefined, undefined);
 
-  const handleClaim = async (tokenId: string) => {
+  const handleClaim = async () => {
     if (!activeAddress) return;
-    setClaimingTokenId(tokenId);
+    setClaimingTokenId("all");
     try {
-      const result = await claimFees.mutateAsync({
-        tokenId,
-        walletAddress: activeAddress,
-        profileId: profileId || undefined,
-      });
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/claw-creator-claim`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": anonKey,
+          },
+          body: JSON.stringify({
+            creatorWallet: activeAddress,
+            payoutWallet: activeAddress,
+          }),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "Claim failed");
+      }
       toast({ title: "Fees claimed!", description: `You claimed ${formatSolAmount(result.claimedAmount)} ${currencySymbol}` });
       refetch();
     } catch (error) {
@@ -66,6 +80,35 @@ export default function PanelEarningsTab() {
         </div>
       )}
 
+      {/* Claim All Button */}
+      {(earningsData?.summary?.totalUnclaimed || 0) >= MIN_CLAIM_SOL && (
+        <Button
+          className="w-full gap-2 font-mono bg-green-500 hover:bg-green-600 text-black border-0 font-bold"
+          disabled={claimingTokenId === "all"}
+          onClick={handleClaim}
+        >
+          {claimingTokenId === "all" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <DollarSign className="h-4 w-4" />
+          )}
+          Claim {formatSolAmount(earningsData?.summary?.totalUnclaimed || 0)} {currencySymbol}
+        </Button>
+      )}
+
+      {(earningsData?.summary?.totalUnclaimed || 0) > 0 && (earningsData?.summary?.totalUnclaimed || 0) < MIN_CLAIM_SOL && (
+        <p className="text-xs text-muted-foreground text-center font-mono">
+          Minimum claim: {MIN_CLAIM_SOL} {currencySymbol}. Current: {formatSolAmount(earningsData?.summary?.totalUnclaimed || 0)} {currencySymbol}
+        </p>
+      )}
+
+      {/* Payout wallet info */}
+      {activeAddress && (
+        <p className="text-[10px] text-muted-foreground text-center truncate px-4">
+          Payouts go to your embedded wallet: {activeAddress.slice(0, 6)}...{activeAddress.slice(-4)}
+        </p>
+      )}
+
       {/* Earnings list */}
       <div className="space-y-3">
         <h2 className="font-semibold text-sm">Your Tokens</h2>
@@ -90,18 +133,10 @@ export default function PanelEarningsTab() {
                     <span>Earned: {formatSolAmount(earning.total_earned_sol || 0)}</span>
                     <span className="text-green-500">Claimable: {formatSolAmount(earning.unclaimed_sol || 0)}</span>
                   </div>
+                  <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    Creator: {earning.creator_fee_bps / 100}% · Total: {earning.trading_fee_bps / 100}%
+                  </div>
                 </div>
-                <Button
-                  size="sm" className="h-8 text-xs"
-                  disabled={!earning.unclaimed_sol || earning.unclaimed_sol < MIN_CLAIM_SOL || claimingTokenId === earning.token_id}
-                  onClick={() => handleClaim(earning.token_id)}
-                >
-                  {claimingTokenId === earning.token_id
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : earning.unclaimed_sol < MIN_CLAIM_SOL
-                      ? "Min 0.05"
-                      : "Claim"}
-                </Button>
               </div>
             </Card>
           ))
