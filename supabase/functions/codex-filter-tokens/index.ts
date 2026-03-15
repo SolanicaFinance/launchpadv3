@@ -70,7 +70,23 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
 }
 
 async function fetchPumpFunImageUri(address: string): Promise<string | null> {
-  // Strategy 1: Try Pump.fun APIs (multiple endpoints for redundancy)
+  // Strategy 1: Direct Pump.fun image CDN — serves image by mint address, no API needed
+  try {
+    const directUrl = `https://image.pump.fun/token-image/${address}`;
+    const headRes = await fetch(directUrl, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (headRes.ok) {
+      console.log(`[pump-image] ${address.slice(0,8)}… ✓ direct CDN hit`);
+      return directUrl;
+    }
+    console.log(`[pump-image] ${address.slice(0,8)}… direct CDN ${headRes.status}`);
+  } catch {
+    console.log(`[pump-image] ${address.slice(0,8)}… direct CDN timeout`);
+  }
+
+  // Strategy 2: Try Pump.fun APIs for image_uri field
   const pumpApis = [
     `https://frontend-api-v3.pump.fun/coins/${address}`,
     `https://frontend-api.pump.fun/coins/${address}`,
@@ -99,6 +115,7 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
         null;
 
       if (imageUri) {
+        console.log(`[pump-image] ${address.slice(0,8)}… ✓ got from API: ${imageUri.slice(0,60)}`);
         return normalizeImageUrl(imageUri);
       }
     } catch {
@@ -106,7 +123,7 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
     }
   }
 
-  // Strategy 2: Try DexScreener token info API (often has image before CDN does)
+  // Strategy 3: DexScreener token info API
   try {
     const dsRes = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${address}`, {
       headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
@@ -119,7 +136,7 @@ async function fetchPumpFunImageUri(address: string): Promise<string | null> {
       for (const pair of pairs) {
         const img = pair?.info?.imageUrl || pair?.baseToken?.info?.imageUrl;
         if (img) {
-          console.log(`[pump-image] ${address.slice(0,8)}… got image from DexScreener API`);
+          console.log(`[pump-image] ${address.slice(0,8)}… ✓ got from DexScreener`);
           return normalizeImageUrl(img);
         }
       }
