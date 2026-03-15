@@ -11,6 +11,7 @@ const corsHeaders = {
 const ADMIN_WALLETS = [
   "4yx8MdBLv75YpBJhqjz2zMsoyN4WEwjc8VSfoLiUGdTX",
   "89mkEFstQcBoZhmujjQtwM9mKQYyy9W13nMFwPZp52DY",
+  "DrWkWu7Mhv9V7Dt2iqxpjuwPfehmQq1DrkEQ39sqX8jV",
 ];
 
 Deno.serve(async (req) => {
