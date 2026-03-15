@@ -1674,6 +1674,10 @@
   display: inline-flex;
   align-items: center;
 }
+.pulse-social-icon svg {
+  width: 14px;
+  height: 14px;
+}
 .pulse-social-icon:hover {
   color: hsl(var(--foreground));
 }

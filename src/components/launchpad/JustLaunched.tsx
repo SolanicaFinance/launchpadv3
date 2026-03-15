@@ -73,7 +73,7 @@ function JustLaunchedCard({ token }: { token: JustLaunchedToken }) {
         </span>
         <div className="flex items-center gap-0.5 text-muted-foreground/50">
           <Clock className="w-2 h-2" />
-          <LiveAge createdAt={token.created_at} className="text-[8px] font-mono text-muted-foreground/50" />
+          <LiveAge createdAt={token.created_at} className="text-[8px]" />
         </div>
       </div>
     </Link>
