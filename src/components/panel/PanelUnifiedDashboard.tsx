@@ -871,7 +871,16 @@ export default function PanelUnifiedDashboard() {
                               </div>
                               <div className="flex items-center justify-between text-[10px]">
                                 <span className="text-muted-foreground">MCAP</span>
-                                <span className="font-mono font-bold" style={{ color: NEON_LIME }}>{formatSolAmount(token.market_cap_sol)} {currencySymbol}</span>
+                                <span className="font-mono font-bold" style={{ color: NEON_LIME }}>
+                                  {solPrice && token.market_cap_sol
+                                    ? (() => {
+                                        const usd = token.market_cap_sol * solPrice;
+                                        if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+                                        if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+                                        return `$${usd.toFixed(0)}`;
+                                      })()
+                                    : `${formatSolAmount(token.market_cap_sol)} ${currencySymbol}`}
+                                </span>
                               </div>
                             </Link>
                             {unclaimed > 0 && (
