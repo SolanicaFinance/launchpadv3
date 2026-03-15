@@ -351,7 +351,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Price Display ── */}
         <div className="py-1">
-          <span className="text-[12px] font-mono text-muted-foreground/45">
+          <span className="text-[12px] font-mono text-foreground/50">
             1 {token.name} = {token.price_sol ? token.price_sol.toFixed(6) : '—'} SOL
           </span>
         </div>
