@@ -383,7 +383,7 @@ export default function HomePage() {
           <div
             className="absolute right-[-2%] top-[2%] w-[44%] max-w-[620px] pointer-events-none hidden lg:block"
             style={{
-              transform: "perspective(1200px) rotateY(-15deg) rotateX(-2deg)",
+              transform: "none",
               opacity: 0.62,
               filter: "blur(1px) brightness(0.75) saturate(1.1)",
               maskImage: "linear-gradient(to left, transparent 0%, black 6%, black 55%, transparent 90%)",
