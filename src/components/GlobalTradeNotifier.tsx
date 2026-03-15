@@ -1,14 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTradeSounds } from "@/hooks/useTradeSounds";
 
 /**
  * Global trade notifier — mounted once at App root.
- * Subscribes to alpha_trades realtime inserts and fires
- * toast notifications + audio on EVERY page, not just Alpha Tracker.
- * 
- * Latency: Supabase Realtime (WebSocket) delivers in ~50-200ms from DB insert.
+ * Listens to alpha_trades realtime inserts via WebSocket (~50-200ms latency).
+ * Fires toast + audio on EVERY page for ALL visitors.
+ * Sounds are ON by default — no opt-in needed.
  */
 export function GlobalTradeNotifier() {
   const { playBuy, playSell } = useTradeSounds();
@@ -17,18 +16,41 @@ export function GlobalTradeNotifier() {
   playBuyRef.current = playBuy;
   playSellRef.current = playSell;
 
+  // Auto-unlock AudioContext on first user interaction (click/touch/key)
   useEffect(() => {
-    console.log("[GlobalTradeNotifier] Subscribing to alpha_trades realtime...");
-    
+    const unlock = () => {
+      try {
+        // Attempt to create/resume AudioContext on any gesture
+        const ctx = new AudioContext();
+        if (ctx.state === "suspended") ctx.resume();
+        ctx.close();
+      } catch {}
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("click", unlock, { once: true });
+    window.addEventListener("touchstart", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("[GlobalTradeNotifier] Subscribing to alpha_trades...");
+
     const channel = supabase
-      .channel("global-trade-notifier-v2")
+      .channel("global-trade-notifier-v3")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "alpha_trades" },
         (payload) => {
-          console.log("[GlobalTradeNotifier] Received trade:", payload.new);
           const trade = payload.new as any;
           if (!trade) return;
+          console.log("[GlobalTradeNotifier] Trade received:", trade.trade_type, trade.token_ticker);
 
           const isBuy = trade.trade_type === "buy";
           const name = trade.trader_display_name || shortenAddr(trade.wallet_address);
@@ -36,18 +58,15 @@ export function GlobalTradeNotifier() {
           const amount = formatAmount(trade.amount_sol);
           const chain = trade.chain === "bnb" ? "BNB" : "SOL";
 
-          // Play sound — always attempt (useTradeSounds checks enabled internally)
+          // Play sound
           try {
-            if (isBuy) {
-              playBuyRef.current();
-            } else {
-              playSellRef.current();
-            }
+            if (isBuy) playBuyRef.current();
+            else playSellRef.current();
           } catch (e) {
             console.warn("[GlobalTradeNotifier] Sound error:", e);
           }
 
-          // Show toast notification
+          // Show toast
           toast(
             `${name} ${isBuy ? "bought" : "sold"} $${ticker}`,
             {
@@ -60,7 +79,7 @@ export function GlobalTradeNotifier() {
         }
       )
       .subscribe((status) => {
-        console.log("[GlobalTradeNotifier] Channel status:", status);
+        console.log("[GlobalTradeNotifier] Status:", status);
       });
 
     return () => {
