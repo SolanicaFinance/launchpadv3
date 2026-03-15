@@ -1001,7 +1001,6 @@ export default function FunTokenDetailPage() {
                   </div>
                 </div>
               )}
-              <PnlSimulator />
             </div>
           </div>
 
