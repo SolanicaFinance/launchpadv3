@@ -280,24 +280,24 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         </div>
 
         {/* ── Quick Presets ── */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {isBuy
             ? quickBuyAmounts.map((v, i) => (
                 <button key={v} onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
+                  className={`flex-1 text-[12px] font-mono font-bold py-1.5 rounded-md border transition-all ${
                     selectedPreset === i
                       ? 'border-green-500/25 bg-green-500/8 text-green-400'
-                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                      : 'border-white/[0.12] text-foreground/55 hover:border-white/[0.2] hover:text-foreground/75'
                   }`}>
-                  <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-4 h-4 rounded-full inline-block mr-1 -mt-0.5" /> {v}
+                  <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="" className="w-3.5 h-3.5 rounded-full inline-block mr-1 -mt-0.5" /> {v}
                 </button>
               ))
             : quickSellPct.map((v, i) => (
                 <button key={v} onClick={() => handleQuickAmount(v, i)}
-                  className={`flex-1 text-[13px] font-mono font-bold py-2.5 rounded-lg border transition-all ${
+                  className={`flex-1 text-[12px] font-mono font-bold py-1.5 rounded-md border transition-all ${
                     selectedPreset === i
                       ? 'border-destructive/25 bg-destructive/8 text-destructive'
-                      : 'border-white/[0.08] text-muted-foreground/50 hover:border-white/[0.15] hover:text-muted-foreground/70'
+                      : 'border-white/[0.12] text-foreground/55 hover:border-white/[0.2] hover:text-foreground/75'
                   }`}>
                   {v}%
                 </button>
