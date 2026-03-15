@@ -258,7 +258,7 @@ export function TradeSuccessPopup() {
                     <button
                       onClick={() => {
                         hide();
-                        navigate("/portfolio");
+                        navigate("/panel");
                       }}
                       className="flex-1 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-foreground/80 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                     >
