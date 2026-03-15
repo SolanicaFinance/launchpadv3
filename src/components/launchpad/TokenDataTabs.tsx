@@ -45,27 +45,26 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
   ];
 
   return (
-    <div className="terminal-panel-flush rounded-lg overflow-hidden min-w-0" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="rounded-xl overflow-hidden min-w-0 border border-white/[0.06]" style={{ backgroundColor: 'hsl(228 18% 7%)' }}>
       {/* Tab bar */}
-      <div className="flex items-center gap-0 border-b border-white/[0.06] px-1 overflow-x-auto scrollbar-none w-full min-w-0">
+      <div className="flex items-center gap-0 border-b border-white/[0.04] px-1 overflow-x-auto scrollbar-none w-full min-w-0">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-2 sm:px-3 py-2.5 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
+            className={`px-3 sm:px-4 py-3 text-[9px] sm:text-[10px] font-mono font-semibold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
               activeTab === tab.key
-                ? "text-foreground"
-                : "text-muted-foreground/50 hover:text-muted-foreground"
+                ? "text-foreground/90"
+                : "text-muted-foreground/35 hover:text-muted-foreground/55"
             }`}
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="ml-1 text-[9px] text-muted-foreground/40">({tab.count})</span>
+              <span className="ml-1 text-[9px] text-muted-foreground/25">({tab.count})</span>
             )}
             {activeTab === tab.key && (
               <span
-                className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-                style={{ backgroundColor: '#c8ff00' }}
+                className="absolute bottom-0 left-3 right-3 h-[1.5px] rounded-full bg-primary/80"
               />
             )}
           </button>
