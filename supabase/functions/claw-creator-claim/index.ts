@@ -382,7 +382,7 @@ Deno.serve(async (req) => {
             distribution_type: "creator_claim",
             signature: null,
             status: "pending",
-            twitter_username: normalizedUsername,
+            twitter_username: normalizedUsername || null,
           }).select("id").single();
 
           if (insertError || !inserted) {
