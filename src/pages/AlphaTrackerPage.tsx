@@ -184,7 +184,25 @@ export default function AlphaTrackerPage() {
                   <div className="min-w-0 flex items-center gap-1.5">
                     <div className="h-6 w-6 rounded-full bg-muted border border-border/50 overflow-hidden flex items-center justify-center flex-shrink-0">
                       {trade.token_image_url ? (
-                        <img src={trade.token_image_url} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).style.removeProperty('display'); }} />
+                        <img
+                          src={trade.token_image_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            const currentSrc = img.src;
+                            console.warn(`[AlphaTracker] Token image failed to load:\n  Token: ${trade.token_ticker || trade.token_mint}\n  Mint: ${trade.token_mint}\n  Failed URL: ${currentSrc}`);
+                            // Try DiceBear identicon as final fallback
+                            const identiconUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${trade.token_mint}&size=24`;
+                            if (!currentSrc.includes('dicebear.com')) {
+                              img.src = identiconUrl;
+                            } else {
+                              img.style.display = 'none';
+                              const sibling = img.nextElementSibling as HTMLElement;
+                              if (sibling) sibling.style.removeProperty('display');
+                            }
+                          }}
+                        />
                       ) : null}
                       <span className="text-[7px] font-bold text-muted-foreground" style={trade.token_image_url ? { display: 'none' } : undefined}>
                         {(trade.token_ticker || "??").slice(0, 2).toUpperCase()}
