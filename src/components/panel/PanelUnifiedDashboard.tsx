@@ -33,6 +33,9 @@ import {
 } from "@/components/ui/collapsible";
 import { Area, AreaChart, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { copyToClipboard } from "@/lib/clipboard";
+import { toast as sonnerToast } from "sonner";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 
 // ─── Lazy modal imports ───
 const SendTokenModal = lazy(() => import("@/components/wallet/SendTokenModal"));
