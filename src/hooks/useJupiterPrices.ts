@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 
@@ -7,7 +8,7 @@ export interface JupiterPriceMap {
 }
 
 /**
- * Fetch live USD prices from Jupiter Price API v2 for a list of mints,
+ * Fetch live USD prices via jupiter-proxy edge function (avoids 401 from direct API calls),
  * then derive SOL price using the SOL/USD rate from the same response.
  */
 export function useJupiterPrices(mints: string[]) {
@@ -30,11 +31,10 @@ export function useJupiterPrices(mints: string[]) {
 
       for (const chunk of chunks) {
         try {
-          const resp = await fetch(
-            `https://api.jup.ag/price/v2?ids=${chunk.join(",")}`
-          );
-          if (!resp.ok) continue;
-          const json = await resp.json();
+          const { data: json, error } = await supabase.functions.invoke("jupiter-proxy", {
+            body: { action: "price", params: { ids: chunk.join(",") } },
+          });
+          if (error || !json?.data) continue;
           const data = json.data as Record<string, { id: string; price: string } | undefined>;
 
           // Extract SOL price first

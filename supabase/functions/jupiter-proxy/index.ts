@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const JUPITER_API = "https://api.jup.ag/swap/v1";
+const JUPITER_SWAP_API = "https://api.jup.ag/swap/v1";
+const JUPITER_PRICE_API = "https://api.jup.ag/price/v2";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
