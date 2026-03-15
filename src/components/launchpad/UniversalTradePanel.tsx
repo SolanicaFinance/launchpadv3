@@ -38,13 +38,10 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { getBuyQuote, getSellQuote, buyToken, sellToken, isLoading: swapLoading } = useJupiterSwap();
+  const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { swap: pumpFunSwap } = usePumpFunSwap();
+  const { executeTurboSwap, isLoading: turboLoading, lastLatencyMs: turboLatencyMs } = useTurboSwap();
   const { signAndSendTransaction, isWalletReady, getBalance } = useSolanaWalletWithPrivy();
-
-  const signAndSendTx = useCallback(async (tx: VersionedTransaction): Promise<{ signature: string; confirmed: boolean }> => {
-    return await signAndSendTransaction(tx);
-  }, [signAndSendTransaction]);
 
   const preferJupiterRoute = token.graduated !== false;
   const [jupiterQuoteFailed, setJupiterQuoteFailed] = useState(false);
