@@ -43,7 +43,9 @@ function buildFallbacks(mint: string, chain?: string | null): string[] {
   return fallbacks;
 }
 
-export function useAlphaTrades(limit = 50) {
+export function useAlphaTrades(limit = 50, onNewTrade?: (trade: AlphaTrade) => void) {
+  const onNewTradeRef = useRef(onNewTrade);
+  onNewTradeRef.current = onNewTrade;
   const [trades, setTrades] = useState<AlphaTrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [tokenImages, setTokenImages] = useState<Map<string, string>>(new Map());
@@ -286,6 +288,7 @@ export function useAlphaTrades(limit = 50) {
         (payload) => {
           const newTrade = payload.new as AlphaTrade;
           setTrades((prev) => [newTrade, ...prev].slice(0, limit));
+          onNewTradeRef.current?.(newTrade);
         }
       )
       .subscribe();

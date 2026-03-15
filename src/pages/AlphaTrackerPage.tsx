@@ -1,13 +1,14 @@
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
-import { useAlphaTrades, PositionSummary } from "@/hooks/useAlphaTrades";
+import { useAlphaTrades, PositionSummary, AlphaTrade } from "@/hooks/useAlphaTrades";
 import { useChain } from "@/contexts/ChainContext";
-import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter } from "lucide-react";
+import { Crosshair, ExternalLink, ArrowUpRight, ArrowDownRight, Search, X, Filter, Volume2, VolumeX } from "lucide-react";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { formatTokenAmt, formatMcap } from "@/lib/tradeUtils";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
+import { useTradeSounds } from "@/hooks/useTradeSounds";
 
 /** Live-updating time ago — re-renders driven by parent tick */
 function liveTimeAgo(dateStr: string, _tick: number) {
@@ -38,8 +39,15 @@ type HoldingFilter = "all" | "HOLDING" | "PARTIAL" | "SOLD";
 export default function AlphaTrackerPage() {
   const { chain, chainConfig } = useChain();
   const { solPrice } = useSolPrice();
+  const { toggle: toggleSounds, playBuy, playSell, isEnabled: isSoundsEnabled } = useTradeSounds();
+  const [soundsOn, setSoundsOn] = useState(() => localStorage.getItem("pulse-sounds-enabled") === "true");
 
-  const { trades, loading, positions } = useAlphaTrades(100);
+  const handleNewTrade = useCallback((trade: AlphaTrade) => {
+    if (trade.trade_type === "buy") playBuy();
+    else playSell();
+  }, [playBuy, playSell]);
+
+  const { trades, loading, positions } = useAlphaTrades(100, handleNewTrade);
   const [searchToken, setSearchToken] = useState("");
   const [searchWallet, setSearchWallet] = useState("");
   const [tradeTypeFilter, setTradeTypeFilter] = useState<TradeTypeFilter>("all");
@@ -93,6 +101,13 @@ export default function AlphaTrackerPage() {
             <span className="text-[9px] text-muted-foreground font-mono tabular-nums">
               {filteredTrades.length}/{trades.length}
             </span>
+            <button
+              onClick={() => { const next = toggleSounds(); setSoundsOn(next); }}
+              className={`p-1 rounded transition-colors ${soundsOn ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              title={soundsOn ? "Mute trade sounds" : "Enable trade sounds"}
+            >
+              {soundsOn ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+            </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-1 rounded transition-colors ${showFilters || hasActiveFilters ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}
