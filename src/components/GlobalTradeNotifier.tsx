@@ -123,6 +123,7 @@ export function GlobalTradeNotifier() {
           (async () => {
             let imageUrl: string | null = null;
 
+            // Check fun_tokens
             const { data: funToken } = await supabase
               .from("fun_tokens")
               .select("image_url")
@@ -135,6 +136,7 @@ export function GlobalTradeNotifier() {
               imageUrl = funToken.image_url;
             }
 
+            // Check tokens table
             if (!imageUrl) {
               const { data: tokenRow } = await supabase
                 .from("tokens")
@@ -146,6 +148,21 @@ export function GlobalTradeNotifier() {
 
               if (tokenRow?.image_url) {
                 imageUrl = tokenRow.image_url;
+              }
+            }
+
+            // Check claw_tokens table
+            if (!imageUrl) {
+              const { data: clawRow } = await supabase
+                .from("claw_tokens")
+                .select("image_url")
+                .eq("mint_address", mint)
+                .not("image_url", "is", null)
+                .limit(1)
+                .maybeSingle();
+
+              if (clawRow?.image_url) {
+                imageUrl = clawRow.image_url;
               }
             }
 
