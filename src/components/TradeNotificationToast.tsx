@@ -1,8 +1,6 @@
 import { toast } from "sonner";
 import { OptimizedTokenImage } from "@/components/ui/OptimizedTokenImage";
 
-const DEFAULT_AVATAR = "/saturn-logo.png";
-
 interface TradeToastData {
   traderName: string;
   traderAvatar: string | null;
@@ -14,6 +12,8 @@ interface TradeToastData {
   chain: string;
   tokenImageUrl?: string | null;
 }
+
+/* ── Formatters ── */
 
 function formatMcap(usd: number | null): string {
   if (!usd || usd <= 0) return "";
@@ -29,181 +29,140 @@ function formatSol(amount: number): string {
   return amount.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
-const ACCENT = {
-  buy:    { text: "#00D4FF", bg: "rgba(0,212,255,0.08)", border: "rgba(0,212,255,0.15)", glow: "rgba(0,212,255,0.12)", dot: "#00D4FF", bar: "#00D4FF" },
-  sell:   { text: "#FF4D4D", bg: "rgba(255,77,77,0.08)",  border: "rgba(255,77,77,0.15)",  glow: "rgba(255,77,77,0.12)",  dot: "#FF4D4D", bar: "#FF4D4D" },
-  launch: { text: "#A78BFA", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.15)", glow: "rgba(167,139,250,0.12)", dot: "#A78BFA", bar: "#A78BFA" },
+/* ── Accent palette per trade type ── */
+
+const PALETTE = {
+  buy: {
+    accent: "0, 212, 255",      // Cyan
+    label: "bought",
+    badge: "BUY",
+    emoji: null,
+  },
+  sell: {
+    accent: "255, 77, 77",      // Crimson
+    label: "sold",
+    badge: "SELL",
+    emoji: null,
+  },
+  launch: {
+    accent: "167, 139, 250",    // Violet
+    label: "launched",
+    badge: "NEW",
+    emoji: "🚀",
+  },
 } as const;
+
+/* ── Image fallback builder ── */
+
+function buildTokenSources(data: TradeToastData): string[] {
+  const dexChain = data.chain === "bnb" ? "bsc" : "solana";
+  const sources: string[] = [];
+
+  if (data.tokenImageUrl) sources.push(data.tokenImageUrl);
+
+  if (data.tokenMint) {
+    sources.push(
+      `https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${data.tokenMint}.png`
+    );
+    if (dexChain === "bsc") {
+      sources.push(`https://tokens.1inch.io/56/${data.tokenMint.toLowerCase()}.png`);
+      sources.push(`https://tokens.pancakeswap.finance/images/${data.tokenMint.toLowerCase()}.png`);
+    }
+  }
+
+  sources.push(
+    `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(data.tokenMint || data.tokenTicker)}`
+  );
+
+  return sources;
+}
+
+/* ── Main export ── */
 
 export function showTradeNotification(data: TradeToastData) {
   const type = data.tradeType;
-  const accent = ACCENT[type];
+  const p = PALETTE[type];
+  const rgb = p.accent;
   const chainLabel = data.chain === "bnb" ? "BNB" : "SOL";
   const mcapStr = formatMcap(data.marketCapUsd);
   const duration = type === "launch" ? 6000 : 5000;
-
-  // Build robust token image fallback chain
-  const dexChain = data.chain === "bnb" ? "bsc" : "solana";
-  const tokenSources: string[] = [];
-  if (data.tokenImageUrl) tokenSources.push(data.tokenImageUrl);
-  if (data.tokenMint) {
-    tokenSources.push(`https://dd.dexscreener.com/ds-data/tokens/${dexChain}/${data.tokenMint}.png`);
-    if (dexChain === "bsc") {
-      tokenSources.push(`https://tokens.1inch.io/56/${data.tokenMint.toLowerCase()}.png`);
-      tokenSources.push(`https://tokens.pancakeswap.finance/images/${data.tokenMint.toLowerCase()}.png`);
-    }
-  }
-  tokenSources.push(`https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(data.tokenMint || data.tokenTicker)}`);
-
-  const actionLabel = type === "launch" ? "launched" : type === "buy" ? "bought" : "sold";
-  const badgeLabel = type === "launch" ? "🚀 NEW" : type === "buy" ? "BUY" : "SELL";
+  const tokenSources = buildTokenSources(data);
 
   toast.custom(
     (id) => (
       <div
-        className="trade-notif-card"
-        style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          width: "100%",
-          maxWidth: "370px",
-          padding: "12px 14px",
-          borderRadius: "14px",
-          background: "rgba(17,17,22,0.82)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          border: `1px solid ${accent.border}`,
-          boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)`,
-          overflow: "hidden",
-          cursor: "pointer",
-          fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
-        }}
+        className="saturn-trade-toast"
+        data-type={type}
         onClick={() => toast.dismiss(id)}
+        role="status"
+        aria-label={`${data.traderName} ${p.label} $${data.tokenTicker} for ${formatSol(data.amountSol)} ${chainLabel}`}
       >
+        {/* Accent side strip */}
+        <div
+          className="saturn-trade-toast__strip"
+          style={{ background: `rgb(${rgb})` }}
+        />
+
         {/* Token icon */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
+        <div className="saturn-trade-toast__icon-wrap">
           <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              overflow: "hidden",
-              border: `1.5px solid ${accent.border}`,
-              background: "rgba(255,255,255,0.04)",
-            }}
+            className="saturn-trade-toast__icon"
+            style={{ borderColor: `rgba(${rgb}, 0.35)` }}
           >
             <OptimizedTokenImage
               src={tokenSources[0] ?? null}
               fallbackSrc={tokenSources.slice(1)}
               fallbackText={data.tokenTicker}
               alt={data.tokenTicker}
-              size={34}
-              className="rounded-full"
-              style={{ width: 34, height: 34, objectFit: "cover", display: "block", borderRadius: "50%" }}
+              size={32}
+              className="saturn-trade-toast__icon-img"
             />
           </div>
-          {/* Status dot */}
-          <div
+          {/* Live dot */}
+          <span
+            className="saturn-trade-toast__dot"
             style={{
-              position: "absolute",
-              bottom: -1,
-              right: -1,
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: accent.dot,
-              border: "2px solid rgba(17,17,22,0.9)",
-              boxShadow: `0 0 6px ${accent.glow}`,
+              background: `rgb(${rgb})`,
+              boxShadow: `0 0 6px rgba(${rgb}, 0.6)`,
             }}
           />
         </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
-          {/* Line 1: wallet + action + ticker */}
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "nowrap" }}>
-            {/* Tiny avatar */}
-            <img
-              src={data.traderAvatar || DEFAULT_AVATAR}
-              alt=""
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                objectFit: "cover",
-                flexShrink: 0,
-                opacity: 0.8,
-              }}
-              onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
-            />
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.85)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+        {/* Text content */}
+        <div className="saturn-trade-toast__body">
+          {/* Line 1 */}
+          <div className="saturn-trade-toast__headline">
+            <span className="saturn-trade-toast__trader">
               {data.traderName}
             </span>
             <span
-              style={{
-                fontSize: "12.5px",
-                fontWeight: 500,
-                color: accent.text,
-                flexShrink: 0,
-                opacity: 0.9,
-              }}
+              className="saturn-trade-toast__action"
+              style={{ color: `rgb(${rgb})` }}
             >
-              {actionLabel}
+              {p.label}
             </span>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "#fff",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+            <span className="saturn-trade-toast__ticker">
               ${data.tokenTicker}
             </span>
           </div>
 
-          {/* Line 2: amount + mcap */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {/* Line 2 */}
+          <div className="saturn-trade-toast__meta">
             {type === "launch" ? (
-              <span style={{ fontSize: "11.5px", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
-                New token on {chainLabel}
+              <span className="saturn-trade-toast__meta-text">
+                {p.emoji} New token on {chainLabel}
               </span>
             ) : (
-              <span
-                style={{
-                  fontSize: "11.5px",
-                  color: "rgba(255,255,255,0.45)",
-                  fontWeight: 500,
-                  fontFamily: "'Geist Mono', 'SF Mono', monospace",
-                  letterSpacing: "-0.02em",
-                }}
-              >
+              <span className="saturn-trade-toast__amount">
                 {formatSol(data.amountSol)} {chainLabel}
               </span>
             )}
             {mcapStr && (
               <>
-                <span style={{ color: "rgba(255,255,255,0.15)", fontSize: "9px" }}>•</span>
+                <span className="saturn-trade-toast__sep">·</span>
                 <span
-                  style={{
-                    fontSize: "11px",
-                    color: accent.text,
-                    opacity: 0.6,
-                    fontWeight: 500,
-                  }}
+                  className="saturn-trade-toast__mcap"
+                  style={{ color: `rgba(${rgb}, 0.7)` }}
                 >
                   MC {mcapStr}
                 </span>
@@ -212,42 +171,24 @@ export function showTradeNotification(data: TradeToastData) {
           </div>
         </div>
 
-        {/* Minimal badge */}
-        <div
+        {/* Badge */}
+        <span
+          className="saturn-trade-toast__badge"
           style={{
-            flexShrink: 0,
-            padding: "3px 8px",
-            borderRadius: "6px",
-            fontSize: "9.5px",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: accent.text,
-            background: accent.bg,
-            border: `1px solid ${accent.border}`,
+            color: `rgb(${rgb})`,
+            background: `rgba(${rgb}, 0.1)`,
+            borderColor: `rgba(${rgb}, 0.2)`,
           }}
         >
-          {badgeLabel}
-        </div>
+          {p.emoji ?? ""}{p.badge}
+        </span>
 
-        {/* Progress bar — animates from full width to 0 */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "2px",
-            background: "rgba(255,255,255,0.03)",
-            overflow: "hidden",
-            borderRadius: "0 0 14px 14px",
-          }}
-        >
+        {/* Countdown progress bar */}
+        <div className="saturn-trade-toast__bar-track">
           <div
-            className="trade-notif-progress"
+            className="saturn-trade-toast__bar-fill"
             style={{
-              height: "100%",
-              background: `linear-gradient(90deg, transparent, ${accent.bar})`,
+              background: `linear-gradient(90deg, transparent 0%, rgb(${rgb}) 100%)`,
               animationDuration: `${duration}ms`,
             }}
           />
@@ -258,7 +199,7 @@ export function showTradeNotification(data: TradeToastData) {
       duration,
       position: "bottom-right",
       unstyled: true,
-      className: "trade-notification-toast",
+      className: "saturn-trade-notification",
     }
   );
 }

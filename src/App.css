@@ -42,60 +42,253 @@ html, body, #root {
   90% { transform: translateX(1px) rotate(1deg); }
 }
 
-/* ─── Trade notification toast positioning ─── */
+/* ═══════════════════════════════════════════════════════
+   Saturn Trade Notification — Premium Glassmorphic Toast
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── Toaster positioning ─── */
 [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] {
   bottom: 80px !important;
   right: 16px !important;
 }
 
-/* ─── Toast entrance / exit ─── */
-@keyframes toast-slide-in {
+/* ─── Toast entrance ─── */
+@keyframes saturn-toast-enter {
   0% {
     opacity: 0;
-    transform: translateX(40px) scale(0.96);
+    transform: translateX(60px) scale(0.92);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
   }
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
+    filter: blur(0);
   }
 }
 
-@keyframes toast-slide-out {
+@keyframes saturn-toast-exit {
   0% {
     opacity: 1;
     transform: translateX(0) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translateX(60px) scale(0.95);
+    transform: translateX(80px) scale(0.94);
   }
 }
 
 [data-sonner-toast] {
-  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: saturn-toast-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 [data-sonner-toast][data-removed="true"] {
-  animation: toast-slide-out 0.35s cubic-bezier(0.4, 0, 0.7, 0.2) forwards !important;
+  animation: saturn-toast-exit 0.35s cubic-bezier(0.4, 0, 0.7, 0.2) forwards !important;
 }
 
-/* Stacked toasts: smooth repositioning */
+/* Stacked: smooth repositioning */
 [data-sonner-toaster] [data-sonner-toast] {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.35s ease !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s ease !important;
 }
 
 /* ─── Progress bar countdown ─── */
-@keyframes trade-notif-countdown {
+@keyframes saturn-bar-countdown {
   from { width: 100%; }
   to   { width: 0%; }
 }
 
-.trade-notif-progress {
-  animation: trade-notif-countdown linear forwards;
+/* ═══════════════════════════════════════════
+   .saturn-trade-toast  — the card itself
+   ═══════════════════════════════════════════ */
+.saturn-trade-toast {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 12px 10px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+
+  /* Glassmorphism */
+  background: rgba(14, 14, 20, 0.88);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  overflow: hidden;
+  font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Mobile responsive ─── */
+/* Accent strip on left edge */
+.saturn-trade-toast__strip {
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 2.5px;
+  border-radius: 0 2px 2px 0;
+  opacity: 0.7;
+}
+
+/* ─── Token icon ─── */
+.saturn-trade-toast__icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.saturn-trade-toast__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.saturn-trade-toast__icon-img {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+/* Fallback text (when all images fail) */
+.saturn-trade-toast__icon .flex.items-center.justify-center {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.saturn-trade-toast__dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(14, 14, 20, 0.95);
+}
+
+/* ─── Text body ─── */
+.saturn-trade-toast__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.saturn-trade-toast__headline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.saturn-trade-toast__trader {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.saturn-trade-toast__action {
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.saturn-trade-toast__ticker {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saturn-trade-toast__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.saturn-trade-toast__amount {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'IBM Plex Mono', 'SF Mono', monospace;
+  letter-spacing: -0.02em;
+}
+
+.saturn-trade-toast__meta-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.saturn-trade-toast__sep {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.saturn-trade-toast__mcap {
+  font-size: 10.5px;
+  font-weight: 500;
+  font-family: 'IBM Plex Mono', 'SF Mono', monospace;
+}
+
+/* ─── Badge ─── */
+.saturn-trade-toast__badge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid;
+  line-height: 1.4;
+}
+
+/* ─── Bottom progress bar ─── */
+.saturn-trade-toast__bar-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  border-radius: 0 0 14px 14px;
+}
+
+.saturn-trade-toast__bar-fill {
+  height: 100%;
+  animation: saturn-bar-countdown linear forwards;
+}
+
+/* ═══════════════════════════════════════════
+   Mobile responsive
+   ═══════════════════════════════════════════ */
 @media (max-width: 767px) {
   [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] {
     bottom: 72px !important;
@@ -103,11 +296,29 @@ html, body, #root {
     left: 8px !important;
     width: calc(100% - 16px) !important;
   }
+
   [data-sonner-toaster][data-x-position="right"][data-y-position="bottom"] [data-sonner-toast] {
     width: 100% !important;
     max-width: 100% !important;
   }
-  .trade-notif-card {
+
+  .saturn-trade-toast {
     max-width: 100% !important;
+  }
+
+  /* Mobile: slide from bottom instead of right */
+  @keyframes saturn-toast-enter-mobile {
+    0% {
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  [data-sonner-toast] {
+    animation: saturn-toast-enter-mobile 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
 }
