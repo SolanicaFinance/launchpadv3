@@ -17,9 +17,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Jupiter Price API v2 — free, supports batch
+    // Jupiter Price API v2 — requires API key from server
+    const jupApiKey = Deno.env.get("JUPITER_API_KEY") || Deno.env.get("VITE_JUPITER_API_KEY");
     const ids = mints.join(",");
-    const res = await fetch(`https://api.jup.ag/price/v2?ids=${ids}`);
+    const headers: Record<string, string> = {};
+    if (jupApiKey) {
+      headers["x-api-key"] = jupApiKey;
+    }
+    const res = await fetch(`https://api.jup.ag/price/v2?ids=${ids}`, { headers });
     if (!res.ok) {
       console.error("Jupiter price API error:", res.status, await res.text());
       return new Response(JSON.stringify({ prices: {} }), {

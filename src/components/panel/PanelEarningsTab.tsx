@@ -13,13 +13,14 @@ import { Link } from "react-router-dom";
 
 export default function PanelEarningsTab() {
   const { walletAddress: embeddedWallet } = useSolanaWalletWithPrivy();
+  const { solanaAddress } = useAuth();
   const { chainConfig } = useChain();
   const { useUserEarnings } = useLaunchpad();
   const { toast } = useToast();
   const [claimingTokenId, setClaimingTokenId] = useState<string | null>(null);
   const MIN_CLAIM_SOL = 0.01;
 
-  const activeAddress = embeddedWallet;
+  const activeAddress = embeddedWallet || solanaAddress;
   const currencySymbol = chainConfig.nativeCurrency.symbol;
   const explorerUrl = chainConfig.explorerUrl;
 

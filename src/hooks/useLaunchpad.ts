@@ -473,6 +473,9 @@ export function useLaunchpad() {
   const useUserEarnings = (walletAddress: string | undefined, profileId: string | undefined) => {
     return useQuery({
       queryKey: ['user-earnings', walletAddress, profileId],
+      staleTime: 30_000,
+      refetchInterval: 60_000,
+      refetchOnMount: 'always' as const,
       queryFn: async () => {
         const params = new URLSearchParams();
         if (walletAddress) params.set('wallet', walletAddress);
