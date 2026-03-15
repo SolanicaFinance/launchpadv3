@@ -307,26 +307,26 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
   return (
     <>
-      <div className="flex flex-col gap-2.5 overflow-hidden">
-        {/* ── Segmented BUY / SELL — cleaner, lighter ── */}
-        <div className="flex h-10 rounded-xl bg-white/[0.02] border border-white/[0.06] p-0.5 relative">
+      <div className="flex flex-col gap-3 overflow-hidden">
+        {/* ── Segmented BUY / SELL ── */}
+        <div className="flex h-11 rounded-xl bg-white/[0.02] border border-white/[0.06] p-1 relative">
           <div
-            className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-lg transition-all duration-200 ${
-              isBuy ? "left-0.5 bg-green-500/8 border border-green-500/20" : "left-[calc(50%+2px)] bg-destructive/8 border border-destructive/20"
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg transition-all duration-200 ${
+              isBuy ? "left-1 bg-green-500/10 border border-green-500/20" : "left-[calc(50%+4px)] bg-destructive/10 border border-destructive/20"
             }`}
           />
           <button
             onClick={() => { setTradeType("buy"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-[12px] font-mono font-semibold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
-              isBuy ? "text-green-400/90" : "text-muted-foreground/35"
+            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
+              isBuy ? "text-green-400" : "text-muted-foreground/35"
             }`}
           >
             Buy
           </button>
           <button
             onClick={() => { setTradeType("sell"); setSelectedPreset(null); setQuote(null); }}
-            className={`flex-1 relative z-10 text-[12px] font-mono font-semibold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
-              !isBuy ? "text-destructive/90" : "text-muted-foreground/35"
+            className={`flex-1 relative z-10 text-[13px] font-mono font-bold uppercase tracking-wider transition-colors min-h-[44px] -my-1 ${
+              !isBuy ? "text-red-400" : "text-muted-foreground/35"
             }`}
           >
             Sell
@@ -334,14 +334,14 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Amount Input ── */}
-        <div className="space-y-1.5 mb-1">
+        <div className="space-y-2">
           <div className="flex justify-between items-center px-0.5 min-w-0 gap-2">
-            <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/40 shrink-0">
+            <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">
               {isBuy ? "You pay" : "You sell"}
             </span>
             <button
               onClick={handleMaxClick}
-              className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/35 truncate hover:text-foreground/60 transition-colors"
+              className="text-[12px] font-mono text-muted-foreground/45 truncate hover:text-foreground/70 transition-colors"
               title="Click to use max"
             >
               Bal: {isBuy
@@ -349,7 +349,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
                 : `${formatAmount(userTokenBalance)} ${shortTicker}`}
             </button>
           </div>
-          <div className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/20 transition-all">
+          <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02] focus-within:ring-1 focus-within:ring-green-500/15 focus-within:border-green-500/25 transition-all">
             <input
               type="text"
               inputMode="decimal"
@@ -362,13 +362,13 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
                   setSelectedPreset(null);
                 }
               }}
-              className="w-full h-12 font-mono font-semibold pl-3.5 pr-[88px] bg-transparent text-foreground/90 placeholder:text-muted-foreground/20 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
-              style={{ fontSize: 'clamp(14px, 4vw, 16px)' }}
+              className="w-full h-13 font-mono font-semibold pl-4 pr-[92px] bg-transparent text-foreground placeholder:text-muted-foreground/20 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-ellipsis overflow-hidden"
+              style={{ fontSize: 'clamp(15px, 4vw, 17px)' }}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 shrink-0">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 shrink-0">
               <button
                 onClick={handleMaxClick}
-                className="h-7 px-2 rounded-lg font-mono text-[10px] font-semibold bg-primary/6 text-primary/70 border border-primary/12 hover:bg-primary/10 transition-all active:scale-95 shrink-0"
+                className="h-7 px-2.5 rounded-lg font-mono text-[11px] font-bold bg-primary/8 text-primary/80 border border-primary/15 hover:bg-primary/12 transition-all active:scale-95 shrink-0"
               >
                 MAX
               </button>
@@ -382,20 +382,20 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Quick Amount Chips ── */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-2">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`h-9 min-h-[44px] rounded-lg font-mono text-[10px] sm:text-[11px] font-semibold border transition-all active:scale-95 flex items-center justify-center gap-0.5 sm:gap-1 ${
+              className={`h-10 min-h-[44px] rounded-lg font-mono text-[12px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
                 selectedPreset === i
                   ? isBuy
-                    ? "border-green-500/20 bg-green-500/6 text-green-400/90"
-                    : "border-destructive/20 bg-destructive/6 text-destructive/90"
-                  : "border-white/[0.06] text-muted-foreground/35 hover:text-muted-foreground/55 hover:border-white/[0.1]"
+                    ? "border-green-500/25 bg-green-500/8 text-green-400"
+                    : "border-destructive/25 bg-destructive/8 text-destructive"
+                  : "border-white/[0.08] text-muted-foreground/45 hover:text-muted-foreground/65 hover:border-white/[0.14]"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full shrink-0 hidden xs:block" />}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-3.5 h-3.5 rounded-full shrink-0 hidden xs:block" />}
               {isBuy ? v : `${v}%`}
             </button>
           ))}
@@ -403,12 +403,12 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Compact Preview ── */}
         {numericAmount > 0 && (
-          <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] px-3 py-2.5 space-y-1">
+          <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 space-y-1.5">
             <div className="flex justify-between items-center min-w-0 gap-2">
-              <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/40 shrink-0">You get ≈</span>
-              <span className="text-[12px] sm:text-sm font-mono font-semibold text-foreground/80 truncate">
+              <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">You get ≈</span>
+              <span className="text-[14px] font-mono font-bold text-foreground/90 truncate">
                 {quoteLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin inline" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin inline" />
                 ) : (
                   `${formatAmount(outputAmount)} ${shortTicker}`
                 )}
@@ -416,8 +416,8 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             </div>
             {priceImpact > 0.01 && (
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono text-muted-foreground/35">Impact</span>
-                <span className={`text-[10px] font-mono font-semibold ${priceImpact > 5 ? "text-destructive/80" : "text-muted-foreground/50"}`}>
+                <span className="text-[11px] font-mono text-muted-foreground/40">Impact</span>
+                <span className={`text-[11px] font-mono font-bold ${priceImpact > 5 ? "text-destructive" : "text-muted-foreground/55"}`}>
                   {priceImpact.toFixed(2)}%
                 </span>
               </div>
@@ -427,24 +427,24 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
         {/* ── Price Impact Warning ── */}
         {priceImpact > 5 && numericAmount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-destructive/6 rounded-xl text-destructive/80 border border-destructive/12">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] font-mono font-semibold truncate">High impact: {priceImpact.toFixed(2)}%</span>
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-destructive/8 rounded-xl text-destructive border border-destructive/15">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span className="text-[12px] font-mono font-bold truncate">High impact: {priceImpact.toFixed(2)}%</span>
           </div>
         )}
 
-        {/* ── Inline Indicators + Settings ── */}
-        <div className="flex items-center justify-between px-0.5 min-w-0">
-          <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground/30 shrink min-w-0">
-            <span className="flex items-center gap-0.5 shrink-0">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500/50" />MEV
+        {/* ── Indicators + Settings ── */}
+        <div className="flex items-center justify-between px-1 min-w-0">
+          <div className="flex items-center gap-2.5 text-[11px] font-mono text-muted-foreground/40 shrink min-w-0">
+            <span className="flex items-center gap-1 shrink-0">
+              <span className="h-2 w-2 rounded-full bg-green-500/60" />MEV
             </span>
-            <span className="flex items-center gap-0.5 shrink-0">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary/40" />Anti-SW
+            <span className="flex items-center gap-1 shrink-0">
+              <span className="h-2 w-2 rounded-full bg-primary/50" />Anti-SW
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/30">{slippage}% slp</span>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="text-[11px] font-mono text-muted-foreground/40">{slippage}% slp</span>
             <AdvancedSettingsSheet
               slippage={slippage}
               onSlippageChange={setSlippage}
@@ -464,7 +464,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {!isAuthenticated ? (
           <button
             onClick={() => login()}
-            className="w-full h-12 rounded-xl font-mono text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full h-13 rounded-xl font-mono text-[14px] font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <Wallet className="h-4 w-4" />
             Connect Wallet
@@ -473,10 +473,10 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
           <button
             onClick={handleTrade}
             disabled={tradingDisabled || !numericAmount || (!isBondingMode && useJupiterRoute && quoteLoading)}
-            className={`w-full h-12 rounded-xl font-mono text-[13px] sm:text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-1.5 ${
+            className={`w-full h-13 rounded-xl font-mono text-[14px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 ${
               isBuy
-                ? "bg-green-500/90 hover:bg-green-500 text-black"
-                : "bg-destructive/90 hover:bg-destructive text-white"
+                ? "bg-green-500 hover:bg-green-400 text-black"
+                : "bg-red-500 hover:bg-red-400 text-white"
             }`}
           >
             {tradingDisabled ? (
