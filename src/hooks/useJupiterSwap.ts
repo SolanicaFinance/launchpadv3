@@ -47,7 +47,13 @@ export function useJupiterSwap() {
       });
 
       if (error) {
-        console.error('[Jupiter] Proxy quote error:', error);
+        const errorBody = typeof data === 'object' ? data : {};
+        const errorCode = errorBody?.error?.errorCode || errorBody?.errorCode || '';
+        if (errorCode === 'NO_ROUTES_FOUND') {
+          console.warn('[Jupiter] No swap routes found for this token pair — it may only be tradeable on its bonding curve');
+          return null;
+        }
+        console.error('[Jupiter] Proxy quote error:', error, data);
         throw new Error(`Jupiter quote failed via proxy`);
       }
 

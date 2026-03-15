@@ -30,12 +30,16 @@ export default function SwapModal({ open, onOpenChange }: SwapModalProps) {
 
   const handleGetQuote = useCallback(async () => {
     if (!outputMint || !amount || parseFloat(amount) <= 0) return;
+    setQuotePreview(null);
     const quote = await getQuote(inputMint, outputMint, parseFloat(amount));
     if (quote) {
       setQuotePreview({
         outAmount: (parseInt(quote.outAmount) / 1e9).toFixed(6),
         priceImpact: quote.priceImpactPct,
       });
+    } else {
+      setErrorMsg("No swap route found for this token. It may only be tradeable on its bonding curve.");
+      setStep("error");
     }
   }, [inputMint, outputMint, amount, getQuote]);
 
