@@ -239,6 +239,7 @@ Deno.serve(async (req) => {
 
     let repliesSent = 0;
     let repliesFailed = 0;
+    const postedThisRun = new Set<string>();
 
     for (const item of queueItems) {
       const account = accountMap.get(item.account_id);
@@ -249,19 +250,35 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // ── Rate limit: max 1 reply per minute per account ──
-      const oneMinAgo = new Date(Date.now() - 60_000).toISOString();
-      const { count: recentCount } = await supabase
+      // Hard cap: never allow more than one successful post per account in a single run
+      if (postedThisRun.has(account.id)) {
+        console.log(`[x-bot-reply] ⏭️ Already posted once this run for ${account.username}, deferring`);
+        continue; // Keep pending
+      }
+
+      // ── Rate limit: max 1 successful reply per minute per account ──
+      const { data: latestSent, error: latestSentError } = await supabase
         .from("x_bot_account_replies")
-        .select("id", { count: "exact", head: true })
+        .select("created_at")
         .eq("account_id", account.id)
         .eq("status", "sent")
-        .gte("created_at", oneMinAgo);
+        .not("created_at", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if ((recentCount ?? 0) >= 1) {
-        console.log(`[x-bot-reply] ⏳ Rate limited ${account.username} — already posted within 1 min, skipping`);
-        // Leave as pending so it gets picked up next invocation
-        continue;
+      if (latestSentError) {
+        console.error(`[x-bot-reply] Rate-limit lookup failed for ${account.username}:`, latestSentError.message);
+        continue; // fail-safe: skip posting if we can't verify rate limit
+      }
+
+      if (latestSent?.created_at) {
+        const msSinceLastSent = Date.now() - new Date(latestSent.created_at).getTime();
+        if (msSinceLastSent < 60_000) {
+          const waitMs = 60_000 - msSinceLastSent;
+          console.log(`[x-bot-reply] ⏳ Rate limited ${account.username} — wait ${Math.ceil(waitMs / 1000)}s`);
+          continue; // Keep pending so next invocation can process
+        }
       }
 
       const accountRules = rulesMap.get(item.account_id);
@@ -288,10 +305,24 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Mark as processing
-      await supabase.from("x_bot_account_queue")
+      // Atomically claim queue item (prevents overlapping invocations from processing the same item)
+      const { data: claimedItem, error: claimError } = await supabase
+        .from("x_bot_account_queue")
         .update({ status: "processing" })
-        .eq("id", item.id);
+        .eq("id", item.id)
+        .eq("status", "pending")
+        .select("id")
+        .maybeSingle();
+
+      if (claimError) {
+        console.error(`[x-bot-reply] Failed to claim queue item ${item.id}:`, claimError.message);
+        continue;
+      }
+
+      if (!claimedItem) {
+        console.log(`[x-bot-reply] Queue item ${item.id} already claimed by another run`);
+        continue;
+      }
 
       // Generate reply text
       const replyText = await generateReply(
@@ -370,6 +401,7 @@ Deno.serve(async (req) => {
           details: { tweet_id: item.tweet_id, reply_id: result.replyId },
         });
 
+        postedThisRun.add(account.id);
         repliesSent++;
         console.log(`[x-bot-reply] ✅ ${account.username} replied to @${item.tweet_author}`);
       } else {
