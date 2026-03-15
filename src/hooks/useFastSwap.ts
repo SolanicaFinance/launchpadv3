@@ -182,7 +182,18 @@ export function useFastSwap() {
     }
 
     if (poolInvalid) {
-      return swapGraduated(token, amount, isBuy, slippageBps);
+      const fallbackResult = await swapGraduated(token, amount, isBuy, slippageBps);
+
+      // Ensure fallback swaps are still broadcast to global Alpha feed (toast + sound)
+      recordTradeForAlphaTracker(
+        token,
+        amount,
+        isBuy,
+        fallbackResult.signature,
+        isBuy ? fallbackResult.tokensOut : fallbackResult.solOut,
+      );
+
+      return fallbackResult;
     }
 
     const t3 = performance.now();
