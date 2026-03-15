@@ -570,7 +570,7 @@ export default function FunTokenDetailPage() {
 
   return (
     <LaunchpadLayout>
-      <div className="trade-page-bg -mx-4 -mt-4 px-4 pt-4 md:mx-0 md:mt-0 md:rounded-xl lg:px-6 lg:pt-6">
+      <div className="trade-page-bg -mx-4 -mt-4 px-4 pt-4 md:mx-0 md:mt-0 md:pl-6 md:pr-4 md:pt-4 md:rounded-xl lg:px-6 lg:pt-6">
         <div className="max-w-[1600px] mx-auto flex flex-col gap-4 pb-32 md:pb-24">
 
           {/* ──── TOP BAR ──── */}
