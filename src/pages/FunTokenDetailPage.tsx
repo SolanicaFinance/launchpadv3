@@ -111,39 +111,39 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
   return (
     <LaunchpadLayout>
       <div className="trade-page-bg -m-4 p-4 md:p-6">
-        <div className="max-w-[1600px] mx-auto flex flex-col gap-4 pb-32 md:pb-24">
+        <div className="max-w-[1600px] mx-auto flex flex-col gap-5 pb-32 md:pb-24">
 
           {/* ── TOP BAR ── */}
           <div className="trade-topbar">
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Link to="/trade" className="shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] rounded-lg">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
 
               <Avatar className="h-10 w-10 rounded-xl trade-avatar-glow shrink-0">
                 <AvatarImage src={token.imageUrl || undefined} className="object-cover" />
-                <AvatarFallback className="rounded-xl text-xs font-bold bg-primary/8 text-primary font-mono">
+                <AvatarFallback className="rounded-xl text-xs font-bold bg-[#0A0A1A] text-[#00C4B4] font-mono">
                   {(token.symbol || '??').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex items-center gap-2.5 min-w-0 shrink">
-                <h1 className="text-[15px] font-bold font-mono tracking-tight truncate max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-none text-foreground">{token.name}</h1>
-                <span className="text-[13px] font-mono text-muted-foreground/50 shrink-0">${token.symbol}</span>
+                <h1 className="text-[16px] font-bold font-mono tracking-tight truncate max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-none text-white">{token.name}</h1>
+                <span className="text-[14px] font-mono text-[#6E6E80] shrink-0">${token.symbol}</span>
                 {token.migrated && (
-                  <span className="hidden sm:inline text-[10px] font-mono px-2 py-0.5 rounded-md bg-green-500/10 text-green-400/90 border border-green-500/15 shrink-0">GRAD</span>
+                  <span className="hidden sm:inline text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 shrink-0">GRAD</span>
                 )}
                 {!token.completed && !token.migrated && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-primary/8 text-primary/90 border border-primary/15 flex items-center gap-1 shrink-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />LIVE
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 flex items-center gap-1 shrink-0">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#00C4B4] animate-pulse" />LIVE
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-2.5 ml-auto sm:ml-4 shrink-0">
-                <span className="text-[15px] font-mono font-bold text-foreground">{formatUsdCompact(token.priceUsd)}</span>
+                <span className="text-[16px] font-mono font-bold text-white">{formatUsdCompact(token.priceUsd)}</span>
                 {token.change24h !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
@@ -153,11 +153,11 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
               </div>
 
               {/* Desktop stats inline */}
-              <div className="hidden lg:flex items-center gap-6 ml-6 min-w-0">
+              <div className="hidden lg:flex items-center gap-5 ml-6 min-w-0">
                 {stats.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
-                    <span className={`text-[13px] font-mono font-semibold ${s.accent ? 'text-yellow-400' : 'text-foreground/80'}`}>{s.value}</span>
+                  <div key={i} className="flex items-center gap-2 border-l border-[#1A1A3A]/50 pl-5 first:border-l-0 first:pl-0">
+                    <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider">{s.label}</span>
+                    <span className={`text-[14px] font-mono font-bold ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</span>
                   </div>
                 ))}
               </div>
