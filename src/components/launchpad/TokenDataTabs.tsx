@@ -40,25 +40,25 @@ export function TokenDataTabs({ tokenAddress, holderCount = 0, userWallet, userW
   ];
 
   return (
-    <div className="rounded-lg overflow-hidden min-w-0 border border-[#1A1A3A]/40" style={{ backgroundColor: '#0A0A1A' }}>
-      {/* Tab bar */}
-      <div className="flex items-center gap-0 border-b border-[#1A1A3A]/30 px-2 overflow-x-auto scrollbar-none w-full min-w-0">
+    <div className="rounded-xl overflow-hidden min-w-0 border border-white/[0.06]" style={{ backgroundColor: 'hsl(225 15% 7%)' }}>
+      {/* Tab bar — cleaner, more visible */}
+      <div className="flex items-center gap-0 border-b border-white/[0.05] px-2 overflow-x-auto scrollbar-none w-full min-w-0">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 sm:px-5 py-3.5 text-[12px] sm:text-[13px] font-mono font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
+            className={`px-4 sm:px-5 py-3.5 text-[11px] sm:text-[12px] font-mono font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap shrink-0 ${
               activeTab === tab.key
-                ? "text-white"
-                : "text-[#6E6E80] hover:text-[#A0A0B0]"
+                ? "text-foreground/90"
+                : "text-muted-foreground/35 hover:text-muted-foreground/55"
             }`}
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="ml-1.5 text-[11px] text-[#6E6E80]/60">({tab.count})</span>
+              <span className="ml-1.5 text-[10px] text-muted-foreground/30">({tab.count})</span>
             )}
             {activeTab === tab.key && (
-              <span className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-[#00C4B4]" />
+              <span className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-primary/80" />
             )}
           </button>
         ))}

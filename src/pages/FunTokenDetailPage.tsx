@@ -111,39 +111,39 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
   return (
     <LaunchpadLayout>
       <div className="trade-page-bg -m-4 p-4 md:p-6">
-        <div className="max-w-[1600px] mx-auto flex flex-col gap-5 pb-32 md:pb-24">
+        <div className="max-w-[1600px] mx-auto flex flex-col gap-4 pb-32 md:pb-24">
 
           {/* ── TOP BAR ── */}
           <div className="trade-topbar">
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Link to="/trade" className="shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] rounded-lg">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
 
               <Avatar className="h-10 w-10 rounded-xl trade-avatar-glow shrink-0">
                 <AvatarImage src={token.imageUrl || undefined} className="object-cover" />
-                <AvatarFallback className="rounded-xl text-xs font-bold bg-[#0A0A1A] text-[#00C4B4] font-mono">
+                <AvatarFallback className="rounded-xl text-xs font-bold bg-primary/8 text-primary font-mono">
                   {(token.symbol || '??').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex items-center gap-2.5 min-w-0 shrink">
-                <h1 className="text-[16px] font-bold font-mono tracking-tight truncate max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-none text-white">{token.name}</h1>
-                <span className="text-[14px] font-mono text-[#6E6E80] shrink-0">${token.symbol}</span>
+                <h1 className="text-[15px] font-bold font-mono tracking-tight truncate max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-none text-foreground">{token.name}</h1>
+                <span className="text-[13px] font-mono text-muted-foreground/50 shrink-0">${token.symbol}</span>
                 {token.migrated && (
-                  <span className="hidden sm:inline text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 shrink-0">GRAD</span>
+                  <span className="hidden sm:inline text-[10px] font-mono px-2 py-0.5 rounded-md bg-green-500/10 text-green-400/90 border border-green-500/15 shrink-0">GRAD</span>
                 )}
                 {!token.completed && !token.migrated && (
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 flex items-center gap-1 shrink-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#00C4B4] animate-pulse" />LIVE
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-primary/8 text-primary/90 border border-primary/15 flex items-center gap-1 shrink-0">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />LIVE
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-2.5 ml-auto sm:ml-4 shrink-0">
-                <span className="text-[16px] font-mono font-bold text-white">{formatUsdCompact(token.priceUsd)}</span>
+                <span className="text-[15px] font-mono font-bold text-foreground">{formatUsdCompact(token.priceUsd)}</span>
                 {token.change24h !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
@@ -153,32 +153,32 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
               </div>
 
               {/* Desktop stats inline */}
-              <div className="hidden lg:flex items-center gap-5 ml-6 min-w-0">
+              <div className="hidden lg:flex items-center gap-6 ml-6 min-w-0">
                 {stats.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 border-l border-[#1A1A3A]/50 pl-5 first:border-l-0 first:pl-0">
-                    <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider">{s.label}</span>
-                    <span className={`text-[14px] font-mono font-bold ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</span>
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                    <span className={`text-[13px] font-mono font-semibold ${s.accent ? 'text-yellow-400' : 'text-foreground/80'}`}>{s.value}</span>
                   </div>
                 ))}
               </div>
 
               <div className="flex items-center gap-1 shrink-0 ml-3">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg" onClick={copyAddress}><Copy className="h-3.5 w-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="hidden sm:flex h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg" onClick={shareToken}><Share2 className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg" onClick={copyAddress}><Copy className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="hidden sm:flex h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg" onClick={shareToken}><Share2 className="h-3.5 w-3.5" /></Button>
                 <div className="hidden md:flex items-center gap-1">
-                  {token.websiteUrl && <a href={token.websiteUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><Globe className="h-3.5 w-3.5" /></Button></a>}
-                  {token.twitterUrl && <a href={token.twitterUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><Twitter className="h-3.5 w-3.5" /></Button></a>}
-                  <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><ExternalLink className="h-3.5 w-3.5" /></Button></a>
+                  {token.websiteUrl && <a href={token.websiteUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><Globe className="h-3.5 w-3.5" /></Button></a>}
+                  {token.twitterUrl && <a href={token.twitterUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><Twitter className="h-3.5 w-3.5" /></Button></a>}
+                  <a href={getExplorerUrl(mintAddress, isBsc)} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><ExternalLink className="h-3.5 w-3.5" /></Button></a>
                 </div>
               </div>
             </div>
 
             {/* Tablet stats row */}
-            <div className="hidden sm:flex lg:hidden items-center gap-5 px-5 py-2.5 overflow-x-auto scrollbar-none border-t border-[#1A1A3A]/40">
+            <div className="hidden sm:flex lg:hidden items-center gap-6 px-5 py-2.5 overflow-x-auto scrollbar-none border-t border-white/[0.04]">
               {stats.map((s, i) => (
                 <div key={i} className="flex items-center gap-2 shrink-0">
-                  <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider">{s.label}</span>
-                  <span className={`text-[14px] font-mono font-bold ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</span>
+                  <span className="text-[11px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                  <span className={`text-[13px] font-mono font-semibold ${s.accent ? 'text-yellow-400' : 'text-foreground/80'}`}>{s.value}</span>
                 </div>
               ))}
             </div>
@@ -188,8 +188,8 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
           <div className="md:hidden grid grid-cols-3 gap-2.5">
             {stats.slice(0, 3).map((s, i) => (
               <div key={i} className="trade-stat-card">
-                <p className="text-[11px] font-mono text-[#6E6E80] uppercase tracking-widest">{s.label}</p>
-                <p className={`text-[14px] font-mono font-bold mt-1 ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</p>
+                <p className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest">{s.label}</p>
+                <p className={`text-sm font-mono font-bold mt-1 ${s.accent ? 'text-yellow-400' : 'text-foreground/90'}`}>{s.value}</p>
               </div>
             ))}
           </div>
@@ -498,8 +498,8 @@ export default function FunTokenDetailPage() {
     return (
       <div className="trade-glass-panel p-5 space-y-2">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[12px] font-mono uppercase tracking-[0.12em] text-[#6E6E80] flex items-center gap-2">
-            <Activity className="h-3.5 w-3.5 text-[#00C4B4]" /> Token Details
+          <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-primary/50" /> Token Details
           </h3>
           <span className={`trade-risk-badge ${risk.className}`}>
             <Shield className="h-3 w-3" />{risk.label}
@@ -514,8 +514,8 @@ export default function FunTokenDetailPage() {
           { label: 'Age', value: formatDistanceToNow(new Date(token.created_at), { addSuffix: false }) },
         ].map((row, i) => (
           <div key={i} className="trade-detail-row">
-            <span className="text-[13px] font-mono text-[#6E6E80]">{row.label}</span>
-            <span className="text-[13px] font-mono text-[#E0E0E0] font-semibold">{row.value}</span>
+            <span className="text-[12px] font-mono text-muted-foreground/50">{row.label}</span>
+            <span className="text-[12px] font-mono text-foreground/80 font-semibold">{row.value}</span>
           </div>
         ))}
       </div>
@@ -571,42 +571,42 @@ export default function FunTokenDetailPage() {
   return (
     <LaunchpadLayout>
       <div className="trade-page-bg -m-4 p-4 md:p-6">
-        <div className="max-w-[1600px] mx-auto flex flex-col gap-5 pb-32 md:pb-24">
+        <div className="max-w-[1600px] mx-auto flex flex-col gap-4 pb-32 md:pb-24">
 
           {/* ──── TOP BAR ──── */}
           <div className="trade-topbar">
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Link to="/" className="shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] rounded-lg">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
 
               <Avatar className="h-10 w-10 rounded-xl trade-avatar-glow shrink-0">
                 <AvatarImage src={token.image_url || undefined} className="object-cover" />
-                <AvatarFallback className="rounded-xl text-xs font-bold bg-[#0A0A1A] text-[#00C4B4] font-mono">
+                <AvatarFallback className="rounded-xl text-xs font-bold bg-primary/8 text-primary font-mono">
                   {(token.ticker || '??').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex items-center gap-2.5 min-w-0 shrink">
-                <h1 className="text-[16px] md:text-[18px] font-bold font-mono tracking-tight truncate max-w-[100px] sm:max-w-[170px] md:max-w-[240px] lg:max-w-none text-white">{token.name}</h1>
-                <span className="text-[14px] font-mono text-[#6E6E80] shrink-0">${token.ticker}</span>
+                <h1 className="text-[15px] md:text-base font-bold font-mono tracking-tight truncate max-w-[100px] sm:max-w-[170px] md:max-w-[240px] lg:max-w-none text-foreground">{token.name}</h1>
+                <span className="text-[13px] font-mono text-muted-foreground/50 shrink-0">${token.ticker}</span>
                 {isGraduated && (
-                  <span className="hidden sm:inline text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 shrink-0">GRAD</span>
+                  <span className="hidden sm:inline text-[10px] font-mono px-2 py-0.5 rounded-md bg-green-500/10 text-green-400/90 border border-green-500/18 shrink-0">GRADUATED</span>
                 )}
                 {isBonding && (
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20 flex items-center gap-1 shrink-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#00C4B4] animate-pulse" />LIVE
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-primary/8 text-primary/90 border border-primary/15 flex items-center gap-1 shrink-0">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />LIVE
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-2.5 ml-auto sm:ml-4 shrink-0">
-                <span className="text-[16px] sm:text-[18px] font-mono font-bold text-white">
+                <span className="text-[15px] sm:text-base font-mono font-bold text-foreground">
                   {(token.price_sol || 0).toFixed(8)}
                 </span>
-                <span className="hidden sm:inline text-[13px] font-mono text-[#6E6E80]">SOL</span>
+                <span className="hidden sm:inline text-[12px] font-mono text-muted-foreground/40">SOL</span>
                 {priceChange !== 0 && (
                   <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'}`}>
                     {isPriceUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
@@ -616,25 +616,25 @@ export default function FunTokenDetailPage() {
               </div>
 
               {/* Inline stats — lg+ */}
-              <div className="hidden lg:flex items-center gap-5 ml-6 min-w-0">
+              <div className="hidden lg:flex items-center gap-6 ml-6 min-w-0">
                 {stats.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 border-l border-[#1A1A3A]/50 pl-5 first:border-l-0 first:pl-0">
-                    <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider">{s.label}</span>
-                    <span className={`text-[14px] font-mono font-bold ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</span>
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                    <span className={`text-[13px] font-mono font-semibold ${s.accent ? 'text-yellow-400' : 'text-foreground/80'}`}>{s.value}</span>
                   </div>
                 ))}
               </div>
 
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0 ml-3">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg" onClick={handleRefresh}><RefreshCw className="h-3.5 w-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg" onClick={copyAddress}><Copy className="h-3.5 w-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="hidden sm:flex h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg" onClick={shareToken}><Share2 className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg" onClick={handleRefresh}><RefreshCw className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg" onClick={copyAddress}><Copy className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="hidden sm:flex h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg" onClick={shareToken}><Share2 className="h-3.5 w-3.5" /></Button>
                 <div className="hidden md:flex items-center gap-1">
-                  {token.website_url && <a href={token.website_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><Globe className="h-3.5 w-3.5" /></Button></a>}
-                  {token.twitter_url && <a href={token.twitter_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><Twitter className="h-3.5 w-3.5" /></Button></a>}
-                  {token.telegram_url && <a href={token.telegram_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><MessageCircle className="h-3.5 w-3.5" /></Button></a>}
-                  {token.mint_address && <a href={`https://solscan.io/token/${token.mint_address}`} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-[#6E6E80] hover:text-white hover:bg-white/[0.05] rounded-lg"><ExternalLink className="h-3.5 w-3.5" /></Button></a>}
+                  {token.website_url && <a href={token.website_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><Globe className="h-3.5 w-3.5" /></Button></a>}
+                  {token.twitter_url && <a href={token.twitter_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><Twitter className="h-3.5 w-3.5" /></Button></a>}
+                  {token.telegram_url && <a href={token.telegram_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><MessageCircle className="h-3.5 w-3.5" /></Button></a>}
+                  {token.mint_address && <a href={`https://solscan.io/token/${token.mint_address}`} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><ExternalLink className="h-3.5 w-3.5" /></Button></a>}
                 </div>
                 {(token as any).launchpad_type === 'bags' && token.mint_address && (
                   <a href={`https://bags.fm/coin/${token.mint_address}`} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex">
@@ -652,21 +652,21 @@ export default function FunTokenDetailPage() {
             </div>
 
             {/* Tablet stats row */}
-            <div className="hidden sm:flex lg:hidden items-center gap-5 px-5 py-2.5 overflow-x-auto scrollbar-none border-t border-[#1A1A3A]/40">
+            <div className="hidden sm:flex lg:hidden items-center gap-6 px-5 py-2.5 overflow-x-auto scrollbar-none border-t border-white/[0.04]">
               {stats.map((s, i) => (
                 <div key={i} className="flex items-center gap-2 shrink-0">
-                  <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider">{s.label}</span>
-                  <span className={`text-[14px] font-mono font-bold ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</span>
+                  <span className="text-[11px] font-mono text-muted-foreground/40 uppercase tracking-wider">{s.label}</span>
+                  <span className={`text-[13px] font-mono font-semibold ${s.accent ? 'text-yellow-400' : 'text-foreground/80'}`}>{s.value}</span>
                 </div>
               ))}
               {token.launch_author && (
                 <a href={`https://x.com/${token.launch_author}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[12px] font-mono text-[#6E6E80] hover:text-white transition-colors shrink-0">
+                  className="flex items-center gap-1.5 text-[12px] font-mono text-muted-foreground/50 hover:text-foreground transition-colors shrink-0">
                   {twitterProfile?.profileImageUrl && <img src={twitterProfile.profileImageUrl} alt="" className="h-4 w-4 rounded-full object-cover" />}
                   @{token.launch_author}
                 </a>
               )}
-              <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#00C4B4]/8 text-[#00C4B4]/80 border border-[#00C4B4]/15 flex items-center gap-1 shrink-0">
+              <span className="text-[9px] font-mono px-2.5 py-1 rounded-full bg-primary/6 text-primary/70 border border-primary/12 flex items-center gap-1 shrink-0">
                 <Shield className="h-3 w-3" /> NON-CUSTODIAL
               </span>
             </div>
@@ -676,8 +676,8 @@ export default function FunTokenDetailPage() {
           <div className="md:hidden grid grid-cols-3 gap-2.5">
             {stats.slice(0, 3).map((s, i) => (
               <div key={i} className="trade-stat-card">
-                <p className="text-[11px] font-mono text-[#6E6E80] uppercase tracking-widest">{s.label}</p>
-                <p className={`text-[14px] font-mono font-bold mt-1 ${s.accent ? 'text-[#F0B90B]' : 'text-[#E0E0E0]'}`}>{s.value}</p>
+                <p className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest">{s.label}</p>
+                <p className={`text-sm font-mono font-bold mt-1 ${s.accent ? 'text-yellow-400' : 'text-foreground/90'}`}>{s.value}</p>
               </div>
             ))}
           </div>
@@ -685,7 +685,7 @@ export default function FunTokenDetailPage() {
           {/* ── PHONE PRICE CHANGE ── */}
           {priceChange !== 0 && (
             <div className="md:hidden flex items-center justify-between px-5 py-3 trade-glass-panel">
-              <span className="text-[13px] font-mono text-[#6E6E80]">24h Change</span>
+              <span className="text-[13px] font-mono text-muted-foreground/50">24h Change</span>
               <span className={`trade-price-pill ${isPriceUp ? 'trade-price-pill-up' : 'trade-price-pill-down'} text-sm`}>
                 {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {formatChange24h(priceChange)}
@@ -696,18 +696,18 @@ export default function FunTokenDetailPage() {
           {/* ── BONDING PROGRESS ── */}
           {isBonding && (
             <div className="trade-glass-panel flex items-center gap-4 px-5 py-3">
-              <Zap className="h-4 w-4 text-[#00C4B4] shrink-0" />
-              <span className="text-[12px] font-mono text-[#6E6E80] uppercase tracking-wider shrink-0">Bonding</span>
+              <Zap className="h-4 w-4 text-primary/70 shrink-0" />
+              <span className="text-[11px] font-mono text-muted-foreground/50 uppercase tracking-wider shrink-0">Bonding</span>
               <div className="flex-1 min-w-[80px]">
                 <div className="trade-bonding-bar">
                   <div className="trade-bonding-fill" style={{ width: `${Math.max(Math.min(bondingProgress, 100), 1)}%` }} />
                 </div>
               </div>
-              <span className="text-[14px] font-mono font-bold text-[#00C4B4] shrink-0 hidden md:inline">{bondingProgress.toFixed(1)}%</span>
-              <span className="text-[13px] font-mono text-[#6E6E80] shrink-0">{realSolReserves.toFixed(1)}/{GRADUATION_THRESHOLD} SOL</span>
+              <span className="text-sm font-mono font-bold text-primary shrink-0 hidden md:inline">{bondingProgress.toFixed(1)}%</span>
+              <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">{realSolReserves.toFixed(1)}/{GRADUATION_THRESHOLD} SOL</span>
               {livePoolState && (
-                <span className="flex items-center gap-1 text-[11px] font-mono text-[#00C4B4] shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#00C4B4] animate-pulse" />LIVE
+                <span className="flex items-center gap-1 text-[10px] font-mono text-red-400 shrink-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />LIVE
                 </span>
               )}
             </div>
@@ -718,13 +718,13 @@ export default function FunTokenDetailPage() {
             {(() => {
               const tabs = isPunchToken ? (['chart', 'info'] as const) : (['trade', 'chart', 'info'] as const);
               return (
-                <div className="flex bg-[#0A0A1A] rounded-lg p-1 border border-[#1A1A3A]/40">
+                <div className="flex bg-white/[0.02] rounded-xl p-1 border border-white/[0.06]">
                   {tabs.map(tab => (
                     <button key={tab} onClick={() => setMobileTab(tab as any)}
-                      className={`flex-1 py-2.5 text-[13px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-2 rounded-md ${
+                      className={`flex-1 py-2.5 text-[12px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-2 rounded-lg ${
                         mobileTab === tab
-                          ? 'bg-[#00C4B4]/10 text-[#00C4B4] font-bold'
-                          : 'text-[#6E6E80] hover:text-[#A0A0B0]'
+                          ? 'bg-white/[0.06] text-foreground font-bold'
+                          : 'text-muted-foreground/40 hover:text-muted-foreground/60'
                       }`}>
                       {tab === 'trade' && <Activity className="h-3.5 w-3.5" />}
                       {tab === 'chart' && <BarChart3 className="h-3.5 w-3.5" />}
@@ -740,7 +740,7 @@ export default function FunTokenDetailPage() {
           {/* ═══ MAIN CONTENT — 3 layouts ═══ */}
 
           {/* PHONE */}
-          <div className="md:hidden flex flex-col gap-4">
+          <div className="md:hidden flex flex-col gap-3">
             {mobileTab === 'trade' && !isPunchToken && (
               <>
                 <MobileTradePanelV2
@@ -767,14 +767,14 @@ export default function FunTokenDetailPage() {
           </div>
 
           {/* TABLET */}
-          <div className="hidden md:grid lg:hidden grid-cols-12 gap-5">
-            <div className={`${isPunchToken ? 'col-span-12' : 'col-span-7'} flex flex-col gap-5`}>
+          <div className="hidden md:grid lg:hidden grid-cols-12 gap-4">
+            <div className={`${isPunchToken ? 'col-span-12' : 'col-span-7'} flex flex-col gap-4`}>
               <ChartSection chartHeight={440} />
               <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
               {isPunchToken && (
                 <div className="trade-glass-panel px-5 py-3 flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-[#6E6E80]" />
-                  <span className="text-[14px] font-mono text-[#6E6E80]">Trading coming soon for Punch tokens</span>
+                  <Lock className="h-4 w-4 text-muted-foreground/40" />
+                  <span className="text-sm font-mono text-muted-foreground/50">Trading coming soon for Punch tokens</span>
                 </div>
               )}
               <TokenDetailsSection />
@@ -782,8 +782,8 @@ export default function FunTokenDetailPage() {
               <DescriptionSection />
             </div>
             {!isPunchToken && (
-              <div className="col-span-5 flex flex-col gap-5">
-                <div className="sticky top-4 flex flex-col gap-5">
+              <div className="col-span-5 flex flex-col gap-4">
+                <div className="sticky top-4 flex flex-col gap-4">
                   <TradeSection />
                   <EmbeddedWalletCard />
                 </div>
@@ -792,46 +792,46 @@ export default function FunTokenDetailPage() {
           </div>
 
           {/* DESKTOP */}
-          <div className="hidden lg:grid grid-cols-12 gap-5 flex-1">
-            <div className="col-span-9 flex flex-col gap-5">
+          <div className="hidden lg:grid grid-cols-12 gap-4 flex-1">
+            <div className="col-span-9 flex flex-col gap-4">
               <ChartSection chartHeight={420} />
               <TokenDataTabs tokenAddress={token.mint_address || mintAddress || ''} holderCount={codexHolders ?? token.holder_count ?? 0} userWallet={solanaAddress || undefined} userWallets={allWalletAddresses} currentPriceUsd={codexPrice || 0} />
             </div>
-            <div className="col-span-3 flex flex-col gap-5">
+            <div className="col-span-3 flex flex-col gap-4">
               {isPunchToken ? (
                 <div className="trade-glass-panel px-5 py-3 flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-[#6E6E80]" />
-                  <span className="text-[14px] font-mono text-[#6E6E80]">Trading coming soon</span>
+                  <Lock className="h-4 w-4 text-muted-foreground/40" />
+                  <span className="text-sm font-mono text-muted-foreground/50">Trading coming soon</span>
                 </div>
               ) : (
                 <TradeSection />
               )}
               {!isPunchToken && <EmbeddedWalletCard />}
               {(token as any).launchpad_type === 'phantom' && (token as any).trading_fee_bps && (
-                <div className="trade-glass-panel p-5 space-y-2">
-                  <h3 className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#6E6E80]">Fee Breakdown</h3>
+                <div className="trade-glass-panel p-4 space-y-2">
+                  <h3 className="text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40">Fee Breakdown</h3>
                   {[
                     { label: 'Total Fee', value: `${((token as any).trading_fee_bps / 100).toFixed(1)}%` },
                     { label: 'Creator', value: `${(((token as any).creator_fee_bps || 0) / 100).toFixed(1)}%`, accent: true },
                     { label: 'Platform', value: `${(((token as any).trading_fee_bps - ((token as any).creator_fee_bps || 0)) / 100).toFixed(1)}%` },
                   ].map((r, i) => (
-                    <div key={i} className="flex items-center justify-between text-[13px] font-mono">
-                      <span className="text-[#6E6E80]">{r.label}</span>
-                      <span className={r.accent ? 'text-[#00C4B4]' : 'text-[#E0E0E0]'}>{r.value}</span>
+                    <div key={i} className="flex items-center justify-between text-[12px] font-mono">
+                      <span className="text-muted-foreground/50">{r.label}</span>
+                      <span className={r.accent ? 'text-primary' : 'text-foreground/70'}>{r.value}</span>
                     </div>
                   ))}
                 </div>
               )}
               {(token as any).fee_mode === 'holder_rewards' && (
-                <div className="trade-glass-panel p-5 space-y-2">
-                  <h3 className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#6E6E80] flex items-center gap-2">
-                    <Users className="h-3 w-3 text-[#00C4B4]" /> Holder Rewards
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#00C4B4]/10 text-[#00C4B4] border border-[#00C4B4]/20">ON</span>
+                <div className="trade-glass-panel p-4 space-y-2">
+                  <h3 className="text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground/40 flex items-center gap-2">
+                    <Users className="h-3 w-3 text-green-400/70" /> Holder Rewards
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/18">ON</span>
                   </h3>
-                  <div className="space-y-1 text-[12px] font-mono text-[#6E6E80]">
-                    <p className="flex items-center gap-1.5"><span className="text-[#00C4B4]">✓</span> Top 50 holders share 50% fees</p>
-                    <p className="flex items-center gap-1.5"><span className="text-[#00C4B4]">✓</span> Proportional to balance</p>
-                    <p className="flex items-center gap-1.5"><span className="text-[#00C4B4]">✓</span> Auto SOL payouts every 5 min</p>
+                  <div className="space-y-1 text-[11px] font-mono text-muted-foreground/50">
+                    <p className="flex items-center gap-1.5"><span className="text-green-400">✓</span> Top 50 holders share 50% fees</p>
+                    <p className="flex items-center gap-1.5"><span className="text-green-400">✓</span> Proportional to balance</p>
+                    <p className="flex items-center gap-1.5"><span className="text-green-400">✓</span> Auto SOL payouts every 5 min</p>
                   </div>
                 </div>
               )}
@@ -846,15 +846,15 @@ export default function FunTokenDetailPage() {
         <div className="md:hidden fixed left-0 right-0 z-50 trade-mobile-bar" style={{ bottom: '48px', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 4px)' }}>
           <div className="flex items-center gap-3 px-5 py-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="text-[13px] font-mono text-[#6E6E80]">{(token.price_sol || 0).toFixed(6)} SOL</span>
+              <span className="text-[12px] font-mono text-muted-foreground/50">{(token.price_sol || 0).toFixed(6)} SOL</span>
               {priceChange !== 0 && (
-                <span className={`text-[13px] font-mono font-bold ${isPriceUp ? 'text-[#00C4B4]' : 'text-[#FF4D4D]'}`}>
+                <span className={`text-[12px] font-mono font-bold ${isPriceUp ? 'text-green-400' : 'text-destructive'}`}>
                   {formatChange24h(priceChange)}
                 </span>
               )}
             </div>
-            <button onClick={() => setMobileTab('trade')} className="trade-btn-buy font-mono text-[14px] font-bold min-w-[76px] px-6 py-2.5 rounded-lg min-h-[42px] active:scale-95">BUY</button>
-            <button onClick={() => setMobileTab('trade')} className="trade-btn-sell font-mono text-[14px] font-bold min-w-[76px] px-6 py-2.5 rounded-lg min-h-[42px] active:scale-95">SELL</button>
+            <button onClick={() => setMobileTab('trade')} className="trade-btn-buy font-mono text-sm font-bold min-w-[76px] px-6 py-2.5 rounded-lg min-h-[42px] active:scale-95">BUY</button>
+            <button onClick={() => setMobileTab('trade')} className="trade-btn-sell font-mono text-sm font-bold min-w-[76px] px-6 py-2.5 rounded-lg min-h-[42px] active:scale-95">SELL</button>
           </div>
         </div>
       )}
