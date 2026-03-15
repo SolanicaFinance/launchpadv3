@@ -232,13 +232,15 @@ export default function PanelUnifiedDashboard() {
   const heldMints = useMemo(() => onChainHoldings.map(h => h.mint).filter(Boolean), [onChainHoldings]);
   const { data: tokenMetaMap = {} } = useTokenMetadata(heldMints);
   
-  // Also fetch price data from fun_tokens for held mints
+  // Fetch live prices from Jupiter for all held mints
+  const { data: jupiterPrices = {} } = useJupiterPrices(heldMints);
+  
+  // Also fetch price data from fun_tokens for held mints (fallback + metadata)
   const { data: funTokenPriceMap } = useQuery({
     queryKey: ['portfolio-fun-token-prices', heldMints.sort().join(',')],
     queryFn: async () => {
       if (heldMints.length === 0) return new Map<string, { name: string; ticker: string; image_url: string | null; price_sol: number; market_cap_sol: number }>();
       
-      // Query both tables for price data
       const [tokensResult, funTokensResult] = await Promise.all([
         supabase.from('tokens').select('mint_address, name, ticker, image_url, price_sol, market_cap_sol').in('mint_address', heldMints),
         supabase.from('fun_tokens').select('mint_address, name, ticker, image_url, price_sol, market_cap_sol').in('mint_address', heldMints),
@@ -257,14 +259,18 @@ export default function PanelUnifiedDashboard() {
     staleTime: 30_000,
   });
   
-  // Build unified holdings with metadata + prices for portfolio display
+  // Build unified holdings with metadata + live Jupiter prices for portfolio display
   const holdings = useMemo(() => {
     return onChainHoldings
       .map(h => {
         const meta = tokenMetaMap[h.mint];
         const dbInfo = funTokenPriceMap?.get(h.mint);
+        const jupPrice = jupiterPrices[h.mint];
         const decimals = h.decimals || meta?.decimals || 6;
         const uiBalance = h.balance / Math.pow(10, decimals);
+        
+        // Prefer Jupiter live price, fall back to DB price
+        const livePriceSol = jupPrice?.priceSol || dbInfo?.price_sol || 0;
         
         return {
           id: h.mint,
@@ -277,13 +283,13 @@ export default function PanelUnifiedDashboard() {
             name: dbInfo?.name || meta?.name || h.mint.slice(0, 6),
             ticker: dbInfo?.ticker || meta?.symbol || h.mint.slice(0, 4).toUpperCase(),
             image_url: dbInfo?.image_url || meta?.image || null,
-            price_sol: dbInfo?.price_sol || 0,
+            price_sol: livePriceSol,
             status: 'active',
           },
         } as HoldingWithToken;
       })
       .filter(h => h.balance > 0);
-  }, [onChainHoldings, tokenMetaMap, funTokenPriceMap, walletAddr]);
+  }, [onChainHoldings, tokenMetaMap, funTokenPriceMap, jupiterPrices, walletAddr]);
   
   const loadingHoldings = loadingOnChainHoldings;
   
