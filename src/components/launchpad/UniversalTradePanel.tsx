@@ -202,47 +202,39 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     setIsLoading(true);
     const t0 = performance.now();
     try {
-      let result: { signature?: string; outputAmount?: number };
-      if (useJupiterRoute) {
-        if (!signAndSendTx) { toast({ title: "Wallet not ready", variant: "destructive" }); return; }
-        result = isBuy
-          ? await buyToken(token.mint_address, numericAmount, solanaAddress, signAndSendTx, slippage * 100)
-          : await sellToken(token.mint_address, numericAmount, tokenDecimals, solanaAddress, signAndSendTx, slippage * 100);
-      } else {
-        const pumpResult = await pumpFunSwap(token.mint_address, numericAmount, isBuy, slippage);
-        result = { signature: pumpResult.signature, outputAmount: pumpResult.outputAmount };
-      }
+      // Use the same TurboSwap pipeline as Pulse quick buy
+      const result = await executeTurboSwap(turboToken, numericAmount, isBuy, slippage * 100);
 
       const latency = Math.round(performance.now() - t0);
       setLastLatencyMs(latency);
       setShowLatency(true);
       setTimeout(() => setShowLatency(false), 5000);
 
-      if (result.signature) {
-        recordAlphaTrade({ walletAddress: solanaAddress!, tokenMint: token.mint_address, tokenName: token.name, tokenTicker: token.ticker, tradeType: isBuy ? 'buy' : 'sell', amountSol: numericAmount, amountTokens: result.outputAmount, txHash: result.signature, chain: 'solana' });
-        supabase.functions.invoke('launchpad-swap', { body: { mintAddress: token.mint_address, userWallet: solanaAddress, amount: numericAmount, isBuy, profileId: profileId || undefined, signature: result.signature, outputAmount: result.outputAmount ?? null, tokenName: token.name, tokenTicker: token.ticker, mode: 'alpha_only' } }).catch(() => {});
-      }
-
       setAmount(''); setQuote(null); setSelectedPreset(null);
+
+      // Show global trade success notification (same as Pulse)
+      showTradeSuccess({
+        type: isBuy ? 'buy' : 'sell',
+        ticker: token.ticker,
+        tokenName: token.name,
+        mintAddress: token.mint_address,
+        amount: isBuy ? `${numericAmount} SOL` : `${formatAmount(numericAmount)} ${token.ticker}`,
+        signature: result.signature,
+        executionMs: result.totalMs || latency,
+        tokenImageUrl: token.imageUrl,
+      });
+
+      // Also show PNL card
       setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
       setShowProfitCard(true);
 
-      toast({
-        title: `${isBuy ? 'Buy' : 'Sell'} successful!`,
-        description: (
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span>{result.outputAmount ? (isBuy ? `Bought ${formatAmount(result.outputAmount)} ${token.ticker}` : `Sold for ${formatAmount(result.outputAmount)} SOL`) : `${isBuy ? 'Buy' : 'Sell'} confirmed`}</span>
-            {result.signature && <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"><ExternalLink className="h-3 w-3" /></a>}
-          </div>
-        ),
-      });
     } catch (error) {
       console.error('Trade error:', error);
       toast({ title: "Trade failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" });
     } finally { setIsLoading(false); }
   };
 
-  const buttonLoading = isLoading || swapLoading;
+  const buttonLoading = isLoading || turboLoading;
   const { data: rugCheck, isLoading: rugLoading } = useRugCheck(token.mint_address);
 
   const safetyChecks = [
