@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface XBotAccount {
   id: string;
@@ -82,6 +82,24 @@ export interface XBotAccountWithRules extends XBotAccount {
   rules?: XBotAccountRules;
 }
 
+// Helper to call the x-bot-admin edge function
+async function callAdmin(action: string, adminWallet: string, params: Record<string, any> = {}) {
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/x-bot-admin`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify({ action, adminWallet, ...params }),
+    }
+  );
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || `Admin call failed: ${response.status}`);
+  return data;
+}
+
 export function useXBotAccounts() {
   const [accounts, setAccounts] = useState<XBotAccountWithRules[]>([]);
   const [replies, setReplies] = useState<XBotAccountReply[]>([]);
@@ -89,135 +107,64 @@ export function useXBotAccounts() {
   const [logs, setLogs] = useState<XBotAccountLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { solanaAddress } = useAuth();
+
+  const adminWallet = solanaAddress || "";
 
   const fetchAccounts = useCallback(async () => {
+    if (!adminWallet) return;
     try {
-      const { data: accountsData, error: accountsError } = await supabase
-        .from("x_bot_accounts")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const [accountsResult, rulesResult] = await Promise.all([
+        callAdmin("list_accounts", adminWallet),
+        callAdmin("list_rules", adminWallet),
+      ]);
 
-      if (accountsError) throw accountsError;
-
-      const { data: rulesData, error: rulesError } = await supabase
-        .from("x_bot_account_rules")
-        .select("*");
-
-      if (rulesError) throw rulesError;
-
-      const accountsWithRules = (accountsData || []).map((account: XBotAccount) => ({
+      const accountsWithRules = (accountsResult.accounts || []).map((account: XBotAccount) => ({
         ...account,
-        rules: rulesData?.find((r: XBotAccountRules) => r.account_id === account.id),
+        rules: rulesResult.rules?.find((r: XBotAccountRules) => r.account_id === account.id),
       }));
 
       setAccounts(accountsWithRules);
     } catch (error) {
       console.error("Error fetching accounts:", error);
     }
-  }, []);
+  }, [adminWallet]);
 
   const fetchReplies = useCallback(async (accountId?: string) => {
+    if (!adminWallet) return;
     try {
-      let query = supabase
-        .from("x_bot_account_replies")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      if (accountId) {
-        query = query.eq("account_id", accountId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setReplies(data || []);
+      const data = await callAdmin("list_replies", adminWallet, { limit: 100 });
+      setReplies(data.replies || []);
     } catch (error) {
       console.error("Error fetching replies:", error);
     }
-  }, []);
+  }, [adminWallet]);
 
   const fetchQueue = useCallback(async (accountId?: string) => {
+    if (!adminWallet) return;
     try {
-      let query = supabase
-        .from("x_bot_account_queue")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (accountId) {
-        query = query.eq("account_id", accountId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setQueue(data || []);
+      const data = await callAdmin("list_queue", adminWallet, { limit: 50 });
+      setQueue(data.queue || []);
     } catch (error) {
       console.error("Error fetching queue:", error);
     }
-  }, []);
+  }, [adminWallet]);
 
   const fetchLogs = useCallback(async (accountId?: string) => {
+    if (!adminWallet) return;
     try {
-      let query = supabase
-        .from("x_bot_account_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (accountId) {
-        query = query.eq("account_id", accountId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setLogs((data || []) as XBotAccountLog[]);
+      const data = await callAdmin("list_logs", adminWallet, { limit: 200 });
+      setLogs((data.logs || []) as XBotAccountLog[]);
     } catch (error) {
       console.error("Error fetching logs:", error);
     }
-  }, []);
+  }, [adminWallet]);
 
   const createAccount = async (account: Partial<XBotAccount>, rules?: Partial<XBotAccountRules>) => {
     try {
-      const { data: newAccount, error: accountError } = await supabase
-        .from("x_bot_accounts")
-        .insert({
-          name: account.name || "New Account",
-          username: account.username || "",
-          email: account.email || null,
-          password_encrypted: account.password_encrypted || null,
-          totp_secret_encrypted: account.totp_secret_encrypted || null,
-          full_cookie_encrypted: account.full_cookie_encrypted || null,
-          auth_token_encrypted: account.auth_token_encrypted || null,
-          ct0_token_encrypted: account.ct0_token_encrypted || null,
-          proxy_url: account.proxy_url || null,
-          socks5_urls: account.socks5_urls || [],
-          current_socks5_index: 0,
-          is_active: account.is_active ?? true,
-          subtuna_ticker: account.subtuna_ticker || null,
-        })
-        .select()
-        .single();
-
-      if (accountError) throw accountError;
-
-      // Create default rules
-      const { error: rulesError } = await supabase.from("x_bot_account_rules").insert({
-        account_id: newAccount.id,
-        monitored_mentions: rules?.monitored_mentions || [],
-        tracked_cashtags: rules?.tracked_cashtags || [],
-        min_follower_count: rules?.min_follower_count || 5000,
-        require_blue_verified: rules?.require_blue_verified ?? true,
-        require_gold_verified: rules?.require_gold_verified ?? false,
-        author_cooldown_hours: rules?.author_cooldown_hours || 6,
-        max_replies_per_thread: rules?.max_replies_per_thread || 3,
-        enabled: rules?.enabled ?? true,
-      });
-
-      if (rulesError) throw rulesError;
-
+      await callAdmin("create_account", adminWallet, { account, rules });
       toast({ title: "Account created successfully" });
       await fetchAccounts();
-      return newAccount;
     } catch (error) {
       console.error("Error creating account:", error);
       toast({ title: "Failed to create account", variant: "destructive" });
@@ -227,54 +174,7 @@ export function useXBotAccounts() {
 
   const updateAccount = async (id: string, account: Partial<XBotAccount>, rules?: Partial<XBotAccountRules>) => {
     try {
-      const { error: accountError } = await supabase
-        .from("x_bot_accounts")
-        .update({
-          name: account.name,
-          username: account.username,
-          email: account.email,
-          password_encrypted: account.password_encrypted,
-          totp_secret_encrypted: account.totp_secret_encrypted,
-          full_cookie_encrypted: account.full_cookie_encrypted,
-          auth_token_encrypted: account.auth_token_encrypted,
-          ct0_token_encrypted: account.ct0_token_encrypted,
-          proxy_url: account.proxy_url,
-          socks5_urls: account.socks5_urls,
-          is_active: account.is_active,
-          subtuna_ticker: account.subtuna_ticker,
-        })
-        .eq("id", id);
-
-      if (accountError) throw accountError;
-
-      if (rules) {
-        const updatePayload: Record<string, any> = {
-          monitored_mentions: rules.monitored_mentions,
-          tracked_cashtags: rules.tracked_cashtags,
-          min_follower_count: rules.min_follower_count,
-          require_blue_verified: rules.require_blue_verified,
-          require_gold_verified: rules.require_gold_verified,
-          author_cooldown_hours: rules.author_cooldown_hours,
-          max_replies_per_thread: rules.max_replies_per_thread,
-          enabled: rules.enabled,
-        };
-        if ('persona_prompt' in rules) {
-          updatePayload.persona_prompt = (rules as any).persona_prompt || null;
-        }
-        if ('tracked_keywords' in rules) {
-          updatePayload.tracked_keywords = (rules as any).tracked_keywords;
-        }
-        if ('author_cooldown_minutes' in rules) {
-          updatePayload.author_cooldown_minutes = (rules as any).author_cooldown_minutes;
-        }
-        const { error: rulesError } = await supabase
-          .from("x_bot_account_rules")
-          .update(updatePayload)
-          .eq("account_id", id);
-
-        if (rulesError) throw rulesError;
-      }
-
+      await callAdmin("update_account", adminWallet, { id, account, rules });
       toast({ title: "Account updated successfully" });
       await fetchAccounts();
     } catch (error) {
@@ -286,9 +186,7 @@ export function useXBotAccounts() {
 
   const deleteAccount = async (id: string) => {
     try {
-      const { error } = await supabase.from("x_bot_accounts").delete().eq("id", id);
-      if (error) throw error;
-
+      await callAdmin("delete_account", adminWallet, { id });
       toast({ title: "Account deleted successfully" });
       await fetchAccounts();
     } catch (error) {
@@ -300,13 +198,7 @@ export function useXBotAccounts() {
 
   const toggleAccountActive = async (id: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from("x_bot_accounts")
-        .update({ is_active: isActive })
-        .eq("id", id);
-
-      if (error) throw error;
-
+      await callAdmin("toggle_active", adminWallet, { id, is_active: isActive });
       toast({ title: isActive ? "Account enabled" : "Account disabled" });
       await fetchAccounts();
     } catch (error) {
@@ -368,13 +260,17 @@ export function useXBotAccounts() {
   };
 
   useEffect(() => {
+    if (!adminWallet) {
+      setLoading(false);
+      return;
+    }
     const loadAll = async () => {
       setLoading(true);
       await Promise.all([fetchAccounts(), fetchReplies(), fetchQueue(), fetchLogs()]);
       setLoading(false);
     };
     loadAll();
-  }, [fetchAccounts, fetchReplies, fetchQueue, fetchLogs]);
+  }, [adminWallet, fetchAccounts, fetchReplies, fetchQueue, fetchLogs]);
 
   return {
     accounts,
