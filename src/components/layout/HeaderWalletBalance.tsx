@@ -33,6 +33,7 @@ function HeaderWalletBalanceInner() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [profile, setProfile] = useState<{ display_name?: string | null; avatar_url?: string | null; username?: string | null; evm_wallet_address?: string | null } | null>(null);
 
