@@ -186,10 +186,16 @@ const ITEMS_PER_PAGE = 10;
 
 export default function SixtyNineListPage() {
   const { data, isLoading, refetch, isFetching } = useTop69Holders();
+  const { data: treasuryBalance = 0, isLoading: balanceLoading } = useTreasuryBalance();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"holdings" | "sol">("holdings");
   const [currentPage, setCurrentPage] = useState(1);
   const countdown = useCountdown();
+
+  const potProgress = Math.min((treasuryBalance / DISTRIBUTION_THRESHOLD_SOL) * 100, 100);
+  const distributionAmount = (treasuryBalance * HOLDER_SHARE_PERCENT) / 100;
+  const perHolder = distributionAmount / 69;
+  const isPotFull = treasuryBalance >= DISTRIBUTION_THRESHOLD_SOL;
 
   const sortedHolders = useMemo(() => {
     if (!data?.holders) return [];
