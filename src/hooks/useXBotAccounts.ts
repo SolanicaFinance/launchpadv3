@@ -58,8 +58,11 @@ export interface XBotQueueItem {
   tweet_id: string;
   tweet_author: string;
   tweet_content: string;
+  tweet_text: string;
   tweet_author_followers: number | null;
   tweet_author_verified: boolean | null;
+  follower_count: number | null;
+  match_type: string | null;
   status: string;
   created_at: string;
 }
