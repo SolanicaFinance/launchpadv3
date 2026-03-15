@@ -7,12 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Hardcoded admin wallet addresses — ONLY these wallets can manage X bot accounts
-const ADMIN_WALLETS = [
-  "4yx8MdBLv75YpBJhqjz2zMsoyN4WEwjc8VSfoLiUGdTX",
-  "89mkEFstQcBoZhmujjQtwM9mKQYyy9W13nMFwPZp52DY",
-  "DrWkWu7Mhv9V7Dt2iqxpjuwPfehmQq1DrkEQ39sqX8jV",
-];
+// Admin password — must match the one used in the admin panel
+const ADMIN_PASSWORD = "saturn135@";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,26 +21,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json();
-    const { action, adminWallet, ...params } = body;
+    const { action, adminPassword, ...params } = body;
 
-    // Verify admin wallet
-    if (!adminWallet || !ADMIN_WALLETS.includes(adminWallet)) {
+    // Verify admin password
+    if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Verify the admin wallet is actually connected by checking profiles
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("wallet_address", adminWallet)
-      .maybeSingle();
-
-    if (!profile) {
-      return new Response(
-        JSON.stringify({ error: "Admin wallet not found in profiles" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -57,7 +39,6 @@ Deno.serve(async (req) => {
           .from("x_bot_accounts")
           .select("id, name, username, email, is_active, created_at, updated_at, subtuna_ticker, proxy_url, socks5_urls, current_socks5_index, last_socks5_failure_at")
           .order("created_at", { ascending: false });
-        // NOTE: We intentionally EXCLUDE sensitive fields (cookies, tokens, passwords) from the response
         if (error) throw error;
         result = { accounts: data };
         break;
@@ -149,7 +130,6 @@ Deno.serve(async (req) => {
       case "update_account": {
         const { id, account, rules } = params;
         
-        // Build update payload, only include fields that were provided
         const updatePayload: Record<string, any> = {};
         const allowedFields = [
           "name", "username", "email", "password_encrypted", "totp_secret_encrypted",
