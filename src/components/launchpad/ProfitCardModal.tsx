@@ -49,18 +49,44 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
     if (!cardRef.current) return;
     setSaving(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: null,
-        scale: 2,
-        useCORS: true,
+      const { toPng } = await import("html-to-image");
+      // Generate at 3x for high quality
+      const dataUrl = await toPng(cardRef.current, {
+        pixelRatio: 3,
+        cacheBust: true,
+        quality: 1.0,
+        // Ensure fonts are embedded
+        fontEmbedCSS: '',
+        // Skip external images that might fail CORS
+        filter: (node: HTMLElement) => {
+          // Skip hidden/zero-size elements
+          if (node.tagName === 'NOSCRIPT') return false;
+          return true;
+        },
       });
       const link = document.createElement("a");
       link.download = `saturn-${data.tokenTicker}-${Date.now()}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = dataUrl;
       link.click();
     } catch (e) {
-      console.error("Save image failed:", e);
+      console.error("Save image failed, trying fallback:", e);
+      // Fallback to html2canvas
+      try {
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(cardRef.current!, {
+          backgroundColor: null,
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+        });
+        const link = document.createElement("a");
+        link.download = `saturn-${data.tokenTicker}-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      } catch (e2) {
+        console.error("Fallback save also failed:", e2);
+      }
     } finally {
       setSaving(false);
     }
@@ -76,66 +102,95 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
     await handleSaveImage();
   };
 
+  // Use inline styles only (no Tailwind classes that might not render in export)
+  // and avoid backdrop-filter which doesn't export
+  const accentColor = isPositive ? "#c8ff00" : "#ff5252";
+  const accentGlow = isPositive
+    ? "0 0 20px rgba(200,255,0,0.4), 0 0 40px rgba(200,255,0,0.15)"
+    : "0 0 20px rgba(255,82,82,0.4), 0 0 40px rgba(255,82,82,0.15)";
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-[440px] p-0 bg-transparent border-0 shadow-none [&>button]:hidden">
         <DialogTitle className="sr-only">Trade Profit Card</DialogTitle>
         <div className="flex flex-col items-center gap-4">
-          {/* The Profit Card */}
+          {/* The Profit Card — all inline styles for perfect export fidelity */}
           <div
             ref={cardRef}
-            className="w-[400px] rounded-2xl overflow-hidden relative"
             style={{
+              width: 400,
+              borderRadius: 16,
+              overflow: "hidden",
+              position: "relative",
               background: "linear-gradient(145deg, #050a08 0%, #0a1a10 30%, #0d1f14 50%, #081610 80%, #030906 100%)",
+              fontFamily: "'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace",
             }}
           >
-            {/* Cosmic glow overlays */}
+            {/* Cosmic glow overlays — using solid-ish backgrounds instead of backdrop-filter */}
             <div
-              className="absolute inset-0 pointer-events-none"
               style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
                 background: "radial-gradient(ellipse at 30% 20%, rgba(200,255,0,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(132,204,22,0.06) 0%, transparent 50%)",
               }}
             />
             {/* Saturn ring decoration */}
             <div
-              className="absolute -right-12 -top-12 w-40 h-40 pointer-events-none opacity-10"
               style={{
+                position: "absolute",
+                right: -48,
+                top: -48,
+                width: 160,
+                height: 160,
+                pointerEvents: "none",
+                opacity: 0.1,
                 background: "radial-gradient(circle, transparent 40%, rgba(200,255,0,0.3) 42%, transparent 44%, transparent 58%, rgba(200,255,0,0.15) 60%, transparent 62%)",
               }}
             />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-2 relative z-10">
-              <div className="flex items-center gap-2">
-                <img src={saturnLogo} alt="Saturn" className="w-6 h-6" />
-                <span className="text-[#c8ff00] font-bold text-sm tracking-[0.2em] uppercase">SATURN.TRADE</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 8px 20px", position: "relative", zIndex: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <img src={saturnLogo} alt="Saturn" style={{ width: 24, height: 24 }} crossOrigin="anonymous" />
+                <span style={{ color: "#c8ff00", fontWeight: 700, fontSize: 14, letterSpacing: "0.2em", textTransform: "uppercase" as const }}>SATURN.TRADE</span>
               </div>
-              <span className="text-white/25 text-[10px] font-mono">{timeStr}</span>
+              <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontFamily: "monospace" }}>{timeStr}</span>
             </div>
 
             {/* User info */}
-            <div className="px-5 pb-3 relative z-10">
-              <div className="flex items-center gap-2">
+            <div style={{ padding: "0 20px 12px 20px", position: "relative", zIndex: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center"
                   style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     background: "linear-gradient(135deg, rgba(200,255,0,0.3), rgba(132,204,22,0.2))",
                     boxShadow: "0 0 12px rgba(200,255,0,0.15)",
                   }}
                 >
-                  <span className="text-[10px]">🪐</span>
+                  <span style={{ fontSize: 10 }}>🪐</span>
                 </div>
-                <span className="text-white/60 text-xs font-mono">{truncatedWallet}</span>
+                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontFamily: "monospace" }}>{truncatedWallet}</span>
               </div>
             </div>
 
-            {/* P&L Section — glassmorphic card */}
+            {/* P&L Section — solid background instead of backdrop-filter for export */}
             <div
-              className="mx-4 rounded-xl mb-3 relative z-10 overflow-hidden"
               style={{
-                background: "rgba(200,255,0,0.03)",
-                backdropFilter: "blur(24px)",
-                border: "1px solid rgba(200,255,0,0.08)",
+                margin: "0 16px 12px 16px",
+                borderRadius: 12,
+                position: "relative",
+                zIndex: 10,
+                overflow: "hidden",
+                background: isPositive
+                  ? "linear-gradient(135deg, rgba(200,255,0,0.06) 0%, rgba(10,26,16,0.95) 100%)"
+                  : "linear-gradient(135deg, rgba(255,82,82,0.06) 0%, rgba(26,10,10,0.95) 100%)",
+                border: `1px solid ${isPositive ? "rgba(200,255,0,0.12)" : "rgba(255,82,82,0.12)"}`,
                 boxShadow: isPositive
                   ? "inset 0 1px 0 rgba(200,255,0,0.1), 0 0 30px rgba(200,255,0,0.05)"
                   : "inset 0 1px 0 rgba(255,82,82,0.1), 0 0 30px rgba(255,82,82,0.05)",
@@ -143,71 +198,90 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
             >
               {/* Inner glow accent */}
               <div
-                className="absolute inset-0 pointer-events-none"
                 style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
                   background: isPositive
                     ? "radial-gradient(ellipse at 20% 50%, rgba(200,255,0,0.06) 0%, transparent 60%)"
                     : "radial-gradient(ellipse at 20% 50%, rgba(255,82,82,0.06) 0%, transparent 60%)",
                 }}
               />
 
-              <div className="px-5 py-5 relative z-10">
-                <div className="flex items-start justify-between">
+              <div style={{ padding: "20px", position: "relative", zIndex: 10 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div>
-                    <div className="text-white/35 text-[9px] font-mono uppercase tracking-[0.25em] mb-2">
+                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontFamily: "monospace", textTransform: "uppercase" as const, letterSpacing: "0.25em", marginBottom: 8 }}>
                       {hasPnl ? 'Profit & Loss' : (isBuy ? 'Invested' : 'Received')}
                     </div>
                     {hasPnl ? (
                       <div
-                        className="text-4xl font-bold font-mono"
                         style={{
-                          color: isPositive ? "#c8ff00" : "#ff5252",
-                          textShadow: isPositive
-                            ? "0 0 20px rgba(200,255,0,0.4), 0 0 40px rgba(200,255,0,0.15)"
-                            : "0 0 20px rgba(255,82,82,0.4), 0 0 40px rgba(255,82,82,0.15)",
+                          fontSize: 36,
+                          fontWeight: 700,
+                          fontFamily: "monospace",
+                          color: accentColor,
+                          textShadow: accentGlow,
+                          lineHeight: 1.1,
                         }}
                       >
                         {isPositive ? "+" : ""}{pnl.toFixed(2)}%
                       </div>
                     ) : (
                       <div
-                        className="text-3xl font-bold font-mono"
                         style={{
+                          fontSize: 30,
+                          fontWeight: 700,
+                          fontFamily: "monospace",
                           color: isBuy ? "#c8ff00" : "#22c55e",
                           textShadow: "0 0 20px rgba(200,255,0,0.3)",
+                          lineHeight: 1.1,
                         }}
                       >
                         {data.amountSol.toFixed(4)}
-                        <span className="text-lg ml-1 text-white/40">SOL</span>
+                        <span style={{ fontSize: 18, marginLeft: 4, color: "rgba(255,255,255,0.4)" }}>SOL</span>
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-white/35 text-[9px] font-mono uppercase tracking-[0.25em] mb-2">
+                  <div style={{ textAlign: "right" as const }}>
+                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontFamily: "monospace", textTransform: "uppercase" as const, letterSpacing: "0.25em", marginBottom: 8 }}>
                       {hasPnl ? 'Amount' : (isBuy ? 'Spent' : 'Received')}
                     </div>
                     <div
-                      className="text-2xl font-bold font-mono"
-                      style={{ color: isPositive ? "#c8ff00" : "#ff5252" }}
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 700,
+                        fontFamily: "monospace",
+                        color: accentColor,
+                      }}
                     >
                       {isBuy ? "-" : "+"}{data.amountSol.toFixed(4)}
                     </div>
-                    <div className="text-white/30 text-xs font-mono mt-0.5">SOL</div>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2 }}>SOL</div>
                   </div>
                 </div>
 
                 {/* Token info row */}
-                <div className="mt-4 flex items-center gap-2">
+                <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8 }}>
                   {data.tokenImageUrl ? (
-                    <img src={data.tokenImageUrl} alt={data.tokenTicker} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                    <img
+                      src={data.tokenImageUrl}
+                      alt={data.tokenTicker}
+                      style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" as const, border: "1px solid rgba(255,255,255,0.1)" }}
+                      crossOrigin="anonymous"
+                    />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>
                       {data.tokenTicker.slice(0, 2)}
                     </div>
                   )}
                   <span
-                    className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md"
                     style={{
+                      fontSize: 10,
+                      fontFamily: "monospace",
+                      fontWeight: 700,
+                      padding: "4px 10px",
+                      borderRadius: 6,
                       background: isBuy ? "rgba(200,255,0,0.12)" : "rgba(255,82,82,0.12)",
                       color: isBuy ? "#c8ff00" : "#ff5252",
                       border: `1px solid ${isBuy ? "rgba(200,255,0,0.2)" : "rgba(255,82,82,0.2)"}`,
@@ -215,18 +289,19 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                   >
                     {isBuy ? "BUY" : "SELL"}
                   </span>
-                  <span className="text-white font-mono text-sm font-bold">${data.tokenTicker}</span>
-                  <span className="text-white/25 text-xs font-mono">{data.tokenName}</span>
+                  <span style={{ color: "white", fontFamily: "monospace", fontSize: 14, fontWeight: 700 }}>${data.tokenTicker}</span>
+                  <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, fontFamily: "monospace" }}>{data.tokenName}</span>
                 </div>
               </div>
             </div>
 
             {/* QR Code + Referral */}
-            <div className="px-5 pb-4 flex items-end justify-between relative z-10">
-              <div className="flex items-center gap-3">
+            <div style={{ padding: "0 20px 16px 20px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", position: "relative", zIndex: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
-                  className="p-1.5 rounded-lg"
                   style={{
+                    padding: 6,
+                    borderRadius: 8,
                     background: "rgba(255,255,255,0.95)",
                     boxShadow: "0 0 12px rgba(200,255,0,0.15)",
                   }}
@@ -234,15 +309,15 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                   <QRCode value={qrLink} size={60} level="M" />
                 </div>
                 <div>
-                  <div className="text-white/25 text-[8px] font-mono uppercase tracking-[0.25em] mb-1">Referral</div>
-                  <div className="text-white/45 text-[10px] font-mono break-all max-w-[150px] leading-relaxed">
+                  <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 8, fontFamily: "monospace", textTransform: "uppercase" as const, letterSpacing: "0.25em", marginBottom: 4 }}>Referral</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, fontFamily: "monospace", wordBreak: "break-all" as const, maxWidth: 150, lineHeight: 1.5 }}>
                     {qrLink.replace("https://", "").replace("http://", "")}
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <img src={saturnLogo} alt="" className="w-4 h-4 opacity-30" />
-                <div className="text-white/15 text-[9px] font-mono">{dateStr}</div>
+              <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "flex-end", gap: 4 }}>
+                <img src={saturnLogo} alt="" style={{ width: 16, height: 16, opacity: 0.3 }} crossOrigin="anonymous" />
+                <div style={{ color: "rgba(255,255,255,0.15)", fontSize: 9, fontFamily: "monospace" }}>{dateStr}</div>
               </div>
             </div>
           </div>
