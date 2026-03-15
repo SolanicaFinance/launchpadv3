@@ -12,13 +12,6 @@ const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
 const DISTRIBUTION_THRESHOLD_SOL = 10;
 const HOLDER_SHARE_PERCENT = 69;
 
-interface HolderEntry {
-  address: string;
-  tokenAmount: number;
-  percentage: number;
-  solBalance: number;
-}
-
 /** Live treasury SOL balance */
 function useTreasuryBalance() {
   return useQuery({
@@ -33,38 +26,6 @@ function useTreasuryBalance() {
     refetchInterval: 15_000,
     staleTime: 10_000,
   });
-}
-
-function useTop69Holders() {
-  return useQuery({
-    queryKey: ["top-69-holders", SATURN_TOKEN_CA],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("fetch-token-holders", {
-        body: { mintAddress: SATURN_TOKEN_CA },
-      });
-      if (error) throw error;
-      const holders = (data.holders || []).slice(0, 69);
-      return {
-        holders,
-        totalSupply: data.totalSupply,
-        count: data.count,
-        lastUpdated: new Date().toISOString(),
-      };
-    },
-    staleTime: 1000 * 60 * 55,
-    refetchInterval: 1000 * 60 * 60,
-  });
-}
-
-function shortenAddress(addr: string) {
-  return addr.slice(0, 6) + "···" + addr.slice(-4);
-}
-
-function formatTokenAmount(n: number) {
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
-  return n.toFixed(0);
 }
 
 // Countdown hook — minutes:seconds until next hour + 5min
@@ -87,9 +48,6 @@ function useCountdown() {
   }, []);
   return timeLeft;
 }
-
-
-const ITEMS_PER_PAGE = 10;
 
 export default function SixtyNineListPage() {
   const { data: treasuryBalance = 0, isLoading: balanceLoading } = useTreasuryBalance();
