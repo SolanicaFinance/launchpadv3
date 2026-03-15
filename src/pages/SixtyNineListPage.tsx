@@ -299,6 +299,59 @@ export default function SixtyNineListPage() {
               ))}
             </div>
 
+            {/* ═══════════════ DISTRIBUTION POT ═══════════════ */}
+            <div className={`max-w-3xl mx-auto mb-8 rounded-xl border p-5 sm:p-6 transition-all duration-500 ${
+              isPotFull 
+                ? "border-primary/40 bg-primary/[0.08] shadow-[0_0_30px_hsl(var(--primary)/0.15)]" 
+                : "border-border/30 bg-card/40 backdrop-blur-sm"
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-primary" />
+                  <h3 className="font-bold text-foreground text-sm">Distribution Pot</h3>
+                </div>
+                {isPotFull && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold animate-pulse">
+                    <Zap className="h-3 w-3" />
+                    Ready to distribute!
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-end justify-between mb-2">
+                <div>
+                  <span className="text-2xl sm:text-3xl font-black text-foreground tabular-nums">
+                    {balanceLoading ? "—" : treasuryBalance.toFixed(4)}
+                  </span>
+                  <span className="text-sm text-muted-foreground ml-1.5">SOL</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  / {DISTRIBUTION_THRESHOLD_SOL} SOL threshold
+                </span>
+              </div>
+
+              <Progress value={potProgress} className={`h-3 mb-3 ${isPotFull ? "shadow-[0_0_12px_hsl(var(--primary)/0.4)]" : ""}`} />
+
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
+                  <div className="text-xs text-muted-foreground mb-0.5">Progress</div>
+                  <div className="text-sm font-bold text-foreground tabular-nums">{potProgress.toFixed(1)}%</div>
+                </div>
+                <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
+                  <div className="text-xs text-muted-foreground mb-0.5">69% to holders</div>
+                  <div className="text-sm font-bold text-primary tabular-nums">{distributionAmount.toFixed(4)} SOL</div>
+                </div>
+                <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
+                  <div className="text-xs text-muted-foreground mb-0.5">Per holder</div>
+                  <div className="text-sm font-bold text-foreground tabular-nums">{perHolder.toFixed(4)} SOL</div>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground mt-3 text-center">
+                Live balance of treasury wallet · Auto-distributes 69% to The List when {DISTRIBUTION_THRESHOLD_SOL} SOL is reached
+              </p>
+            </div>
+
             {/* How It Works */}
             <div className="max-w-3xl mx-auto bg-card/30 border border-border/20 rounded-xl p-4 sm:p-5 mb-6">
               <h3 className="font-bold text-foreground mb-4 flex items-center gap-2 text-sm">
