@@ -233,7 +233,7 @@ export default function BrandingAdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="appUrl">App URL</Label>
-                  <Input id="appUrl" value={form.appUrl || ""} onChange={(e) => set("appUrl", e.target.value)} placeholder="https://saturntrade.lovable.app" />
+                  <Input id="appUrl" value={form.appUrl || ""} onChange={(e) => set("appUrl", e.target.value)} placeholder="https://saturn.trade" />
                 </div>
                 <div>
                   <Label htmlFor="twitterHandle">Twitter / X Handle</Label>

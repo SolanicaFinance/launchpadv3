@@ -17,14 +17,14 @@ export const BRAND = {
 
   // ── Domain & URLs ──
   domain: "saturn.trade",
-  appUrl: "https://saturntrade.lovable.app",
+  appUrl: "https://saturn.trade",
   twitterHandle: "@saturntrade",
   twitterUrl: "https://x.com/saturntrade",
 
   // ── Assets ──
   logoPath: "/saturn-logo.png",
   iconEmoji: "🪐",
-  ogImage: "https://saturntrade.com/saturn-logo.png",
+  ogImage: "https://saturn.trade/og-image.png",
   faviconPath: "/favicon.png",
 
   // ── Feature Names ──
@@ -63,7 +63,7 @@ export const BRAND = {
     "SubTuna": "Saturn Community",
     "OpenTuna": "Saturn SDK",
     "Saturn Trade": "Saturn",
-    "saturn.trade": "saturntrade.com",
+    "saturn.trade": "saturn.trade",
     "@saturntrade": "@saturntrade",
     "MoonDexo": "Saturn",
   },

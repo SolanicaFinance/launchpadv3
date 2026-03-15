@@ -124,7 +124,7 @@ serve(async (req) => {
       .update({ agent_id: agent.id })
       .eq("id", tradingAgent.id);
 
-    const websiteUrl = `https://claw.fun/t/${finalTicker.toUpperCase()}`;
+    const websiteUrl = `https://saturn.trade/t/${finalTicker.toUpperCase()}`;
     const finalTwitterUrl = twitterUrl?.trim() || null;
 
     console.log(`[saturn-trading-create] Launching token for ${finalName}...`);

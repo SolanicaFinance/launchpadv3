@@ -869,7 +869,7 @@ Deno.serve(async (req) => {
       // Generate Claw's viral take on a launched token
       async function generateClawViralTake(tokenName: string, tokenSymbol: string, tweetText: string): Promise<string> {
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        if (!LOVABLE_API_KEY) return "🦞 Snip snip. Trade it on saturntrade.com";
+        if (!LOVABLE_API_KEY) return "🪐 Trade it on saturn.trade";
 
         try {
           const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -905,12 +905,12 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
 
           if (!response.ok) {
             console.error("[agent-scan-twitter] AI viral take error:", response.status);
-            return "🦞 Snip snip. Trade it on saturntrade.com";
+            return "🪐 Trade it on saturn.trade";
           }
 
           const data = await response.json();
           let take = data.choices?.[0]?.message?.content?.trim();
-          if (!take) return "🦞 Snip snip. Trade it on saturntrade.com";
+          if (!take) return "🪐 Trade it on saturn.trade";
 
           // Ensure it starts with 🦞 and trim to 140 chars
           if (!take.startsWith("🦞")) take = "🦞 " + take;
@@ -918,7 +918,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           return take;
         } catch (e) {
           console.error("[agent-scan-twitter] AI viral take exception:", e);
-          return "🦞 Snip snip. Trade it on saturntrade.com";
+          return "🪐 Trade it on saturn.trade";
         }
       }
 
@@ -978,7 +978,7 @@ Do NOT mention fees, panels, or platform features. Just your raw take on the mem
           "Trading-Fees goes to your Panel",
           "is now live on TUNA!",
           "claim them any time",
-          "Trade it on saturntrade.com",
+          "Trade it on saturn.trade",
           "Snip snip",
         ];
         if (botReplySignatures.some(sig => tweetText.includes(sig))) {
