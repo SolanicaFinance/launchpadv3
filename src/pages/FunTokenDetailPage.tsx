@@ -941,7 +941,6 @@ export default function FunTokenDetailPage() {
               <TokenDetailsSection />
               <ContractSection />
               <DescriptionSection />
-              <PnlSimulator />
               {/* Comments removed for platform tokens */}
             </div>
             {!isPunchToken && (
