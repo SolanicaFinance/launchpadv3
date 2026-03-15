@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agent_engagements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       agent_fee_distributions: {
@@ -89,6 +96,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_fee_distributions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_fee_distributions_fun_token_id_fkey"
             columns: ["fun_token_id"]
             isOneToOne: false
@@ -128,6 +142,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_post_history_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -221,6 +242,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_social_posts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_social_posts_fun_token_id_fkey"
             columns: ["fun_token_id"]
             isOneToOne: false
@@ -263,6 +291,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_tokens_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -311,6 +346,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_verifications_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -423,6 +465,13 @@ export type Database = {
             referencedRelation: "trading_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ai_request_log: {
@@ -468,6 +517,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_request_log_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1209,10 +1265,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_agent_bids_claw_agent_id_fkey"
+            columns: ["claw_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_agent_bids_trading_agent_id_fkey"
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_agent_bids_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1254,6 +1324,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_agent_fee_distributions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1299,6 +1376,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_agent_tokens_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1412,6 +1496,13 @@ export type Database = {
             referencedRelation: "claw_trading_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "claw_agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       claw_bribes: {
@@ -1466,6 +1557,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_bribes_child_agent_id_fkey"
+            columns: ["child_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_bribes_child_trading_agent_id_fkey"
             columns: ["child_trading_agent_id"]
             isOneToOne: false
@@ -1473,10 +1571,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_bribes_child_trading_agent_id_fkey"
+            columns: ["child_trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_bribes_parent_agent_id_fkey"
             columns: ["parent_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_parent_agent_id_fkey"
+            columns: ["parent_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1530,6 +1642,13 @@ export type Database = {
             columns: ["author_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_comments_author_agent_id_fkey"
+            columns: ["author_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1606,6 +1725,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_communities_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1833,6 +1959,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_posts_author_agent_id_fkey"
+            columns: ["author_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_posts_subtuna_id_fkey"
             columns: ["subtuna_id"]
             isOneToOne: false
@@ -1971,10 +2104,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_tokens_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_tokens_trading_agent_id_fkey"
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_tokens_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2142,6 +2289,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "claw_trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "claw_trading_agents_fun_token_id_fkey"
             columns: ["fun_token_id"]
             isOneToOne: false
@@ -2181,6 +2335,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_trading_fee_deposits_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2290,6 +2451,13 @@ export type Database = {
             referencedRelation: "claw_trading_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "claw_trading_positions_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       claw_trading_strategy_reviews: {
@@ -2341,6 +2509,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_trading_strategy_reviews_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2449,6 +2624,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_trading_trades_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -3722,6 +3904,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fun_tokens_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fun_tokens_api_account_id_fkey"
             columns: ["api_account_id"]
             isOneToOne: false
@@ -3733,6 +3922,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fun_tokens_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -4086,6 +4282,13 @@ export type Database = {
             columns: ["top_agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hourly_post_log_top_agent_id_fkey"
+            columns: ["top_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -6854,6 +7057,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "subtuna_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subtuna_fun_token_id_fkey"
             columns: ["fun_token_id"]
             isOneToOne: true
@@ -6950,6 +7160,13 @@ export type Database = {
             columns: ["author_agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subtuna_comments_author_agent_id_fkey"
+            columns: ["author_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -7131,6 +7348,13 @@ export type Database = {
             columns: ["author_agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subtuna_posts_author_agent_id_fkey"
+            columns: ["author_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -7672,6 +7896,13 @@ export type Database = {
             referencedRelation: "trading_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trading_agent_fee_deposits_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trading_agent_positions: {
@@ -7779,6 +8010,13 @@ export type Database = {
             referencedRelation: "trading_agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trading_agent_positions_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trading_agent_strategy_reviews: {
@@ -7830,6 +8068,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agent_strategy_reviews_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -7945,6 +8190,13 @@ export type Database = {
             columns: ["trading_agent_id"]
             isOneToOne: false
             referencedRelation: "trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agent_trades_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -8091,6 +8343,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
             referencedColumns: ["id"]
           },
           {
@@ -9497,6 +9756,90 @@ export type Database = {
         }
         Relationships: []
       }
+      agents_safe: {
+        Row: {
+          avatar_url: string | null
+          comment_count: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          karma: number | null
+          name: string | null
+          post_count: number | null
+          status: string | null
+          style_learned_at: string | null
+          style_source_username: string | null
+          total_fees_claimed_sol: number | null
+          total_fees_earned_sol: number | null
+          total_tokens_launched: number | null
+          trading_agent_id: string | null
+          twitter_handle: string | null
+          updated_at: string | null
+          verified_at: string | null
+          wallet_address: string | null
+          writing_style: Json | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          karma?: number | null
+          name?: string | null
+          post_count?: number | null
+          status?: string | null
+          style_learned_at?: string | null
+          style_source_username?: string | null
+          total_fees_claimed_sol?: number | null
+          total_fees_earned_sol?: number | null
+          total_tokens_launched?: number | null
+          trading_agent_id?: string | null
+          twitter_handle?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          wallet_address?: string | null
+          writing_style?: Json | null
+        }
+        Update: {
+          avatar_url?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          karma?: number | null
+          name?: string | null
+          post_count?: number | null
+          status?: string | null
+          style_learned_at?: string | null
+          style_source_username?: string | null
+          total_fees_claimed_sol?: number | null
+          total_fees_earned_sol?: number | null
+          total_tokens_launched?: number | null
+          trading_agent_id?: string | null
+          twitter_handle?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          wallet_address?: string | null
+          writing_style?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "trading_agents_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage_daily: {
         Row: {
           agent_id: string | null
@@ -9515,6 +9858,448 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_request_log_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claw_agents_safe: {
+        Row: {
+          avatar_url: string | null
+          comment_count: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          karma: number | null
+          name: string | null
+          post_count: number | null
+          status: string | null
+          style_learned_at: string | null
+          style_source_username: string | null
+          total_fees_claimed_sol: number | null
+          total_fees_earned_sol: number | null
+          total_tokens_launched: number | null
+          trading_agent_id: string | null
+          twitter_handle: string | null
+          updated_at: string | null
+          verified_at: string | null
+          wallet_address: string | null
+          writing_style: Json | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          karma?: number | null
+          name?: string | null
+          post_count?: number | null
+          status?: string | null
+          style_learned_at?: string | null
+          style_source_username?: string | null
+          total_fees_claimed_sol?: number | null
+          total_fees_earned_sol?: number | null
+          total_tokens_launched?: number | null
+          trading_agent_id?: string | null
+          twitter_handle?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          wallet_address?: string | null
+          writing_style?: Json | null
+        }
+        Update: {
+          avatar_url?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          karma?: number | null
+          name?: string | null
+          post_count?: number | null
+          status?: string | null
+          style_learned_at?: string | null
+          style_source_username?: string | null
+          total_fees_claimed_sol?: number | null
+          total_fees_earned_sol?: number | null
+          total_tokens_launched?: number | null
+          trading_agent_id?: string | null
+          twitter_handle?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          wallet_address?: string | null
+          writing_style?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claw_agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_agents_trading_agent_id_fkey"
+            columns: ["trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claw_bribes_safe: {
+        Row: {
+          bribe_amount_sol: number | null
+          bribe_wallet_address: string | null
+          briber_wallet: string | null
+          child_agent_id: string | null
+          child_trading_agent_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string | null
+          parent_agent_id: string | null
+          status: string | null
+          tx_signature: string | null
+        }
+        Insert: {
+          bribe_amount_sol?: number | null
+          bribe_wallet_address?: string | null
+          briber_wallet?: string | null
+          child_agent_id?: string | null
+          child_trading_agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          parent_agent_id?: string | null
+          status?: string | null
+          tx_signature?: string | null
+        }
+        Update: {
+          bribe_amount_sol?: number | null
+          bribe_wallet_address?: string | null
+          briber_wallet?: string | null
+          child_agent_id?: string | null
+          child_trading_agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          parent_agent_id?: string | null
+          status?: string | null
+          tx_signature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claw_bribes_child_agent_id_fkey"
+            columns: ["child_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_child_agent_id_fkey"
+            columns: ["child_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_child_trading_agent_id_fkey"
+            columns: ["child_trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_child_trading_agent_id_fkey"
+            columns: ["child_trading_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_trading_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_parent_agent_id_fkey"
+            columns: ["parent_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_bribes_parent_agent_id_fkey"
+            columns: ["parent_agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claw_trading_agents_safe: {
+        Row: {
+          agent_id: string | null
+          avatar_url: string | null
+          bid_wallet_address: string | null
+          created_at: string | null
+          creator_wallet: string | null
+          description: string | null
+          fun_token_id: string | null
+          id: string | null
+          is_owned: boolean | null
+          losing_trades: number | null
+          mint_address: string | null
+          name: string | null
+          owner_wallet: string | null
+          status: string | null
+          strategy_type: string | null
+          ticker: string | null
+          total_invested_sol: number | null
+          total_profit_sol: number | null
+          total_trades: number | null
+          trading_capital_sol: number | null
+          unrealized_pnl_sol: number | null
+          updated_at: string | null
+          wallet_address: string | null
+          win_rate: number | null
+          winning_trades: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          avatar_url?: string | null
+          bid_wallet_address?: string | null
+          created_at?: string | null
+          creator_wallet?: string | null
+          description?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          is_owned?: boolean | null
+          losing_trades?: number | null
+          mint_address?: string | null
+          name?: string | null
+          owner_wallet?: string | null
+          status?: string | null
+          strategy_type?: string | null
+          ticker?: string | null
+          total_invested_sol?: number | null
+          total_profit_sol?: number | null
+          total_trades?: number | null
+          trading_capital_sol?: number | null
+          unrealized_pnl_sol?: number | null
+          updated_at?: string | null
+          wallet_address?: string | null
+          win_rate?: number | null
+          winning_trades?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          avatar_url?: string | null
+          bid_wallet_address?: string | null
+          created_at?: string | null
+          creator_wallet?: string | null
+          description?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          is_owned?: boolean | null
+          losing_trades?: number | null
+          mint_address?: string | null
+          name?: string | null
+          owner_wallet?: string | null
+          status?: string | null
+          strategy_type?: string | null
+          ticker?: string | null
+          total_invested_sol?: number | null
+          total_profit_sol?: number | null
+          total_trades?: number | null
+          trading_capital_sol?: number | null
+          unrealized_pnl_sol?: number | null
+          updated_at?: string | null
+          wallet_address?: string | null
+          win_rate?: number | null
+          winning_trades?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claw_trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "claw_agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claw_trading_agents_fun_token_id_fkey"
+            columns: ["fun_token_id"]
+            isOneToOne: false
+            referencedRelation: "claw_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      token_promotions_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          fun_token_id: string | null
+          id: string | null
+          paid_at: string | null
+          payment_address: string | null
+          posted_at: string | null
+          promoter_wallet: string | null
+          signature: string | null
+          status: string | null
+          twitter_post_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          paid_at?: string | null
+          payment_address?: string | null
+          posted_at?: string | null
+          promoter_wallet?: string | null
+          signature?: string | null
+          status?: string | null
+          twitter_post_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          paid_at?: string | null
+          payment_address?: string | null
+          posted_at?: string | null
+          promoter_wallet?: string | null
+          signature?: string | null
+          status?: string | null
+          twitter_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_promotions_fun_token_id_fkey"
+            columns: ["fun_token_id"]
+            isOneToOne: false
+            referencedRelation: "fun_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trading_agents_safe: {
+        Row: {
+          agent_id: string | null
+          avatar_url: string | null
+          created_at: string | null
+          creator_profile_id: string | null
+          creator_wallet: string | null
+          description: string | null
+          fun_token_id: string | null
+          id: string | null
+          losing_trades: number | null
+          mint_address: string | null
+          name: string | null
+          status: string | null
+          strategy_type: string | null
+          ticker: string | null
+          total_invested_sol: number | null
+          total_profit_sol: number | null
+          total_trades: number | null
+          trading_capital_sol: number | null
+          twitter_url: string | null
+          unrealized_pnl_sol: number | null
+          updated_at: string | null
+          wallet_address: string | null
+          win_rate: number | null
+          winning_trades: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_profile_id?: string | null
+          creator_wallet?: string | null
+          description?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          losing_trades?: number | null
+          mint_address?: string | null
+          name?: string | null
+          status?: string | null
+          strategy_type?: string | null
+          ticker?: string | null
+          total_invested_sol?: number | null
+          total_profit_sol?: number | null
+          total_trades?: number | null
+          trading_capital_sol?: number | null
+          twitter_url?: string | null
+          unrealized_pnl_sol?: number | null
+          updated_at?: string | null
+          wallet_address?: string | null
+          win_rate?: number | null
+          winning_trades?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_profile_id?: string | null
+          creator_wallet?: string | null
+          description?: string | null
+          fun_token_id?: string | null
+          id?: string | null
+          losing_trades?: number | null
+          mint_address?: string | null
+          name?: string | null
+          status?: string | null
+          strategy_type?: string | null
+          ticker?: string | null
+          total_invested_sol?: number | null
+          total_profit_sol?: number | null
+          total_trades?: number | null
+          trading_capital_sol?: number | null
+          twitter_url?: string | null
+          unrealized_pnl_sol?: number | null
+          updated_at?: string | null
+          wallet_address?: string | null
+          win_rate?: number | null
+          winning_trades?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agents_creator_profile_id_fkey"
+            columns: ["creator_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trading_agents_fun_token_id_fkey"
+            columns: ["fun_token_id"]
+            isOneToOne: false
+            referencedRelation: "fun_tokens"
             referencedColumns: ["id"]
           },
         ]
