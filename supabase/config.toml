@@ -450,3 +450,6 @@ verify_jwt = false
 
 [functions.fetch-token-prices]
 verify_jwt = false
+
+[functions.x-post-restyle]
+verify_jwt = false
