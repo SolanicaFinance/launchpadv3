@@ -12,6 +12,7 @@ import { SettingsModal } from "@/components/settings/SettingsModal";
 import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 import { PortfolioModal } from "@/components/portfolio/PortfolioModal";
 import { DepositDialog } from "@/components/wallet/DepositDialog";
+import { WithdrawDialog } from "@/components/wallet/WithdrawDialog";
 import { useChain } from "@/contexts/ChainContext";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
