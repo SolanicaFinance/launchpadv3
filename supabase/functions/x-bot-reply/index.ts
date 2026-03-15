@@ -6,5 +6,5 @@ const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  return new Response(JSON.stringify({ success: true, message: "Bot reply is disabled" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true, message: "Bot reply is disabled", debug: { repliesSent: 0 } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
