@@ -9,7 +9,9 @@ import { Search, Loader2, ArrowUpRight, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 
 interface TokenHoldingsListProps {
   walletAddress: string | null;
