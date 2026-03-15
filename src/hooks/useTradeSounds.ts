@@ -56,6 +56,25 @@ const TONE_PRESETS: Record<string, { buy: [number, number, number, OscillatorTyp
   },
 };
 
+function playTone(freqStart: number, freqEnd: number, duration: number, waveType: OscillatorType = "square") {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = waveType;
+    osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(freqEnd, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration + 0.02);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration + 0.02);
+  } catch (e) {
+    console.warn("[TradeSounds] tone error:", e);
+  }
+}
+
 // ─── Custom audio file paths (used when ACTIVE_PRESET = "custom-file") ───
 // Place your .mp3 or .wav files in /public/sounds/ and update paths here:
 const CUSTOM_BUY_SOUND = "/sounds/buy.mp3";
