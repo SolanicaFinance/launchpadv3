@@ -657,51 +657,7 @@ export default function FunTokenDetailPage() {
       </div>
     );
   };
-  const PnlSimulator = () => {
-    const [simSol, setSimSol] = useState('');
-    const [simMultiplier, setSimMultiplier] = useState('2');
-    const simAmount = parseFloat(simSol) || 0;
-    const simMult = parseFloat(simMultiplier) || 2;
-    const simProfit = simAmount * (simMult - 1);
-    const simProfitPct = ((simMult - 1) * 100).toFixed(0);
 
-    return (
-      <div className="trade-pnl-panel p-3 space-y-2">
-        <h3 className="text-[9px] font-mono uppercase tracking-[0.14em] text-muted-foreground/60 flex items-center gap-1.5">
-          <TrendingUp className="h-2.5 w-2.5 text-primary/60" /> PNL Simulator
-        </h3>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 relative">
-            <input
-              type="number"
-              placeholder="SOL amount"
-              value={simSol}
-              onChange={(e) => setSimSol(e.target.value)}
-              className="w-full bg-hsl(222 28% 8% / 0.8) border border-border/30 rounded-md px-2.5 py-1.5 text-[10px] font-mono text-foreground placeholder:text-muted-foreground/40 trade-input-glow focus:outline-none"
-            />
-          </div>
-          <span className="text-[9px] font-mono text-muted-foreground/50">×</span>
-          <select
-            value={simMultiplier}
-            onChange={(e) => setSimMultiplier(e.target.value)}
-            className="bg-hsl(222 28% 8% / 0.8) border border-border/30 rounded-md px-2 py-1.5 text-[10px] font-mono text-foreground focus:outline-none trade-input-glow appearance-none cursor-pointer"
-          >
-            {[2, 3, 5, 10, 20, 50, 100].map(m => (
-              <option key={m} value={m}>{m}x</option>
-            ))}
-          </select>
-        </div>
-        {simAmount > 0 && (
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-mono text-muted-foreground/60">Profit at {simMult}x</span>
-            <span className="text-[11px] font-mono font-bold text-green-400">
-              +{simProfit.toFixed(2)} SOL ({simProfitPct}%)
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const CommentsSection = () => (
     <div className="trade-glass-panel p-4 md:p-3 lg:p-3 flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -923,7 +879,6 @@ export default function FunTokenDetailPage() {
                 <TokenDetailsSection />
                 <ContractSection />
                 <DescriptionSection />
-                <PnlSimulator />
               </>
             )}
           </div>
@@ -942,7 +897,6 @@ export default function FunTokenDetailPage() {
               <TokenDetailsSection />
               <ContractSection />
               <DescriptionSection />
-              <PnlSimulator />
               {/* Comments removed for platform tokens */}
             </div>
             {!isPunchToken && (
@@ -1003,7 +957,6 @@ export default function FunTokenDetailPage() {
                   </div>
                 </div>
               )}
-              <PnlSimulator />
             </div>
           </div>
 
