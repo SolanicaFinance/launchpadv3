@@ -12,7 +12,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const stripQuotes = (v: string) => v.replace(/^['"]+|['"]+$/g, "").trim();
+// Banned words — never reply TO tweets containing these, and never OUTPUT them
+const BANNED_WORDS = ["rug", "rugpull", "rug pull", "scam", "scammer", "ponzi", "fraud", "honeypot", "honey pot"];
+const BANNED_REGEX = new RegExp(`\\b(${BANNED_WORDS.join("|")})\\b`, "gi");
+
+function containsBannedWords(text: string): boolean {
+  return BANNED_REGEX.test(text);
+}
+
+function stripBannedWords(text: string): string {
+  return text.replace(BANNED_REGEX, "").replace(/\s{2,}/g, " ").trim();
+}
+
 
 function parseCookieString(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
