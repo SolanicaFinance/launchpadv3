@@ -34,7 +34,7 @@ export function KolTweetCard({ tweet }: { tweet: KolTweet }) {
     : `https://etherscan.io/token/${tweet.contract_address}`;
 
   return (
-    <div className="group flex flex-col gap-3 p-4 rounded-xl transition-all duration-300
+    <div className="group flex flex-col gap-3 p-4 rounded-xl transition-all duration-300 h-full
                     bg-card/30 backdrop-blur-sm border border-border/20
                     hover:border-primary/30 hover:bg-card/50 hover:shadow-[0_0_20px_hsl(var(--primary)/0.06)]">
       {/* Header: KOL info + time */}
