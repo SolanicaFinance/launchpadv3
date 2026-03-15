@@ -462,7 +462,11 @@ Deno.serve(async (req) => {
         nextClaimAt: new Date(Date.now() + CLAIM_COOLDOWN_MS).toISOString(),
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } finally {
-      await supabase.rpc("release_claw_creator_claim_lock", { p_twitter_username: normalizedUsername });
+      if (isWalletBased) {
+        await supabase.rpc("release_creator_claim_lock_by_wallet", { p_wallet_address: creatorWallet });
+      } else {
+        await supabase.rpc("release_claw_creator_claim_lock", { p_twitter_username: normalizedUsername });
+      }
     }
   } catch (error) {
     console.error("[saturn-creator-claim] Error:", error);
