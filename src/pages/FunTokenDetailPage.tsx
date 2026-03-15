@@ -498,8 +498,8 @@ export default function FunTokenDetailPage() {
     return (
       <div className="trade-glass-panel p-5 space-y-2">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
-            <Activity className="h-3.5 w-3.5 text-primary/50" /> Token Details
+          <h3 className="text-[12px] font-mono uppercase tracking-[0.12em] text-[#6E6E80] flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-[#00C4B4]" /> Token Details
           </h3>
           <span className={`trade-risk-badge ${risk.className}`}>
             <Shield className="h-3 w-3" />{risk.label}
@@ -514,8 +514,8 @@ export default function FunTokenDetailPage() {
           { label: 'Age', value: formatDistanceToNow(new Date(token.created_at), { addSuffix: false }) },
         ].map((row, i) => (
           <div key={i} className="trade-detail-row">
-            <span className="text-[12px] font-mono text-muted-foreground/50">{row.label}</span>
-            <span className="text-[12px] font-mono text-foreground/80 font-semibold">{row.value}</span>
+            <span className="text-[13px] font-mono text-[#6E6E80]">{row.label}</span>
+            <span className="text-[13px] font-mono text-[#E0E0E0] font-semibold">{row.value}</span>
           </div>
         ))}
       </div>
