@@ -132,6 +132,45 @@ serve(async (req) => {
     }
 
     if (!token) {
+      // For record mode with a signature, treat as alpha-only (external/graduated token not in DB)
+      if (mode === 'record' && clientSignature) {
+        console.log("[launchpad-swap] Token not in DB, falling back to alpha-only recording for:", mintAddress);
+        try {
+          let traderDisplayName: string | null = null;
+          let traderAvatarUrl: string | null = null;
+          if (profileId) {
+            const { data: profile } = await supabase.from("profiles").select("display_name, avatar_url").eq("id", profileId).single();
+            if (profile) {
+              traderDisplayName = profile.display_name;
+              traderAvatarUrl = profile.avatar_url;
+            }
+          }
+          const solAmount = isBuy ? amount : (outputAmount || 0);
+          const tokensAmount = isBuy ? (outputAmount || 0) : amount;
+          await supabase.from("alpha_trades").upsert({
+            wallet_address: userWallet,
+            token_mint: mintAddress,
+            token_name: tokenName || null,
+            token_ticker: tokenTicker || null,
+            trade_type: isBuy ? "buy" : "sell",
+            amount_sol: solAmount,
+            amount_tokens: tokensAmount,
+            price_usd: null,
+            price_sol: null,
+            tx_hash: clientSignature,
+            trader_display_name: traderDisplayName,
+            trader_avatar_url: traderAvatarUrl,
+            chain: 'solana',
+          }, { onConflict: "tx_hash" });
+        } catch (e) {
+          console.warn("[launchpad-swap] alpha fallback insert failed:", e);
+        }
+        return new Response(
+          JSON.stringify({ success: true, signature: clientSignature }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       console.error("[launchpad-swap] Token not found in any table for mint:", mintAddress);
       return new Response(
         JSON.stringify({ error: "Token not found" }),
