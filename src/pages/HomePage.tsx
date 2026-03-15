@@ -340,7 +340,7 @@ export default function HomePage() {
           {/* ── Flanking Product Screenshots — VISIBLE teasers ── */}
           {/* Left: Trading Terminal */}
           <div
-            className="absolute left-[-2%] top-[-5%] bottom-0 w-[46%] max-w-[660px] pointer-events-none hidden lg:block"
+            className="absolute left-[-2%] top-0 bottom-0 w-[46%] max-w-[660px] pointer-events-none hidden lg:block"
             style={{
               transform: "perspective(1200px) rotateY(15deg) rotateX(-2deg)",
               opacity: 0.62,
@@ -350,10 +350,9 @@ export default function HomePage() {
               zIndex: 1,
             }}
           >
-            <div className="relative rounded-xl overflow-hidden"
+            <div className="absolute inset-0 rounded-xl overflow-hidden"
               style={{
-                border: "1.5px solid hsl(84 81% 44% / 0.25)",
-                boxShadow: "0 0 30px hsl(84 81% 44% / 0.12), 0 0 60px hsl(84 81% 44% / 0.06), 0 0 120px hsl(84 81% 44% / 0.03), inset 0 0 40px hsl(0 0% 0% / 0.4)",
+                boxShadow: "inset 0 0 40px hsl(0 0% 0% / 0.4)",
               }}
             >
               {/* Dark vignette overlay */}
