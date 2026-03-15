@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { useAuth } from "@/hooks/useAuth";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { usePumpFunSwap } from "@/hooks/usePumpFunSwap";
+import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +14,9 @@ import { useRugCheck } from "@/hooks/useRugCheck";
 import { VersionedTransaction, Connection, PublicKey } from "@solana/web3.js";
 import { supabase } from "@/integrations/supabase/client";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, ProfitCardData } from "@/components/launchpad/ProfitCardModal";
+import { Token, formatTokenAmount } from "@/hooks/useLaunchpad";
 
 interface TokenInfo {
   mint_address: string;
