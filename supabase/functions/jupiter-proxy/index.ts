@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const JUPITER_API = "https://api.jup.ag/swap/v1";
+const JUPITER_SWAP_API = "https://api.jup.ag/swap/v1";
+const JUPITER_PRICE_API = "https://api.jup.ag/price/v2";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -28,16 +29,19 @@ serve(async (req) => {
 
     if (action === "quote") {
       const qs = new URLSearchParams(params).toString();
-      response = await fetch(`${JUPITER_API}/quote?${qs}`, { method: "GET", headers });
+      response = await fetch(`${JUPITER_SWAP_API}/quote?${qs}`, { method: "GET", headers });
     } else if (action === "swap") {
-      response = await fetch(`${JUPITER_API}/swap`, {
+      response = await fetch(`${JUPITER_SWAP_API}/swap`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
+    } else if (action === "price") {
+      const qs = new URLSearchParams(params).toString();
+      response = await fetch(`${JUPITER_PRICE_API}?${qs}`, { method: "GET", headers });
     } else {
       return new Response(
-        JSON.stringify({ error: "Invalid action. Use 'quote' or 'swap'." }),
+        JSON.stringify({ error: "Invalid action. Use 'quote', 'swap', or 'price'." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

@@ -103,10 +103,10 @@ Deno.serve(async (req) => {
 
     console.log("Attempting update with:", JSON.stringify(updates));
 
+    // Use upsert so new profiles are created if they don't exist yet
     const { data, error: updateError } = await supabase
       .from("profiles")
-      .update(updates)
-      .eq("id", profileId)
+      .upsert({ id: profileId, ...updates }, { onConflict: "id" })
       .select()
       .single();
 
