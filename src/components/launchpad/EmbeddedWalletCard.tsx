@@ -217,26 +217,26 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   }
 
   return (
-    <div className={`border border-border/40 rounded-lg overflow-hidden bg-[hsl(var(--card))] ${className}`}>
+    <div className={`border border-[#c8ff00]/20 rounded-xl overflow-hidden bg-[#0a0a12] ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
-        <div className="flex items-center gap-2">
-          <Wallet className="h-3.5 w-3.5 text-[#c8ff00]" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-foreground/80">Wallet</span>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#c8ff00]/10">
+        <div className="flex items-center gap-2.5">
+          <Wallet className="h-4 w-4 text-[#c8ff00]" />
+          <span className="text-xs font-mono font-bold uppercase tracking-[0.15em] text-foreground/90">Wallet</span>
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fetchBalance} disabled={isLoading}>
-          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-[#c8ff00]/60 hover:text-[#c8ff00]" onClick={fetchBalance} disabled={isLoading}>
+          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
       {/* 2x2 Action Grid */}
-      <div className="p-2.5 grid grid-cols-2 gap-1.5">
+      <div className="p-3 grid grid-cols-2 gap-2">
         {/* Deposit */}
         <Dialog open={showQR} onOpenChange={handleQROpenChange}>
           <DialogTrigger asChild>
-            <button className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
-              <ArrowDownToLine className="h-4 w-4 text-[#c8ff00]" />
-              <span className="text-[9px] font-mono font-bold text-muted-foreground">DEPOSIT</span>
+            <button className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-[#c8ff00]/15 bg-[#111118] hover:bg-[#16161f] hover:border-[#c8ff00]/30 transition-all">
+              <ArrowDownToLine className="h-5 w-5 text-[#c8ff00]" />
+              <span className="text-[10px] font-mono font-bold tracking-widest text-foreground/60">DEPOSIT</span>
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -289,9 +289,9 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
         {/* Export Key */}
         <Dialog open={showExport} onOpenChange={(open) => { setShowExport(open); if (!open) setConfirmText(""); }}>
           <DialogTrigger asChild>
-            <button className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
-              <Key className="h-4 w-4 text-[#c8ff00]" />
-              <span className="text-[9px] font-mono font-bold text-muted-foreground">EXPORT KEY</span>
+            <button className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-[#c8ff00]/15 bg-[#111118] hover:bg-[#16161f] hover:border-[#c8ff00]/30 transition-all">
+              <Key className="h-5 w-5 text-[#c8ff00]" />
+              <span className="text-[10px] font-mono font-bold tracking-widest text-foreground/60">EXPORT KEY</span>
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -326,15 +326,15 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
         </Dialog>
 
         {/* Copy Address */}
-        <button onClick={handleCopy} className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
-          {copied ? <Check className="h-4 w-4 text-[#c8ff00]" /> : <Copy className="h-4 w-4 text-[#c8ff00]" />}
-          <span className="text-[9px] font-mono font-bold text-muted-foreground">{copied ? 'COPIED' : 'COPY ADDR'}</span>
+        <button onClick={handleCopy} className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-[#c8ff00]/15 bg-[#111118] hover:bg-[#16161f] hover:border-[#c8ff00]/30 transition-all">
+          {copied ? <Check className="h-5 w-5 text-[#c8ff00]" /> : <Copy className="h-5 w-5 text-[#c8ff00]" />}
+          <span className="text-[10px] font-mono font-bold tracking-widest text-foreground/60">{copied ? 'COPIED' : 'COPY ADDR'}</span>
         </button>
 
         {/* Solscan */}
-        <button onClick={() => window.open(`https://solscan.io/account/${walletAddress}`, "_blank")} className="flex flex-col items-center gap-1 py-2.5 rounded-md border border-border/30 bg-background/30 hover:bg-background/50 transition-colors">
-          <ExternalLink className="h-4 w-4 text-[#c8ff00]" />
-          <span className="text-[9px] font-mono font-bold text-muted-foreground">SOLSCAN</span>
+        <button onClick={() => window.open(`https://solscan.io/account/${walletAddress}`, "_blank")} className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-[#c8ff00]/15 bg-[#111118] hover:bg-[#16161f] hover:border-[#c8ff00]/30 transition-all">
+          <ExternalLink className="h-5 w-5 text-[#c8ff00]" />
+          <span className="text-[10px] font-mono font-bold tracking-widest text-foreground/60">SOLSCAN</span>
         </button>
       </div>
     </div>
