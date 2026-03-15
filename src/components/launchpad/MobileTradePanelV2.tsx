@@ -382,20 +382,20 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         </div>
 
         {/* ── Quick Amount Chips ── */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {(isBuy ? quickBuyAmounts : quickSellPct).map((v, i) => (
             <button
               key={v}
               onClick={() => handleQuickAmount(v, i)}
-              className={`h-10 min-h-[44px] rounded-lg font-mono text-[12px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
+              className={`h-8 rounded-md font-mono text-[11px] font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 ${
                 selectedPreset === i
                   ? isBuy
                     ? "border-green-500/25 bg-green-500/8 text-green-400"
                     : "border-destructive/25 bg-destructive/8 text-destructive"
-                  : "border-white/[0.08] text-muted-foreground/45 hover:text-muted-foreground/65 hover:border-white/[0.14]"
+                  : "border-white/[0.12] text-foreground/55 hover:text-foreground/75 hover:border-white/[0.2]"
               }`}
             >
-              {isBuy && <img src={SOL_LOGO} alt="" className="w-3.5 h-3.5 rounded-full shrink-0 hidden xs:block" />}
+              {isBuy && <img src={SOL_LOGO} alt="" className="w-3 h-3 rounded-full shrink-0" />}
               {isBuy ? v : `${v}%`}
             </button>
           ))}
