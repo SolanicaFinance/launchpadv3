@@ -1,4 +1,5 @@
 import { TokenCard, WalletBalanceCard } from "@/components/launchpad";
+import { DevWalletRotationBanner } from "@/components/launchpad/DevWalletRotationBanner";
 import { TopPerformersToday } from "@/components/launchpad/TopPerformersToday";
 import { PulseColumnHeaderBar } from "@/components/launchpad/PulseColumnHeaderBar";
 import { PulseFiltersDialog } from "@/components/launchpad/PulseFiltersDialog";
