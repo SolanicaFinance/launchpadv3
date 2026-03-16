@@ -336,6 +336,16 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 </div>
               )}
 
+              {/* No launches warning */}
+              {state.step === "selecting_cex" && state.launchCount === 0 && (
+                <div className="flex items-start gap-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3.5 py-2.5">
+                  <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-400">You have 0 token launches from this wallet</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">This wallet is already clean. Are you sure you want to rotate again?</p>
+                  </div>
+                </div>
+              )
               {/* Loading */}
               {state.step === "loading_data" && (
                 <div className="flex items-center justify-center py-8 gap-2.5 text-sm text-muted-foreground">
