@@ -993,6 +993,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       toast({ title: "Missing token info", description: "Name and ticker required", variant: "destructive" });
       return;
     }
+    if (phantomDevBuySol < 0.1) {
+      toast({ title: "Dev buy too low", description: "Minimum 0.1 SOL dev buy is required to launch", variant: "destructive" });
+      return;
+    }
     if (!phantomImagePreview && !phantomMeme?.imageUrl && !phantomToken.imageUrl) {
       toast({ title: "Image required", description: "Click AI Randomize or upload an image", variant: "destructive" });
       return;
@@ -2252,16 +2256,22 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                         </div>
 
                         {/* Dev Buy */}
-                        <div className="space-y-3 p-5 rounded-xl phantom-devbuy-card">
+                        <div className={`space-y-3 p-5 rounded-xl phantom-devbuy-card transition-all duration-300 ${phantomDevBuySol < 0.1 ? 'ring-2 ring-primary shadow-[0_0_20px_rgba(200,255,0,0.15)]' : ''}`}>
                           <div className="flex items-center justify-between">
-                            <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Dev Buy (optional)</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-white/45 uppercase tracking-wider font-semibold text-[10px]">Dev Buy</span>
+                              <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">MIN 0.1 SOL</span>
+                            </div>
                             <span className="font-bold text-base font-mono text-primary">{phantomDevBuySol} SOL</span>
                           </div>
-                          <Input type="text" inputMode="decimal" autoComplete="off" spellCheck={false} placeholder="0.00"
+                          <Input type="text" inputMode="decimal" autoComplete="off" spellCheck={false} placeholder="0.10"
                             value={phantomDevBuySolInput}
                             onChange={(e) => { let next = e.target.value; if (next.startsWith('.')) next = '0' + next; if (next === "" || DEV_BUY_INPUT_RE.test(next)) setPhantomDevBuySolInput(next); }}
                             onBlur={() => setPhantomDevBuySolInput(formatDevBuySolInput(parseDevBuySol(phantomDevBuySolInput)))}
-                            className="h-11 rounded-xl text-sm font-medium font-mono phantom-glass-input" />
+                            className={`h-11 rounded-xl text-sm font-medium font-mono phantom-glass-input ${phantomDevBuySol < 0.1 ? 'border-primary/50 placeholder:text-primary/40' : ''}`} />
+                          {phantomDevBuySol < 0.1 && (
+                            <p className="text-[10px] text-primary font-medium animate-pulse">⚠ Minimum 0.1 SOL dev buy required to launch</p>
+                          )}
                         </div>
 
                         {/* Sub-mode tabs */}
