@@ -65,15 +65,18 @@ function useMultiWalletInner() {
     if (!profileId) return;
     supabase
       .from("user_wallets")
-      .select("wallet_address, label, is_default")
+      .select("wallet_address, label, is_default, is_hidden")
       .eq("profile_id", profileId)
       .then(({ data }) => {
         if (!data) return;
         const map: Record<string, string> = {};
-        data.forEach((row) => {
+        const hidden = new Set<string>();
+        data.forEach((row: any) => {
           map[row.wallet_address] = row.label;
+          if (row.is_hidden) hidden.add(row.wallet_address);
         });
         setLabels(map);
+        setHiddenAddresses(hidden);
       });
   }, [profileId]);
 
