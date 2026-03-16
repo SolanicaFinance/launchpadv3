@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { useSolPrice } from "@/hooks/useSolPrice";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { LaunchpadDepositPrompt } from "./LaunchpadDepositPrompt";
 import { Connection, Transaction, VersionedTransaction, PublicKey, Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
