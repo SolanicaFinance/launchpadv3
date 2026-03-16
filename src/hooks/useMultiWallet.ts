@@ -194,6 +194,7 @@ function useMultiWalletInner() {
     switchWallet,
     createNewWallet,
     renameWallet,
+    hideWallet,
     refreshBalances,
     getWalletByAddress,
     creating,
