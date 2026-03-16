@@ -49,15 +49,16 @@ serve(async (req) => {
 
     // ─── CREATE QUOTE ────────────────────────────────────────────
     if (action === "quote") {
-      const { fromAssetId, fromNetworkId, toAssetId, toNetworkId, fromAmount, type } = params;
-      const body: Record<string, unknown> = {
+      const { fromAssetId, fromNetworkId, toAssetId, toNetworkId, fromAmount } = params;
+      const numAmount = typeof fromAmount === "string" ? parseFloat(fromAmount) : Number(fromAmount);
+      const body = {
         fromAssetId: fromAssetId || "sol",
         fromNetworkId: fromNetworkId || "solana",
         toAssetId: toAssetId || "sol",
         toNetworkId: toNetworkId || "solana",
-        fromAmount: typeof fromAmount === "number" ? String(fromAmount) : fromAmount,
+        fromAmount: numAmount,
       };
-      if (type) body.type = type;
+      console.log("[splitnow-proxy] Quote request:", JSON.stringify(body));
       const res = await fetch(`${SPLITNOW_API}/quotes/`, {
         method: "POST",
         headers,
