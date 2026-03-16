@@ -324,8 +324,8 @@ export default function FunTokenDetailPage() {
   const { mintAddress } = useParams<{ mintAddress: string }>();
   const { solanaAddress } = useAuth();
   const privyAvailable = usePrivyAvailable();
-  const { managedWallets } = useMultiWallet();
-  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
+  const { allAddresses } = useMultiWallet();
+  const allWalletAddresses = allAddresses;
   const { solPrice } = useSolPrice();
   const { bnbPrice } = useBnbPrice();
   const { toast } = useToast();
