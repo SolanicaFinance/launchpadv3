@@ -469,7 +469,7 @@ export function useDevWalletRotation() {
     } finally {
       setRunning(false);
     }
-  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, getWalletSigner, log, update, state.sendAmount, state.quoteId]);
+  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, privySignTransaction, log, update, state.sendAmount, state.quoteId]);
 
   const reset = useCallback(() => {
     setState(initial);
