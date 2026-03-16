@@ -295,7 +295,7 @@ export function useDevWalletRotation() {
 
       // Step 2: Create new wallet (reuse if already created from a previous attempt)
       setCurrentStep("creating_wallet");
-      let newAddr: string;
+      let newAddr: string | null | undefined;
       const existingNewAddr = await new Promise<string | null>((resolve) => {
         setState((s) => { resolve(s.newWalletAddress); return s; });
       });
@@ -305,8 +305,14 @@ export function useDevWalletRotation() {
       } else {
         log("Generating fresh Privy embedded wallet...");
         newAddr = await createNewWallet();
-        update({ newWalletAddress: newAddr });
-        log(`New wallet created: ${newAddr}`);
+        if (newAddr) {
+          update({ newWalletAddress: newAddr });
+          log(`New wallet created: ${newAddr}`);
+        }
+      }
+
+      if (!newAddr) {
+        throw new Error("Failed to create new wallet. Please try again.");
       }
 
       // Step 3: Create order via SplitNow
