@@ -2223,10 +2223,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     </div>
 
                     {/* Deposit prompt if balance too low */}
-                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
+                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.1) && !privyDepositReady && (
                       <LaunchpadDepositPrompt
                         walletAddress={launchpadPrivyWalletAddress}
-                        minSol={0.05}
+                        minSol={0.1}
                         onReady={async () => {
                           setPrivyDepositReady(true);
                           await refreshManagedWalletBalances();
