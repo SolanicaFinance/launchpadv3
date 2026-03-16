@@ -227,13 +227,31 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             )}
 
             {/* Actions */}
-            {(isComplete || isError) && (
+            {isError && (
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  className="flex-1 gap-2"
+                  onClick={() => { reset(); startRotation(); }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            )}
+            {isComplete && (
               <Button
-                variant={isError ? "outline" : "default"}
                 className="w-full"
                 onClick={() => onOpenChange(false)}
               >
-                {isComplete ? "Done" : "Close"}
+                Done
               </Button>
             )}
           </div>
