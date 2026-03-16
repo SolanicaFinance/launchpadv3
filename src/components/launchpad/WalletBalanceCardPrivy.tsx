@@ -13,7 +13,7 @@ interface WalletBalanceCardPrivyProps {
 // Component that uses Privy wallet hooks - ONLY rendered when privyAvailable is true
 export default function WalletBalanceCardPrivy({ minRequired, className = "" }: WalletBalanceCardPrivyProps) {
   const { walletAddress: defaultWalletAddress, isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
-  const { activeAddress } = useMultiWallet();
+  const { activeAddress, activeWallet, refreshBalances } = useMultiWallet();
   // Use the multi-wallet active address (respects rotation/switch), fallback to default
   const walletAddress = activeAddress || defaultWalletAddress;
   const { toast } = useToast();
@@ -23,14 +23,26 @@ export default function WalletBalanceCardPrivy({ minRequired, className = "" }: 
   const [copied, setCopied] = useState(false);
   const [balanceError, setBalanceError] = useState<string | null>(null);
 
+  // Sync balance from multi-wallet if available
+  useEffect(() => {
+    if (activeWallet?.balance !== null && activeWallet?.balance !== undefined) {
+      setBalance(activeWallet.balance);
+    }
+  }, [activeWallet?.balance]);
+
   const fetchBalance = async () => {
-    if (!isWalletReady) return;
+    if (!walletAddress) return;
     setIsLoading(true);
     setBalanceError(null);
 
     try {
-      const bal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
-      setBalance(bal);
+      // If multi-wallet has refreshBalances, use it for the active wallet
+      if (refreshBalances) {
+        await refreshBalances();
+      } else {
+        const bal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
+        setBalance(bal);
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to fetch balance";
       setBalanceError(msg);
@@ -42,10 +54,11 @@ export default function WalletBalanceCardPrivy({ minRequired, className = "" }: 
 
   // Fetch balance on mount and every 10 seconds
   useEffect(() => {
-    if (!isWalletReady) return;
+    if (!walletAddress) return;
 
     fetchBalance();
     const interval = setInterval(fetchBalance, 10000);
+    return () => clearInterval(interval);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWalletReady]);
