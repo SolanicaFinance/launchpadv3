@@ -5,11 +5,11 @@
  * 
  * Step 1: createAndFetchQuote → returns quoteId + rates[] per exchange
  * Step 2: createAndFetchOrder → returns depositAddress, depositAmount, orderId
- * Step 3: Send SOL to depositAddress
+ * Step 3: User confirms → Send SOL to depositAddress
  * Step 4: getOrderStatus → poll until completed
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
@@ -44,6 +44,7 @@ export type RotationStep =
   | "checking_launches"
   | "creating_wallet"
   | "creating_order"
+  | "awaiting_confirmation"
   | "sending_sol"
   | "polling_status"
   | "switching_wallet"
@@ -73,6 +74,33 @@ export interface RotationState {
   logs: string[];
   minDeposit: number;
   maxDeposit: number | null;
+  usedDirectFallback: boolean;
+}
+
+const ROTATION_STORAGE_KEY = "claw_rotation_order";
+
+/** Save active rotation order to localStorage for crash recovery */
+function persistOrder(data: { orderId: string; depositAddress: string; depositAmount: number; newWalletAddress: string; selectedCex: string; timestamp: number }) {
+  try { localStorage.setItem(ROTATION_STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+/** Get persisted rotation order */
+export function getPersistedOrder(): { orderId: string; depositAddress: string; depositAmount: number; newWalletAddress: string; selectedCex: string; timestamp: number } | null {
+  try {
+    const raw = localStorage.getItem(ROTATION_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    // Expire after 2 hours
+    if (Date.now() - data.timestamp > 2 * 60 * 60 * 1000) {
+      localStorage.removeItem(ROTATION_STORAGE_KEY);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function clearPersistedOrder() {
+  try { localStorage.removeItem(ROTATION_STORAGE_KEY); } catch {}
 }
 
 const initial: RotationState = {
@@ -98,6 +126,7 @@ const initial: RotationState = {
   logs: [],
   minDeposit: 0.05,
   maxDeposit: null,
+  usedDirectFallback: false,
 };
 
 export function useDevWalletRotation() {
@@ -148,11 +177,7 @@ export function useDevWalletRotation() {
   );
 
   /**
-   * Load all data needed for the selection screen:
-   * - Exchangers list
-   * - SOL deposit limits
-   * - Wallet balance
-   * - Quote with per-exchange rates
+   * Load all data needed for the selection screen
    */
   const loadData = useCallback(async () => {
     if (!activeWallet?.address) {
@@ -162,8 +187,7 @@ export function useDevWalletRotation() {
 
     update({ step: "loading_data", error: null });
     try {
-      // Fire wallet pre-creation in background (don't block data loading)
-      // Use a timeout to prevent hanging indefinitely
+      // Fire wallet pre-creation in background
       const walletPromise = (async () => {
         try {
           console.log("[WalletRotation] Starting wallet pre-creation...");
@@ -215,7 +239,7 @@ export function useDevWalletRotation() {
         maxDeposit: maxDep,
       });
 
-      // Now fetch quote to get per-exchange rates
+      // Fetch quote to get per-exchange rates
       if (sendAmt >= minDep) {
         try {
           const quoteData = await splitnowCall("quote", {
@@ -227,7 +251,6 @@ export function useDevWalletRotation() {
             type: "floating_rate",
           });
 
-          // Parse rates from quoteLegs or rates array
           const rawRates = quoteData?.rates || quoteData?.quoteLegs || [];
           const rates: ExchangeRate[] = rawRates.map((r: any) => {
             const exchanger = available.find((e) => e.id === r.exchangerId);
@@ -248,7 +271,6 @@ export function useDevWalletRotation() {
             rates,
           });
         } catch (quoteErr: any) {
-          // Quote failed but we can still show exchanges without rates
           console.warn("[WalletRotation] Quote failed, showing exchanges without rates:", quoteErr);
           update({ step: "selecting_cex", rates: [] });
         }
@@ -260,8 +282,8 @@ export function useDevWalletRotation() {
     }
   }, [splitnowCall, update, rpcUrl, activeWallet, createNewWallet]);
 
-  /** Run the full rotation flow with a user-selected CEX */
-  const startRotation = useCallback(async (selectedCex: string) => {
+  /** Phase 1: Prepare rotation - check launches, create wallet, create order, then STOP for confirmation */
+  const prepareRotation = useCallback(async (selectedCex: string) => {
     if (!activeWallet?.address || running) return;
     setRunning(true);
 
@@ -285,6 +307,7 @@ export function useDevWalletRotation() {
       orderStatusText: null,
       error: null,
       logs: [],
+      usedDirectFallback: false,
     }));
 
     try {
@@ -295,7 +318,7 @@ export function useDevWalletRotation() {
       update({ launchCount: count });
       log(`Found ${count} token launch(es) from this wallet`);
 
-      // Step 2: Create new wallet (reuse if already created from a previous attempt)
+      // Step 2: Create new wallet
       setCurrentStep("creating_wallet");
       let newAddr: string | null | undefined;
       const existingNewAddr = await new Promise<string | null>((resolve) => {
@@ -318,8 +341,6 @@ export function useDevWalletRotation() {
       }
 
       // Step 3: Create order via SplitNow
-      // SDK: createAndFetchOrder({ quoteId, fromAmount, fromAssetId, fromNetworkId, walletDistributions })
-      // Returns: { depositAddress, depositAmount, orderId }
       setCurrentStep("creating_order");
       
       const sendAmount = state.sendAmount;
@@ -352,7 +373,6 @@ export function useDevWalletRotation() {
       if (quoteId) {
         log(`Creating order routed through ${selectedCex}...`);
         try {
-          // SDK uses walletDistributions, raw API uses orderOutputs
           const orderOutputs = [
             {
               toAddress: newAddr,
@@ -374,7 +394,6 @@ export function useDevWalletRotation() {
 
           update({ order: orderData });
 
-          // SDK docs: order.depositAddress, order.depositAmount, order.orderId
           depositAddr = orderData?.depositAddress || orderData?.depositWalletAddress || newAddr;
           depositAmt = Number(orderData?.depositAmount || orderData?.orderInput?.fromAmount || sendAmount);
           orderIdStr = orderData?.orderId || orderData?.shortId;
@@ -384,6 +403,18 @@ export function useDevWalletRotation() {
           log(`Order created (ID: ${orderIdStr})`);
           log(`Deposit to: ${depositAddr}`);
           log(`Deposit amount: ${depositAmt} SOL`);
+
+          // Persist order for crash recovery
+          if (orderIdStr) {
+            persistOrder({
+              orderId: orderIdStr,
+              depositAddress: depositAddr,
+              depositAmount: depositAmt,
+              newWalletAddress: newAddr,
+              selectedCex,
+              timestamp: Date.now(),
+            });
+          }
         } catch (orderErr: any) {
           usedDirectFallback = true;
           log(`Order failed: ${orderErr.message}`);
@@ -398,10 +429,46 @@ export function useDevWalletRotation() {
         depositAmt = sendAmount;
       }
 
-      // Step 4: Send SOL to deposit address
+      update({ usedDirectFallback, depositAddress: depositAddr, depositAmount: depositAmt });
+
+      // STOP HERE — wait for user to click "Confirm & Send"
+      setCurrentStep("awaiting_confirmation");
+      log("⏸ Order ready — waiting for your confirmation to send SOL.");
+    } catch (err: any) {
+      console.error("[WalletRotation] Error:", err);
+      update({ step: "error", failedStep: currentStep, error: err.message || "Unknown error" });
+      log(`❌ Error: ${err.message}`);
+    } finally {
+      setRunning(false);
+    }
+  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, log, update, state.sendAmount, state.quoteId]);
+
+  /** Phase 2: User confirmed — send SOL and poll */
+  const confirmAndSend = useCallback(async () => {
+    if (!activeWallet?.address || running) return;
+    setRunning(true);
+
+    let currentStep: RotationStep = "sending_sol";
+    const setCurrentStep = (step: RotationStep) => {
+      currentStep = step;
+      update({ step, failedStep: null });
+    };
+
+    try {
+      const depositAddr = state.depositAddress;
+      const depositAmt = state.depositAmount || state.sendAmount;
+      const orderIdStr = state.orderId;
+      const newAddr = state.newWalletAddress;
+      const usedDirectFallback = state.usedDirectFallback;
+
+      if (!depositAddr || !newAddr) {
+        throw new Error("Missing deposit address or new wallet. Please restart.");
+      }
+
+      // Step 4: Send SOL
       setCurrentStep("sending_sol");
       const connection = new Connection(rpcUrl, "confirmed");
-      log(`Sending ${depositAmt.toFixed(4)} SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
+      log(`Sending ${Number(depositAmt).toFixed(4)} SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
       
       const sendLamports = Math.floor(Number(depositAmt) * LAMPORTS_PER_SOL);
       const { blockhash } = await connection.getLatestBlockhash("confirmed");
@@ -415,7 +482,6 @@ export function useDevWalletRotation() {
       tx.recentBlockhash = blockhash;
       tx.feePayer = new PublicKey(activeWallet.address);
 
-      // Use Privy's signTransaction with showWalletUIs: false for auto-sign
       const signedTx = await privySignTransaction(tx, { walletAddress: activeWallet.address });
       const sig = await connection.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: true,
@@ -425,8 +491,6 @@ export function useDevWalletRotation() {
       log(`Transaction sent: ${sig}`);
 
       // Step 5: Poll order status
-      // SDK docs: orderStatus.orderStatus === 'completed' means done
-      // orderStatus.orderStatusText for human-readable, orderStatus.orderStatusShort for short
       setCurrentStep("polling_status");
 
       if (usedDirectFallback || !orderIdStr) {
@@ -439,7 +503,6 @@ export function useDevWalletRotation() {
         for (let i = 0; i < 120; i++) {
           await new Promise((r) => setTimeout(r, 5000));
           const statusData = await splitnowCall("status", { orderId: orderIdStr });
-          // SDK fields: orderStatus, orderStatusText, orderStatusShort
           finalStatus = statusData?.orderStatus || statusData?.status || "pending";
           statusText = statusData?.orderStatusText || statusData?.statusText || finalStatus;
           const statusShort = statusData?.orderStatusShort || statusData?.statusShort || "";
@@ -462,6 +525,7 @@ export function useDevWalletRotation() {
       }
       log("✅ Wallet rotation complete!");
       update({ step: "complete", failedStep: null });
+      clearPersistedOrder();
     } catch (err: any) {
       console.error("[WalletRotation] Error:", err);
       update({ step: "error", failedStep: currentStep, error: err.message || "Unknown error" });
@@ -469,7 +533,7 @@ export function useDevWalletRotation() {
     } finally {
       setRunning(false);
     }
-  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, privySignTransaction, log, update, state.sendAmount, state.quoteId]);
+  }, [activeWallet, running, rpcUrl, wallets, switchWallet, hideWallet, splitnowCall, privySignTransaction, log, update, state]);
 
   const reset = useCallback(() => {
     setState(initial);
@@ -480,8 +544,11 @@ export function useDevWalletRotation() {
     state,
     running,
     loadData,
-    startRotation,
+    prepareRotation,
+    confirmAndSend,
     reset,
     checkLaunches,
+    // Keep old name for backwards compat but map to prepareRotation
+    startRotation: prepareRotation,
   };
 }

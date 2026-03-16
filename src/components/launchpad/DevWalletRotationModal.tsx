@@ -24,8 +24,9 @@ import {
   ExternalLink,
   ShieldCheck,
   ChevronRight,
+  HandMetal,
 } from "lucide-react";
-import { useDevWalletRotation, type RotationStep, type ExchangeRate } from "@/hooks/useDevWalletRotation";
+import { useDevWalletRotation, type RotationStep, type ExchangeRate, getPersistedOrder } from "@/hooks/useDevWalletRotation";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,7 @@ const PROCESS_STEPS: { key: RotationStep; label: string; icon: React.ElementType
   { key: "checking_launches", label: "Checking existing launches", icon: Search },
   { key: "creating_wallet", label: "Generating fresh wallet", icon: Wallet },
   { key: "creating_order", label: "Creating exchange order", icon: ArrowRightLeft },
+  { key: "awaiting_confirmation", label: "Awaiting your confirmation", icon: HandMetal },
   { key: "sending_sol", label: "Sending SOL to deposit", icon: Send },
   { key: "polling_status", label: "Processing through CEX", icon: RefreshCw },
   { key: "switching_wallet", label: "Switching to new wallet", icon: Sparkles },
@@ -173,7 +175,6 @@ function StepItem({ stepKey, label, icon: Icon, currentStep, failedStep }: {
 
 /* ─── Log Entry Component ─── */
 function LogEntry({ message, index }: { message: string; index: number }) {
-  // Try to extract timestamp
   const tsMatch = message.match(/^\[(\d{2}:\d{2}:\d{2})\]\s*(.*)/);
   const timestamp = tsMatch ? tsMatch[1] : null;
   const content = tsMatch ? tsMatch[2] : message;
@@ -194,16 +195,14 @@ function LogEntry({ message, index }: { message: string; index: number }) {
    MAIN MODAL
    ═══════════════════════════════════════════════ */
 export function DevWalletRotationModal({ open, onOpenChange }: Props) {
-  const { state, running, loadData, startRotation, reset } = useDevWalletRotation();
+  const { state, running, loadData, prepareRotation, confirmAndSend, reset } = useDevWalletRotation();
   const { activeWallet, switchWallet } = useMultiWallet() as any;
   const queryClient = useQueryClient();
 
   const handleDone = useCallback(() => {
-    // Switch to the new wallet if rotation completed
     if (state.newWalletAddress) {
       switchWallet(state.newWalletAddress);
     }
-    // Invalidate all wallet/balance related queries so UI refreshes
     queryClient.invalidateQueries({ queryKey: ["wallet-holdings"] });
     queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
     queryClient.invalidateQueries({ queryKey: ["sol-balance"] });
@@ -220,19 +219,22 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (!open) {
-      if (state.step === "complete" || state.step === "error" || state.step === "selecting_cex") {
+      // Only reset if not in a critical sending state
+      if (state.step === "complete" || state.step === "selecting_cex" || state.step === "awaiting_confirmation") {
         setTimeout(reset, 300);
       }
+      // Don't reset if error (user might want to see the order ID)
     }
   }, [open, state.step, reset]);
 
   const isSelecting = state.step === "selecting_cex" || state.step === "loading_data";
-  const isProcessing = !isSelecting && state.step !== "idle" && state.step !== "complete" && state.step !== "error";
+  const isAwaitingConfirmation = state.step === "awaiting_confirmation";
+  const isProcessing = !isSelecting && !isAwaitingConfirmation && state.step !== "idle" && state.step !== "complete" && state.step !== "error";
   const isComplete = state.step === "complete";
   const isError = state.step === "error" && !isSelecting;
 
   const handleSelectCex = (cexId: string) => {
-    startRotation(cexId);
+    prepareRotation(cexId);
   };
 
   // Progress bar percentage
@@ -260,6 +262,9 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
 
   const balanceTooLow = state.sendAmount > 0 && state.sendAmount < state.minDeposit;
 
+  // Check for persisted order from a crash
+  const persistedOrder = getPersistedOrder();
+
   return (
     <Dialog open={open} onOpenChange={running ? undefined : onOpenChange}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-border/50 bg-card/95 backdrop-blur-xl shadow-[0_8px_64px_rgba(0,0,0,0.5)]">
@@ -277,11 +282,11 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
           </div>
 
           {/* Progress bar - only show during processing */}
-          {(isProcessing || isComplete) && (
+          {(isProcessing || isComplete || isAwaitingConfirmation) && (
             <div className="mt-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {isComplete ? "Complete" : "Processing"}
+                  {isComplete ? "Complete" : isAwaitingConfirmation ? "Awaiting Confirmation" : "Processing"}
                 </span>
                 <span className="text-[10px] font-mono text-primary tabular-nums">{progressPercent}%</span>
               </div>
@@ -292,6 +297,30 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
 
         {/* ─── Content ─── */}
         <div className="px-5 py-4 max-h-[70vh] overflow-y-auto space-y-3">
+
+          {/* ═══ PERSISTED ORDER RECOVERY BANNER ═══ */}
+          {isSelecting && persistedOrder && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3.5 space-y-2">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-amber-400">Previous rotation in progress</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    A previous rotation order was found. You can track it using the order ID below.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <CopyableAddress label="Order ID" value={persistedOrder.orderId} />
+                <CopyableAddress label="Deposit Address" value={persistedOrder.depositAddress} />
+                <CopyableAddress label="New Wallet" value={persistedOrder.newWalletAddress} />
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/40 border border-border/30">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Amount</p>
+                  <p className="text-sm font-mono font-bold text-primary">{persistedOrder.depositAmount} SOL</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ═══ SELECTION PHASE ═══ */}
           {isSelecting && (
@@ -447,6 +476,115 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             </>
           )}
 
+          {/* ═══ AWAITING CONFIRMATION PHASE ═══ */}
+          {isAwaitingConfirmation && (
+            <>
+              {/* Selected CEX pill */}
+              {state.selectedCex && (
+                <div className="flex items-center justify-between rounded-xl bg-secondary/30 border border-border/40 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const cex = state.exchangers.find((e) => e.id === state.selectedCex);
+                      const icon = cex ? getCexIcon(cex.id, cex.name, cex.website) : null;
+                      return (
+                        <>
+                          {icon && (
+                            <div className="h-6 w-6 rounded-md bg-secondary/60 flex items-center justify-center overflow-hidden">
+                              <img src={icon} alt="" className="h-3.5 w-3.5 object-contain" />
+                            </div>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            via <span className="font-semibold text-foreground">{cex?.name || state.selectedCex}</span>
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <span className="text-sm font-mono font-bold text-primary">{state.sendAmount.toFixed(4)} SOL</span>
+                </div>
+              )}
+
+              {/* Steps so far */}
+              <div className="space-y-1">
+                {PROCESS_STEPS.map(({ key, label, icon }) => (
+                  <StepItem
+                    key={key}
+                    stepKey={key}
+                    label={label}
+                    icon={icon}
+                    currentStep={state.step}
+                    failedStep={state.failedStep}
+                  />
+                ))}
+              </div>
+
+              {/* Order ID - prominent display */}
+              {state.orderId && (
+                <div className="rounded-xl bg-primary/5 border-2 border-primary/30 p-3.5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">Exchange Order ID</p>
+                  </div>
+                  <CopyableAddress label="Order ID (save this!)" value={state.orderId} />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    ⚠️ Save this order ID. If the page crashes after sending, you can use it to track your transfer on the exchange.
+                  </p>
+                </div>
+              )}
+
+              {/* Details */}
+              {(state.depositAddress || state.newWalletAddress) && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1">Order Details</p>
+                  <div className="space-y-1.5">
+                    {state.depositAddress && (
+                      <CopyableAddress label="Deposit Address" value={state.depositAddress} />
+                    )}
+                    {state.depositAmount && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/40 border border-border/30">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Amount to Send</p>
+                        <p className="text-sm font-mono font-bold text-primary">{state.depositAmount} SOL</p>
+                      </div>
+                    )}
+                    {state.newWalletAddress && (
+                      <CopyableAddress label="New Wallet (destination)" value={state.newWalletAddress} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmation warning */}
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3.5 space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-400">Ready to send — confirm below</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                      Clicking "Confirm & Send SOL" will transfer your funds to the exchange deposit address. 
+                      This action cannot be undone. Make sure you have saved the Order ID above before proceeding.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logs */}
+              {state.logs.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1">Activity Log</p>
+                  <div className="relative rounded-xl bg-background/60 border border-border/30 overflow-hidden">
+                    <ScrollArea className="h-24">
+                      <div className="p-3 space-y-0">
+                        {state.logs.map((l, i) => (
+                          <LogEntry key={i} message={l} index={i} />
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           {/* ═══ PROCESSING / COMPLETE / ERROR PHASE ═══ */}
           {(isProcessing || isComplete || isError) && (
             <>
@@ -499,6 +637,13 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 </div>
               )}
 
+              {/* Order ID - always visible during processing */}
+              {state.orderId && (
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1.5">
+                  <CopyableAddress label="Exchange Order ID" value={state.orderId} />
+                </div>
+              )}
+
               {/* Details grid - addresses, tx, amount */}
               {(state.depositAddress || state.newWalletAddress || state.txSignature) && (
                 <div className="space-y-1.5">
@@ -535,7 +680,6 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                         ))}
                       </div>
                     </ScrollArea>
-                    {/* Bottom fade overlay */}
                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
                   </div>
                 </div>
@@ -548,6 +692,11 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                   <div>
                     <p className="text-xs font-semibold text-destructive mb-0.5">Rotation failed</p>
                     <p className="text-[11px] text-destructive/80">{state.error}</p>
+                    {state.orderId && (
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Your exchange Order ID: <span className="font-mono font-bold text-foreground">{state.orderId}</span> — save this to track your funds.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -567,8 +716,23 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
         </div>
 
         {/* ─── Footer Actions ─── */}
-        {(isError || isComplete) && (
+        {(isAwaitingConfirmation || isError || isComplete) && (
           <div className="px-5 pb-5 pt-1">
+            {isAwaitingConfirmation && (
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 gap-2 btn-gradient-green hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
+                  onClick={confirmAndSend}
+                  disabled={running}
+                >
+                  <Send className="h-4 w-4" />
+                  Confirm & Send SOL
+                </Button>
+                <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>
+                  Cancel
+                </Button>
+              </div>
+            )}
             {isError && (
               <div className="flex gap-2">
                 <Button className="flex-1 gap-2" onClick={() => reset()}>
