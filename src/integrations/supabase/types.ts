@@ -8969,6 +8969,7 @@ export type Database = {
           created_at: string
           id: string
           is_default: boolean
+          is_hidden: boolean | null
           label: string
           profile_id: string
           wallet_address: string
@@ -8977,6 +8978,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          is_hidden?: boolean | null
           label?: string
           profile_id: string
           wallet_address: string
@@ -8985,6 +8987,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          is_hidden?: boolean | null
           label?: string
           profile_id?: string
           wallet_address?: string
