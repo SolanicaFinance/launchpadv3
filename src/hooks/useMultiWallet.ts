@@ -31,6 +31,7 @@ const FALLBACK = {
   switchWallet: (_addr: string) => {},
   createNewWallet: async () => { throw new Error("Privy not available"); return "" as string; },
   renameWallet: async (_addr: string, _label: string) => {},
+  hideWallet: async (_addr: string) => {},
   refreshBalances: async () => {},
   getWalletByAddress: (_addr: string) => null,
   creating: false,
