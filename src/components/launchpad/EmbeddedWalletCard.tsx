@@ -123,7 +123,7 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
 
     const pollInterval = setInterval(async () => {
       try {
-        const currentBal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
+        const currentBal = await fetchBalance() ?? balance ?? 0;
         setBalance(currentBal);
 
         // Check if balance increased
