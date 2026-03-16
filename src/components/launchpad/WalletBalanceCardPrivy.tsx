@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { Button } from "@/components/ui/button";
 import { Wallet, Copy, Check, RefreshCw, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +12,10 @@ interface WalletBalanceCardPrivyProps {
 
 // Component that uses Privy wallet hooks - ONLY rendered when privyAvailable is true
 export default function WalletBalanceCardPrivy({ minRequired, className = "" }: WalletBalanceCardPrivyProps) {
-  const { walletAddress, isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
+  const { walletAddress: defaultWalletAddress, isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
+  const { activeAddress } = useMultiWallet();
+  // Use the multi-wallet active address (respects rotation/switch), fallback to default
+  const walletAddress = activeAddress || defaultWalletAddress;
   const { toast } = useToast();
 
   const [balance, setBalance] = useState<number | null>(null);
