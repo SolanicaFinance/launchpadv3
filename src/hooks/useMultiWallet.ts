@@ -5,7 +5,7 @@
  * Tracks active wallet, syncs labels to DB.
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useWallets, useCreateWallet } from "@privy-io/react-auth/solana";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useAuth } from "@/hooks/useAuth";
