@@ -42,6 +42,7 @@ import { useTurboSwap } from "@/hooks/useTurboSwap";
 const SendTokenModal = lazy(() => import("@/components/wallet/SendTokenModal"));
 const SwapModal = lazy(() => import("@/components/wallet/SwapModal"));
 const ReceiveDialog = lazy(() => import("@/components/wallet/ReceiveDialog"));
+const MyWalletsSection = lazy(() => import("@/components/panel/MyWalletsSection"));
 import { SettingsModal } from "@/components/settings/SettingsModal";
 import { AccountSecurityModal } from "@/components/settings/AccountSecurityModal";
 import { DepositDialog } from "@/components/wallet/DepositDialog";
@@ -1091,6 +1092,19 @@ export default function PanelUnifiedDashboard() {
           </CollapsibleContent>
         </Collapsible>
       </GlassCard>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* MY WALLETS SECTION */}
+      {/* ═══════════════════════════════════════════ */}
+      {isSolana && (
+        <GlassCard className="overflow-hidden">
+          <div className="p-4">
+            <Suspense fallback={<div className="py-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}>
+              <MyWalletsSection />
+            </Suspense>
+          </div>
+        </GlassCard>
+      )}
 
       {/* ═══════════════════════════════════════════ */}
       {/* REFERRALS SECTION */}
