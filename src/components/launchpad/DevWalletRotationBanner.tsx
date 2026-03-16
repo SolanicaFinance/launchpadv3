@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
@@ -6,41 +6,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
 export function DevWalletRotationBanner() {
-  const { managedWallets, ready } = useMultiWallet();
+  const { activeWallet, ready } = useMultiWallet();
   const [launchCount, setLaunchCount] = useState(0);
   const [checked, setChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Stable key derived from sorted addresses — only changes when actual addresses change
-  const addressKey = useMemo(
-    () => managedWallets.map((w) => w.address).sort().join(","),
-    [managedWallets]
-  );
-
-  const lastCheckedKey = useRef("");
+  const lastCheckedAddr = useRef("");
 
   useEffect(() => {
-    if (!ready || !addressKey) return;
-    // Skip if we already checked this exact set of addresses
-    if (lastCheckedKey.current === addressKey) return;
-    lastCheckedKey.current = addressKey;
+    const addr = activeWallet?.address;
+    if (!ready || !addr) return;
+    if (lastCheckedAddr.current === addr) return;
+    lastCheckedAddr.current = addr;
 
-    const addresses = addressKey.split(",").filter(Boolean);
-    if (addresses.length === 0) {
-      setChecked(true);
-      return;
-    }
-
+    setChecked(false);
     supabase
-      .from("tokens")
-      .select("id")
-      .in("creator_wallet", addresses)
-      .then(({ data, error }) => {
-        console.log("[RotationBanner] Launch check:", { addresses, count: data?.length, error });
-        setLaunchCount(data?.length ?? 0);
+      .from("fun_tokens")
+      .select("id", { count: "exact", head: true })
+      .eq("creator_wallet", addr)
+      .then(({ count, error }) => {
+        console.log("[RotationBanner] Launch check:", { addr, count, error });
+        setLaunchCount(count ?? 0);
         setChecked(true);
       });
-  }, [addressKey, ready]);
+  }, [activeWallet?.address, ready]);
 
   if (!checked || launchCount === 0) return null;
 
