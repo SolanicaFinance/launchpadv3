@@ -48,16 +48,27 @@ serve(async (req) => {
     }
 
     // ─── CREATE QUOTE ────────────────────────────────────────────
+    // ─── GET LIMITS ──────────────────────────────────────────────
+    if (action === "limits") {
+      const res = await fetch(`${SPLITNOW_API}/assets/limits`, { headers });
+      const data = await res.json();
+      return json(data, res.status);
+    }
+
     if (action === "quote") {
-      const { fromAssetId, fromNetworkId, toAssetId, toNetworkId, fromAmount } = params;
+      const { fromAssetId, fromNetworkId, toAssetId, toNetworkId, fromAmount, type: quoteType } = params;
       const numAmount = typeof fromAmount === "string" ? parseFloat(fromAmount) : Number(fromAmount);
-      const body = {
+      const body: Record<string, unknown> = {
         fromAssetId: fromAssetId || "sol",
         fromNetworkId: fromNetworkId || "solana",
         toAssetId: toAssetId || "sol",
         toNetworkId: toNetworkId || "solana",
         fromAmount: numAmount,
       };
+      // Include type if provided (floating_rate, fixed_rate, mixed_rate)
+      if (quoteType) {
+        body.type = quoteType;
+      }
       console.log("[splitnow-proxy] Quote request:", JSON.stringify(body));
       const res = await fetch(`${SPLITNOW_API}/quotes/`, {
         method: "POST",
