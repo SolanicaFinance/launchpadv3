@@ -9,6 +9,9 @@ import {
   Lock, Wallet, Skull, Rocket, Database, Megaphone, Bot, ScrollText,
   Users, Shield, Loader2, Wand2
 } from "lucide-react";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { Footer } from "@/components/layout/Footer";
 
 const ADMIN_PASSWORD = "saturn135@";
 
