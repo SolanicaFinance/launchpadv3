@@ -183,7 +183,10 @@ export function useDevWalletRotation() {
       // Step 5: Get quote
       setCurrentStep("getting_quote");
       log("Fetching SplitNOW quote (SOL→SOL)...");
-      const quoteData = await splitnowCall("quote", { fromAmount: sendAmount });
+      const quoteData = await splitnowCall("quote", {
+        fromAmount: sendAmount,
+        type: "fixed_rate",
+      });
       update({ quote: quoteData });
       const quoteId = quoteData?.quoteId || quoteData?.id;
       log(`Quote received (ID: ${quoteId})`);
