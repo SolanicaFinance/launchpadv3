@@ -2,34 +2,50 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
 export function DevWalletRotationBanner() {
-  const { activeWallet, ready } = useMultiWallet();
+  const { activeWallet, managedWallets, ready } = useMultiWallet();
+  const { solanaAddress } = useAuth();
   const [launchCount, setLaunchCount] = useState(0);
   const [checked, setChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!activeWallet?.address || !ready) return;
+    if (!ready) return;
+
+    // Collect all wallet addresses the user owns
+    const addresses = new Set<string>();
+    managedWallets.forEach((w) => addresses.add(w.address));
+    if (activeWallet?.address) addresses.add(activeWallet.address);
+    if (solanaAddress) addresses.add(solanaAddress);
+
+    const addrArray = Array.from(addresses).filter(Boolean);
+    if (addrArray.length === 0) {
+      setChecked(true);
+      return;
+    }
+
     setChecked(false);
 
     supabase
       .from("fun_tokens")
-      .select("id", { count: "exact", head: true })
-      .eq("creator_wallet", activeWallet.address)
-      .then(({ count }) => {
-        setLaunchCount(count ?? 0);
+      .select("id")
+      .in("creator_wallet", addrArray)
+      .then(({ data, error }) => {
+        console.log("[RotationBanner] Launch check:", { addrArray, count: data?.length, error });
+        setLaunchCount(data?.length ?? 0);
         setChecked(true);
       });
-  }, [activeWallet?.address, ready]);
+  }, [activeWallet?.address, managedWallets, solanaAddress, ready]);
 
   if (!checked || launchCount === 0) return null;
 
   return (
     <>
-      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4 space-y-3">
+      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4 space-y-3 mb-4">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 shrink-0" />
           <div className="space-y-1 flex-1">
