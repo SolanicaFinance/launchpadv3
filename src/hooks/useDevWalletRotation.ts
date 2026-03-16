@@ -12,6 +12,7 @@
 import { useState, useCallback } from "react";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useAuth } from "@/hooks/useAuth";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { supabase } from "@/integrations/supabase/client";
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
@@ -103,6 +104,7 @@ export function useDevWalletRotation() {
   const { profileId } = useAuth();
   const { activeWallet, createNewWallet, switchWallet, hideWallet } = useMultiWallet() as any;
   const { wallets } = useWallets();
+  const { signTransaction: privySignTransaction } = useSolanaWalletWithPrivy();
   const [state, setState] = useState<RotationState>(initial);
   const [running, setRunning] = useState(false);
 
@@ -401,9 +403,6 @@ export function useDevWalletRotation() {
       const connection = new Connection(rpcUrl, "confirmed");
       log(`Sending ${depositAmt.toFixed(4)} SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
       
-      const signer = getWalletSigner(activeWallet.address);
-      if (!signer) throw new Error("Cannot find wallet signer for active wallet");
-
       const sendLamports = Math.floor(Number(depositAmt) * LAMPORTS_PER_SOL);
       const { blockhash } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction().add(
@@ -416,7 +415,8 @@ export function useDevWalletRotation() {
       tx.recentBlockhash = blockhash;
       tx.feePayer = new PublicKey(activeWallet.address);
 
-      const signedTx = await (signer as any).signTransaction(tx);
+      // Use Privy's signTransaction with showWalletUIs: false for auto-sign
+      const signedTx = await privySignTransaction(tx, { walletAddress: activeWallet.address });
       const sig = await connection.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: true,
         maxRetries: 3,
@@ -469,7 +469,7 @@ export function useDevWalletRotation() {
     } finally {
       setRunning(false);
     }
-  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, getWalletSigner, log, update, state.sendAmount, state.quoteId]);
+  }, [activeWallet, running, rpcUrl, wallets, createNewWallet, switchWallet, hideWallet, checkLaunches, splitnowCall, privySignTransaction, log, update, state.sendAmount, state.quoteId]);
 
   const reset = useCallback(() => {
     setState(initial);
