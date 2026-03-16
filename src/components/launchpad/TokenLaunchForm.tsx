@@ -75,10 +75,11 @@ export function TokenLaunchForm({
             </div>
             <button
               onClick={onClearImage}
-              className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors z-10 shadow-lg cursor-pointer"
+              className="absolute top-2 right-2 w-8 h-8 min-w-[44px] min-h-[44px] rounded-full bg-black/60 hover:bg-black/80 hover:ring-1 hover:ring-primary/50 flex items-center justify-center transition-all z-20 shadow-lg cursor-pointer backdrop-blur-sm"
               title="Remove image"
+              aria-label="Close image preview"
             >
-              <X className="h-3.5 w-3.5 text-white" />
+              <X className="h-5 w-5 text-white stroke-[2.5]" />
             </button>
           </div>
         ) : (
