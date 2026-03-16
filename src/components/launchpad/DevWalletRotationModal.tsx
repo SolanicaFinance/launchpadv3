@@ -32,6 +32,42 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+/** CEX logo URLs keyed by common exchanger IDs from SplitNow */
+const CEX_ICONS: Record<string, string> = {
+  binance: "https://cryptologos.cc/logos/binance-coin-bnb-logo.svg",
+  kucoin: "https://cryptologos.cc/logos/kucoin-token-kcs-logo.svg",
+  "gate.io": "https://cdn.gate.io/brand/assets/v2/brand-logo-white.svg",
+  gateio: "https://cdn.gate.io/brand/assets/v2/brand-logo-white.svg",
+  bybit: "https://www.bybit.com/favicon.ico",
+  mexc: "https://www.mexc.com/favicon.ico",
+  okx: "https://static.okx.com/cdn/assets/imgs/2112/630C74E5F29B73D6.png",
+  huobi: "https://www.htx.com/favicon.ico",
+  htx: "https://www.htx.com/favicon.ico",
+  changelly: "https://changelly.com/favicon.ico",
+  changehero: "https://changehero.io/favicon.ico",
+  changenow: "https://changenow.io/favicon.ico",
+  fixedfloat: "https://fixedfloat.com/favicon.ico",
+  simpleswap: "https://simpleswap.io/favicon.ico",
+  exolix: "https://exolix.com/favicon.ico",
+  godex: "https://godex.io/favicon.ico",
+  letsexchange: "https://letsexchange.io/favicon.ico",
+  stealthex: "https://stealthex.io/favicon.ico",
+  swapspace: "https://swapspace.co/favicon.ico",
+  swapzone: "https://swapzone.io/favicon.ico",
+  tradeogre: "https://tradeogre.com/favicon.ico",
+};
+
+function getCexIcon(id: string, name: string): string | null {
+  const lower = id.toLowerCase();
+  if (CEX_ICONS[lower]) return CEX_ICONS[lower];
+  // Try matching by name
+  const nameLower = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  for (const [key, url] of Object.entries(CEX_ICONS)) {
+    if (nameLower.includes(key.replace(/[^a-z0-9]/g, ""))) return url;
+  }
+  return null;
+}
+
 const PROCESS_STEPS: { key: RotationStep; label: string; icon: React.ElementType }[] = [
   { key: "checking_launches", label: "Checking existing launches", icon: Search },
   { key: "creating_wallet", label: "Generating fresh wallet", icon: Wallet },
@@ -146,10 +182,15 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To (auto-generated)</p>
-                    <p className="text-xs font-mono text-muted-foreground">
-                      {state.newWalletAddress ? shortAddr(state.newWalletAddress) : "Created on start"}
-                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To (new wallet)</p>
+                    {state.newWalletAddress ? (
+                      <p className="text-xs font-mono text-foreground">{shortAddr(state.newWalletAddress)}</p>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                        <p className="text-xs font-mono text-muted-foreground">Creating wallet...</p>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right space-y-0.5">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Send amount</p>
@@ -196,6 +237,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     {exchangersWithRates.map((ex) => {
                       const hasRate = ex.rate && ex.rate.available;
                       const noRate = ex.rate && !ex.rate.available;
+                      const iconUrl = getCexIcon(ex.id, ex.name);
                       return (
                         <button
                           key={ex.id}
@@ -208,6 +250,25 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                             balanceTooLow && "opacity-50 cursor-not-allowed"
                           )}
                         >
+                          {/* CEX icon */}
+                          <div className="h-7 w-7 rounded-full bg-secondary/80 flex items-center justify-center shrink-0 overflow-hidden">
+                            {iconUrl ? (
+                              <img
+                                src={iconUrl}
+                                alt={ex.name}
+                                className="h-4 w-4 object-contain"
+                                onError={(e) => {
+                                  // Fallback to first letter on icon load error
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                  (e.target as HTMLImageElement).parentElement!.innerHTML =
+                                    `<span class="text-xs font-bold text-foreground">${ex.name.charAt(0).toUpperCase()}</span>`;
+                                }}
+                              />
+                            ) : (
+                              <span className="text-xs font-bold text-foreground">{ex.name.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-foreground">{ex.name}</span>
@@ -245,9 +306,20 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             {/* Selected CEX + route info */}
             {state.selectedCex && (
               <div className="flex items-center justify-between text-xs text-muted-foreground rounded-lg bg-secondary/50 px-3 py-2">
-                <span>Exchange: <span className="font-semibold text-foreground">
-                  {state.exchangers.find((e) => e.id === state.selectedCex)?.name || state.selectedCex}
-                </span></span>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const cex = state.exchangers.find((e) => e.id === state.selectedCex);
+                    const icon = cex ? getCexIcon(cex.id, cex.name) : null;
+                    return (
+                      <>
+                        {icon && <img src={icon} alt="" className="h-4 w-4 object-contain" />}
+                        <span>Exchange: <span className="font-semibold text-foreground">
+                          {cex?.name || state.selectedCex}
+                        </span></span>
+                      </>
+                    );
+                  })()}
+                </div>
                 <span className="font-mono">{state.sendAmount.toFixed(4)} SOL</span>
               </div>
             )}

@@ -160,11 +160,21 @@ export function useDevWalletRotation() {
 
     update({ step: "loading_data", error: null });
     try {
-      // Fetch exchangers, limits, and balance in parallel
-      const [exchangersData, limitsData, balLamports] = await Promise.all([
+      // Fetch exchangers, limits, balance, AND pre-create new wallet in parallel
+      const [exchangersData, limitsData, balLamports, newAddr] = await Promise.all([
         splitnowCall("exchangers"),
         splitnowCall("limits"),
         new Connection(rpcUrl, "confirmed").getBalance(new PublicKey(activeWallet.address)),
+        // Pre-create the destination wallet immediately so user sees the real address
+        (async () => {
+          try {
+            const addr = await createNewWallet();
+            return addr;
+          } catch (e) {
+            console.warn("[WalletRotation] Pre-create wallet failed, will retry later:", e);
+            return null;
+          }
+        })(),
       ]);
 
       const available: Exchanger[] = (exchangersData?.exchangers || [])
@@ -191,6 +201,7 @@ export function useDevWalletRotation() {
         sendAmount: sendAmt,
         minDeposit: minDep,
         maxDeposit: maxDep,
+        newWalletAddress: newAddr,
       });
 
       // Now fetch quote to get per-exchange rates
