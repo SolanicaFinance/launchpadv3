@@ -459,3 +459,6 @@ verify_jwt = false
 
 [functions.jupiter-proxy]
 verify_jwt = false
+
+[functions.splitnow-proxy]
+verify_jwt = false

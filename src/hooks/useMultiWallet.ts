@@ -31,6 +31,7 @@ const FALLBACK = {
   switchWallet: (_addr: string) => {},
   createNewWallet: async () => { throw new Error("Privy not available"); return "" as string; },
   renameWallet: async (_addr: string, _label: string) => {},
+  hideWallet: async (_addr: string) => {},
   refreshBalances: async () => {},
   getWalletByAddress: (_addr: string) => null,
   creating: false,
@@ -45,6 +46,7 @@ function useMultiWalletInner() {
   const { createWallet } = useCreateWallet();
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [balances, setBalances] = useState<Record<string, number>>({});
+  const [hiddenAddresses, setHiddenAddresses] = useState<Set<string>>(new Set());
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -63,15 +65,18 @@ function useMultiWalletInner() {
     if (!profileId) return;
     supabase
       .from("user_wallets")
-      .select("wallet_address, label, is_default")
+      .select("wallet_address, label, is_default, is_hidden")
       .eq("profile_id", profileId)
       .then(({ data }) => {
         if (!data) return;
         const map: Record<string, string> = {};
-        data.forEach((row) => {
+        const hidden = new Set<string>();
+        data.forEach((row: any) => {
           map[row.wallet_address] = row.label;
+          if (row.is_hidden) hidden.add(row.wallet_address);
         });
         setLabels(map);
+        setHiddenAddresses(hidden);
       });
   }, [profileId]);
 
@@ -86,14 +91,16 @@ function useMultiWalletInner() {
   }, [embeddedWallets]);
 
   const managedWallets: ManagedWallet[] = useMemo(() => {
-    return embeddedWallets.map((w: any, i: number) => ({
-      address: w.address,
-      label: labels[w.address] || (i === 0 ? "Main" : `Wallet ${i + 1}`),
-      isDefault: i === 0,
-      balance: balances[w.address] ?? null,
-      index: i,
-    }));
-  }, [embeddedWallets, labels, balances]);
+    return embeddedWallets
+      .filter((w: any) => !hiddenAddresses.has(w.address))
+      .map((w: any, i: number) => ({
+        address: w.address,
+        label: labels[w.address] || (i === 0 ? "Main" : `Wallet ${i + 1}`),
+        isDefault: i === 0,
+        balance: balances[w.address] ?? null,
+        index: i,
+      }));
+  }, [embeddedWallets, labels, balances, hiddenAddresses]);
 
   const activeWallet = useMemo(() => {
     return managedWallets.find((w) => w.address === activeAddress) || managedWallets[0] || null;
@@ -140,6 +147,19 @@ function useMultiWalletInner() {
     }
   }, [profileId]);
 
+  const hideWallet = useCallback(async (address: string) => {
+    setHiddenAddresses((prev) => new Set([...prev, address]));
+    if (profileId) {
+      await supabase.from("user_wallets").upsert({
+        profile_id: profileId,
+        wallet_address: address,
+        label: labels[address] || "Hidden",
+        is_default: false,
+        is_hidden: true,
+      } as any, { onConflict: "profile_id,wallet_address" });
+    }
+  }, [profileId, labels]);
+
   const refreshBalances = useCallback(async () => {
     if (embeddedWallets.length === 0) return;
     const connection = new Connection(rpcUrl, "confirmed");
@@ -174,6 +194,7 @@ function useMultiWalletInner() {
     switchWallet,
     createNewWallet,
     renameWallet,
+    hideWallet,
     refreshBalances,
     getWalletByAddress,
     creating,
