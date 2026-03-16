@@ -2,13 +2,11 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
 export function DevWalletRotationBanner() {
   const { activeWallet, managedWallets, ready } = useMultiWallet();
-  const { solanaAddress } = useAuth();
   const [launchCount, setLaunchCount] = useState(0);
   const [checked, setChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -16,14 +14,9 @@ export function DevWalletRotationBanner() {
   useEffect(() => {
     if (!ready) return;
 
-    // Collect all wallet addresses the user owns
-    const addresses = new Set<string>();
-    managedWallets.forEach((w) => addresses.add(w.address));
-    if (activeWallet?.address) addresses.add(activeWallet.address);
-    if (solanaAddress) addresses.add(solanaAddress);
-
-    const addrArray = Array.from(addresses).filter(Boolean);
-    if (addrArray.length === 0) {
+    // Only check embedded wallet addresses, not linked external wallets
+    const addresses = managedWallets.map((w) => w.address).filter(Boolean);
+    if (addresses.length === 0) {
       setChecked(true);
       return;
     }
@@ -33,13 +26,13 @@ export function DevWalletRotationBanner() {
     supabase
       .from("fun_tokens")
       .select("id")
-      .in("creator_wallet", addrArray)
+      .in("creator_wallet", addresses)
       .then(({ data, error }) => {
-        console.log("[RotationBanner] Launch check:", { addrArray, count: data?.length, error });
+        console.log("[RotationBanner] Launch check:", { addresses, count: data?.length, error });
         setLaunchCount(data?.length ?? 0);
         setChecked(true);
       });
-  }, [activeWallet?.address, managedWallets, solanaAddress, ready]);
+  }, [activeWallet?.address, managedWallets, ready]);
 
   if (!checked || launchCount === 0) return null;
 
