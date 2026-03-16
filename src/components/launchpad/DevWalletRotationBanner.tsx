@@ -7,57 +7,61 @@ import { supabase } from "@/integrations/supabase/client";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
 export function DevWalletRotationBanner() {
-  const { solanaAddress, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { walletAddress: embeddedWalletAddress, isWalletReady } = useSolanaWalletWithPrivy();
   const [launchCount, setLaunchCount] = useState(0);
   const [checked, setChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const resolvedWalletAddress = embeddedWalletAddress || solanaAddress || null;
   const lastCheckedAddr = useRef("");
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setLaunchCount(0);
       setChecked(true);
       lastCheckedAddr.current = "";
+      requestIdRef.current += 1;
       return;
     }
 
-    if (!resolvedWalletAddress) {
+    if (!isWalletReady || !embeddedWalletAddress) {
       setChecked(false);
       return;
     }
 
-    if (lastCheckedAddr.current === resolvedWalletAddress) return;
-    lastCheckedAddr.current = resolvedWalletAddress;
+    if (lastCheckedAddr.current === embeddedWalletAddress) return;
+
+    lastCheckedAddr.current = embeddedWalletAddress;
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
     setChecked(false);
 
     supabase
       .from("fun_tokens")
       .select("id", { count: "exact", head: true })
-      .eq("creator_wallet", resolvedWalletAddress)
+      .eq("creator_wallet", embeddedWalletAddress)
       .then(({ count, error }) => {
+        if (requestId !== requestIdRef.current) return;
+
         console.log("[RotationBanner] Launch check:", {
-          resolvedWalletAddress,
           embeddedWalletAddress,
-          solanaAddress,
           count,
           error,
         });
         setLaunchCount(count ?? 0);
         setChecked(true);
       });
-  }, [embeddedWalletAddress, isAuthenticated, resolvedWalletAddress, solanaAddress]);
+  }, [embeddedWalletAddress, isAuthenticated, isWalletReady]);
 
-  const isCheckingWallet = isAuthenticated && (!resolvedWalletAddress || !checked || !isWalletReady);
+  const isCheckingWallet = isAuthenticated && (!isWalletReady || !embeddedWalletAddress || !checked);
 
   if (isCheckingWallet) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 space-y-2 mb-4">
         <p className="text-sm font-medium text-foreground">Reading your wallet…</p>
         <p className="text-xs text-muted-foreground">
-          Checking the active launch wallet for previous launches.
+          Checking your embedded launch wallet for previous launches.
         </p>
       </div>
     );
@@ -96,3 +100,4 @@ export function DevWalletRotationBanner() {
     </>
   );
 }
+
