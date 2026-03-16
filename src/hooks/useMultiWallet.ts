@@ -91,14 +91,16 @@ function useMultiWalletInner() {
   }, [embeddedWallets]);
 
   const managedWallets: ManagedWallet[] = useMemo(() => {
-    return embeddedWallets.map((w: any, i: number) => ({
-      address: w.address,
-      label: labels[w.address] || (i === 0 ? "Main" : `Wallet ${i + 1}`),
-      isDefault: i === 0,
-      balance: balances[w.address] ?? null,
-      index: i,
-    }));
-  }, [embeddedWallets, labels, balances]);
+    return embeddedWallets
+      .filter((w: any) => !hiddenAddresses.has(w.address))
+      .map((w: any, i: number) => ({
+        address: w.address,
+        label: labels[w.address] || (i === 0 ? "Main" : `Wallet ${i + 1}`),
+        isDefault: i === 0,
+        balance: balances[w.address] ?? null,
+        index: i,
+      }));
+  }, [embeddedWallets, labels, balances, hiddenAddresses]);
 
   const activeWallet = useMemo(() => {
     return managedWallets.find((w) => w.address === activeAddress) || managedWallets[0] || null;
