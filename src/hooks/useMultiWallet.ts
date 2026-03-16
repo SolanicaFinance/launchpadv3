@@ -49,6 +49,7 @@ function useMultiWalletInner() {
   const [hiddenAddresses, setHiddenAddresses] = useState<Set<string>>(new Set());
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const embeddedWalletsRef = useRef<any[]>([]);
 
   const rpcUrl = getRpcUrl().url;
 
