@@ -666,10 +666,20 @@
   animation: lt-shake 0.5s ease-in-out;
 }
 
-/* King of the Claws blink */
+/* King of the Hill animations */
 @keyframes king-blink {
   0%, 100% { opacity: 1; box-shadow: none; }
   50% { opacity: 0.7; box-shadow: 0 0 12px 2px hsl(var(--success) / 0.35); }
+}
+
+@keyframes koth-crown-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(245,158,11,0.3); }
+  50% { transform: scale(1.04); box-shadow: 0 0 20px rgba(245,158,11,0.5); }
+}
+
+@keyframes koth-shimmer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(200%); }
 }
 
 /* Price pulse glow */
