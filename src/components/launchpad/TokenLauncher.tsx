@@ -993,6 +993,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
       toast({ title: "Missing token info", description: "Name and ticker required", variant: "destructive" });
       return;
     }
+    if (phantomDevBuySol < 0.1) {
+      toast({ title: "Dev buy too low", description: "Minimum 0.1 SOL dev buy is required to launch", variant: "destructive" });
+      return;
+    }
     if (!phantomImagePreview && !phantomMeme?.imageUrl && !phantomToken.imageUrl) {
       toast({ title: "Image required", description: "Click AI Randomize or upload an image", variant: "destructive" });
       return;
