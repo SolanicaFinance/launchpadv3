@@ -218,7 +218,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     {exchangersWithRates.map((ex) => {
                       const hasRate = ex.rate && ex.rate.available;
                       const noRate = ex.rate && !ex.rate.available;
-                      const iconUrl = getCexIcon(ex.id, ex.name);
+                      const iconUrl = getCexIcon(ex.id, ex.name, ex.website);
                       return (
                         <button
                           key={ex.id}
