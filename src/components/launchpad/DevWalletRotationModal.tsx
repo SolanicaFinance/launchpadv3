@@ -44,18 +44,24 @@ const STEP_ORDER = STEPS.map((s) => s.key);
 
 function getStepState(
   currentStep: RotationStep,
+  failedStep: RotationStep | null,
   targetStep: RotationStep
-): "done" | "active" | "pending" {
+): "done" | "active" | "pending" | "error" {
   if (currentStep === "complete") return "done";
   if (currentStep === "error") {
-    const ci = STEP_ORDER.indexOf(currentStep === "error" ? targetStep : currentStep);
-    // Mark previous steps as done, current as error
+    if (failedStep === targetStep) return "error";
+    if (failedStep) {
+      const failedIndex = STEP_ORDER.indexOf(failedStep);
+      const targetIndex = STEP_ORDER.indexOf(targetStep);
+      if (targetIndex < failedIndex) return "done";
+    }
     return "pending";
   }
-  const ci = STEP_ORDER.indexOf(currentStep);
-  const ti = STEP_ORDER.indexOf(targetStep);
-  if (ti < ci) return "done";
-  if (ti === ci) return "active";
+
+  const currentIndex = STEP_ORDER.indexOf(currentStep);
+  const targetIndex = STEP_ORDER.indexOf(targetStep);
+  if (targetIndex < currentIndex) return "done";
+  if (targetIndex === currentIndex) return "active";
   return "pending";
 }
 
@@ -111,28 +117,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             {/* Step indicators */}
             <div className="space-y-2">
               {STEPS.map(({ key, label, icon: Icon }) => {
-                const ss = state.step === "error"
-                  ? (STEP_ORDER.indexOf(key) < STEP_ORDER.indexOf(state.logs.length > 0 ? key : key)
-                    ? "done" : key === state.step ? "active" : "pending")
-                  : getStepState(state.step, key);
-
-                // Better error detection: find which step errored
-                const currentIdx = STEP_ORDER.indexOf(state.step === "error" || state.step === "complete" ? "switching_wallet" : state.step);
-                const thisIdx = STEP_ORDER.indexOf(key);
-                
-                let actualState: "done" | "active" | "pending" = "pending";
-                if (state.step === "complete") {
-                  actualState = "done";
-                } else if (state.step === "error") {
-                  // Find how many log entries we have to estimate progress
-                  const logCount = state.logs.length;
-                  actualState = thisIdx < Math.min(logCount, STEP_ORDER.length) ? "done" : thisIdx === Math.min(logCount, STEP_ORDER.length) ? "active" : "pending";
-                } else {
-                  const ci = STEP_ORDER.indexOf(state.step);
-                  if (thisIdx < ci) actualState = "done";
-                  else if (thisIdx === ci) actualState = "active";
-                  else actualState = "pending";
-                }
+                const actualState = getStepState(state.step, state.failedStep, key);
 
                 return (
                   <div
@@ -141,27 +126,21 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                       actualState === "active" && "bg-primary/10 text-primary",
                       actualState === "done" && "text-green-500",
+                      actualState === "error" && "bg-destructive/10 text-destructive border border-destructive/20",
                       actualState === "pending" && "text-muted-foreground/50"
                     )}
                   >
                     {actualState === "done" && <CheckCircle2 className="h-4 w-4 shrink-0" />}
-                    {actualState === "active" && (
-                      state.step === "error" ? (
-                        <XCircle className="h-4 w-4 shrink-0 text-destructive" />
-                      ) : (
-                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                      )
-                    )}
-                    {actualState === "pending" && (
-                      <Icon className="h-4 w-4 shrink-0 opacity-40" />
-                    )}
+                    {actualState === "active" && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
+                    {actualState === "error" && <XCircle className="h-4 w-4 shrink-0" />}
+                    {actualState === "pending" && <Icon className="h-4 w-4 shrink-0 opacity-40" />}
                     <span className="flex-1">{label}</span>
-                    {key === "randomizing_cex" && state.selectedCex && actualState === "done" && (
+                    {key === "randomizing_cex" && state.selectedCex && actualState !== "pending" && (
                       <span className="text-xs font-mono bg-secondary px-2 py-0.5 rounded">
                         {state.selectedCex}
                       </span>
                     )}
-                    {key === "fetching_balance" && state.balance > 0 && actualState === "done" && (
+                    {key === "fetching_balance" && state.balance > 0 && actualState !== "pending" && (
                       <span className="text-xs font-mono">
                         {state.balance.toFixed(4)} SOL
                       </span>
