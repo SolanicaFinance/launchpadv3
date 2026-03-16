@@ -290,7 +290,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 <div className="flex items-center gap-2">
                   {(() => {
                     const cex = state.exchangers.find((e) => e.id === state.selectedCex);
-                    const icon = cex ? getCexIcon(cex.id, cex.name) : null;
+                    const icon = cex ? getCexIcon(cex.id, cex.name, cex.website) : null;
                     return (
                       <>
                         {icon && <img src={icon} alt="" className="h-4 w-4 object-contain" />}
