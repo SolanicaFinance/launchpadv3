@@ -88,33 +88,40 @@ export default function AdminPanelPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Lock className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-            <CardTitle>Admin Panel</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder="Enter admin password"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
-            <Button className="w-full" onClick={handleLogin}>
-              <Lock className="w-4 h-4 mr-2" />
-              Unlock
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+        <div className="md:ml-[48px] flex flex-col min-h-screen">
+          <AppHeader onMobileMenuOpen={() => setMobileOpen(true)} />
+          <main className="flex-1 flex items-center justify-center p-4">
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <Lock className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                <CardTitle>Admin Panel</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    placeholder="Enter admin password"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-red-500 text-center">{error}</p>
+                )}
+                <Button className="w-full" onClick={handleLogin}>
+                  <Lock className="w-4 h-4 mr-2" />
+                  Unlock
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+          <Footer />
+        </div>
       </div>
     );
   }
