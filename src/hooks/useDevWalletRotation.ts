@@ -12,6 +12,7 @@
 import { useState, useCallback } from "react";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useAuth } from "@/hooks/useAuth";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { supabase } from "@/integrations/supabase/client";
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
