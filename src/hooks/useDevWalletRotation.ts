@@ -118,30 +118,38 @@ export function useDevWalletRotation() {
   const startRotation = useCallback(async () => {
     if (!activeWallet || running) return;
     setRunning(true);
-    setState({ ...initial, step: "checking_launches" });
+
+    let currentStep: RotationStep = "checking_launches";
+    const setCurrentStep = (step: RotationStep) => {
+      currentStep = step;
+      update({ step, failedStep: null });
+    };
+
+    setState({ ...initial, step: "checking_launches", failedStep: null });
 
     try {
       // Step 1: Check launches
+      setCurrentStep("checking_launches");
       log(`Checking launches for wallet ${activeWallet.address.slice(0, 8)}...`);
       const count = await checkLaunches(activeWallet.address);
-      update({ launchCount: count, step: "checking_launches" });
+      update({ launchCount: count });
       log(`Found ${count} token launch(es) from this wallet`);
 
       // Step 2: Create new wallet
-      update({ step: "creating_wallet" });
+      setCurrentStep("creating_wallet");
       log("Generating fresh Privy embedded wallet...");
       const newAddr = await createNewWallet();
       update({ newWalletAddress: newAddr });
       log(`New wallet created: ${newAddr}`);
 
       // Step 3: Randomize CEX
-      update({ step: "randomizing_cex" });
+      setCurrentStep("randomizing_cex");
       const cex = CEXES[Math.floor(Math.random() * CEXES.length)];
       update({ selectedCex: cex });
       log(`Selected exchange: ${cex}`);
 
       // Step 4: Get balance
-      update({ step: "fetching_balance" });
+      setCurrentStep("fetching_balance");
       const connection = new Connection(rpcUrl, "confirmed");
       const balLamports = await connection.getBalance(new PublicKey(activeWallet.address));
       const balSol = balLamports / LAMPORTS_PER_SOL;
@@ -157,7 +165,7 @@ export function useDevWalletRotation() {
       log(`Amount to send (minus fees): ${sendAmount.toFixed(6)} SOL`);
 
       // Step 5: Get quote
-      update({ step: "getting_quote" });
+      setCurrentStep("getting_quote");
       log("Fetching SplitNOW quote (SOL→SOL)...");
       const quoteData = await splitnowCall("quote", { fromAmount: sendAmount });
       update({ quote: quoteData });
@@ -165,7 +173,7 @@ export function useDevWalletRotation() {
       log(`Quote received (ID: ${quoteId})`);
 
       // Step 6: Create order
-      update({ step: "creating_order" });
+      setCurrentStep("creating_order");
       log(`Creating order routed through ${cex}...`);
       const orderData = await splitnowCall("order", {
         quoteId,
@@ -188,7 +196,7 @@ export function useDevWalletRotation() {
       log(`Deposit amount: ${depositAmount} SOL`);
 
       // Step 7: Send SOL to deposit address
-      update({ step: "sending_sol" });
+      setCurrentStep("sending_sol");
       log("Signing and sending SOL to deposit address...");
       const signer = getWalletSigner(activeWallet.address);
       if (!signer) throw new Error("Cannot find wallet signer for active wallet");
@@ -214,7 +222,7 @@ export function useDevWalletRotation() {
       log(`Transaction sent: ${sig}`);
 
       // Step 8: Poll order status
-      update({ step: "polling_status" });
+      setCurrentStep("polling_status");
       log("Polling order status...");
 
       let finalStatus = "pending";
@@ -234,7 +242,7 @@ export function useDevWalletRotation() {
       }
 
       // Step 9: Switch wallet and hide old
-      update({ step: "switching_wallet" });
+      setCurrentStep("switching_wallet");
       log("Switching to new wallet and hiding old one...");
       switchWallet(newAddr);
       if (hideWallet) {
@@ -242,10 +250,10 @@ export function useDevWalletRotation() {
       }
       log("✅ Wallet rotation complete!");
 
-      update({ step: "complete" });
+      update({ step: "complete", failedStep: null });
     } catch (err: any) {
       console.error("[WalletRotation] Error:", err);
-      update({ step: "error", error: err.message || "Unknown error" });
+      update({ step: "error", failedStep: currentStep, error: err.message || "Unknown error" });
       log(`❌ Error: ${err.message}`);
     } finally {
       setRunning(false);
