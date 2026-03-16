@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useDevWalletRotation, type RotationStep, type ExchangeRate } from "@/hooks/useDevWalletRotation";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
@@ -194,7 +195,22 @@ function LogEntry({ message, index }: { message: string; index: number }) {
    ═══════════════════════════════════════════════ */
 export function DevWalletRotationModal({ open, onOpenChange }: Props) {
   const { state, running, loadData, startRotation, reset } = useDevWalletRotation();
-  const { activeWallet } = useMultiWallet() as any;
+  const { activeWallet, switchWallet } = useMultiWallet() as any;
+  const queryClient = useQueryClient();
+
+  const handleDone = useCallback(() => {
+    // Switch to the new wallet if rotation completed
+    if (state.newWalletAddress) {
+      switchWallet(state.newWalletAddress);
+    }
+    // Invalidate all wallet/balance related queries so UI refreshes
+    queryClient.invalidateQueries({ queryKey: ["wallet-holdings"] });
+    queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
+    queryClient.invalidateQueries({ queryKey: ["sol-balance"] });
+    queryClient.invalidateQueries({ queryKey: ["user-wallets"] });
+    queryClient.invalidateQueries({ queryKey: ["launch-count"] });
+    onOpenChange(false);
+  }, [state.newWalletAddress, switchWallet, queryClient, onOpenChange]);
 
   useEffect(() => {
     if (open && state.step === "idle" && activeWallet?.address) {
@@ -567,7 +583,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             {isComplete && (
               <Button
                 className="w-full gap-2 btn-gradient-green hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
-                onClick={() => onOpenChange(false)}
+                onClick={handleDone}
               >
                 <ShieldCheck className="h-4 w-4" />
                 Done — Start Fresh Launch
