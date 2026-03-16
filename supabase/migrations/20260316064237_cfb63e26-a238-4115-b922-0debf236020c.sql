@@ -1,0 +1,1 @@
+ALTER TABLE public.user_wallets ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false;
