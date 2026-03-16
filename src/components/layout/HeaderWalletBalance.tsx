@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useToast } from "@/hooks/use-toast";
 import { SettingsModal } from "@/components/settings/SettingsModal";
@@ -20,7 +21,8 @@ import { fetchBnbBalance as fetchBnbBalanceRpc } from "@/lib/bscRpc";
 
 function HeaderWalletBalanceInner() {
   const { isAuthenticated, logout } = useAuth();
-  const { walletAddress: embeddedAddress, getBalance } = useSolanaWalletWithPrivy();
+  const {} = useSolanaWalletWithPrivy(); // keep hook call order stable
+  const { activeAddress: embeddedAddress } = useMultiWallet();
   const { chain } = useChain();
   const evmWallet = useEvmWallet();
   const privyEvm = usePrivyEvmWallet();
@@ -103,7 +105,12 @@ function HeaderWalletBalanceInner() {
       // Also fetch via RPC as backup / refresh
       const fetchViaRpc = async () => {
         try {
-          const bal = await getBalance();
+          const connection = new (await import("@solana/web3.js")).Connection(
+            (await import("@/hooks/useSolanaWallet")).getRpcUrl().url, "confirmed"
+          );
+          const pubkey = new (await import("@solana/web3.js")).PublicKey(embeddedAddress!);
+          const lamports = await connection.getBalance(pubkey);
+          const bal = lamports / 1e9;
           if (!cancelled) { setBalance(bal); setBalanceLoading(false); }
         } catch (e) { console.warn("Header RPC balance fetch failed:", e); if (!cancelled) setBalanceLoading(false); }
       };
@@ -115,7 +122,7 @@ function HeaderWalletBalanceInner() {
       const interval = setInterval(fetchViaRpc, 15000);
       return () => { cancelled = true; clearInterval(interval); };
     }
-  }, [embeddedAddress, getBalance, chain, evmWallet.isConnected, evmWallet.address, privyEvm.address]);
+  }, [embeddedAddress, chain, evmWallet.isConnected, evmWallet.address, privyEvm.address]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -258,7 +265,7 @@ function HeaderWalletBalanceInner() {
         onOpenChange={setDepositOpen}
         address={displayAddress}
         chain={isBnb ? "bnb" : "solana"}
-        getBalance={isBnb ? undefined : getBalance}
+        getBalance={undefined}
       />
       <WithdrawDialog
         open={withdrawOpen}

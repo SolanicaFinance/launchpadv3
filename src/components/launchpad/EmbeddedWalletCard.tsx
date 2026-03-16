@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { usePrivy } from "@privy-io/react-auth";
 import { useExportWallet } from "@privy-io/react-auth/solana";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
@@ -69,7 +70,8 @@ export function EmbeddedWalletCard({ className = "" }: EmbeddedWalletCardProps) 
 }
 
 function EmbeddedWalletCardInner({ className }: { className: string }) {
-  const { walletAddress, isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
+  const { isWalletReady } = useSolanaWalletWithPrivy();
+  const { activeAddress: walletAddress } = useMultiWallet();
   const { exportWallet } = useExportWallet();
   const { toast } = useToast();
 
@@ -84,11 +86,15 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   const [balanceAtOpen, setBalanceAtOpen] = useState<number | null>(null);
 
   const fetchBalance = async () => {
-    if (!isWalletReady) return;
+    if (!isWalletReady || !walletAddress) return;
     setIsLoading(true);
 
     try {
-      const bal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
+      const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
+      const { getRpcUrl } = await import("@/hooks/useSolanaWallet");
+      const connection = new Connection(getRpcUrl().url, "confirmed");
+      const lamports = await connection.getBalance(new PublicKey(walletAddress));
+      const bal = lamports / LAMPORTS_PER_SOL;
       setBalance(bal);
       return bal;
     } catch (error) {
@@ -100,11 +106,11 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   };
 
   useEffect(() => {
-    if (!isWalletReady) return;
+    if (!isWalletReady || !walletAddress) return;
     fetchBalance();
     const interval = setInterval(fetchBalance, 15000);
     return () => clearInterval(interval);
-  }, [isWalletReady]);
+  }, [isWalletReady, walletAddress]);
 
   // Poll for deposits when QR modal is open
   useEffect(() => {
@@ -117,7 +123,7 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
 
     const pollInterval = setInterval(async () => {
       try {
-        const currentBal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
+        const currentBal = await fetchBalance() ?? balance ?? 0;
         setBalance(currentBal);
 
         // Check if balance increased
