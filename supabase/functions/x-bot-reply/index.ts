@@ -141,6 +141,12 @@ async function generateReply(
     // Strip banned words as hard safety net
     reply = stripBannedWords(reply);
 
+    // Strip banned openers (ngl, tbh, honestly, etc.) if they start the reply
+    for (const opener of BANNED_OPENERS) {
+      const openerRegex = new RegExp(`^${opener}[,\\s]*`, "i");
+      reply = reply.replace(openerRegex, "").trim();
+    }
+
     // If after stripping the reply is too short or empty, discard
     if (reply.length < 5) return "";
 
