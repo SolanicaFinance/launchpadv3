@@ -88,8 +88,7 @@ export function DevWalletRotationBanner() {
 
         <Button
           size="sm"
-          variant="outline"
-          className="w-full gap-2"
+          className="w-full gap-2 btn-gradient-green hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
           onClick={() => setModalOpen(true)}
         >
           <ArrowRightLeft className="h-4 w-4" />
