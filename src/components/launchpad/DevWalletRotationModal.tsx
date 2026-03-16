@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useDevWalletRotation, type RotationStep, type ExchangeRate } from "@/hooks/useDevWalletRotation";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
