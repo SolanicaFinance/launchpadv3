@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { useSolPrice } from "@/hooks/useSolPrice";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { LaunchpadDepositPrompt } from "./LaunchpadDepositPrompt";
 import { Connection, Transaction, VersionedTransaction, PublicKey, Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -108,6 +109,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const { solPrice } = useSolPrice();
   const { user, isAuthenticated, login: privyLogin } = useAuth();
   const { walletAddress: privyWalletAddress, isWalletReady: privyWalletReady, getBalance: getPrivyBalance, signAndSendTransaction: privySignAndSend, getConnection: getPrivyConnection, signTransaction: privySignTransaction } = useSolanaWalletWithPrivy();
+  const { activeAddress: activePrivyWalletAddress, activeWallet: activePrivyWallet, refreshBalances: refreshManagedWalletBalances } = useMultiWallet();
+  const launchpadPrivyWalletAddress = activePrivyWalletAddress || privyWalletAddress;
   
   // Wallet mode for Phantom tab: "phantom" (external) or "privy" (embedded 1-click)
   const [launchWalletMode, setLaunchWalletMode] = useState<"phantom" | "privy">("privy");
@@ -204,13 +207,20 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const [isEditingBannerText, setIsEditingBannerText] = useState(false);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
 
-  // Fetch Privy balance when wallet is ready  
-  // (inline import to avoid adding useEffect import if missing)
-  const privyBalanceFetchedRef = useState(() => false);
-  if (!privyBalanceFetchedRef[0] && privyWalletReady && privyWalletAddress) {
-    privyBalanceFetchedRef[1](true);
-    getPrivyBalance().then(b => setPrivyBalance(b));
-  }
+  useEffect(() => {
+    if (launchpadPrivyWalletAddress && activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
+      setPrivyBalance(activePrivyWallet.balance);
+      setPrivyDepositReady(activePrivyWallet.balance >= 0.05);
+      return;
+    }
+
+    if (privyWalletReady && launchpadPrivyWalletAddress) {
+      getPrivyBalance().then(b => {
+        setPrivyBalance(b);
+        setPrivyDepositReady(b >= 0.05);
+      });
+    }
+  }, [launchpadPrivyWalletAddress, activePrivyWallet?.balance, privyWalletReady, getPrivyBalance]);
 
   const isValidSolanaAddress = (address: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
 
@@ -972,8 +982,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const handlePhantomLaunch = useCallback(async (feeMode?: 'standard' | 'holders') => {
     // Determine which wallet to use based on launchWalletMode
     const usePrivy = launchWalletMode === "privy";
-    const activeWalletAddress = usePrivy ? privyWalletAddress : phantomWallet.address;
-    const isWalletConnected = usePrivy ? (isAuthenticated && privyWalletReady && !!privyWalletAddress) : (phantomWallet.isConnected && !!phantomWallet.address);
+    const activeWalletAddress = usePrivy ? launchpadPrivyWalletAddress : phantomWallet.address;
+    const isWalletConnected = usePrivy ? (isAuthenticated && privyWalletReady && !!launchpadPrivyWalletAddress) : (phantomWallet.isConnected && !!phantomWallet.address);
     
     if (!isWalletConnected || !activeWalletAddress) {
       toast({ title: "Wallet not connected", description: usePrivy ? "Login with Privy first" : "Connect Phantom first", variant: "destructive" });
@@ -1375,7 +1385,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
        window.clearTimeout(stillWorkingTimer);
        setIsPhantomLaunching(false);
      }
-  }, [phantomWallet, phantomToken, phantomMeme, phantomImagePreview, phantomTradingFee, phantomDevBuySol, toast, uploadPhantomImageIfNeeded, onLaunchSuccess, onShowResult, launchWalletMode, privyWalletAddress, isAuthenticated, privyWalletReady, privyBalance, privySignTransaction]);
+  }, [phantomWallet, phantomToken, phantomMeme, phantomImagePreview, phantomTradingFee, phantomDevBuySol, toast, uploadPhantomImageIfNeeded, onLaunchSuccess, onShowResult, launchWalletMode, launchpadPrivyWalletAddress, isAuthenticated, privyWalletReady, privyBalance, privySignTransaction]);
 
   // FUN mode handlers
   const uploadFunImageIfNeeded = useCallback(async (): Promise<string> => {
@@ -2203,7 +2213,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))", boxShadow: "0 0 10px hsl(var(--primary) / 0.5)" }} />
                         <span className="text-sm font-mono font-semibold tracking-tight text-white/90">
-                          {privyWalletAddress?.slice(0, 4)}...{privyWalletAddress?.slice(-4)}
+                          {launchpadPrivyWalletAddress?.slice(0, 4)}...{launchpadPrivyWalletAddress?.slice(-4)}
                         </span>
                         {privyBalance !== null && (
                           <span className="text-xs font-mono text-white/35">{privyBalance.toFixed(3)} SOL</span>
@@ -2213,13 +2223,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     </div>
 
                     {/* Deposit prompt if balance too low */}
-                    {privyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
+                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
                       <LaunchpadDepositPrompt
-                        walletAddress={privyWalletAddress}
+                        walletAddress={launchpadPrivyWalletAddress}
                         minSol={0.05}
-                        onReady={() => {
+                        onReady={async () => {
                           setPrivyDepositReady(true);
-                          getPrivyBalance().then(b => setPrivyBalance(b));
+                          await refreshManagedWalletBalances();
+                          if (activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
+                            setPrivyBalance(activePrivyWallet.balance);
+                          }
                         }}
                       />
                     )}
