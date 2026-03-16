@@ -86,11 +86,15 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   const [balanceAtOpen, setBalanceAtOpen] = useState<number | null>(null);
 
   const fetchBalance = async () => {
-    if (!isWalletReady) return;
+    if (!isWalletReady || !walletAddress) return;
     setIsLoading(true);
 
     try {
-      const bal = getBalanceStrict ? await getBalanceStrict() : await getBalance();
+      const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
+      const { getRpcUrl } = await import("@/hooks/useSolanaWallet");
+      const connection = new Connection(getRpcUrl().url, "confirmed");
+      const lamports = await connection.getBalance(new PublicKey(walletAddress));
+      const bal = lamports / LAMPORTS_PER_SOL;
       setBalance(bal);
       return bal;
     } catch (error) {
