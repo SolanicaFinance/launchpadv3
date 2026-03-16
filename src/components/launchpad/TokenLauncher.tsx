@@ -2213,7 +2213,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                       <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))", boxShadow: "0 0 10px hsl(var(--primary) / 0.5)" }} />
                         <span className="text-sm font-mono font-semibold tracking-tight text-white/90">
-                          {privyWalletAddress?.slice(0, 4)}...{privyWalletAddress?.slice(-4)}
+                          {launchpadPrivyWalletAddress?.slice(0, 4)}...{launchpadPrivyWalletAddress?.slice(-4)}
                         </span>
                         {privyBalance !== null && (
                           <span className="text-xs font-mono text-white/35">{privyBalance.toFixed(3)} SOL</span>
@@ -2223,13 +2223,16 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     </div>
 
                     {/* Deposit prompt if balance too low */}
-                    {privyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
+                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
                       <LaunchpadDepositPrompt
-                        walletAddress={privyWalletAddress}
+                        walletAddress={launchpadPrivyWalletAddress}
                         minSol={0.05}
-                        onReady={() => {
+                        onReady={async () => {
                           setPrivyDepositReady(true);
-                          getPrivyBalance().then(b => setPrivyBalance(b));
+                          await refreshManagedWalletBalances();
+                          if (activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
+                            setPrivyBalance(activePrivyWallet.balance);
+                          }
                         }}
                       />
                     )}
