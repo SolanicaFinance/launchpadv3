@@ -88,7 +88,7 @@ export default function WalletBalanceCardPrivy({ minRequired, className = "" }: 
   const hasEnough = minRequired === undefined || (balance !== null && balance >= minRequired);
 
   // Loading / missing-wallet state
-  if (!isWalletReady || !walletAddress) {
+  if (!walletAddress) {
     return (
       <div className={`bg-secondary/50 rounded-xl p-4 border border-border ${className}`}>
         <div className="flex items-center justify-between mb-3">
