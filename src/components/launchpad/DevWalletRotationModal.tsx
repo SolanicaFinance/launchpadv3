@@ -170,6 +170,12 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                       <div className="flex items-center gap-1.5">
                         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                         <p className="text-xs font-mono text-muted-foreground">Creating wallet...</p>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); loadData(); }}
+                          className="text-[10px] text-primary hover:underline ml-1"
+                        >
+                          Retry
+                        </button>
                       </div>
                     )}
                   </div>
