@@ -210,14 +210,14 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   useEffect(() => {
     if (launchpadPrivyWalletAddress && activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
       setPrivyBalance(activePrivyWallet.balance);
-      setPrivyDepositReady(activePrivyWallet.balance >= 0.05);
+      setPrivyDepositReady(activePrivyWallet.balance >= 0.1);
       return;
     }
 
     if (privyWalletReady && launchpadPrivyWalletAddress) {
       getPrivyBalance().then(b => {
         setPrivyBalance(b);
-        setPrivyDepositReady(b >= 0.05);
+        setPrivyDepositReady(b >= 0.1);
       });
     }
   }, [launchpadPrivyWalletAddress, activePrivyWallet?.balance, privyWalletReady, getPrivyBalance]);
@@ -2223,10 +2223,10 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     </div>
 
                     {/* Deposit prompt if balance too low */}
-                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.05) && !privyDepositReady && (
+                    {launchpadPrivyWalletAddress && (privyBalance === null || privyBalance < 0.1) && !privyDepositReady && (
                       <LaunchpadDepositPrompt
                         walletAddress={launchpadPrivyWalletAddress}
-                        minSol={0.05}
+                        minSol={0.1}
                         onReady={async () => {
                           setPrivyDepositReady(true);
                           await refreshManagedWalletBalances();
@@ -2238,7 +2238,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     )}
 
                     {/* When Privy is ready, show form + 1-click launch */}
-                    {(privyDepositReady || (privyBalance !== null && privyBalance >= 0.05)) && (
+                    {(privyDepositReady || (privyBalance !== null && privyBalance >= 0.1)) && (
                       <>
                         {/* Trading Fee */}
                         <div className="space-y-3 phantom-slider">

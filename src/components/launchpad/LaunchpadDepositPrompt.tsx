@@ -9,7 +9,7 @@ interface LaunchpadDepositPromptProps {
   minSol?: number;
 }
 
-export function LaunchpadDepositPrompt({ walletAddress, onReady, minSol = 0.05 }: LaunchpadDepositPromptProps) {
+export function LaunchpadDepositPrompt({ walletAddress, onReady, minSol = 0.1 }: LaunchpadDepositPromptProps) {
   const [balance, setBalance] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [isReady, setIsReady] = useState(false);

@@ -37,7 +37,7 @@ export default function LaunchTokenPage() {
 
             {/* Right: Sticky Sidebar */}
             <div className="space-y-5 lg:sticky lg:top-4 lg:self-start">
-              <WalletBalanceCard minRequired={isBnb ? 0.01 : 0.05} />
+              <WalletBalanceCard minRequired={isBnb ? 0.01 : 0.1} />
 
               {/* Platform Info Card */}
               <div className="glass-surface rounded-xl p-5">
