@@ -982,8 +982,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const handlePhantomLaunch = useCallback(async (feeMode?: 'standard' | 'holders') => {
     // Determine which wallet to use based on launchWalletMode
     const usePrivy = launchWalletMode === "privy";
-    const activeWalletAddress = usePrivy ? privyWalletAddress : phantomWallet.address;
-    const isWalletConnected = usePrivy ? (isAuthenticated && privyWalletReady && !!privyWalletAddress) : (phantomWallet.isConnected && !!phantomWallet.address);
+    const activeWalletAddress = usePrivy ? launchpadPrivyWalletAddress : phantomWallet.address;
+    const isWalletConnected = usePrivy ? (isAuthenticated && privyWalletReady && !!launchpadPrivyWalletAddress) : (phantomWallet.isConnected && !!phantomWallet.address);
     
     if (!isWalletConnected || !activeWalletAddress) {
       toast({ title: "Wallet not connected", description: usePrivy ? "Login with Privy first" : "Connect Phantom first", variant: "destructive" });
