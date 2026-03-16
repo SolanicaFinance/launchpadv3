@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRightLeft, ShieldAlert, Info, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
-import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,10 +10,10 @@ export function DevWalletRotationBanner() {
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [launchCount, setLaunchCount] = useState<number | null>(null);
-  const { walletAddress: embeddedWalletAddress } = useSolanaWalletWithPrivy();
+  const { activeAddress } = useMultiWallet();
   const { solanaAddress } = useAuth();
 
-  const address = embeddedWalletAddress || solanaAddress || null;
+  const address = activeAddress || solanaAddress || null;
 
   useEffect(() => {
     if (!address) return;
