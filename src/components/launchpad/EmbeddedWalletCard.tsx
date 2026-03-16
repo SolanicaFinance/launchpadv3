@@ -70,7 +70,8 @@ export function EmbeddedWalletCard({ className = "" }: EmbeddedWalletCardProps) 
 }
 
 function EmbeddedWalletCardInner({ className }: { className: string }) {
-  const { walletAddress, isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
+  const { isWalletReady, getBalance, getBalanceStrict } = useSolanaWalletWithPrivy();
+  const { activeAddress: walletAddress } = useMultiWallet();
   const { exportWallet } = useExportWallet();
   const { toast } = useToast();
 
