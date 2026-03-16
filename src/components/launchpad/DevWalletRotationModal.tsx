@@ -21,8 +21,9 @@ import {
   Sparkles,
   Clock,
   ArrowDown,
+  AlertTriangle,
 } from "lucide-react";
-import { useDevWalletRotation, type RotationStep, type Exchanger } from "@/hooks/useDevWalletRotation";
+import { useDevWalletRotation, type RotationStep, type ExchangeRate } from "@/hooks/useDevWalletRotation";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,6 @@ interface Props {
 const PROCESS_STEPS: { key: RotationStep; label: string; icon: React.ElementType }[] = [
   { key: "checking_launches", label: "Checking existing launches", icon: Search },
   { key: "creating_wallet", label: "Generating fresh wallet", icon: Wallet },
-  { key: "fetching_balance", label: "Fetching balance", icon: Wallet },
-  { key: "getting_quote", label: "Getting SplitNOW quote", icon: ArrowRightLeft },
   { key: "creating_order", label: "Creating exchange order", icon: ArrowRightLeft },
   { key: "sending_sol", label: "Sending SOL to deposit", icon: Send },
   { key: "polling_status", label: "Processing through CEX", icon: RefreshCw },
@@ -59,7 +58,6 @@ function getStepState(
     }
     return "pending";
   }
-
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const targetIndex = STEP_ORDER.indexOf(targetStep);
   if (targetIndex < currentIndex) return "done";
@@ -72,14 +70,14 @@ function shortAddr(addr: string) {
 }
 
 export function DevWalletRotationModal({ open, onOpenChange }: Props) {
-  const { state, running, loadExchangers, previewQuote, startRotation, reset } = useDevWalletRotation();
+  const { state, running, loadData, startRotation, reset } = useDevWalletRotation();
   const { activeWallet } = useMultiWallet() as any;
 
   useEffect(() => {
     if (open && state.step === "idle") {
-      loadExchangers();
+      loadData();
     }
-  }, [open, state.step, loadExchangers]);
+  }, [open, state.step, loadData]);
 
   useEffect(() => {
     if (!open) {
@@ -89,12 +87,30 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
     }
   }, [open, state.step, reset]);
 
-  const isSelecting = state.step === "selecting_cex" || state.step === "loading_exchangers" || state.step === "previewing_quote";
+  const isSelecting = state.step === "selecting_cex" || state.step === "loading_data";
   const isProcessing = !isSelecting && state.step !== "idle" && state.step !== "complete" && state.step !== "error";
   const isComplete = state.step === "complete";
   const isError = state.step === "error" && !isSelecting;
 
-  const sendAmount = state.balance > 0.005 ? state.balance - 0.005 : 0;
+  const handleSelectCex = (cexId: string) => {
+    startRotation(cexId);
+  };
+
+  // Merge rates with exchangers for display
+  const exchangersWithRates = state.exchangers.map((ex) => {
+    const rate = state.rates.find((r) => r.exchangerId === ex.id);
+    return { ...ex, rate };
+  });
+
+  // Sort: available rates first, then by rate descending
+  exchangersWithRates.sort((a, b) => {
+    if (a.rate?.available && !b.rate?.available) return -1;
+    if (!a.rate?.available && b.rate?.available) return 1;
+    if (a.rate && b.rate) return b.rate.exchangeRate - a.rate.exchangeRate;
+    return 0;
+  });
+
+  const balanceTooLow = state.sendAmount > 0 && state.sendAmount < state.minDeposit;
 
   return (
     <Dialog open={open} onOpenChange={running ? undefined : onOpenChange}>
@@ -111,13 +127,13 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
 
         {/* ─── SELECTION PHASE ─── */}
         {isSelecting && (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-3 pt-1">
             {/* From / To wallet info */}
-            {activeWallet && (
-              <div className="rounded-lg bg-secondary/50 p-3 space-y-3">
+            {activeWallet?.address && (
+              <div className="rounded-lg bg-secondary/50 p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">From (current wallet)</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">From</p>
                     <p className="text-xs font-mono text-foreground">{shortAddr(activeWallet.address)}</p>
                   </div>
                   <div className="text-right space-y-0.5">
@@ -126,96 +142,70 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center justify-center">
-                  <ArrowDown className="h-4 w-4 text-muted-foreground" />
+                  <ArrowDown className="h-3 w-3 text-muted-foreground" />
                 </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To (new wallet — auto-generated)</p>
-                  <p className="text-xs font-mono text-muted-foreground">
-                    {state.newWalletAddress ? shortAddr(state.newWalletAddress) : "Will be created on start"}
-                  </p>
-                </div>
-
-                {sendAmount > 0 && (
-                  <div className="pt-1 border-t border-border">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Amount to rotate</span>
-                      <span className="font-mono font-medium text-foreground">{sendAmount.toFixed(4)} SOL</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      100% balance minus ~0.005 SOL tx fee reserve
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">To (auto-generated)</p>
+                    <p className="text-xs font-mono text-muted-foreground">
+                      {state.newWalletAddress ? shortAddr(state.newWalletAddress) : "Created on start"}
                     </p>
                   </div>
-                )}
-
-                {state.minDeposit > 0 && (
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>Min deposit</span>
-                    <span className="font-mono">{state.minDeposit} SOL</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Quote preview */}
-            {state.quotePreview && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
-                <p className="text-xs font-medium text-foreground">Quote Preview</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className="text-muted-foreground">Send</p>
-                    <p className="font-mono text-foreground">{state.quotePreview.fromAmount.toFixed(4)} SOL</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Est. Receive</p>
-                    <p className="font-mono text-foreground">{state.quotePreview.estimatedReceive.toFixed(4)} SOL</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Rate</p>
-                    <p className="font-mono text-foreground">{state.quotePreview.rate.toFixed(6)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Est. Fee</p>
-                    <p className="font-mono text-foreground">{state.quotePreview.fee.toFixed(4)} SOL</p>
+                  <div className="text-right space-y-0.5">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Send amount</p>
+                    <p className="text-xs font-mono text-foreground">{state.sendAmount.toFixed(4)} SOL</p>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Floating rate — final amount may vary slightly</p>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border">
+                  <span>Min deposit: {state.minDeposit} SOL</span>
+                  <span>100% balance – 0.005 fee</span>
+                </div>
               </div>
             )}
 
-            {/* Error in selection phase */}
-            {state.error && (
-              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+            {balanceTooLow && (
+              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                Balance too low. Minimum deposit is {state.minDeposit} SOL.
+              </div>
+            )}
+
+            {/* Loading state */}
+            {state.step === "loading_data" && (
+              <div className="flex items-center justify-center py-6 gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading exchanges & rates...
+              </div>
+            )}
+
+            {/* Error in loading */}
+            {state.step === "selecting_cex" && state.error && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-2.5">
                 <p className="text-xs text-destructive">{state.error}</p>
               </div>
             )}
 
-            {/* Exchange selector */}
-            {state.step === "loading_exchangers" && (
-              <div className="flex items-center justify-center py-8 gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading available exchanges...
-              </div>
-            )}
-
-            {(state.step === "selecting_cex" || state.step === "previewing_quote") && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Select exchange to route through:</p>
-                <ScrollArea className="h-[240px]">
-                  <div className="space-y-1.5 pr-3">
-                    {state.exchangers.map((ex) => {
-                      const isSelected = state.selectedCex === ex.id;
-                      const isQuoting = state.step === "previewing_quote" && isSelected;
+            {/* Exchange list with rates */}
+            {state.step === "selecting_cex" && (
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-foreground">
+                  Select exchange {state.rates.length > 0 ? "(sorted by rate)" : ""}:
+                </p>
+                <ScrollArea className="h-[220px]">
+                  <div className="space-y-1 pr-3">
+                    {exchangersWithRates.map((ex) => {
+                      const hasRate = ex.rate && ex.rate.available;
+                      const noRate = ex.rate && !ex.rate.available;
                       return (
                         <button
                           key={ex.id}
-                          disabled={state.step === "previewing_quote" && !isSelected}
-                          onClick={() => previewQuote(ex.id)}
+                          disabled={balanceTooLow || (noRate === true)}
+                          onClick={() => handleSelectCex(ex.id)}
                           className={cn(
-                            "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all border",
-                            isSelected
-                              ? "border-primary/40 bg-primary/10"
-                              : "border-transparent hover:bg-secondary/60",
-                            state.step === "previewing_quote" && !isSelected && "opacity-50"
+                            "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-all border border-transparent",
+                            "hover:bg-secondary/60 hover:border-primary/20",
+                            noRate && "opacity-40 cursor-not-allowed",
+                            balanceTooLow && "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <div className="flex-1 min-w-0">
@@ -225,13 +215,20 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                                 {ex.category}
                               </Badge>
                             </div>
+                            {hasRate && (
+                              <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                                <span>Rate: <span className="font-mono text-foreground">{ex.rate!.exchangeRate.toFixed(6)}</span></span>
+                                <span>Est: <span className="font-mono text-foreground">{ex.rate!.estimatedReceive.toFixed(4)} SOL</span></span>
+                              </div>
+                            )}
+                            {noRate && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">Unavailable for this pair</p>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground shrink-0">
                             <Clock className="h-3 w-3" />
-                            ~{ex.eta} min
+                            ~{ex.eta}m
                           </div>
-                          {isQuoting && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />}
-                          {isSelected && !isQuoting && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
                         </button>
                       );
                     })}
@@ -239,49 +236,31 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 </ScrollArea>
               </div>
             )}
-
-            {/* Confirm button */}
-            {state.selectedCex && state.quotePreview && state.step === "selecting_cex" && (
-              <Button
-                className="w-full gap-2"
-                onClick={() => startRotation(state.selectedCex!)}
-                disabled={sendAmount < state.minDeposit}
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-                Start Rotation via {state.exchangers.find((e) => e.id === state.selectedCex)?.name || state.selectedCex}
-              </Button>
-            )}
-
-            {sendAmount > 0 && sendAmount < state.minDeposit && (
-              <p className="text-xs text-destructive text-center">
-                Balance too low. Minimum deposit is {state.minDeposit} SOL.
-              </p>
-            )}
           </div>
         )}
 
         {/* ─── PROCESSING PHASE ─── */}
         {(isProcessing || isComplete || isError) && (
-          <div className="space-y-4 pt-2">
-            {/* Selected CEX badge */}
+          <div className="space-y-3 pt-1">
+            {/* Selected CEX + route info */}
             {state.selectedCex && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Exchange:</span>
-                <span className="font-semibold text-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground rounded-lg bg-secondary/50 px-3 py-2">
+                <span>Exchange: <span className="font-semibold text-foreground">
                   {state.exchangers.find((e) => e.id === state.selectedCex)?.name || state.selectedCex}
-                </span>
+                </span></span>
+                <span className="font-mono">{state.sendAmount.toFixed(4)} SOL</span>
               </div>
             )}
 
             {/* Step indicators */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {PROCESS_STEPS.map(({ key, label, icon: Icon }) => {
                 const actualState = getStepState(state.step, state.failedStep, key);
                 return (
                   <div
                     key={key}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
+                      "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-all",
                       actualState === "active" && "bg-primary/10 text-primary",
                       actualState === "done" && "text-green-500",
                       actualState === "error" && "bg-destructive/10 text-destructive border border-destructive/20",
@@ -293,15 +272,23 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     {actualState === "error" && <XCircle className="h-4 w-4 shrink-0" />}
                     {actualState === "pending" && <Icon className="h-4 w-4 shrink-0 opacity-40" />}
                     <span className="flex-1">{label}</span>
-                    {key === "fetching_balance" && state.balance > 0 && actualState !== "pending" && (
-                      <span className="text-xs font-mono">{state.balance.toFixed(4)} SOL</span>
-                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* New wallet address */}
+            {/* Deposit info */}
+            {state.depositAddress && (
+              <div className="rounded-lg bg-secondary/50 p-3 space-y-1">
+                <p className="text-xs text-muted-foreground">Deposit address</p>
+                <p className="text-xs font-mono break-all text-foreground">{state.depositAddress}</p>
+                {state.depositAmount && (
+                  <p className="text-xs text-muted-foreground">Amount: <span className="font-mono text-foreground">{state.depositAmount} SOL</span></p>
+                )}
+              </div>
+            )}
+
+            {/* New wallet */}
             {state.newWalletAddress && (
               <div className="rounded-lg bg-secondary/50 p-3 space-y-1">
                 <p className="text-xs text-muted-foreground">New wallet</p>
@@ -325,7 +312,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             )}
 
             {/* Live logs */}
-            <ScrollArea className="h-32 rounded-lg bg-background border border-border p-3">
+            <ScrollArea className="h-28 rounded-lg bg-background border border-border p-3">
               <div className="space-y-1">
                 {state.logs.map((l, i) => (
                   <p key={i} className="text-[10px] font-mono text-muted-foreground leading-relaxed">{l}</p>
