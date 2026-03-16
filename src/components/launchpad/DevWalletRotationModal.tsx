@@ -195,7 +195,22 @@ function LogEntry({ message, index }: { message: string; index: number }) {
    ═══════════════════════════════════════════════ */
 export function DevWalletRotationModal({ open, onOpenChange }: Props) {
   const { state, running, loadData, startRotation, reset } = useDevWalletRotation();
-  const { activeWallet } = useMultiWallet() as any;
+  const { activeWallet, switchWallet } = useMultiWallet() as any;
+  const queryClient = useQueryClient();
+
+  const handleDone = useCallback(() => {
+    // Switch to the new wallet if rotation completed
+    if (state.newWalletAddress) {
+      switchWallet(state.newWalletAddress);
+    }
+    // Invalidate all wallet/balance related queries so UI refreshes
+    queryClient.invalidateQueries({ queryKey: ["wallet-holdings"] });
+    queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
+    queryClient.invalidateQueries({ queryKey: ["sol-balance"] });
+    queryClient.invalidateQueries({ queryKey: ["user-wallets"] });
+    queryClient.invalidateQueries({ queryKey: ["launch-count"] });
+    onOpenChange(false);
+  }, [state.newWalletAddress, switchWallet, queryClient, onOpenChange]);
 
   useEffect(() => {
     if (open && state.step === "idle" && activeWallet?.address) {
