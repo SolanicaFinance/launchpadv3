@@ -7,7 +7,6 @@ import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
 export function DevWalletRotationBanner() {
   const { activeWallet, managedWallets, ready } = useMultiWallet();
-  const { solanaAddress } = useAuth();
   const [launchCount, setLaunchCount] = useState(0);
   const [checked, setChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
