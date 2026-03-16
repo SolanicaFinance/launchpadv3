@@ -203,7 +203,6 @@ export function useDevWalletRotation() {
         sendAmount: sendAmt,
         minDeposit: minDep,
         maxDeposit: maxDep,
-        newWalletAddress: newAddr,
       });
 
       // Now fetch quote to get per-exchange rates
