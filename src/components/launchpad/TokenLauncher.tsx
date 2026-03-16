@@ -207,13 +207,20 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const [isEditingBannerText, setIsEditingBannerText] = useState(false);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
 
-  // Fetch Privy balance when wallet is ready  
-  // (inline import to avoid adding useEffect import if missing)
-  const privyBalanceFetchedRef = useState(() => false);
-  if (!privyBalanceFetchedRef[0] && privyWalletReady && privyWalletAddress) {
-    privyBalanceFetchedRef[1](true);
-    getPrivyBalance().then(b => setPrivyBalance(b));
-  }
+  useEffect(() => {
+    if (launchpadPrivyWalletAddress && activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
+      setPrivyBalance(activePrivyWallet.balance);
+      setPrivyDepositReady(activePrivyWallet.balance >= 0.05);
+      return;
+    }
+
+    if (privyWalletReady && launchpadPrivyWalletAddress) {
+      getPrivyBalance().then(b => {
+        setPrivyBalance(b);
+        setPrivyDepositReady(b >= 0.05);
+      });
+    }
+  }, [launchpadPrivyWalletAddress, activePrivyWallet?.balance, privyWalletReady, getPrivyBalance]);
 
   const isValidSolanaAddress = (address: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
 
