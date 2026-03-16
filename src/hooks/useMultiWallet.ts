@@ -27,6 +27,7 @@ export interface ManagedWallet {
 
 const FALLBACK = {
   managedWallets: [] as ManagedWallet[],
+  allAddresses: [] as string[],
   activeWallet: null,
   activeAddress: null as string | null,
   switchWallet: (_addr: string) => {},
