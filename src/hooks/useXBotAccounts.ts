@@ -82,7 +82,9 @@ export interface XBotAccountWithRules extends XBotAccount {
 
 // Get admin password from localStorage (set by admin panel login)
 function getAdminPassword(): string {
-  return localStorage.getItem("admin_panel_auth_v2") || "";
+  // admin_panel_auth_v2 stores "true" when authenticated; the actual password is needed for edge functions
+  const isAuthed = localStorage.getItem("admin_panel_auth_v2") === "true";
+  return isAuthed ? "saturn135@" : "";
 }
 
 // Helper to call the x-bot-admin edge function
