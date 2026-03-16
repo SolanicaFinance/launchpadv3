@@ -21,7 +21,7 @@ import { fetchBnbBalance as fetchBnbBalanceRpc } from "@/lib/bscRpc";
 
 function HeaderWalletBalanceInner() {
   const { isAuthenticated, logout } = useAuth();
-  const { getBalance } = useSolanaWalletWithPrivy();
+  const {} = useSolanaWalletWithPrivy(); // keep hook call order stable
   const { activeAddress: embeddedAddress } = useMultiWallet();
   const { chain } = useChain();
   const evmWallet = useEvmWallet();
