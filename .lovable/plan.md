@@ -1,104 +1,55 @@
 
-## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-### Problem
-TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
-Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+## Root Cause (confirmed from SDK source code at unpkg.com/splitnow@1.0.1)
 
-### Architecture
-1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
-   - Privy embedded wallet handles all on-chain signing (same as trading)
-   - Users logged in via Privy can launch directly — no Phantom popup
-   - Logged-out users can still generate memes, prompted to login on Launch
+The SplitNow API wraps POST responses in a `{ success: true, data: <value> }` envelope. Our edge function ignores this and reads `createData.quoteId` which is `undefined`, causing the subsequent GET to fail with `Cast to ObjectId failed for value "undefined"`.
 
-2. **Simplify the "phantom" mode → "launch" mode**
-   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
-   - Rename to generic wallet references since Privy handles everything
-   - Keep all sub-modes (random, describe, realistic, custom)
+The 422 error the user keeps seeing is likely from a stale/cached edge function deployment still sending the old flat format. The current code in the repo IS using the nested format but the response parsing is broken.
 
-3. **On-chain flow change:**
-   ```
-   Before: Phantom popup → user signs → broadcast
-   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
-   ```
+### SDK source reveals (lines 130-168):
+```text
+POST /quotes/  → { success: true, data: "quote-id-string" }
+POST /orders/  → { success: true, data: { shortId: "xxx" } }
+GET  /quotes/  → { success: true, data: { quoteLegs: [...] } }
+GET  /orders/  → { success: true, data: { shortId, depositWalletAddress, orderInput, status, statusText } }
+```
 
-4. **Auth gate on launch:**
-   - Check `useAuth()` / `usePrivy()` for logged-in state
-   - If not logged in → trigger Privy login modal
-   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
-
-### Files to modify:
-- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
-- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
-- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
-- `src/components/launchpad/CreateTokenModal.tsx` — same
-- `src/pages/FunLauncherPage.tsx` — same
-
-### Dependencies:
-- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
-- `src/hooks/useAuth.ts` (already exists)
-- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+Our edge function reads `createData.quoteId` instead of `createData.data` (the unwrapped ID).
 
 ---
 
-## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
+## Plan
 
-### What was built:
-1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
-   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
-   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
-   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
-   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
-   - Records trade in DB + alpha_trades (non-blocking)
-   - Returns signature immediately with timing breakdown
+### 1. Rewrite `splitnow-proxy` edge function response handling
 
-2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
-   - Single `supabase.functions.invoke('turbo-trade')` call
-   - No client-side tx building or signing
-   - Background query invalidation after 500ms
-   - Logs client roundtrip vs server execution time
+Fix the response envelope unwrapping for all POST and GET calls to `/quotes/` and `/orders/`:
 
-3. **Wired into trade components:**
-   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
-   - `PortfolioModal.tsx` — uses `useTurboSwap`
+- **Quote POST**: Extract `quoteId = createData.data` (it's a string ID)
+- **Quote GET**: Extract `getData.data` to get the actual quote object
+- **Order POST**: Extract `shortId = createData.data.shortId`
+- **Order GET**: Extract `getData.data` to get order details
+- **Status GET**: Extract `data.data` with `status`, `statusShort`, `statusText` fields
+- Add a `limits` check before order creation matching the SDK's min deposit validation
 
-### Expected latency:
-```
-Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
-After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
-```
+### 2. Add manual CEX selection to the rotation modal
 
----
+Per user preference, replace auto-random CEX selection with a picker:
 
-## 6-Phase Axiom Feature Integration Plan (SAVED)
+- Fetch available exchangers from the API on modal open
+- Show a grid/list of CEX options (Binance, KuCoin, Gate, Bybit) with logos
+- User selects one before starting rotation
+- Pass selected CEX through to the order step
 
-### Phase 1: Copy Trade Execution
-- New `copy-trade-execute` edge function
-- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
-- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
-- New `copy_trade_log` table
+### 3. Update `useDevWalletRotation.ts` hook
 
-### Phase 2: Limit Orders (SL/TP)
-- Jupiter limit order program integration
-- `limit-order-create` edge function
-- `limit_orders` DB table
-- Limit order tab in trade panel
+- Accept `selectedCex` as a parameter to `startRotation()` instead of randomizing
+- Fix response field mapping to match SDK: `depositWalletAddress`, `orderInput.fromAmount`
+- Fix status polling to use `status`, `statusShort`, `statusText` fields
+- Add min deposit validation (0.05 SOL for Solana)
+- Keep the direct-transfer fallback as safety net
 
-### Phase 3: Real-Time WebSocket Token Feed
-- Helius WebSocket for sub-1s new pair detection
-- Replace Codex polling (~30s) 
-- Edge function → Supabase Realtime channel
+### Files to change:
+- `supabase/functions/splitnow-proxy/index.ts` -- response envelope unwrapping
+- `src/hooks/useDevWalletRotation.ts` -- accept CEX param, fix field mapping, add min deposit check
+- `src/components/launchpad/DevWalletRotationModal.tsx` -- add CEX selection step before starting
 
-### Phase 4: DCA (Dollar Cost Averaging)
-- `dca_orders` DB table
-- `dca-execute` cron edge function
-- DCA tab in trade panel
-
-### Phase 5: Enhanced Token Safety
-- LP lock status, mint authority, honeypot detection
-- Safety score badge on Pulse cards
-
-### Phase 6: Wallet PnL Analytics
-- `wallet-pnl-calculate` edge function
-- Per-wallet realized/unrealized PnL
-- Rank tracked wallets by performance
