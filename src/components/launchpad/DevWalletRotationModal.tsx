@@ -74,10 +74,10 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
   const { activeWallet } = useMultiWallet() as any;
 
   useEffect(() => {
-    if (open && state.step === "idle") {
+    if (open && state.step === "idle" && activeWallet?.address) {
       loadData();
     }
-  }, [open, state.step, loadData]);
+  }, [open, state.step, loadData, activeWallet?.address]);
 
   useEffect(() => {
     if (!open) {
