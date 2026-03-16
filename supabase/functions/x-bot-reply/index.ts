@@ -14,6 +14,7 @@ function sleep(ms: number) {
 
 // Banned words — never reply TO tweets containing these, and never OUTPUT them
 const BANNED_WORDS = ["rug", "rugpull", "rug pull", "scam", "scammer", "ponzi", "fraud", "honeypot", "honey pot"];
+const BANNED_OPENERS = ["ngl", "tbh", "honestly", "great point", "interesting"];
 const BANNED_REGEX = new RegExp(`\\b(${BANNED_WORDS.join("|")})\\b`, "gi");
 
 function containsBannedWords(text: string): boolean {
