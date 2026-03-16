@@ -162,15 +162,15 @@ export function TokenCard({ token, solPrice, isPromoted, creatorUsername, creato
       className={`lt-card group block overflow-hidden relative ${isPulsing ? 'lt-shake' : ''} ${isNearGrad ? 'lt-card-hot' : ''}`}
     >
       {/* ── Token Image ── */}
-      <div className="relative z-10 w-full" style={{ paddingBottom: "54%" }}>
-        <div className="absolute inset-0">
+      <div className="relative z-10 w-full bg-black/40" style={{ paddingBottom: "54%" }}>
+        <div className="absolute inset-0 flex items-center justify-center">
           <OptimizedTokenImage
             src={token.image_url}
             fallbackSrc={token.mint_address ? `https://dd.dexscreener.com/ds-data/tokens/solana/${token.mint_address}.png` : undefined}
             alt={token.name}
             fallbackText={token.ticker}
             size={400}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
 
           {/* Gradient overlay for text readability */}
