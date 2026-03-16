@@ -46,6 +46,7 @@ function useMultiWalletInner() {
   const { createWallet } = useCreateWallet();
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [balances, setBalances] = useState<Record<string, number>>({});
+  const [hiddenAddresses, setHiddenAddresses] = useState<Set<string>>(new Set());
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
