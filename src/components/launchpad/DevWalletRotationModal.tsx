@@ -345,7 +345,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     <p className="text-[11px] text-muted-foreground mt-0.5">This wallet is already clean. Are you sure you want to rotate again?</p>
                   </div>
                 </div>
-              )
+              )}
               {/* Loading */}
               {state.step === "loading_data" && (
                 <div className="flex items-center justify-center py-8 gap-2.5 text-sm text-muted-foreground">
