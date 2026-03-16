@@ -2238,7 +2238,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     )}
 
                     {/* When Privy is ready, show form + 1-click launch */}
-                    {(privyDepositReady || (privyBalance !== null && privyBalance >= 0.05)) && (
+                    {(privyDepositReady || (privyBalance !== null && privyBalance >= 0.1)) && (
                       <>
                         {/* Trading Fee */}
                         <div className="space-y-3 phantom-slider">
