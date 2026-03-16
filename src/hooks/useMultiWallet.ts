@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { getPersistedOrder, clearPersistedOrder } from "@/hooks/useDevWalletRotation";
 
 const MAX_WALLETS = 25;
 const ACTIVE_WALLET_KEY = "claw_active_wallet";
