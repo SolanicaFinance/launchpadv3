@@ -265,7 +265,7 @@ function HeaderWalletBalanceInner() {
         onOpenChange={setDepositOpen}
         address={displayAddress}
         chain={isBnb ? "bnb" : "solana"}
-        getBalance={isBnb ? undefined : getBalance}
+        getBalance={undefined}
       />
       <WithdrawDialog
         open={withdrawOpen}
