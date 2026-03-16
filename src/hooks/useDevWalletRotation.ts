@@ -161,13 +161,21 @@ export function useDevWalletRotation() {
     update({ step: "loading_data", error: null });
     try {
       // Fire wallet pre-creation in background (don't block data loading)
+      // Use a timeout to prevent hanging indefinitely
       const walletPromise = (async () => {
         try {
-          const addr = await createNewWallet();
-          if (addr) update({ newWalletAddress: addr });
+          console.log("[WalletRotation] Starting wallet pre-creation...");
+          const timeoutPromise = new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error("Wallet creation timed out after 15s")), 15000)
+          );
+          const addr = await Promise.race([createNewWallet(), timeoutPromise]) as string;
+          if (addr) {
+            console.log("[WalletRotation] Pre-created wallet:", addr);
+            update({ newWalletAddress: addr });
+          }
           return addr;
-        } catch (e) {
-          console.warn("[WalletRotation] Pre-create wallet failed, will retry later:", e);
+        } catch (e: any) {
+          console.warn("[WalletRotation] Pre-create wallet failed, will retry later:", e?.message || e);
           return null;
         }
       })();
