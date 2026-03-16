@@ -210,7 +210,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   useEffect(() => {
     if (launchpadPrivyWalletAddress && activePrivyWallet?.balance !== null && activePrivyWallet?.balance !== undefined) {
       setPrivyBalance(activePrivyWallet.balance);
-      setPrivyDepositReady(activePrivyWallet.balance >= 0.05);
+      setPrivyDepositReady(activePrivyWallet.balance >= 0.1);
       return;
     }
 
