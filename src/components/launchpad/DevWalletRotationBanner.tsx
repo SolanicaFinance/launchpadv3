@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DevWalletRotationModal } from "./DevWalletRotationModal";
 
