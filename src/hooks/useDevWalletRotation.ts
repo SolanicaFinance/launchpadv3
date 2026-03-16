@@ -125,7 +125,14 @@ export function useDevWalletRotation() {
       update({ step, failedStep: null });
     };
 
-    setState({ ...initial, step: "checking_launches", failedStep: null });
+    // Preserve newWalletAddress from previous attempt to avoid creating duplicates
+    setState((prev) => ({
+      ...initial,
+      step: "checking_launches",
+      failedStep: null,
+      newWalletAddress: prev.newWalletAddress,
+      logs: [],
+    }));
 
     try {
       // Step 1: Check launches
@@ -135,12 +142,21 @@ export function useDevWalletRotation() {
       update({ launchCount: count });
       log(`Found ${count} token launch(es) from this wallet`);
 
-      // Step 2: Create new wallet
+      // Step 2: Create new wallet (reuse if already created from a previous attempt)
       setCurrentStep("creating_wallet");
-      log("Generating fresh Privy embedded wallet...");
-      const newAddr = await createNewWallet();
-      update({ newWalletAddress: newAddr });
-      log(`New wallet created: ${newAddr}`);
+      let newAddr: string;
+      const existingNewAddr = (await new Promise<string | null>((resolve) => {
+        setState((s) => { resolve(s.newWalletAddress); return s; });
+      }));
+      if (existingNewAddr) {
+        newAddr = existingNewAddr;
+        log(`Reusing previously created wallet: ${newAddr}`);
+      } else {
+        log("Generating fresh Privy embedded wallet...");
+        newAddr = await createNewWallet();
+        update({ newWalletAddress: newAddr });
+        log(`New wallet created: ${newAddr}`);
+      }
 
       // Step 3: Randomize CEX
       setCurrentStep("randomizing_cex");
