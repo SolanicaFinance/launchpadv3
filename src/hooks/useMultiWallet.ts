@@ -5,7 +5,7 @@
  * Tracks active wallet, syncs labels to DB.
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useWallets, useCreateWallet } from "@privy-io/react-auth/solana";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +49,7 @@ function useMultiWalletInner() {
   const [hiddenAddresses, setHiddenAddresses] = useState<Set<string>>(new Set());
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const embeddedWalletsRef = useRef<any[]>([]);
 
   const rpcUrl = getRpcUrl().url;
 
@@ -60,6 +61,10 @@ function useMultiWalletInner() {
       return type === "privy" || name.includes("privy") || name.includes("embedded");
     });
   }, [wallets]);
+
+  useEffect(() => {
+    embeddedWalletsRef.current = embeddedWallets;
+  }, [embeddedWallets]);
 
   useEffect(() => {
     if (!profileId) return;
@@ -115,12 +120,32 @@ function useMultiWalletInner() {
     if (embeddedWallets.length >= MAX_WALLETS) {
       throw new Error(`Maximum ${MAX_WALLETS} wallets reached`);
     }
+
+    const existingAddresses = new Set(embeddedWalletsRef.current.map((w: any) => w.address));
+
     setCreating(true);
     try {
       const newWallet = await createWallet({ createAdditional: true });
-      const address = (newWallet as any)?.address;
-      if (address && profileId) {
-        const label = `Wallet ${embeddedWallets.length + 1}`;
+      let address = (newWallet as any)?.address as string | undefined;
+
+      if (!address) {
+        const startedAt = Date.now();
+        while (Date.now() - startedAt < 20000) {
+          const detectedWallet = embeddedWalletsRef.current.find((w: any) => !existingAddresses.has(w.address));
+          if (detectedWallet?.address) {
+            address = detectedWallet.address;
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+      }
+
+      if (!address) {
+        throw new Error("Wallet was created but is still syncing. Please try again in a moment.");
+      }
+
+      if (profileId) {
+        const label = `Wallet ${embeddedWalletsRef.current.length}`;
         await supabase.from("user_wallets").upsert({
           profile_id: profileId,
           wallet_address: address,
@@ -129,6 +154,7 @@ function useMultiWalletInner() {
         }, { onConflict: "profile_id,wallet_address" });
         setLabels((prev) => ({ ...prev, [address]: label }));
       }
+
       return address;
     } finally {
       setCreating(false);
