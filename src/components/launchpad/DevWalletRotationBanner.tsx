@@ -32,7 +32,7 @@ export function DevWalletRotationBanner() {
     }
 
     supabase
-      .from("fun_tokens")
+      .from("tokens")
       .select("id")
       .in("creator_wallet", addresses)
       .then(({ data, error }) => {
