@@ -160,21 +160,23 @@ export function useDevWalletRotation() {
 
     update({ step: "loading_data", error: null });
     try {
-      // Fetch exchangers, limits, balance, AND pre-create new wallet in parallel
-      const [exchangersData, limitsData, balLamports, newAddr] = await Promise.all([
+      // Fire wallet pre-creation in background (don't block data loading)
+      const walletPromise = (async () => {
+        try {
+          const addr = await createNewWallet();
+          if (addr) update({ newWalletAddress: addr });
+          return addr;
+        } catch (e) {
+          console.warn("[WalletRotation] Pre-create wallet failed, will retry later:", e);
+          return null;
+        }
+      })();
+
+      // Fetch exchangers, limits, and balance in parallel
+      const [exchangersData, limitsData, balLamports] = await Promise.all([
         splitnowCall("exchangers"),
         splitnowCall("limits"),
         new Connection(rpcUrl, "confirmed").getBalance(new PublicKey(activeWallet.address)),
-        // Pre-create the destination wallet immediately so user sees the real address
-        (async () => {
-          try {
-            const addr = await createNewWallet();
-            return addr;
-          } catch (e) {
-            console.warn("[WalletRotation] Pre-create wallet failed, will retry later:", e);
-            return null;
-          }
-        })(),
       ]);
 
       const available: Exchanger[] = (exchangersData?.exchangers || [])
