@@ -104,6 +104,7 @@ export function useDevWalletRotation() {
   const { profileId } = useAuth();
   const { activeWallet, createNewWallet, switchWallet, hideWallet } = useMultiWallet() as any;
   const { wallets } = useWallets();
+  const { signTransaction: privySignTransaction } = useSolanaWalletWithPrivy();
   const [state, setState] = useState<RotationState>(initial);
   const [running, setRunning] = useState(false);
 
