@@ -583,7 +583,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             {isComplete && (
               <Button
                 className="w-full gap-2 btn-gradient-green hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
-                onClick={() => onOpenChange(false)}
+                onClick={handleDone}
               >
                 <ShieldCheck className="h-4 w-4" />
                 Done — Start Fresh Launch
