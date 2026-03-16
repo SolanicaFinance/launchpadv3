@@ -147,6 +147,19 @@ function useMultiWalletInner() {
     }
   }, [profileId]);
 
+  const hideWallet = useCallback(async (address: string) => {
+    setHiddenAddresses((prev) => new Set([...prev, address]));
+    if (profileId) {
+      await supabase.from("user_wallets").upsert({
+        profile_id: profileId,
+        wallet_address: address,
+        label: labels[address] || "Hidden",
+        is_default: false,
+        is_hidden: true,
+      } as any, { onConflict: "profile_id,wallet_address" });
+    }
+  }, [profileId, labels]);
+
   const refreshBalances = useCallback(async () => {
     if (embeddedWallets.length === 0) return;
     const connection = new Connection(rpcUrl, "confirmed");
