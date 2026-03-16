@@ -473,6 +473,16 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 ))}
               </div>
 
+              {/* DO NOT CLOSE warning during CEX processing */}
+              {(state.step === "polling_status" || state.step === "sending_sol") && !state.failedStep && (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse">
+                  <span className="text-destructive text-lg">⚠️</span>
+                  <p className="text-xs font-bold text-destructive uppercase tracking-wide">
+                    Do not close this window — transfer in progress
+                  </p>
+                </div>
+              )}
+
               {/* Details grid - addresses, tx, amount */}
               {(state.depositAddress || state.newWalletAddress || state.txSignature) && (
                 <div className="space-y-1.5">
