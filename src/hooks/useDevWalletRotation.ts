@@ -38,6 +38,7 @@ export type RotationStep =
 
 export interface RotationState {
   step: RotationStep;
+  failedStep: RotationStep | null;
   launchCount: number;
   newWalletAddress: string | null;
   selectedCex: CexName | null;
@@ -53,6 +54,7 @@ export interface RotationState {
 
 const initial: RotationState = {
   step: "idle",
+  failedStep: null,
   launchCount: 0,
   newWalletAddress: null,
   selectedCex: null,
