@@ -99,7 +99,7 @@ export function getPersistedOrder(): { orderId: string; depositAddress: string; 
   } catch { return null; }
 }
 
-function clearPersistedOrder() {
+export function clearPersistedOrder() {
   try { localStorage.removeItem(ROTATION_STORAGE_KEY); } catch {}
 }
 
