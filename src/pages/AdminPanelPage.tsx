@@ -60,6 +60,7 @@ export default function AdminPanelPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const activeTab = searchParams.get("tab") || "treasury";
 
   useEffect(() => {
