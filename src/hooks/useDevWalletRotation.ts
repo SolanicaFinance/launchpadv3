@@ -4,7 +4,7 @@
  * Orchestrates the full CEX-routed wallet rotation flow:
  * 1. Detect existing launches
  * 2. Create new Privy embedded wallet
- * 3. Randomize CEX
+ * 3. User selects CEX (manual)
  * 4. Get SplitNOW quote → create order
  * 5. Send SOL to deposit address
  * 6. Poll order status
@@ -20,14 +20,16 @@ import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { useWallets } from "@privy-io/react-auth/solana";
 
 // CEX exchanger IDs matching the SplitNow API (lowercase)
-const CEXES = ["binance", "kucoin", "gate", "bybit"] as const;
-type CexId = (typeof CEXES)[number];
+export const CEXES = ["binance", "kucoin", "gate", "bybit"] as const;
+export type CexId = (typeof CEXES)[number];
+
+const MIN_DEPOSIT_SOL = 0.05;
 
 export type RotationStep =
   | "idle"
+  | "selecting_cex"
   | "checking_launches"
   | "creating_wallet"
-  | "randomizing_cex"
   | "fetching_balance"
   | "getting_quote"
   | "creating_order"
@@ -115,8 +117,8 @@ export function useDevWalletRotation() {
     [wallets]
   );
 
-  /** Run the full rotation flow */
-  const startRotation = useCallback(async () => {
+  /** Run the full rotation flow with a user-selected CEX */
+  const startRotation = useCallback(async (selectedCex: CexId) => {
     if (!activeWallet || running) return;
     setRunning(true);
 
@@ -131,6 +133,7 @@ export function useDevWalletRotation() {
       ...initial,
       step: "checking_launches",
       failedStep: null,
+      selectedCex,
       newWalletAddress: prev.newWalletAddress,
       logs: [],
     }));
@@ -159,13 +162,7 @@ export function useDevWalletRotation() {
         log(`New wallet created: ${newAddr}`);
       }
 
-      // Step 3: Randomize CEX
-      setCurrentStep("randomizing_cex");
-      const cex = CEXES[Math.floor(Math.random() * CEXES.length)];
-      update({ selectedCex: cex });
-      log(`Selected exchange: ${cex}`);
-
-      // Step 4: Get balance
+      // Step 3: Get balance
       setCurrentStep("fetching_balance");
       const connection = new Connection(rpcUrl, "confirmed");
       const balLamports = await connection.getBalance(new PublicKey(activeWallet.address));
@@ -173,8 +170,8 @@ export function useDevWalletRotation() {
       update({ balance: balSol });
       log(`Current balance: ${balSol.toFixed(6)} SOL`);
 
-      if (balSol < 0.01) {
-        throw new Error("Insufficient balance for rotation (need at least 0.01 SOL)");
+      if (balSol < MIN_DEPOSIT_SOL) {
+        throw new Error(`Insufficient balance for rotation (need at least ${MIN_DEPOSIT_SOL} SOL, have ${balSol.toFixed(4)})`);
       }
 
       // Reserve for tx fee
@@ -186,9 +183,9 @@ export function useDevWalletRotation() {
       let usedDirectFallback = false;
       let orderId: string | undefined;
 
-      // Step 5: Get quote (using SDK-correct nested format)
+      // Step 4: Get quote
       setCurrentStep("getting_quote");
-      log("Fetching SplitNOW quote (SOL→SOL, floating_rate)...");
+      log(`Fetching SplitNOW quote (SOL→SOL, floating_rate)...`);
 
       try {
         const quoteData = await splitnowCall("quote", {
@@ -200,12 +197,12 @@ export function useDevWalletRotation() {
           type: "floating_rate",
         });
         update({ quote: quoteData });
-        const quoteId = quoteData?.quoteId || quoteData?.id;
+        const quoteId = quoteData?.quoteId;
         log(`Quote received (ID: ${quoteId})`);
 
-        // Step 6: Create order with SDK-correct nested format
+        // Step 5: Create order
         setCurrentStep("creating_order");
-        log(`Creating order routed through ${cex}...`);
+        log(`Creating order routed through ${selectedCex}...`);
 
         const orderOutputs = [
           {
@@ -213,7 +210,7 @@ export function useDevWalletRotation() {
             toAssetId: "sol",
             toNetworkId: "solana",
             toPctBips: 10000,
-            toExchangerId: cex,
+            toExchangerId: selectedCex,
           },
         ];
 
@@ -227,17 +224,15 @@ export function useDevWalletRotation() {
         });
 
         update({ order: orderData });
-        orderId = orderData?.shortId || orderData?.orderId || orderData?.id;
+        orderId = orderData?.shortId;
 
-        // Parse deposit address from the order response
-        // The GET response nests it under orderInput or at the top level
+        // SDK returns depositWalletAddress at top level of unwrapped data
         depositAddress =
           orderData?.depositWalletAddress ||
           orderData?.orderInput?.depositWalletAddress ||
           newAddr;
         depositAmount = Number(
           orderData?.orderInput?.fromAmount ||
-          orderData?.depositAmount ||
           sendAmount
         );
 
@@ -251,7 +246,7 @@ export function useDevWalletRotation() {
           quote: null,
           order: null,
           orderStatus: "fallback_direct_transfer",
-          orderStatusText: "SplitNOW quote rejected, using direct transfer fallback",
+          orderStatusText: "SplitNOW unavailable, using direct transfer fallback",
         });
         log(`SplitNOW error: ${quoteErr.message}`);
         log("Falling back to a direct transfer to the new wallet so rotation can complete.");
@@ -259,7 +254,7 @@ export function useDevWalletRotation() {
         depositAmount = sendAmount;
       }
 
-      // Step 7: Send SOL to deposit address
+      // Step 6: Send SOL to deposit address
       setCurrentStep("sending_sol");
       log(`Signing and sending SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
       const signer = getWalletSigner(activeWallet.address);
@@ -285,7 +280,7 @@ export function useDevWalletRotation() {
       update({ txSignature: sig });
       log(`Transaction sent: ${sig}`);
 
-      // Step 8: Poll order status
+      // Step 7: Poll order status
       setCurrentStep("polling_status");
 
       if (usedDirectFallback || !orderId) {
@@ -302,8 +297,9 @@ export function useDevWalletRotation() {
         for (let i = 0; i < 120; i++) {
           await new Promise((r) => setTimeout(r, 5000));
           const statusData = await splitnowCall("status", { orderId });
-          finalStatus = statusData?.orderStatus || statusData?.status || "pending";
-          statusText = statusData?.orderStatusText || finalStatus;
+          // SDK fields: status, statusShort, statusText
+          finalStatus = statusData?.statusShort || statusData?.status || "pending";
+          statusText = statusData?.statusText || finalStatus;
           update({ orderStatus: finalStatus, orderStatusText: statusText });
           log(`Status: ${statusText} (${finalStatus})`);
 
@@ -314,7 +310,7 @@ export function useDevWalletRotation() {
         }
       }
 
-      // Step 9: Switch wallet and hide old
+      // Step 8: Switch wallet and hide old
       setCurrentStep("switching_wallet");
       log("Switching to new wallet and hiding old one...");
       switchWallet(newAddr);
