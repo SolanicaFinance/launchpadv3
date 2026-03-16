@@ -106,11 +106,11 @@ function EmbeddedWalletCardInner({ className }: { className: string }) {
   };
 
   useEffect(() => {
-    if (!isWalletReady) return;
+    if (!isWalletReady || !walletAddress) return;
     fetchBalance();
     const interval = setInterval(fetchBalance, 15000);
     return () => clearInterval(interval);
-  }, [isWalletReady]);
+  }, [isWalletReady, walletAddress]);
 
   // Poll for deposits when QR modal is open
   useEffect(() => {
