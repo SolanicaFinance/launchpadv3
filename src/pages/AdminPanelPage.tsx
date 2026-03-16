@@ -127,102 +127,109 @@ export default function AdminPanelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Shield className="w-6 h-6" /> Admin Panel
-            </h1>
-            <p className="text-sm text-muted-foreground">All admin tools in one place</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
-        </div>
-
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setSearchParams({ tab: v })}
-          className="w-full"
-        >
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
-              {TAB_CONFIG.map(({ value, label, icon: Icon }) => (
-                <TabsTrigger key={value} value={value} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-
-          <TabsContent value="treasury" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <TreasuryAdminContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="announcements" className="mt-6">
-            <AnnouncementManager />
-          </TabsContent>
-
-          <TabsContent value="deployer" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <DeployerDustAdminPage />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="xbots" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <XBotAdminPage />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="agent-logs" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <AgentLogsAdminPage />
-            </Suspense>
-          </TabsContent>
-
-
-          <TabsContent value="follower-scan" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <FollowerScanPage />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="promo" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <div className="space-y-6">
-                <PromoMentionsAdminPage />
-                <InfluencerRepliesAdminPage />
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      <div className="md:ml-[48px] flex flex-col min-h-screen">
+        <AppHeader onMobileMenuOpen={() => setMobileOpen(true)} />
+        <main className="flex-1 px-4 py-6 md:px-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="border-l-2 border-primary pl-4">
+                <h1 className="font-mono text-sm text-primary uppercase tracking-widest flex items-center gap-2">
+                  <Shield className="w-4 h-4" /> Admin Panel
+                </h1>
+                <p className="font-mono text-xs text-muted-foreground mt-1">All admin tools in one place</p>
               </div>
-            </Suspense>
-          </TabsContent>
+              <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+            </div>
 
-          <TabsContent value="forum" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <SaturnForumAdminPage />
-            </Suspense>
-          </TabsContent>
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => setSearchParams({ tab: v })}
+              className="w-full"
+            >
+              <div className="overflow-x-auto pb-2">
+                <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
+                  {TAB_CONFIG.map(({ value, label, icon: Icon }) => (
+                    <TabsTrigger key={value} value={value} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
 
-          <TabsContent value="saturn-launch" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <SaturnAdminLaunchPage />
-            </Suspense>
-          </TabsContent>
+              <TabsContent value="treasury" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <TreasuryAdminContent />
+                </Suspense>
+              </TabsContent>
 
-          <TabsContent value="partner-fees" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <PartnerFeesPage />
-            </Suspense>
-          </TabsContent>
+              <TabsContent value="announcements" className="mt-6">
+                <AnnouncementManager />
+              </TabsContent>
 
-          <TabsContent value="x-restyler" className="mt-6">
-            <Suspense fallback={<TabLoader />}>
-              <XPostRestylerPage />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="deployer" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <DeployerDustAdminPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="xbots" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <XBotAdminPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="agent-logs" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <AgentLogsAdminPage />
+                </Suspense>
+              </TabsContent>
+
+
+              <TabsContent value="follower-scan" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <FollowerScanPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="promo" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <div className="space-y-6">
+                    <PromoMentionsAdminPage />
+                    <InfluencerRepliesAdminPage />
+                  </div>
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="forum" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <SaturnForumAdminPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="saturn-launch" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <SaturnAdminLaunchPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="partner-fees" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <PartnerFeesPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="x-restyler" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <XPostRestylerPage />
+                </Suspense>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+        <Footer />
       </div>
     </div>
   );
