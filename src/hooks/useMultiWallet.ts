@@ -96,6 +96,35 @@ function useMultiWalletInner() {
     }
   }, [embeddedWallets]);
 
+  // Auto-recovery: if a rotation order was persisted (page crash), finalize the switch
+  useEffect(() => {
+    if (embeddedWallets.length === 0 || !profileId) return;
+    const order = getPersistedOrder();
+    if (!order?.newWalletAddress) return;
+
+    const newAddr = order.newWalletAddress;
+    const found = embeddedWallets.some((w: any) => w.address === newAddr);
+    if (!found) return;
+
+    console.log("[MultiWallet] Recovering rotation – switching to", newAddr);
+    setActiveAddress(newAddr);
+    localStorage.setItem(ACTIVE_WALLET_KEY, newAddr);
+
+    // Register in DB
+    const idx = embeddedWallets.findIndex((w: any) => w.address === newAddr);
+    const label = `Wallet ${idx + 1}`;
+    supabase.from("user_wallets").upsert({
+      profile_id: profileId,
+      wallet_address: newAddr,
+      label,
+      is_default: false,
+    }, { onConflict: "profile_id,wallet_address" }).then(() => {
+      setLabels((prev) => ({ ...prev, [newAddr]: label }));
+    });
+
+    clearPersistedOrder();
+  }, [embeddedWallets, profileId]);
+
   const managedWallets: ManagedWallet[] = useMemo(() => {
     return embeddedWallets
       .filter((w: any) => !hiddenAddresses.has(w.address))
