@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { usePrivy } from "@privy-io/react-auth";
 import { useExportWallet } from "@privy-io/react-auth/solana";
 import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
