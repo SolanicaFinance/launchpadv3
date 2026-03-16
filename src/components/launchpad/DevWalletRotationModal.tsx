@@ -32,40 +32,21 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-/** CEX logo URLs keyed by common exchanger IDs from SplitNow */
-const CEX_ICONS: Record<string, string> = {
-  binance: "https://cryptologos.cc/logos/binance-coin-bnb-logo.svg",
-  kucoin: "https://cryptologos.cc/logos/kucoin-token-kcs-logo.svg",
-  "gate.io": "https://cdn.gate.io/brand/assets/v2/brand-logo-white.svg",
-  gateio: "https://cdn.gate.io/brand/assets/v2/brand-logo-white.svg",
-  bybit: "https://www.bybit.com/favicon.ico",
-  mexc: "https://www.mexc.com/favicon.ico",
-  okx: "https://static.okx.com/cdn/assets/imgs/2112/630C74E5F29B73D6.png",
-  huobi: "https://www.htx.com/favicon.ico",
-  htx: "https://www.htx.com/favicon.ico",
-  changelly: "https://changelly.com/favicon.ico",
-  changehero: "https://changehero.io/favicon.ico",
-  changenow: "https://changenow.io/favicon.ico",
-  fixedfloat: "https://fixedfloat.com/favicon.ico",
-  simpleswap: "https://simpleswap.io/favicon.ico",
-  exolix: "https://exolix.com/favicon.ico",
-  godex: "https://godex.io/favicon.ico",
-  letsexchange: "https://letsexchange.io/favicon.ico",
-  stealthex: "https://stealthex.io/favicon.ico",
-  swapspace: "https://swapspace.co/favicon.ico",
-  swapzone: "https://swapzone.io/favicon.ico",
-  tradeogre: "https://tradeogre.com/favicon.ico",
-};
-
-function getCexIcon(id: string, name: string): string | null {
-  const lower = id.toLowerCase();
-  if (CEX_ICONS[lower]) return CEX_ICONS[lower];
-  // Try matching by name
-  const nameLower = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  for (const [key, url] of Object.entries(CEX_ICONS)) {
-    if (nameLower.includes(key.replace(/[^a-z0-9]/g, ""))) return url;
+/**
+ * Get a reliable icon URL for any CEX using Google's favicon service.
+ * Falls back to the exchanger's website domain.
+ */
+function getCexIcon(id: string, name: string, website?: string): string {
+  // Extract domain from website URL if available
+  if (website) {
+    try {
+      const domain = new URL(website).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch { /* ignore */ }
   }
-  return null;
+  // Fallback: guess domain from name/id
+  const slug = (name || id).toLowerCase().replace(/[^a-z0-9]/g, "");
+  return `https://www.google.com/s2/favicons?domain=${slug}.com&sz=64`;
 }
 
 const PROCESS_STEPS: { key: RotationStep; label: string; icon: React.ElementType }[] = [
@@ -237,7 +218,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     {exchangersWithRates.map((ex) => {
                       const hasRate = ex.rate && ex.rate.available;
                       const noRate = ex.rate && !ex.rate.available;
-                      const iconUrl = getCexIcon(ex.id, ex.name);
+                      const iconUrl = getCexIcon(ex.id, ex.name, ex.website);
                       return (
                         <button
                           key={ex.id}
@@ -309,7 +290,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 <div className="flex items-center gap-2">
                   {(() => {
                     const cex = state.exchangers.find((e) => e.id === state.selectedCex);
-                    const icon = cex ? getCexIcon(cex.id, cex.name) : null;
+                    const icon = cex ? getCexIcon(cex.id, cex.name, cex.website) : null;
                     return (
                       <>
                         {icon && <img src={icon} alt="" className="h-4 w-4 object-contain" />}
