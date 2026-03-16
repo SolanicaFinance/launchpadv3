@@ -19,8 +19,9 @@ import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } f
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { useWallets } from "@privy-io/react-auth/solana";
 
-const CEXES = ["Binance", "KuCoin", "Gate.io"] as const;
-type CexName = (typeof CEXES)[number];
+// CEX exchanger IDs matching the SplitNow API (lowercase)
+const CEXES = ["binance", "kucoin", "gate", "bybit"] as const;
+type CexId = (typeof CEXES)[number];
 
 export type RotationStep =
   | "idle"
@@ -41,7 +42,7 @@ export interface RotationState {
   failedStep: RotationStep | null;
   launchCount: number;
   newWalletAddress: string | null;
-  selectedCex: CexName | null;
+  selectedCex: CexId | null;
   balance: number;
   quote: any | null;
   order: any | null;
@@ -145,9 +146,9 @@ export function useDevWalletRotation() {
       // Step 2: Create new wallet (reuse if already created from a previous attempt)
       setCurrentStep("creating_wallet");
       let newAddr: string;
-      const existingNewAddr = (await new Promise<string | null>((resolve) => {
+      const existingNewAddr = await new Promise<string | null>((resolve) => {
         setState((s) => { resolve(s.newWalletAddress); return s; });
-      }));
+      });
       if (existingNewAddr) {
         newAddr = existingNewAddr;
         log(`Reusing previously created wallet: ${newAddr}`);
@@ -185,39 +186,61 @@ export function useDevWalletRotation() {
       let usedDirectFallback = false;
       let orderId: string | undefined;
 
-      // Step 5: Get quote
+      // Step 5: Get quote (using SDK-correct nested format)
       setCurrentStep("getting_quote");
-      log("Fetching SplitNOW quote (SOL→SOL)...");
+      log("Fetching SplitNOW quote (SOL→SOL, floating_rate)...");
 
       try {
         const quoteData = await splitnowCall("quote", {
           fromAmount: sendAmount,
-          type: "fixed_rate",
+          fromAssetId: "sol",
+          fromNetworkId: "solana",
+          toAssetId: "sol",
+          toNetworkId: "solana",
+          type: "floating_rate",
         });
         update({ quote: quoteData });
         const quoteId = quoteData?.quoteId || quoteData?.id;
         log(`Quote received (ID: ${quoteId})`);
 
-        // Step 6: Create order
+        // Step 6: Create order with SDK-correct nested format
         setCurrentStep("creating_order");
         log(`Creating order routed through ${cex}...`);
+
+        const orderOutputs = [
+          {
+            toAddress: newAddr,
+            toAssetId: "sol",
+            toNetworkId: "solana",
+            toPctBips: 10000,
+            toExchangerId: cex,
+          },
+        ];
+
         const orderData = await splitnowCall("order", {
           quoteId,
           fromAmount: sendAmount,
-          walletDistributions: [
-            {
-              address: newAddr,
-              toAssetId: "sol",
-              toNetworkId: "solana",
-              percentage: 100,
-            },
-          ],
+          fromAssetId: "sol",
+          fromNetworkId: "solana",
+          orderOutputs,
+          type: "floating_rate",
         });
 
         update({ order: orderData });
-        orderId = orderData?.orderId || orderData?.id;
-        depositAddress = orderData?.depositAddress || newAddr;
-        depositAmount = Number(orderData?.depositAmount || sendAmount);
+        orderId = orderData?.shortId || orderData?.orderId || orderData?.id;
+
+        // Parse deposit address from the order response
+        // The GET response nests it under orderInput or at the top level
+        depositAddress =
+          orderData?.depositWalletAddress ||
+          orderData?.orderInput?.depositWalletAddress ||
+          newAddr;
+        depositAmount = Number(
+          orderData?.orderInput?.fromAmount ||
+          orderData?.depositAmount ||
+          sendAmount
+        );
+
         log(`Order created (ID: ${orderId})`);
         log(`Deposit address: ${depositAddress}`);
         log(`Deposit amount: ${depositAmount} SOL`);
@@ -230,7 +253,7 @@ export function useDevWalletRotation() {
           orderStatus: "fallback_direct_transfer",
           orderStatusText: "SplitNOW quote rejected, using direct transfer fallback",
         });
-        log("SplitNOW rejected this quote route.");
+        log(`SplitNOW error: ${quoteErr.message}`);
         log("Falling back to a direct transfer to the new wallet so rotation can complete.");
         depositAddress = newAddr;
         depositAmount = sendAmount;
