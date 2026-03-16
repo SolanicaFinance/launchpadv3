@@ -80,7 +80,7 @@ export function DevWalletRotationBanner() {
             {launchCount === null ? "…" : launchCount}
           </span>
           {launchCount !== null && launchCount > 0 && (
-            <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full animate-pulse">
               Rotation recommended
             </span>
           )}
