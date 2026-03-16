@@ -403,9 +403,6 @@ export function useDevWalletRotation() {
       const connection = new Connection(rpcUrl, "confirmed");
       log(`Sending ${depositAmt.toFixed(4)} SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
       
-      const signer = getWalletSigner(activeWallet.address);
-      if (!signer) throw new Error("Cannot find wallet signer for active wallet");
-
       const sendLamports = Math.floor(Number(depositAmt) * LAMPORTS_PER_SOL);
       const { blockhash } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction().add(
@@ -418,7 +415,8 @@ export function useDevWalletRotation() {
       tx.recentBlockhash = blockhash;
       tx.feePayer = new PublicKey(activeWallet.address);
 
-      const signedTx = await (signer as any).signTransaction(tx);
+      // Use Privy's signTransaction with showWalletUIs: false for auto-sign
+      const signedTx = await privySignTransaction(tx, { walletAddress: activeWallet.address });
       const sig = await connection.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: true,
         maxRetries: 3,
