@@ -247,7 +247,7 @@ export function useDevWalletRotation() {
     } catch (err: any) {
       update({ step: "error", error: err.message || "Failed to load exchange data" });
     }
-  }, [splitnowCall, update, rpcUrl, activeWallet]);
+  }, [splitnowCall, update, rpcUrl, activeWallet, createNewWallet]);
 
   /** Run the full rotation flow with a user-selected CEX */
   const startRotation = useCallback(async (selectedCex: string) => {
