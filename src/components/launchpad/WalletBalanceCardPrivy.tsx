@@ -59,7 +59,6 @@ export default function WalletBalanceCardPrivy({ minRequired, className = "" }: 
     fetchBalance();
     const interval = setInterval(fetchBalance, 10000);
     return () => clearInterval(interval);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletAddress]);
 
