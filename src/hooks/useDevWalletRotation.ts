@@ -160,19 +160,8 @@ export function useDevWalletRotation() {
 
     update({ step: "loading_data", error: null });
     try {
-      // Check if current wallet has been used (launched at least 1 token)
-      // If not, block rotation — no point creating unused wallets
-      const launchCount = await checkLaunches(activeWallet.address);
-      update({ launchCount });
-      if (launchCount === 0) {
-        update({ 
-          step: "error", 
-          error: "Your current wallet hasn't launched any tokens yet. Use it first before rotating to a new one." 
-        });
-        return;
-      }
-
       // Fire wallet pre-creation in background (don't block data loading)
+      // Use a timeout to prevent hanging indefinitely
       const walletPromise = (async () => {
         try {
           console.log("[WalletRotation] Starting wallet pre-creation...");
