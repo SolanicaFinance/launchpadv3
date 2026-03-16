@@ -217,7 +217,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
     if (privyWalletReady && launchpadPrivyWalletAddress) {
       getPrivyBalance().then(b => {
         setPrivyBalance(b);
-        setPrivyDepositReady(b >= 0.05);
+        setPrivyDepositReady(b >= 0.1);
       });
     }
   }, [launchpadPrivyWalletAddress, activePrivyWallet?.balance, privyWalletReady, getPrivyBalance]);
