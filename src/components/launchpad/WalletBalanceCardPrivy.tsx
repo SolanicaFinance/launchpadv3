@@ -61,7 +61,7 @@ export default function WalletBalanceCardPrivy({ minRequired, className = "" }: 
     return () => clearInterval(interval);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isWalletReady]);
+  }, [walletAddress]);
 
   const handleCopy = async () => {
     if (!walletAddress) return;
