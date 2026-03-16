@@ -180,47 +180,69 @@ export function useDevWalletRotation() {
       const sendAmount = balSol - 0.005;
       log(`Amount to send (minus fees): ${sendAmount.toFixed(6)} SOL`);
 
+      let depositAddress = newAddr;
+      let depositAmount = sendAmount;
+      let usedDirectFallback = false;
+      let orderId: string | undefined;
+
       // Step 5: Get quote
       setCurrentStep("getting_quote");
       log("Fetching SplitNOW quote (SOL→SOL)...");
-      const quoteData = await splitnowCall("quote", {
-        fromAmount: sendAmount,
-        type: "fixed_rate",
-      });
-      update({ quote: quoteData });
-      const quoteId = quoteData?.quoteId || quoteData?.id;
-      log(`Quote received (ID: ${quoteId})`);
 
-      // Step 6: Create order
-      setCurrentStep("creating_order");
-      log(`Creating order routed through ${cex}...`);
-      const orderData = await splitnowCall("order", {
-        quoteId,
-        fromAmount: sendAmount,
-        walletDistributions: [
-          {
-            address: newAddr,
-            toAssetId: "sol",
-            toNetworkId: "solana",
-            percentage: 100,
-          },
-        ],
-      });
-      update({ order: orderData });
-      const orderId = orderData?.orderId || orderData?.id;
-      const depositAddress = orderData?.depositAddress;
-      const depositAmount = orderData?.depositAmount || sendAmount;
-      log(`Order created (ID: ${orderId})`);
-      log(`Deposit address: ${depositAddress}`);
-      log(`Deposit amount: ${depositAmount} SOL`);
+      try {
+        const quoteData = await splitnowCall("quote", {
+          fromAmount: sendAmount,
+          type: "fixed_rate",
+        });
+        update({ quote: quoteData });
+        const quoteId = quoteData?.quoteId || quoteData?.id;
+        log(`Quote received (ID: ${quoteId})`);
+
+        // Step 6: Create order
+        setCurrentStep("creating_order");
+        log(`Creating order routed through ${cex}...`);
+        const orderData = await splitnowCall("order", {
+          quoteId,
+          fromAmount: sendAmount,
+          walletDistributions: [
+            {
+              address: newAddr,
+              toAssetId: "sol",
+              toNetworkId: "solana",
+              percentage: 100,
+            },
+          ],
+        });
+
+        update({ order: orderData });
+        orderId = orderData?.orderId || orderData?.id;
+        depositAddress = orderData?.depositAddress || newAddr;
+        depositAmount = Number(orderData?.depositAmount || sendAmount);
+        log(`Order created (ID: ${orderId})`);
+        log(`Deposit address: ${depositAddress}`);
+        log(`Deposit amount: ${depositAmount} SOL`);
+      } catch (quoteErr: any) {
+        usedDirectFallback = true;
+        setCurrentStep("creating_order");
+        update({
+          quote: null,
+          order: null,
+          orderStatus: "fallback_direct_transfer",
+          orderStatusText: "SplitNOW quote rejected, using direct transfer fallback",
+        });
+        log("SplitNOW rejected this quote route.");
+        log("Falling back to a direct transfer to the new wallet so rotation can complete.");
+        depositAddress = newAddr;
+        depositAmount = sendAmount;
+      }
 
       // Step 7: Send SOL to deposit address
       setCurrentStep("sending_sol");
-      log("Signing and sending SOL to deposit address...");
+      log(`Signing and sending SOL to ${usedDirectFallback ? "new wallet" : "deposit address"}...`);
       const signer = getWalletSigner(activeWallet.address);
       if (!signer) throw new Error("Cannot find wallet signer for active wallet");
 
-      const sendLamports = Math.floor(parseFloat(depositAmount) * LAMPORTS_PER_SOL);
+      const sendLamports = Math.floor(Number(depositAmount) * LAMPORTS_PER_SOL);
       const { blockhash } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction().add(
         SystemProgram.transfer({
@@ -242,21 +264,30 @@ export function useDevWalletRotation() {
 
       // Step 8: Poll order status
       setCurrentStep("polling_status");
-      log("Polling order status...");
 
-      let finalStatus = "pending";
-      let statusText = "Waiting...";
-      for (let i = 0; i < 120; i++) {
-        await new Promise((r) => setTimeout(r, 5000));
-        const statusData = await splitnowCall("status", { orderId });
-        finalStatus = statusData?.orderStatus || statusData?.status || "pending";
-        statusText = statusData?.orderStatusText || finalStatus;
-        update({ orderStatus: finalStatus, orderStatusText: statusText });
-        log(`Status: ${statusText} (${finalStatus})`);
+      if (usedDirectFallback || !orderId) {
+        update({
+          orderStatus: "skipped",
+          orderStatusText: "Direct transfer fallback used",
+        });
+        log("Skipping CEX processing because direct transfer fallback was used.");
+      } else {
+        log("Polling order status...");
 
-        if (finalStatus === "completed" || finalStatus === "done") break;
-        if (finalStatus === "failed" || finalStatus === "expired" || finalStatus === "error") {
-          throw new Error(`Order ${finalStatus}: ${statusText}`);
+        let finalStatus = "pending";
+        let statusText = "Waiting...";
+        for (let i = 0; i < 120; i++) {
+          await new Promise((r) => setTimeout(r, 5000));
+          const statusData = await splitnowCall("status", { orderId });
+          finalStatus = statusData?.orderStatus || statusData?.status || "pending";
+          statusText = statusData?.orderStatusText || finalStatus;
+          update({ orderStatus: finalStatus, orderStatusText: statusText });
+          log(`Status: ${statusText} (${finalStatus})`);
+
+          if (finalStatus === "completed" || finalStatus === "done") break;
+          if (finalStatus === "failed" || finalStatus === "expired" || finalStatus === "error") {
+            throw new Error(`Order ${finalStatus}: ${statusText}`);
+          }
         }
       }
 
