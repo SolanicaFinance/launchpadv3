@@ -1207,7 +1207,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
          let signedTx: Transaction | VersionedTransaction | null;
          if (usePrivy) {
            // Privy embedded wallet: sign-only via useSignTransaction (no popup with showWalletUIs: false)
-           signedTx = await privySignTransaction(tx);
+           signedTx = await privySignTransaction(tx, { walletAddress: activeWalletAddress! });
          } else {
            signedTx = await phantomWallet.signTransaction(tx as any);
          }
