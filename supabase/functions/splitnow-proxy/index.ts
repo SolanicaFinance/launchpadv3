@@ -15,6 +15,10 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,7 +51,6 @@ serve(async (req) => {
       return json(data, res.status);
     }
 
-    // ─── CREATE QUOTE ────────────────────────────────────────────
     // ─── GET LIMITS ──────────────────────────────────────────────
     if (action === "limits") {
       const res = await fetch(`${SPLITNOW_API}/assets/limits`, { headers });
@@ -55,31 +58,65 @@ serve(async (req) => {
       return json(data, res.status);
     }
 
+    // ─── CREATE QUOTE ────────────────────────────────────────────
+    // SDK format: POST /quotes/ with nested quoteInput + quoteOutputs
+    // Then wait ~1s and GET /quotes/{id} to retrieve rates
     if (action === "quote") {
-      const { fromAssetId, fromNetworkId, toAssetId, toNetworkId, fromAmount, type: quoteType } = params;
-      const numAmount = typeof fromAmount === "string" ? parseFloat(fromAmount) : Number(fromAmount);
-      const body: Record<string, unknown> = {
-        fromAssetId: fromAssetId || "sol",
-        fromNetworkId: fromNetworkId || "solana",
-        toAssetId: toAssetId || "sol",
-        toNetworkId: toNetworkId || "solana",
-        fromAmount: numAmount,
+      const {
+        fromAssetId = "sol",
+        fromNetworkId = "solana",
+        toAssetId = "sol",
+        toNetworkId = "solana",
+        fromAmount,
+        type: quoteType = "floating_rate",
+      } = params;
+
+      const body = {
+        type: quoteType,
+        quoteInput: {
+          fromAmount: typeof fromAmount === "string" ? parseFloat(fromAmount) : Number(fromAmount),
+          fromAssetId,
+          fromNetworkId,
+        },
+        quoteOutputs: [
+          {
+            toPctBips: 10000,
+            toAssetId,
+            toNetworkId,
+          },
+        ],
       };
-      // Include type if provided (floating_rate, fixed_rate, mixed_rate)
-      if (quoteType) {
-        body.type = quoteType;
-      }
+
       console.log("[splitnow-proxy] Quote request:", JSON.stringify(body));
-      const res = await fetch(`${SPLITNOW_API}/quotes/`, {
+
+      const createRes = await fetch(`${SPLITNOW_API}/quotes/`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("[splitnow-proxy] Quote error:", res.status, JSON.stringify(data));
+      const createData = await createRes.json();
+
+      if (!createRes.ok) {
+        console.error("[splitnow-proxy] Quote create error:", createRes.status, JSON.stringify(createData));
+        return json(createData, createRes.status);
       }
-      return json(data, res.status);
+
+      const quoteId = createData?.quoteId || createData?.id;
+      console.log("[splitnow-proxy] Quote created, id:", quoteId);
+
+      // Wait then fetch full quote with rates
+      await sleep(1500);
+
+      const getRes = await fetch(`${SPLITNOW_API}/quotes/${quoteId}`, { headers });
+      const getData = await getRes.json();
+
+      if (!getRes.ok) {
+        console.error("[splitnow-proxy] Quote GET error:", getRes.status, JSON.stringify(getData));
+        return json(getData, getRes.status);
+      }
+
+      console.log("[splitnow-proxy] Quote fetched:", JSON.stringify(getData));
+      return json({ ...getData, quoteId }, getRes.status);
     }
 
     // ─── GET QUOTE ───────────────────────────────────────────────
@@ -91,21 +128,59 @@ serve(async (req) => {
     }
 
     // ─── CREATE ORDER ────────────────────────────────────────────
+    // SDK format: POST /orders/ with nested orderInput + orderOutputs
+    // Then wait ~1s and GET /orders/{shortId} to get deposit details
     if (action === "order") {
-      const { quoteId, fromAmount, fromAssetId, fromNetworkId, walletDistributions } = params;
-      const res = await fetch(`${SPLITNOW_API}/orders`, {
+      const {
+        quoteId,
+        fromAmount,
+        fromAssetId = "sol",
+        fromNetworkId = "solana",
+        orderOutputs,
+        type: orderType = "floating_rate",
+      } = params;
+
+      const body = {
+        type: orderType,
+        quoteId,
+        orderInput: {
+          fromAmount: typeof fromAmount === "string" ? parseFloat(fromAmount) : Number(fromAmount),
+          fromAssetId,
+          fromNetworkId,
+        },
+        orderOutputs,
+      };
+
+      console.log("[splitnow-proxy] Order request:", JSON.stringify(body));
+
+      const createRes = await fetch(`${SPLITNOW_API}/orders/`, {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          quoteId,
-          fromAmount,
-          fromAssetId: fromAssetId || "sol",
-          fromNetworkId: fromNetworkId || "solana",
-          walletDistributions,
-        }),
+        body: JSON.stringify(body),
       });
-      const data = await res.json();
-      return json(data, res.status);
+      const createData = await createRes.json();
+
+      if (!createRes.ok) {
+        console.error("[splitnow-proxy] Order create error:", createRes.status, JSON.stringify(createData));
+        return json(createData, createRes.status);
+      }
+
+      const shortId = createData?.shortId || createData?.id;
+      console.log("[splitnow-proxy] Order created, shortId:", shortId);
+
+      // Wait then fetch full order with deposit details
+      await sleep(1500);
+
+      const getRes = await fetch(`${SPLITNOW_API}/orders/${shortId}`, { headers });
+      const getData = await getRes.json();
+
+      if (!getRes.ok) {
+        console.error("[splitnow-proxy] Order GET error:", getRes.status, JSON.stringify(getData));
+        return json(getData, getRes.status);
+      }
+
+      console.log("[splitnow-proxy] Order fetched:", JSON.stringify(getData));
+      return json({ ...getData, shortId }, getRes.status);
     }
 
     // ─── GET ORDER STATUS ────────────────────────────────────────
