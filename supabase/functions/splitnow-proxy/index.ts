@@ -19,6 +19,14 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/** Unwrap SplitNow's { success, data } envelope. Returns the inner data. */
+function unwrap(response: any): any {
+  if (response && typeof response === "object" && "data" in response) {
+    return response.data;
+  }
+  return response;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -40,27 +48,27 @@ serve(async (req) => {
     // ─── GET ASSETS ──────────────────────────────────────────────
     if (action === "assets") {
       const res = await fetch(`${SPLITNOW_API}/assets/`, { headers });
-      const data = await res.json();
-      return json(data, res.status);
+      const raw = await res.json();
+      return json(unwrap(raw), res.ok ? 200 : res.status);
     }
 
     // ─── GET EXCHANGERS ──────────────────────────────────────────
     if (action === "exchangers") {
       const res = await fetch(`${SPLITNOW_API}/exchangers/`, { headers });
-      const data = await res.json();
-      return json(data, res.status);
+      const raw = await res.json();
+      return json(unwrap(raw), res.ok ? 200 : res.status);
     }
 
     // ─── GET LIMITS ──────────────────────────────────────────────
     if (action === "limits") {
       const res = await fetch(`${SPLITNOW_API}/assets/limits`, { headers });
-      const data = await res.json();
-      return json(data, res.status);
+      const raw = await res.json();
+      return json(unwrap(raw), res.ok ? 200 : res.status);
     }
 
     // ─── CREATE QUOTE ────────────────────────────────────────────
-    // SDK format: POST /quotes/ with nested quoteInput + quoteOutputs
-    // Then wait ~1s and GET /quotes/{id} to retrieve rates
+    // POST /quotes/ → { success: true, data: "quote-id-string" }
+    // GET  /quotes/{id} → { success: true, data: { quoteLegs: [...] } }
     if (action === "quote") {
       const {
         fromAssetId = "sol",
@@ -94,42 +102,45 @@ serve(async (req) => {
         headers,
         body: JSON.stringify(body),
       });
-      const createData = await createRes.json();
+      const createRaw = await createRes.json();
 
       if (!createRes.ok) {
-        console.error("[splitnow-proxy] Quote create error:", createRes.status, JSON.stringify(createData));
-        return json(createData, createRes.status);
+        console.error("[splitnow-proxy] Quote create error:", createRes.status, JSON.stringify(createRaw));
+        return json(createRaw, createRes.status);
       }
 
-      const quoteId = createData?.quoteId || createData?.id;
+      // POST returns { success: true, data: "quoteId-string" }
+      const quoteId = unwrap(createRaw);
       console.log("[splitnow-proxy] Quote created, id:", quoteId);
 
       // Wait then fetch full quote with rates
       await sleep(1500);
 
       const getRes = await fetch(`${SPLITNOW_API}/quotes/${quoteId}`, { headers });
-      const getData = await getRes.json();
+      const getRaw = await getRes.json();
 
       if (!getRes.ok) {
-        console.error("[splitnow-proxy] Quote GET error:", getRes.status, JSON.stringify(getData));
-        return json(getData, getRes.status);
+        console.error("[splitnow-proxy] Quote GET error:", getRes.status, JSON.stringify(getRaw));
+        return json(getRaw, getRes.status);
       }
 
-      console.log("[splitnow-proxy] Quote fetched:", JSON.stringify(getData));
-      return json({ ...getData, quoteId }, getRes.status);
+      // GET returns { success: true, data: { quoteLegs: [...], ... } }
+      const quoteData = unwrap(getRaw);
+      console.log("[splitnow-proxy] Quote fetched:", JSON.stringify(quoteData));
+      return json({ ...quoteData, quoteId });
     }
 
     // ─── GET QUOTE ───────────────────────────────────────────────
     if (action === "get_quote") {
       const { quoteId } = params;
       const res = await fetch(`${SPLITNOW_API}/quotes/${quoteId}`, { headers });
-      const data = await res.json();
-      return json(data, res.status);
+      const raw = await res.json();
+      return json(unwrap(raw), res.ok ? 200 : res.status);
     }
 
     // ─── CREATE ORDER ────────────────────────────────────────────
-    // SDK format: POST /orders/ with nested orderInput + orderOutputs
-    // Then wait ~1s and GET /orders/{shortId} to get deposit details
+    // POST /orders/ → { success: true, data: { shortId: "xxx" } }
+    // GET  /orders/{shortId} → { success: true, data: { depositWalletAddress, status, ... } }
     if (action === "order") {
       const {
         quoteId,
@@ -158,37 +169,41 @@ serve(async (req) => {
         headers,
         body: JSON.stringify(body),
       });
-      const createData = await createRes.json();
+      const createRaw = await createRes.json();
 
       if (!createRes.ok) {
-        console.error("[splitnow-proxy] Order create error:", createRes.status, JSON.stringify(createData));
-        return json(createData, createRes.status);
+        console.error("[splitnow-proxy] Order create error:", createRes.status, JSON.stringify(createRaw));
+        return json(createRaw, createRes.status);
       }
 
-      const shortId = createData?.shortId || createData?.id;
+      // POST returns { success: true, data: { shortId: "xxx" } }
+      const orderMeta = unwrap(createRaw);
+      const shortId = orderMeta?.shortId || orderMeta;
       console.log("[splitnow-proxy] Order created, shortId:", shortId);
 
       // Wait then fetch full order with deposit details
       await sleep(1500);
 
       const getRes = await fetch(`${SPLITNOW_API}/orders/${shortId}`, { headers });
-      const getData = await getRes.json();
+      const getRaw = await getRes.json();
 
       if (!getRes.ok) {
-        console.error("[splitnow-proxy] Order GET error:", getRes.status, JSON.stringify(getData));
-        return json(getData, getRes.status);
+        console.error("[splitnow-proxy] Order GET error:", getRes.status, JSON.stringify(getRaw));
+        return json(getRaw, getRes.status);
       }
 
-      console.log("[splitnow-proxy] Order fetched:", JSON.stringify(getData));
-      return json({ ...getData, shortId }, getRes.status);
+      // GET returns { success: true, data: { shortId, depositWalletAddress, ... } }
+      const orderData = unwrap(getRaw);
+      console.log("[splitnow-proxy] Order fetched:", JSON.stringify(orderData));
+      return json({ ...orderData, shortId });
     }
 
     // ─── GET ORDER STATUS ────────────────────────────────────────
     if (action === "status") {
       const { orderId } = params;
       const res = await fetch(`${SPLITNOW_API}/orders/${orderId}`, { headers });
-      const data = await res.json();
-      return json(data, res.status);
+      const raw = await res.json();
+      return json(unwrap(raw), res.ok ? 200 : res.status);
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);

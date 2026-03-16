@@ -13,14 +13,13 @@ import {
   Loader2,
   XCircle,
   Wallet,
-  Shuffle,
   ArrowRightLeft,
   Search,
   Send,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
-import { useDevWalletRotation, type RotationStep } from "@/hooks/useDevWalletRotation";
+import { useDevWalletRotation, CEXES, type CexId, type RotationStep } from "@/hooks/useDevWalletRotation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -31,7 +30,6 @@ interface Props {
 const STEPS: { key: RotationStep; label: string; icon: React.ElementType }[] = [
   { key: "checking_launches", label: "Checking existing launches", icon: Search },
   { key: "creating_wallet", label: "Generating fresh wallet", icon: Wallet },
-  { key: "randomizing_cex", label: "Selecting exchange", icon: Shuffle },
   { key: "fetching_balance", label: "Fetching balance", icon: Wallet },
   { key: "getting_quote", label: "Getting SplitNOW quote", icon: ArrowRightLeft },
   { key: "creating_order", label: "Creating exchange order", icon: ArrowRightLeft },
@@ -41,6 +39,13 @@ const STEPS: { key: RotationStep; label: string; icon: React.ElementType }[] = [
 ];
 
 const STEP_ORDER = STEPS.map((s) => s.key);
+
+const CEX_META: Record<CexId, { label: string; color: string }> = {
+  binance: { label: "Binance", color: "text-yellow-500" },
+  kucoin: { label: "KuCoin", color: "text-green-500" },
+  gate: { label: "Gate.io", color: "text-blue-400" },
+  bybit: { label: "Bybit", color: "text-orange-400" },
+};
 
 function getStepState(
   currentStep: RotationStep,
@@ -70,16 +75,20 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (!open) {
-      // Allow reset after close if complete or error
       if (state.step === "complete" || state.step === "error") {
         setTimeout(reset, 300);
       }
     }
   }, [open, state.step, reset]);
 
-  const isIdle = state.step === "idle";
+  const isIdle = state.step === "idle" || state.step === "selecting_cex";
   const isComplete = state.step === "complete";
   const isError = state.step === "error";
+  const isRunning = !isIdle && !isComplete && !isError;
+
+  const handleSelectCex = (cex: CexId) => {
+    startRotation(cex);
+  };
 
   return (
     <Dialog open={open} onOpenChange={running ? undefined : onOpenChange}>
@@ -90,7 +99,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
             CEX Wallet Rotation
           </DialogTitle>
           <DialogDescription>
-            Route funds through a randomized CEX to a fresh wallet, breaking on-chain links.
+            Route funds through a CEX to a fresh wallet, breaking on-chain links.
           </DialogDescription>
         </DialogHeader>
 
@@ -100,20 +109,45 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
               <p>This will:</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
                 <li>Create a new embedded wallet</li>
-                <li>Pick a random CEX (Binance, KuCoin, or Gate.io)</li>
-                <li>Route your SOL through that CEX to the new wallet</li>
+                <li>Route your SOL through the selected CEX to the new wallet</li>
                 <li>Hide the old wallet and switch to the new one</li>
               </ol>
             </div>
-            <Button className="w-full gap-2" onClick={startRotation}>
-              <ArrowRightLeft className="h-4 w-4" />
-              Start Rotation
-            </Button>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Select exchange:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {CEXES.map((cex) => {
+                  const meta = CEX_META[cex];
+                  return (
+                    <Button
+                      key={cex}
+                      variant="outline"
+                      className="h-14 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-primary/5"
+                      onClick={() => handleSelectCex(cex)}
+                    >
+                      <span className={cn("text-sm font-semibold", meta.color)}>{meta.label}</span>
+                      <span className="text-[10px] text-muted-foreground">SOL → SOL</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
         {!isIdle && (
           <div className="space-y-4 pt-2">
+            {/* Selected CEX badge */}
+            {state.selectedCex && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Exchange:</span>
+                <span className={cn("font-semibold", CEX_META[state.selectedCex]?.color)}>
+                  {CEX_META[state.selectedCex]?.label}
+                </span>
+              </div>
+            )}
+
             {/* Step indicators */}
             <div className="space-y-2">
               {STEPS.map(({ key, label, icon: Icon }) => {
@@ -135,11 +169,6 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                     {actualState === "error" && <XCircle className="h-4 w-4 shrink-0" />}
                     {actualState === "pending" && <Icon className="h-4 w-4 shrink-0 opacity-40" />}
                     <span className="flex-1">{label}</span>
-                    {key === "randomizing_cex" && state.selectedCex && actualState !== "pending" && (
-                      <span className="text-xs font-mono bg-secondary px-2 py-0.5 rounded">
-                        {state.selectedCex}
-                      </span>
-                    )}
                     {key === "fetching_balance" && state.balance > 0 && actualState !== "pending" && (
                       <span className="text-xs font-mono">
                         {state.balance.toFixed(4)} SOL
@@ -211,7 +240,7 @@ export function DevWalletRotationModal({ open, onOpenChange }: Props) {
                 <Button
                   variant="default"
                   className="flex-1 gap-2"
-                  onClick={() => { reset(); startRotation(); }}
+                  onClick={() => { reset(); }}
                 >
                   <RefreshCw className="h-4 w-4" />
                   Retry
