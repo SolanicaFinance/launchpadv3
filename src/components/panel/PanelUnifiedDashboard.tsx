@@ -1093,6 +1093,19 @@ export default function PanelUnifiedDashboard() {
       </GlassCard>
 
       {/* ═══════════════════════════════════════════ */}
+      {/* MY WALLETS SECTION */}
+      {/* ═══════════════════════════════════════════ */}
+      {isSolana && (
+        <GlassCard className="overflow-hidden">
+          <div className="p-4">
+            <Suspense fallback={<div className="py-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}>
+              <MyWalletsSection />
+            </Suspense>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* ═══════════════════════════════════════════ */}
       {/* REFERRALS SECTION */}
       {/* ═══════════════════════════════════════════ */}
       <GlassCard className="overflow-hidden">
