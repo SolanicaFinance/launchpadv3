@@ -456,3 +456,6 @@ verify_jwt = false
 
 [functions.x-bot-admin]
 verify_jwt = false
+
+[functions.jupiter-proxy]
+verify_jwt = false
