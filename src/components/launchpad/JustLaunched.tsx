@@ -109,7 +109,7 @@ function JustLaunchedCard({ token, index }: { token: JustLaunchedToken; index: n
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
             style={{ background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.10)" }}>
             <Clock className="w-2.5 h-2.5" style={{ color: "#00D4FF" }} />
-            <LiveAge createdAt={token.created_at} className="text-[9px] font-mono font-medium" style={{ color: "#00D4FF" }} />
+            <LiveAge createdAt={token.created_at} className="text-[9px] font-mono font-medium text-[#00D4FF]" />
           </div>
         </div>
       </div>
