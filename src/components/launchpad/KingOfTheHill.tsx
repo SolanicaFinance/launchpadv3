@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LiveAge } from "@/components/ui/LiveAge";
-import { Users, Bot, BadgeCheck, TrendingUp, BarChart3, ArrowUpRight, Globe, MessageCircle, Copy, Check, Zap, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { Users, Bot, BadgeCheck, TrendingUp, BarChart3, ArrowUpRight, Globe, MessageCircle, Copy, Check, Zap, ChevronLeft, ChevronRight, Pencil, Crown } from "lucide-react";
 import { useSolPrice } from "@/hooks/useSolPrice";
 import { useKingOfTheHill, type KingToken } from "@/hooks/useKingOfTheHill";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,31 +22,34 @@ import { BRAND } from "@/config/branding";
 /* ── rank config ── */
 const RANKS = [
   {
-    border: "border-amber-500/30",
-    hoverBorder: "hover:border-amber-400/60",
-    glow: "hover:shadow-[0_0_24px_rgba(245,158,11,0.2)]",
-    badgeBg: "bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600",
-    badgeRing: "ring-2 ring-amber-400/30",
+    borderColor: "rgba(245,158,11,0.25)",
+    hoverBorderColor: "rgba(245,158,11,0.5)",
+    glowColor: "rgba(245,158,11,0.12)",
+    badgeBg: "linear-gradient(135deg, #F59E0B, #D97706, #F59E0B)",
+    badgeShadow: "0 0 16px rgba(245,158,11,0.4), 0 2px 4px rgba(0,0,0,0.3)",
     king: true,
     label: "#1",
+    crownPulse: true,
   },
   {
-    border: "border-cyan-500/20",
-    hoverBorder: "hover:border-cyan-400/50",
-    glow: "hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]",
-    badgeBg: "bg-gradient-to-br from-cyan-400 via-teal-500 to-cyan-600",
-    badgeRing: "ring-1 ring-cyan-400/20",
+    borderColor: "rgba(0,212,255,0.18)",
+    hoverBorderColor: "rgba(0,212,255,0.4)",
+    glowColor: "rgba(0,212,255,0.08)",
+    badgeBg: "linear-gradient(135deg, #00D4FF, #0891B2, #00D4FF)",
+    badgeShadow: "0 0 12px rgba(0,212,255,0.3), 0 2px 4px rgba(0,0,0,0.3)",
     king: false,
     label: "#2",
+    crownPulse: false,
   },
   {
-    border: "border-slate-500/15",
-    hoverBorder: "hover:border-slate-400/40",
-    glow: "hover:shadow-[0_0_16px_rgba(148,163,184,0.1)]",
-    badgeBg: "bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600",
-    badgeRing: "ring-1 ring-slate-400/15",
+    borderColor: "rgba(148,163,184,0.12)",
+    hoverBorderColor: "rgba(148,163,184,0.3)",
+    glowColor: "rgba(148,163,184,0.06)",
+    badgeBg: "linear-gradient(135deg, #94A3B8, #64748B, #94A3B8)",
+    badgeShadow: "0 0 8px rgba(148,163,184,0.2), 0 2px 4px rgba(0,0,0,0.3)",
     king: false,
     label: "#3",
+    crownPulse: false,
   },
 ];
 
@@ -55,34 +58,44 @@ function extractXUsername(url?: string | null): string | null {
   try { return new URL(url).pathname.split("/").filter(Boolean)[0] || null; } catch { return null; }
 }
 
-/* ── premium progress bar ── */
+/* ── ultra-premium progress bar ── */
 function ProgressBar({ value }: { value: number }) {
   const [w, setW] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setW(Math.min(value, 100)), 150); return () => clearTimeout(t); }, [value]);
-
-  const gradient = value >= 80
-    ? "from-orange-500 via-amber-400 to-yellow-300"
-    : value >= 50
-      ? "from-emerald-500 via-lime-400 to-yellow-400"
-      : "from-emerald-600 via-emerald-400 to-teal-300";
+  useEffect(() => { const t = setTimeout(() => setW(Math.min(value, 100)), 200); return () => clearTimeout(t); }, [value]);
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-semibold font-mono">Bonding Progress</span>
-        <span className="text-[13px] font-bold font-mono tabular-nums text-foreground">{value.toFixed(0)}%</span>
+        <span className="text-[9px] uppercase tracking-[0.15em] font-semibold font-mono" style={{ color: "#6E6E80" }}>
+          Bonding Progress
+        </span>
+        <span className="text-[12px] font-bold font-mono tabular-nums" style={{ color: "#FFFFFF" }}>
+          {value.toFixed(0)}%
+        </span>
       </div>
-      <div className="h-[10px] w-full rounded-full overflow-hidden bg-muted/30">
+      <div className="relative h-[6px] w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.04)" }}>
         <div
-          className={cn(
-            "h-full rounded-full bg-gradient-to-r transition-all duration-[1.2s] ease-out relative",
-            gradient,
-          )}
-          style={{ width: `${Math.max(w, 2)}%` }}
+          className="h-full rounded-full transition-all duration-[1.4s] ease-out relative"
+          style={{
+            width: `${Math.max(w, 1.5)}%`,
+            background: value >= 80
+              ? "linear-gradient(90deg, #F59E0B, #FBBF24, #F59E0B)"
+              : value >= 50
+                ? "linear-gradient(90deg, #10B981, #34D399, #A3E635)"
+                : "linear-gradient(90deg, #00D4FF, #00FFAA)",
+            boxShadow: value >= 80
+              ? "0 0 12px rgba(245,158,11,0.4)"
+              : "0 0 10px rgba(0,212,255,0.3)",
+          }}
         >
-          {/* shimmer */}
           <div className="absolute inset-0 rounded-full overflow-hidden">
-            <div className="absolute -left-full top-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            <div
+              className="absolute -left-full top-0 w-full h-full"
+              style={{
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
+                animation: "koth-shimmer 2.5s ease-in-out infinite",
+              }}
+            />
           </div>
         </div>
       </div>
@@ -92,62 +105,31 @@ function ProgressBar({ value }: { value: number }) {
 
 function kingToFunToken(t: KingToken): FunToken {
   return {
-    id: t.id,
-    name: t.name,
-    ticker: t.ticker,
-    image_url: t.image_url,
-    mint_address: t.mint_address,
-    dbc_pool_address: t.dbc_pool_address,
-    status: t.status as any,
-    bonding_progress: t.bonding_progress ?? 0,
-    market_cap_sol: t.market_cap_sol ?? 0,
-    holder_count: t.holder_count ?? 0,
-    trading_fee_bps: t.trading_fee_bps ?? 0,
-    fee_mode: t.fee_mode ?? null,
-    agent_id: t.agent_id ?? null,
-    launchpad_type: t.launchpad_type ?? null,
-    trading_agent_id: t.trading_agent_id ?? null,
-    is_trading_agent_token: t.is_trading_agent_token ?? false,
-    creator_wallet: t.creator_wallet ?? null,
-    twitter_url: t.twitter_url ?? null,
-    twitter_avatar_url: t.twitter_avatar_url ?? null,
-    twitter_verified: t.twitter_verified ?? false,
-    twitter_verified_type: t.twitter_verified_type ?? null,
-    telegram_url: t.telegram_url ?? null,
-    website_url: t.website_url ?? null,
-    discord_url: t.discord_url ?? null,
-    created_at: t.created_at,
-    price_sol: 0,
-    volume_24h_sol: 0,
-    description: null,
-    total_fees_earned: 0,
-    last_distribution_at: null,
-    updated_at: t.created_at,
+    id: t.id, name: t.name, ticker: t.ticker, image_url: t.image_url,
+    mint_address: t.mint_address, dbc_pool_address: t.dbc_pool_address,
+    status: t.status as any, bonding_progress: t.bonding_progress ?? 0,
+    market_cap_sol: t.market_cap_sol ?? 0, holder_count: t.holder_count ?? 0,
+    trading_fee_bps: t.trading_fee_bps ?? 0, fee_mode: t.fee_mode ?? null,
+    agent_id: t.agent_id ?? null, launchpad_type: t.launchpad_type ?? null,
+    trading_agent_id: t.trading_agent_id ?? null, is_trading_agent_token: t.is_trading_agent_token ?? false,
+    creator_wallet: t.creator_wallet ?? null, twitter_url: t.twitter_url ?? null,
+    twitter_avatar_url: t.twitter_avatar_url ?? null, twitter_verified: t.twitter_verified ?? false,
+    twitter_verified_type: t.twitter_verified_type ?? null, telegram_url: t.telegram_url ?? null,
+    website_url: t.website_url ?? null, discord_url: t.discord_url ?? null,
+    created_at: t.created_at, price_sol: 0, volume_24h_sol: 0,
+    description: null, total_fees_earned: 0, last_distribution_at: null, updated_at: t.created_at,
   } as unknown as FunToken;
 }
 
-/* ── premium card ── */
+/* ── premium king card ── */
 function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingToken; rank: number; quickBuyAmount: number; sparklineData?: number[] }) {
   const navigate = useNavigate();
   const funToken = useMemo(() => kingToFunToken(token), [token]);
-  const [blink, setBlink] = useState(false);
   const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    const schedule = () => {
-      const delay = 2000 + Math.random() * 4000;
-      return setTimeout(() => {
-        setBlink(true);
-        setTimeout(() => setBlink(false), 300);
-        timerId = schedule();
-      }, delay);
-    };
-    let timerId = schedule();
-    return () => clearTimeout(timerId);
-  }, []);
+  const [isHovered, setIsHovered] = useState(false);
 
   const { solPrice } = useSolPrice();
   const progress = token.codex_graduation_percent ?? token.bonding_progress ?? 0;
-  // Prefer live Codex USD mcap, fallback to SOL-based calculation
   const mcapUsd = token.codex_market_cap_usd || (token.market_cap_sol ?? 0) * (solPrice || 0);
   const change24h = token.codex_change_24h ?? 0;
   const isPump = token.launchpad_type === "pumpfun";
@@ -158,249 +140,360 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
   const xAvatar = token.twitter_avatar_url;
   const verified = token.twitter_verified;
   const vType = token.twitter_verified_type;
-  const checkClr = vType === "business" || vType === "government" ? "hsl(45 93% 47%)" : "hsl(204 88% 53%)";
+  const checkClr = vType === "business" || vType === "government" ? "#F0B90B" : "#00D4FF";
   const holders = token.holder_count ?? 0;
 
   const url = `/trade/${token.mint_address || token.dbc_pool_address || token.id}`;
   const codexChartUrl = token.mint_address ? `https://www.defined.fi/sol/${token.mint_address}` : null;
 
-  const handleTradeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  const handleChartClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (codexChartUrl) window.open(codexChartUrl, "_blank");
-  };
-
   const handleCopyCA = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     if (!token.mint_address) return;
     const ok = await copyToClipboard(token.mint_address);
     if (ok) { setCopied(true); setTimeout(() => setCopied(false), 1500); }
   };
 
   const handleSocialClick = (e: React.MouseEvent, url: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     window.open(url, "_blank");
   };
 
   return (
     <div
       onClick={() => navigate(url)}
-      className={cn(
-        "group relative flex flex-col",
-        "rounded-2xl border transition-all duration-300 ease-out",
-        "cursor-pointer",
-        r.border, r.hoverBorder, r.glow,
-        "scale-[0.96] hover:scale-[0.99] active:scale-[0.95] md:scale-[0.97] md:hover:scale-100 md:active:scale-[0.98]",
-        r.king ? "md:flex-[1.06]" : "md:flex-1",
-        blink && "animate-[king-blink_0.3s_ease-in-out]",
-      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative flex flex-col cursor-pointer"
       style={{
-        background: "linear-gradient(135deg, hsl(0 0% 7%) 0%, hsl(0 0% 5%) 100%)",
-        padding: "12px",
+        background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: `1px solid ${isHovered ? r.hoverBorderColor : r.borderColor}`,
+        borderRadius: "20px",
+        padding: "16px",
+        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: isHovered ? "scale(1.015) translateY(-2px)" : "scale(1)",
+        boxShadow: isHovered
+          ? `0 0 32px ${r.glowColor}, 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)`
+          : `0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)`,
+        minWidth: 0,
+        flex: r.king ? "1.04" : "1",
       }}
     >
-      {/* King crown glow for #1 */}
+      {/* Top edge glow for #1 */}
       {r.king && (
-        <div className="absolute -top-px -left-px -right-px h-[2px] rounded-t-2xl bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+        <div
+          className="absolute -top-px left-4 right-4 h-[1px] rounded-full"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.5), rgba(255,215,0,0.6), rgba(245,158,11,0.5), transparent)",
+          }}
+        />
       )}
 
-      {/* Top: Rank badge + Avatar + Info */}
-      <div className="relative z-10 flex items-center gap-3 mb-4">
+      {/* Cosmic speck overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-[20px] overflow-hidden"
+        style={{ opacity: 0.4 }}
+      >
+        <div
+          className="absolute w-1 h-1 rounded-full"
+          style={{ background: "rgba(0,212,255,0.3)", top: "15%", left: "80%", filter: "blur(1px)" }}
+        />
+        <div
+          className="absolute w-0.5 h-0.5 rounded-full"
+          style={{ background: "rgba(0,255,170,0.2)", top: "60%", left: "20%", filter: "blur(0.5px)" }}
+        />
+      </div>
+
+      {/* ── Header: Rank + Avatar + Info ── */}
+      <div className="relative z-10 flex items-center gap-3 mb-3">
         {/* Rank Badge */}
-        <div className={cn(
-          "flex-shrink-0 flex items-center justify-center rounded-xl font-black text-white shadow-lg",
-          r.badgeBg, r.badgeRing,
-          r.king ? "w-11 h-11 text-base" : "w-9 h-9 text-sm",
-        )}>
+        <div
+          className="flex-shrink-0 flex items-center justify-center rounded-xl font-black text-white relative"
+          style={{
+            background: r.badgeBg,
+            boxShadow: r.badgeShadow,
+            width: r.king ? "40px" : "34px",
+            height: r.king ? "40px" : "34px",
+            fontSize: r.king ? "15px" : "13px",
+            animation: r.crownPulse ? "koth-crown-pulse 2s ease-in-out infinite" : undefined,
+          }}
+        >
           {r.label}
+          {r.king && (
+            <Crown
+              className="absolute -top-2 -right-1.5"
+              style={{
+                width: "14px", height: "14px",
+                color: "#FFD700",
+                filter: "drop-shadow(0 0 4px rgba(255,215,0,0.5))",
+              }}
+            />
+          )}
         </div>
 
-        {/* Token Avatar */}
-        <div className={cn(
-          "flex-shrink-0 rounded-2xl overflow-hidden border border-border/30",
-          r.king ? "w-14 h-14" : "w-12 h-12",
-        )}>
+        {/* Token Icon */}
+        <div
+          className="flex-shrink-0 overflow-hidden"
+          style={{
+            width: r.king ? "48px" : "42px",
+            height: r.king ? "48px" : "42px",
+            borderRadius: "14px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            transition: "box-shadow 0.3s ease",
+            boxShadow: isHovered ? "0 0 12px rgba(0,212,255,0.15)" : "none",
+          }}
+        >
           <OptimizedTokenImage
             src={token.image_url}
             alt={token.name}
             fallbackText={token.ticker}
-            size={112}
+            size={96}
             className="w-full h-full object-cover"
           />
         </div>
 
-        {/* Name + Creator */}
+        {/* Name + X link */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap overflow-visible">
-            <span className={cn(
-              "font-bold text-foreground leading-tight truncate max-w-[120px]",
-              r.king ? "text-[16px]" : "text-[14px]",
-            )}>
+            <span
+              className="font-bold leading-tight truncate max-w-[110px]"
+              style={{ color: "#FFFFFF", fontSize: r.king ? "16px" : "14px", letterSpacing: "0.2px" }}
+            >
               {token.name}
             </span>
-            <span className="text-[11px] font-mono text-muted-foreground/50 flex-shrink-0 whitespace-nowrap">${token.ticker}</span>
+            <span className="font-mono flex-shrink-0 whitespace-nowrap" style={{ color: "#6E6E80", fontSize: "11px" }}>
+              ${token.ticker}
+            </span>
             <LiveAge createdAt={token.created_at} className="text-[9px]" />
             {isTrader && (
-              <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wider flex-shrink-0 bg-cyan-500/10 text-cyan-400 border border-cyan-500/15">
+              <span
+                className="text-[8px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wider flex-shrink-0"
+                style={{ background: "rgba(0,212,255,0.08)", color: "#00D4FF", border: "1px solid rgba(0,212,255,0.12)" }}
+              >
                 <Bot className="w-2.5 h-2.5 inline mr-0.5 -mt-px" />Trader
               </span>
             )}
             {isPump && <PumpBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
             {isBags && <BagsBadge mintAddress={token.mint_address ?? undefined} showText={false} />}
           </div>
-          <div className="flex items-center gap-1 mt-0.5 min-h-[18px]">
-            <svg className="w-3 h-3 flex-shrink-0 text-muted-foreground/40" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <div className="flex items-center gap-1 mt-0.5 min-h-[16px]">
+            <svg className="w-3 h-3 flex-shrink-0" style={{ color: "#4A4A5A" }} viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
             {xUser ? (
               <>
                 {xAvatar && (
-                  <img src={xAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0 border border-border/20" />
+                  <img src={xAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" style={{ border: "1px solid rgba(255,255,255,0.08)" }} />
                 )}
-                <span className="text-[11px] text-muted-foreground/45 truncate">@{xUser}</span>
+                <span className="truncate" style={{ fontSize: "11px", color: "#00D4FF", opacity: 0.7 }}>@{xUser}</span>
                 {verified && <BadgeCheck className="w-3.5 h-3.5 flex-shrink-0" style={{ color: checkClr }} />}
               </>
             ) : (
-              <span className="text-[11px] text-muted-foreground/25 italic">— None</span>
+              <span style={{ fontSize: "11px", color: "#3A3A4A", fontStyle: "italic" }}>— None</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Middle section with sparkline background — between header and progress bar */}
-      <div className="relative mb-3">
-        {/* Sparkline background - only in this middle section */}
-        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden rounded-lg">
+      {/* ── Sparkline Chart Background Section ── */}
+      <div className="relative mb-3 rounded-xl overflow-hidden" style={{ minHeight: "72px" }}>
+        {/* Chart behind metrics */}
+        <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.5 }}>
           <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
         </div>
 
-        {/* Middle: MCAP + Holders grid */}
-        <div className="relative z-10 grid grid-cols-2 gap-3 mb-3">
+        {/* Metrics overlay */}
+        <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-2 p-2">
+          {/* MCAP */}
           <div>
-            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">MCap</span>
+            <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
+              MCap
+            </span>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-lg font-black font-mono tabular-nums text-emerald-400 leading-none">
+              <span
+                className="font-black font-mono tabular-nums leading-none"
+                style={{
+                  fontSize: "17px",
+                  color: "#FFD700",
+                  textShadow: "0 0 12px rgba(255,215,0,0.2)",
+                }}
+              >
                 ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
               </span>
               {change24h !== 0 && (
-                <span className={cn(
-                  "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md",
-                  change24h > 0 ? "text-emerald-300 bg-emerald-500/15" : "text-red-400 bg-red-500/15"
-                )}>
+                <span
+                  className="font-mono font-bold px-1.5 py-0.5 rounded-md"
+                  style={{
+                    fontSize: "10px",
+                    color: change24h > 0 ? "#00FFAA" : "#FF4D4D",
+                    background: change24h > 0 ? "rgba(0,255,170,0.1)" : "rgba(255,77,77,0.1)",
+                    border: `1px solid ${change24h > 0 ? "rgba(0,255,170,0.15)" : "rgba(255,77,77,0.15)"}`,
+                  }}
+                >
                   {formatChange24h(change24h)}
                 </span>
               )}
             </div>
           </div>
+
+          {/* HOLDERS */}
           <div>
-            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Holders</span>
+            <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
+              Holders
+            </span>
             <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-muted-foreground/50" />
-              <span className="text-sm font-mono font-bold text-foreground/80">{holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}</span>
+              <Users className="flex-shrink-0" style={{ width: "14px", height: "14px", color: "#4A4A5A" }} />
+              <span className="font-mono font-bold" style={{ fontSize: "14px", color: "#FFFFFF", opacity: 0.85 }}>
+                {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
+              </span>
             </div>
           </div>
-        </div>
-        <div className="relative z-10">
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 block mb-1">Vol 24h</span>
-          <span className="text-sm font-mono font-bold text-foreground/80">
-            ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0 ? (token.codex_volume_24h_usd >= 1_000_000 ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M` : token.codex_volume_24h_usd >= 1_000 ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K` : token.codex_volume_24h_usd.toFixed(0)) : "0"}
-          </span>
+
+          {/* VOL 24H */}
+          <div className="col-span-2">
+            <span className="uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
+              Vol 24h
+            </span>
+            <span className="ml-2 font-mono font-bold" style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)" }}>
+              ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0
+                ? (token.codex_volume_24h_usd >= 1_000_000
+                  ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M`
+                  : token.codex_volume_24h_usd >= 1_000
+                    ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K`
+                    : token.codex_volume_24h_usd.toFixed(0))
+                : "0"}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* ── Progress Bar ── */}
       <div className="relative z-10 mb-3">
         <ProgressBar value={progress} />
       </div>
 
-      {/* Bottom Tools Row */}
-      <div className="relative z-10 pt-3 border-t border-border/10 space-y-2">
-        {/* Social icons row */}
-        <div className="flex items-center gap-1">
-          <TooltipProvider delayDuration={200}>
-            {token.twitter_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.twitter_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Twitter</TooltipContent>
-              </Tooltip>
-            )}
-            {token.telegram_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.telegram_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <MessageCircle className="w-2.5 h-2.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Telegram</TooltipContent>
-              </Tooltip>
-            )}
-            {token.website_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.website_url!)} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <Globe className="w-2.5 h-2.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Website</TooltipContent>
-              </Tooltip>
-            )}
-            {token.mint_address && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={handleCopyCA} className={cn(
-                    "p-1 rounded transition-colors",
-                    copied ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30"
-                  )}>
-                    {copied ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">{copied ? "Copied!" : "Copy CA"}</TooltipContent>
-              </Tooltip>
-            )}
-            {codexChartUrl && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={handleChartClick} className="p-1 rounded text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/30 transition-colors">
-                    <BarChart3 className="w-2.5 h-2.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Chart</TooltipContent>
-              </Tooltip>
-            )}
-          </TooltipProvider>
-        </div>
+      {/* ── Social Icons ── */}
+      <div className="relative z-10 flex items-center gap-0.5 mb-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "8px" }}>
+        <TooltipProvider delayDuration={200}>
+          {token.twitter_url && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => handleSocialClick(e, token.twitter_url!)}
+                  className="p-1.5 rounded-lg transition-all duration-300"
+                  style={{ color: "#6E6E80" }}
+                  onMouseEnter={e => { (e.target as HTMLElement).style.color = "#00D4FF"; (e.target as HTMLElement).style.background = "rgba(0,212,255,0.08)"; }}
+                  onMouseLeave={e => { (e.target as HTMLElement).style.color = "#6E6E80"; (e.target as HTMLElement).style.background = "transparent"; }}
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">Twitter</TooltipContent>
+            </Tooltip>
+          )}
+          {token.telegram_url && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => handleSocialClick(e, token.telegram_url!)}
+                  className="p-1.5 rounded-lg transition-all duration-300"
+                  style={{ color: "#6E6E80" }}
+                  onMouseEnter={e => { (e.target as HTMLElement).style.color = "#00D4FF"; (e.target as HTMLElement).style.background = "rgba(0,212,255,0.08)"; }}
+                  onMouseLeave={e => { (e.target as HTMLElement).style.color = "#6E6E80"; (e.target as HTMLElement).style.background = "transparent"; }}
+                >
+                  <MessageCircle className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">Telegram</TooltipContent>
+            </Tooltip>
+          )}
+          {token.website_url && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => handleSocialClick(e, token.website_url!)}
+                  className="p-1.5 rounded-lg transition-all duration-300"
+                  style={{ color: "#6E6E80" }}
+                  onMouseEnter={e => { (e.target as HTMLElement).style.color = "#00D4FF"; (e.target as HTMLElement).style.background = "rgba(0,212,255,0.08)"; }}
+                  onMouseLeave={e => { (e.target as HTMLElement).style.color = "#6E6E80"; (e.target as HTMLElement).style.background = "transparent"; }}
+                >
+                  <Globe className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">Website</TooltipContent>
+            </Tooltip>
+          )}
+          {token.mint_address && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleCopyCA}
+                  className="p-1.5 rounded-lg transition-all duration-300"
+                  style={{
+                    color: copied ? "#00FFAA" : "#6E6E80",
+                    background: copied ? "rgba(0,255,170,0.08)" : "transparent",
+                  }}
+                >
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">{copied ? "Copied!" : "Copy CA"}</TooltipContent>
+            </Tooltip>
+          )}
+          {codexChartUrl && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(codexChartUrl, "_blank"); }}
+                  className="p-1.5 rounded-lg transition-all duration-300"
+                  style={{ color: "#6E6E80" }}
+                  onMouseEnter={e => { (e.target as HTMLElement).style.color = "#00D4FF"; (e.target as HTMLElement).style.background = "rgba(0,212,255,0.08)"; }}
+                  onMouseLeave={e => { (e.target as HTMLElement).style.color = "#6E6E80"; (e.target as HTMLElement).style.background = "transparent"; }}
+                >
+                  <BarChart3 className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10px]">Chart</TooltipContent>
+            </Tooltip>
+          )}
+        </TooltipProvider>
+      </div>
 
-        {/* Buttons row — onMouseDown capture prevents card navigation */}
-        <div
-          className="king-footer-actions flex items-center gap-2"
-          onClickCapture={e => e.stopPropagation()}
-          onMouseDownCapture={e => e.stopPropagation()}
-          onTouchStartCapture={e => e.stopPropagation()}
-          onPointerDownCapture={e => e.stopPropagation()}
+      {/* ── Action Buttons ── */}
+      <div
+        className="relative z-10 flex items-center gap-2"
+        onClickCapture={e => e.stopPropagation()}
+        onMouseDownCapture={e => e.stopPropagation()}
+        onTouchStartCapture={e => e.stopPropagation()}
+        onPointerDownCapture={e => e.stopPropagation()}
+      >
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate(url); }}
+          className="flex-1 flex items-center justify-center gap-1.5 font-bold font-mono transition-all duration-200 active:scale-[0.96]"
+          style={{
+            height: "34px",
+            borderRadius: "12px",
+            fontSize: "12px",
+            color: "#00D4FF",
+            background: "rgba(0,212,255,0.06)",
+            border: "1px solid rgba(0,212,255,0.15)",
+            letterSpacing: "0.3px",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(0,212,255,0.12)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,212,255,0.3)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(0,212,255,0.06)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,212,255,0.15)";
+          }}
         >
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(url); }}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1 px-3 py-1.5 min-h-[30px] rounded-xl text-[11px] font-bold transition-all duration-200 font-mono",
-              "bg-primary/10 text-primary hover:bg-primary/20",
-              "border border-primary/20 hover:border-primary/40",
-              "hover:scale-[1.03] active:scale-[0.97]",
-            )}
-          >
-            <TrendingUp className="w-3 h-3" />
-            Trade
-          </button>
-          <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper flex-1">
-            <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
-          </div>
+          <TrendingUp style={{ width: "13px", height: "13px" }} />
+          Trade
+        </button>
+        <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper flex-1">
+          <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
         </div>
       </div>
     </div>
@@ -411,37 +504,35 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
 function KingCardSkeleton() {
   return (
     <div
-      className="flex flex-col md:flex-1 rounded-2xl border border-border/10"
-      style={{ background: "linear-gradient(135deg, hsl(0 0% 7%) 0%, hsl(0 0% 5%) 100%)", padding: "20px" }}
+      className="flex flex-col rounded-[20px]"
+      style={{
+        background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)",
+        border: "1px solid rgba(255,255,255,0.04)",
+        padding: "16px",
+        flex: 1,
+      }}
     >
-      <div className="flex items-center gap-3 mb-4">
-        <Skeleton className="w-11 h-11 rounded-xl" />
-        <Skeleton className="w-14 h-14 rounded-2xl" />
+      <div className="flex items-center gap-3 mb-3">
+        <Skeleton className="w-10 h-10 rounded-xl" />
+        <Skeleton className="w-12 h-12 rounded-[14px]" />
         <div className="flex-1 space-y-1.5">
-          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-24" />
           <Skeleton className="h-3 w-16" />
         </div>
       </div>
-      <div className="flex items-center gap-4 mb-3">
-        <div className="space-y-1">
-          <Skeleton className="h-2 w-8" />
-          <Skeleton className="h-5 w-16" />
-        </div>
-        <div className="space-y-1">
-          <Skeleton className="h-2 w-8" />
-          <Skeleton className="h-4 w-10" />
-        </div>
+      <div className="space-y-2 mb-3">
+        <Skeleton className="h-[72px] w-full rounded-xl" />
       </div>
       <Skeleton className="h-[6px] w-full rounded-full mb-3" />
-      <div className="flex items-center justify-between pt-2 border-t border-border/10">
-        <Skeleton className="h-7 w-20 rounded-lg" />
-        <Skeleton className="h-6 w-14 rounded-lg" />
+      <div className="flex items-center gap-2 pt-2">
+        <Skeleton className="h-[34px] flex-1 rounded-xl" />
+        <Skeleton className="h-[34px] flex-1 rounded-xl" />
       </div>
     </div>
   );
 }
 
-/* ── export ── */
+/* ── main export ── */
 export function KingOfTheHill() {
   const { tokens, isLoading } = useKingOfTheHill();
   const [quickBuyAmount, setQuickBuyAmount] = useState(() => {
@@ -507,21 +598,42 @@ export function KingOfTheHill() {
 
   return (
     <div className="w-full">
-      {/* Premium Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <img src={BRAND.logoPath} alt={BRAND.shortName} className="w-6 h-6 md:w-9 md:h-9 object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <img
+            src={BRAND.logoPath}
+            alt={BRAND.shortName}
+            className="w-7 h-7 md:w-9 md:h-9 object-contain"
+            style={{ filter: "drop-shadow(0 0 10px rgba(245,158,11,0.25))" }}
+          />
           <div>
-            <h2 className="text-[13px] md:text-base font-black uppercase tracking-[0.08em] text-foreground" style={{ textShadow: "0 0 20px rgba(245,158,11,0.15)" }}>
+            <h2
+              className="font-black uppercase tracking-[0.1em]"
+              style={{
+                fontSize: "clamp(13px, 3vw, 16px)",
+                color: "#FFFFFF",
+                textShadow: "0 0 24px rgba(245,158,11,0.12)",
+                lineHeight: 1.3,
+              }}
+            >
               King of the Hill
             </h2>
-            <span className="text-[10px] text-muted-foreground/40 tracking-wide">Soon to Graduate</span>
+            <span className="tracking-wide" style={{ fontSize: "10px", color: "#4A4A5A" }}>
+              Soon to Graduate
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          {/* Editable quick-buy amount */}
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/30 border border-border/30">
-            <Zap className="w-2.5 h-2.5 text-amber-400" />
+        <div className="flex items-center gap-2">
+          {/* Quick buy amount editor */}
+          <div
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <Zap style={{ width: "11px", height: "11px", color: "#F0B90B" }} />
             {editingQuickBuy ? (
               <input
                 ref={quickBuyInputRef}
@@ -531,40 +643,57 @@ export function KingOfTheHill() {
                 onChange={(e) => setQuickBuyInput(e.target.value.replace(/[^0-9.]/g, ""))}
                 onBlur={commitQuickBuy}
                 onKeyDown={(e) => { if (e.key === "Enter") commitQuickBuy(); if (e.key === "Escape") { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(false); } }}
-                className="w-12 bg-transparent text-[10px] font-mono font-bold text-foreground outline-none border-b border-primary/40"
+                className="w-12 bg-transparent outline-none font-mono font-bold"
+                style={{ fontSize: "11px", color: "#FFFFFF", borderBottom: "1px solid rgba(0,212,255,0.4)" }}
               />
             ) : (
               <button
                 onClick={() => { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(true); }}
-                className="flex items-center gap-0.5 text-[10px] font-mono font-bold text-foreground/80 hover:text-foreground transition-colors"
+                className="flex items-center gap-0.5 font-mono font-bold transition-colors"
+                style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)" }}
               >
                 {quickBuyAmount} SOL
-                <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
+                <Pencil style={{ width: "10px", height: "10px", color: "#4A4A5A" }} />
               </button>
             )}
           </div>
-          <Link to="/agents/leaderboard" className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] md:text-[10px] font-semibold text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all whitespace-nowrap">
+          <Link
+            to="/agents/leaderboard"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200"
+            style={{
+              fontSize: "clamp(9px, 2vw, 11px)",
+              color: "#00D4FF",
+              background: "rgba(0,212,255,0.06)",
+              border: "1px solid rgba(0,212,255,0.12)",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(0,212,255,0.12)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,212,255,0.25)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(0,212,255,0.06)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,212,255,0.12)";
+            }}
+          >
             View Full Leaderboard
-            <ArrowUpRight className="w-2.5 h-2.5" />
+            <ArrowUpRight style={{ width: "11px", height: "11px" }} />
           </Link>
         </div>
       </div>
 
-      {/* Cards Row with scroll arrows on mobile */}
+      {/* ── Cards Row ── */}
       <div className="relative flex items-center">
-        {/* Left arrow — always visible on mobile */}
+        {/* Left arrow mobile */}
         <button
           onClick={() => scroll("left")}
           className={cn(
-            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
-            "bg-muted/60 border border-border/40",
-            "transition-all",
-            "md:hidden",
-            canScrollLeft
-              ? "text-foreground/90 hover:bg-muted hover:border-border/60"
-              : "text-muted-foreground/30 cursor-default",
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all md:hidden",
+            canScrollLeft ? "text-foreground/80" : "text-muted-foreground/20 cursor-default",
           )}
-          aria-label="Scroll left"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
           disabled={!canScrollLeft}
         >
           <ChevronLeft className="w-5 h-5" />
@@ -572,28 +701,34 @@ export function KingOfTheHill() {
 
         <div
           ref={scrollRef}
-          className="flex-1 flex flex-row md:gap-5 overflow-x-auto md:overflow-visible pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide mx-1 md:mx-0 md:px-1 [&>*]:snap-center [&>*]:min-w-full [&>*]:flex-shrink-0 md:[&>*]:min-w-0 md:[&>*]:flex-shrink md:[&>*]:snap-align-none"
+          className="flex-1 flex flex-row md:gap-4 overflow-x-auto md:overflow-visible pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide mx-1 md:mx-0 md:px-0.5 [&>*]:snap-center [&>*]:min-w-full [&>*]:flex-shrink-0 md:[&>*]:min-w-0 md:[&>*]:flex-shrink md:[&>*]:snap-align-none"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {isLoading
             ? [1, 2, 3].map(i => <KingCardSkeleton key={i} />)
-            : tokens?.map((t, i) => <KingCard key={t.id} token={t} rank={i + 1} quickBuyAmount={quickBuyAmount} sparklineData={t.mint_address ? sparklines?.[t.mint_address] : undefined} />)
+            : tokens?.map((t, i) => (
+              <KingCard
+                key={t.id}
+                token={t}
+                rank={i + 1}
+                quickBuyAmount={quickBuyAmount}
+                sparklineData={t.mint_address ? sparklines?.[t.mint_address] : undefined}
+              />
+            ))
           }
         </div>
 
-        {/* Right arrow — always visible on mobile */}
+        {/* Right arrow mobile */}
         <button
           onClick={() => scroll("right")}
           className={cn(
-            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
-            "bg-muted/60 border border-border/40",
-            "transition-all",
-            "md:hidden",
-            canScrollRight
-              ? "text-foreground/90 hover:bg-muted hover:border-border/60"
-              : "text-muted-foreground/30 cursor-default",
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all md:hidden",
+            canScrollRight ? "text-foreground/80" : "text-muted-foreground/20 cursor-default",
           )}
-          aria-label="Scroll right"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
           disabled={!canScrollRight}
         >
           <ChevronRight className="w-5 h-5" />
