@@ -63,6 +63,10 @@ function useMultiWalletInner() {
   }, [wallets]);
 
   useEffect(() => {
+    embeddedWalletsRef.current = embeddedWallets;
+  }, [embeddedWallets]);
+
+  useEffect(() => {
     if (!profileId) return;
     supabase
       .from("user_wallets")
