@@ -137,6 +137,11 @@ function useMultiWalletInner() {
       }));
   }, [embeddedWallets, labels, balances, hiddenAddresses]);
 
+  // All addresses including hidden — for portfolio aggregation
+  const allAddresses: string[] = useMemo(() => {
+    return embeddedWallets.map((w: any) => w.address);
+  }, [embeddedWallets]);
+
   const activeWallet = useMemo(() => {
     return managedWallets.find((w) => w.address === activeAddress) || managedWallets[0] || null;
   }, [managedWallets, activeAddress]);
