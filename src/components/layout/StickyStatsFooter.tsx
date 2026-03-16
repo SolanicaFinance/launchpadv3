@@ -67,6 +67,13 @@ export function StickyStatsFooter() {
   const { data: launchpadStats, refetch: refetchLaunchpads } = useLaunchpadStats();
   const isMobile = useIsMobile();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const compactLinks = windowWidth < 1100;
   
   const { pathname } = useLocation();
   const [selectedRegion, setSelectedRegion] = useState("EU-E");
