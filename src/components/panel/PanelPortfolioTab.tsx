@@ -2,7 +2,8 @@ import { useLaunchpad, formatTokenAmount, formatSolAmount, Token } from "@/hooks
 import { useAuth } from "@/hooks/useAuth";
 import { useChain } from "@/contexts/ChainContext";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
-import { useWalletHoldings } from "@/hooks/useWalletHoldings";
+import { useMultiWalletHoldings } from "@/hooks/useMultiWalletHoldings";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useTokenMetadata } from "@/hooks/useTokenMetadata";
 import { useJupiterPrices } from "@/hooks/useJupiterPrices";
 import { Card } from "@/components/ui/card";
@@ -38,12 +39,14 @@ export default function PanelPortfolioTab() {
   const { chain, chainConfig } = useChain();
   const { address: evmAddress } = usePrivyEvmWallet();
   const { useUserTokens, useUserEarnings } = useLaunchpad();
+  const { allAddresses } = useMultiWallet();
 
   const activeAddress = chain === 'solana' ? solanaAddress : evmAddress;
   const currencySymbol = chainConfig.nativeCurrency.symbol;
 
-  // Fetch on-chain holdings
-  const { data: onChainHoldings = [], isLoading: isLoadingHoldings } = useWalletHoldings(activeAddress);
+  // Fetch on-chain holdings across ALL wallets (including hidden/rotated)
+  const portfolioAddresses = chain === 'solana' ? allAddresses : (evmAddress ? [evmAddress] : []);
+  const { data: onChainHoldings = [], isLoading: isLoadingHoldings } = useMultiWalletHoldings(portfolioAddresses);
   const heldMints = useMemo(() => onChainHoldings.map(h => h.mint).filter(Boolean), [onChainHoldings]);
   
   // Fetch live Jupiter prices + metadata + DB fallback

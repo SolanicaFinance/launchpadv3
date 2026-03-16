@@ -5,7 +5,9 @@ import { useChain } from "@/contexts/ChainContext";
 import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useLaunchpad, formatSolAmount, formatTokenAmount, Token } from "@/hooks/useLaunchpad";
-import { useWalletHoldings, TokenHolding as OnChainHolding } from "@/hooks/useWalletHoldings";
+import { useMultiWalletHoldings } from "@/hooks/useMultiWalletHoldings";
+import { TokenHolding as OnChainHolding } from "@/hooks/useWalletHoldings";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useTokenMetadata } from "@/hooks/useTokenMetadata";
 import { useJupiterPrices } from "@/hooks/useJupiterPrices";
 import { useReferralCode, useReferralDashboard } from "@/hooks/useReferral";
@@ -217,6 +219,7 @@ export default function PanelUnifiedDashboard() {
   const queryClient = useQueryClient();
   const { executeTurboSwap } = useTurboSwap();
   const [sellingMint, setSellingMint] = useState<string | null>(null);
+  const { allAddresses } = useMultiWallet();
 
   const isBnb = chain === 'bnb';
   const isSolana = chain === 'solana';
@@ -226,8 +229,9 @@ export default function PanelUnifiedDashboard() {
   const explorerUrl = chainConfig.explorerUrl;
 
   // ─── Data fetching ───
-  // On-chain wallet holdings (real balances from RPC)
-  const { data: onChainHoldings = [], isLoading: loadingOnChainHoldings } = useWalletHoldings(walletAddr);
+  // On-chain wallet holdings across ALL wallets (including rotated/hidden)
+  const portfolioAddresses = isSolana ? allAddresses : (evmAddress ? [evmAddress] : []);
+  const { data: onChainHoldings = [], isLoading: loadingOnChainHoldings } = useMultiWalletHoldings(portfolioAddresses);
   
   // Get metadata for held tokens from edge function
   const heldMints = useMemo(() => onChainHoldings.map(h => h.mint).filter(Boolean), [onChainHoldings]);

@@ -27,6 +27,7 @@ export interface ManagedWallet {
 
 const FALLBACK = {
   managedWallets: [] as ManagedWallet[],
+  allAddresses: [] as string[],
   activeWallet: null,
   activeAddress: null as string | null,
   switchWallet: (_addr: string) => {},
@@ -137,6 +138,11 @@ function useMultiWalletInner() {
       }));
   }, [embeddedWallets, labels, balances, hiddenAddresses]);
 
+  // All addresses including hidden — for portfolio aggregation
+  const allAddresses: string[] = useMemo(() => {
+    return embeddedWallets.map((w: any) => w.address);
+  }, [embeddedWallets]);
+
   const activeWallet = useMemo(() => {
     return managedWallets.find((w) => w.address === activeAddress) || managedWallets[0] || null;
   }, [managedWallets, activeAddress]);
@@ -245,6 +251,7 @@ function useMultiWalletInner() {
 
   return {
     managedWallets,
+    allAddresses,
     activeWallet,
     activeAddress: activeAddress || activeWallet?.address || null,
     switchWallet,

@@ -90,8 +90,8 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
   const networkId = isBsc ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
   const privyAvailable = usePrivyAvailable();
   const { solanaAddress } = useAuth();
-  const { managedWallets } = useMultiWallet();
-  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
+  const { allAddresses } = useMultiWallet();
+  const allWalletAddresses = allAddresses;
   const { toast } = useToast();
   const [mobileTab, setMobileTab] = useState<'trade' | 'chart'>('trade');
 
@@ -324,8 +324,8 @@ export default function FunTokenDetailPage() {
   const { mintAddress } = useParams<{ mintAddress: string }>();
   const { solanaAddress } = useAuth();
   const privyAvailable = usePrivyAvailable();
-  const { managedWallets } = useMultiWallet();
-  const allWalletAddresses = useMemo(() => managedWallets.map(w => w.address), [managedWallets]);
+  const { allAddresses } = useMultiWallet();
+  const allWalletAddresses = allAddresses;
   const { solPrice } = useSolPrice();
   const { bnbPrice } = useBnbPrice();
   const { toast } = useToast();
