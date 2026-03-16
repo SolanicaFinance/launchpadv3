@@ -120,12 +120,32 @@ function useMultiWalletInner() {
     if (embeddedWallets.length >= MAX_WALLETS) {
       throw new Error(`Maximum ${MAX_WALLETS} wallets reached`);
     }
+
+    const existingAddresses = new Set(embeddedWalletsRef.current.map((w: any) => w.address));
+
     setCreating(true);
     try {
       const newWallet = await createWallet({ createAdditional: true });
-      const address = (newWallet as any)?.address;
-      if (address && profileId) {
-        const label = `Wallet ${embeddedWallets.length + 1}`;
+      let address = (newWallet as any)?.address as string | undefined;
+
+      if (!address) {
+        const startedAt = Date.now();
+        while (Date.now() - startedAt < 20000) {
+          const detectedWallet = embeddedWalletsRef.current.find((w: any) => !existingAddresses.has(w.address));
+          if (detectedWallet?.address) {
+            address = detectedWallet.address;
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+      }
+
+      if (!address) {
+        throw new Error("Wallet was created but is still syncing. Please try again in a moment.");
+      }
+
+      if (profileId) {
+        const label = `Wallet ${embeddedWalletsRef.current.length}`;
         await supabase.from("user_wallets").upsert({
           profile_id: profileId,
           wallet_address: address,
@@ -134,6 +154,7 @@ function useMultiWalletInner() {
         }, { onConflict: "profile_id,wallet_address" });
         setLabels((prev) => ({ ...prev, [address]: label }));
       }
+
       return address;
     } finally {
       setCreating(false);
