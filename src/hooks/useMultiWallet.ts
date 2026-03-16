@@ -216,7 +216,7 @@ function useMultiWalletInner() {
   return {
     managedWallets,
     activeWallet,
-    activeAddress: activeWallet?.address || null,
+    activeAddress: activeAddress || activeWallet?.address || null,
     switchWallet,
     createNewWallet,
     renameWallet,
