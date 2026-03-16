@@ -105,7 +105,12 @@ function HeaderWalletBalanceInner() {
       // Also fetch via RPC as backup / refresh
       const fetchViaRpc = async () => {
         try {
-          const bal = await getBalance();
+          const connection = new (await import("@solana/web3.js")).Connection(
+            (await import("@/hooks/useSolanaWallet")).getRpcUrl().url, "confirmed"
+          );
+          const pubkey = new (await import("@solana/web3.js")).PublicKey(embeddedAddress!);
+          const lamports = await connection.getBalance(pubkey);
+          const bal = lamports / 1e9;
           if (!cancelled) { setBalance(bal); setBalanceLoading(false); }
         } catch (e) { console.warn("Header RPC balance fetch failed:", e); if (!cancelled) setBalanceLoading(false); }
       };
