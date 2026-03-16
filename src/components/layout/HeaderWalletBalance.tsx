@@ -122,7 +122,7 @@ function HeaderWalletBalanceInner() {
       const interval = setInterval(fetchViaRpc, 15000);
       return () => { cancelled = true; clearInterval(interval); };
     }
-  }, [embeddedAddress, getBalance, chain, evmWallet.isConnected, evmWallet.address, privyEvm.address]);
+  }, [embeddedAddress, chain, evmWallet.isConnected, evmWallet.address, privyEvm.address]);
 
   useEffect(() => {
     if (!menuOpen) return;
