@@ -346,31 +346,31 @@ export function StickyStatsFooter() {
                 <FileText style={{ width: "11px", height: "11px" }} />
               </Link>
               <Link to="/leverage" style={{
-                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                display: "flex", alignItems: "center", gap: compactLinks ? 0 : "4px", padding: compactLinks ? "2px 5px" : "2px 7px", borderRadius: "4px",
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
                 fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
-                textDecoration: "none", transition: "all 0.15s",
+                textDecoration: "none", transition: "all 0.15s", justifyContent: "center",
               }}>
                 <TrendingUp style={{ width: "11px", height: "11px" }} />
-                <span>Leverage</span>
+                {!compactLinks && <span>Leverage</span>}
               </Link>
               <Link to="/launch" style={{
-                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                display: "flex", alignItems: "center", gap: compactLinks ? 0 : "4px", padding: compactLinks ? "2px 5px" : "2px 7px", borderRadius: "4px",
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
                 fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
-                textDecoration: "none", transition: "all 0.15s",
+                textDecoration: "none", transition: "all 0.15s", justifyContent: "center",
               }}>
                 <Coins style={{ width: "11px", height: "11px" }} />
-                <span>Launch</span>
+                {!compactLinks && <span>Launch</span>}
               </Link>
               <Link to="/tokens" style={{
-                display: "flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "4px",
+                display: "flex", alignItems: "center", gap: compactLinks ? 0 : "4px", padding: compactLinks ? "2px 5px" : "2px 7px", borderRadius: "4px",
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)",
                 fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap",
-                textDecoration: "none", transition: "all 0.15s",
+                textDecoration: "none", transition: "all 0.15s", justifyContent: "center",
               }}>
                 <Activity style={{ width: "11px", height: "11px" }} />
-                <span>Pulse</span>
+                {!compactLinks && <span>Pulse</span>}
               </Link>
             </div>
           )}
