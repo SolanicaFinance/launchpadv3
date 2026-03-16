@@ -114,6 +114,7 @@ export default function LaunchpadPage() {
           </div>
 
           <WalletBalanceCard className="mb-4" />
+          <DevWalletRotationBanner />
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             <div className="bg-secondary/50 rounded-lg p-2 sm:p-3 text-center">
