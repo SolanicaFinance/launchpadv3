@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { TokenLauncher } from "@/components/launchpad/TokenLauncher";
 import { BnbLauncher } from "@/components/launchpad/BnbLauncher";
+import { DevWalletRotationBanner } from "@/components/launchpad/DevWalletRotationBanner";
 import { Rocket, ExternalLink, CheckCircle2, ArrowLeft, Shield, Zap, Coins, Copy, Check, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
@@ -135,6 +136,12 @@ export default function CreateTokenPage() {
               </Link>
             </div>
           </div>
+
+          {!isBnb && !lastResult?.success && (
+            <div className="relative z-10 max-w-[640px] mx-auto px-4 pb-4">
+              <DevWalletRotationBanner />
+            </div>
+          )}
 
           {/* Main content: form */}
           <div className="relative z-10 max-w-[640px] mx-auto px-4">
