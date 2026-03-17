@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
   lazy,
   Suspense,
 } from "react";
@@ -13,16 +14,139 @@ import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
 import { BRAND } from "@/config/branding";
 
-// Lazy load Privy AND bundle a ready-gate so we only set privyAvailable=true
-// after Privy's internal contexts (wagmi, etc.) are fully initialized.
+/* ------------------------------------------------------------------ */
+/*  Bridge: safely exposes Privy hook results via React context        */
+/*  so consumer hooks NEVER call Privy hooks directly.                 */
+/* ------------------------------------------------------------------ */
+
+export interface PrivyBridgeData {
+  privy: {
+    ready: boolean;
+    authenticated: boolean;
+    user: any;
+    login: () => void;
+    logout: () => Promise<void>;
+  };
+  evmWallets: any[];
+  evmCreateWallet: any;
+  solanaWallets: any[];
+  solanaWalletsReady: boolean;
+  solanaCreateWallet: any;
+  solanaSignAndSend: any;
+  solanaSign: any;
+}
+
+const noopAsync = async () => {};
+const noopLogin = () => {};
+
+const DEFAULT_BRIDGE: PrivyBridgeData = {
+  privy: {
+    ready: false,
+    authenticated: false,
+    user: null,
+    login: noopLogin,
+    logout: noopAsync,
+  },
+  evmWallets: [],
+  evmCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
+  solanaWallets: [],
+  solanaWalletsReady: false,
+  solanaCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
+  solanaSignAndSend: { signAndSendTransaction: async () => { throw new Error("Privy not ready"); } },
+  solanaSign: { signTransaction: async () => { throw new Error("Privy not ready"); } },
+};
+
+const PrivyBridgeContext = createContext<PrivyBridgeData>(DEFAULT_BRIDGE);
+const PrivyAvailableContext = createContext(false);
+
+export function usePrivyAvailable() {
+  return useContext(PrivyAvailableContext);
+}
+
+export function usePrivyBridge(): PrivyBridgeData {
+  return useContext(PrivyBridgeContext);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Lazy-loaded Privy provider + bridge populator                      */
+/* ------------------------------------------------------------------ */
+
 const PrivyProviderWithGate = lazy(async () => {
   const mod = await import("@privy-io/react-auth");
+  const solanaMod = await import("@privy-io/react-auth/solana");
+
+  /**
+   * Only mounted when usePrivy().ready === true.
+   * Calls all Privy hooks that are unsafe to call before ready,
+   * and pushes results into parent state via onData.
+   */
+  function WalletBridgePopulator({ onData }: { onData: (d: Omit<PrivyBridgeData, "privy">) => void }) {
+    const evmResult = mod.useWallets();
+    const evmCreate = mod.useCreateWallet();
+    const solResult = solanaMod.useWallets();
+    const solCreate = solanaMod.useCreateWallet();
+    const solSign = solanaMod.useSignAndSendTransaction();
+    const solSignOnly = solanaMod.useSignTransaction();
+
+    // Stable identity keys to avoid infinite effect loops
+    const evmKey = (evmResult.wallets ?? []).map((w: any) => w.address).join(",");
+    const solKey = (solResult.wallets ?? []).map((w: any) => w.address).join(",");
+    const solReady = solResult.ready;
+
+    useEffect(() => {
+      onData({
+        evmWallets: evmResult.wallets ?? [],
+        evmCreateWallet: evmCreate,
+        solanaWallets: solResult.wallets ?? [],
+        solanaWalletsReady: solReady ?? false,
+        solanaCreateWallet: solCreate,
+        solanaSignAndSend: solSign,
+        solanaSign: solSignOnly,
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [evmKey, solKey, solReady, onData]);
+
+    return null;
+  }
 
   function InnerReadyGate({ children }: { children: ReactNode }) {
-    const { ready } = mod.usePrivy();
+    const privyResult = mod.usePrivy();
+    const ready = privyResult.ready;
+
+    const [walletData, setWalletData] = useState<Omit<PrivyBridgeData, "privy">>({
+      evmWallets: [],
+      evmCreateWallet: DEFAULT_BRIDGE.evmCreateWallet,
+      solanaWallets: [],
+      solanaWalletsReady: false,
+      solanaCreateWallet: DEFAULT_BRIDGE.solanaCreateWallet,
+      solanaSignAndSend: DEFAULT_BRIDGE.solanaSignAndSend,
+      solanaSign: DEFAULT_BRIDGE.solanaSign,
+    });
+
+    const bridgeValue = useMemo<PrivyBridgeData>(() => ({
+      privy: {
+        ready: privyResult.ready,
+        authenticated: privyResult.authenticated,
+        user: privyResult.user,
+        login: privyResult.login,
+        logout: privyResult.logout,
+      },
+      ...walletData,
+    }), [
+      privyResult.ready,
+      privyResult.authenticated,
+      privyResult.user,
+      privyResult.login,
+      privyResult.logout,
+      walletData,
+    ]);
+
     return (
       <PrivyAvailableContext.Provider value={ready}>
-        {children}
+        <PrivyBridgeContext.Provider value={bridgeValue}>
+          {ready && <WalletBridgePopulator onData={setWalletData} />}
+          {children}
+        </PrivyBridgeContext.Provider>
       </PrivyAvailableContext.Provider>
     );
   }
@@ -38,12 +162,9 @@ const PrivyProviderWithGate = lazy(async () => {
   return { default: WrappedProvider };
 });
 
-// Context to track if Privy is available
-const PrivyAvailableContext = createContext(false);
-
-export function usePrivyAvailable() {
-  return useContext(PrivyAvailableContext);
-}
+/* ------------------------------------------------------------------ */
+/*  Public wrapper                                                     */
+/* ------------------------------------------------------------------ */
 
 interface PrivyProviderWrapperProps {
   children: ReactNode;
@@ -59,14 +180,10 @@ function getHeliusRpcUrlFromRuntime(): string | null {
 
   const isBrowser = typeof window !== "undefined";
 
-  // 1) runtime config on window (freshest)
   if (isBrowser) {
     const fromWindow = (window as any)?.__PUBLIC_CONFIG__?.heliusRpcUrl as string | undefined;
-    if (isValidHttpsUrl(fromWindow)) {
-      return fromWindow!.trim();
-    }
+    if (isValidHttpsUrl(fromWindow)) return fromWindow!.trim();
 
-    // Avoid stale baked env keys before runtime config finishes loading.
     const runtimeLoaded = !!(window as any)?.__PUBLIC_CONFIG_LOADED__;
     if (!runtimeLoaded) {
       const fromStorage = localStorage.getItem("heliusRpcUrl");
@@ -74,26 +191,18 @@ function getHeliusRpcUrlFromRuntime(): string | null {
       return "https://mainnet.helius-rpc.com";
     }
 
-    // runtime loaded but window config missing: try persisted URL
     const fromStorage = localStorage.getItem("heliusRpcUrl");
-    if (isValidHttpsUrl(fromStorage)) {
-      return fromStorage!.trim();
-    }
+    if (isValidHttpsUrl(fromStorage)) return fromStorage!.trim();
   }
 
-  // 2) build-time env (last resort)
   const fromEnv = import.meta.env.VITE_HELIUS_RPC_URL;
-  if (isValidHttpsUrl(fromEnv)) {
-    return fromEnv!.trim();
-  }
+  if (isValidHttpsUrl(fromEnv)) return fromEnv!.trim();
 
-  // 3) api key -> construct paid Helius URL (last resort)
   const apiKey = import.meta.env.VITE_HELIUS_API_KEY;
   if (apiKey && typeof apiKey === "string" && apiKey.trim().length > 10 && !apiKey.includes("${")) {
     return `https://mainnet.helius-rpc.com/?api-key=${apiKey.trim()}`;
   }
 
-  // 4) fallback
   return "https://mainnet.helius-rpc.com";
 }
 
@@ -105,9 +214,6 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
   const rawAppId = import.meta.env.VITE_PRIVY_APP_ID;
   const buildTimeAppId = (rawAppId ?? "").trim();
 
-  // Prefer build-time env, otherwise use the runtime config loaded by RuntimeConfigBootstrap.
-  // IMPORTANT: We avoid doing our own public-config fetch here because aggressive retries +
-  // AbortController timeouts can create an abort loop that interrupts other data loading.
   const [resolvedAppId, setResolvedAppId] = useState<string>(() => {
     if (isValidPrivyAppId(buildTimeAppId)) return buildTimeAppId;
     const fromWindow = ((window as any)?.__PUBLIC_CONFIG__?.privyAppId as string | undefined) ?? "";
@@ -115,8 +221,6 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
     return "";
   });
 
-  // If we didn't have a valid app id at build time, wait briefly for RuntimeConfigBootstrap
-  // to populate window.__PUBLIC_CONFIG__, then hydrate the app id once available.
   useEffect(() => {
     if (isValidPrivyAppId(buildTimeAppId)) {
       if (!isValidPrivyAppId(resolvedAppId)) setResolvedAppId(buildTimeAppId);
@@ -137,9 +241,7 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
         window.clearInterval(timer);
         return;
       }
-
       if (Date.now() - startedAt > maxWaitMs) {
-        // Give up quietly — app should still load without Privy.
         window.clearInterval(timer);
       }
     }, 400);
@@ -158,15 +260,15 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
     []
   );
 
-  // Privy embedded Solana wallets require Solana RPC config.
-  // Use Helius when available; otherwise fall back to the public Solana endpoint.
   const solanaHttpRpcUrl = getHeliusRpcUrlFromRuntime() ?? "https://api.mainnet-beta.solana.com";
   const solanaWsUrl = toWebsocketUrl(solanaHttpRpcUrl);
 
   if (!privyAvailable) {
     return (
       <PrivyAvailableContext.Provider value={false}>
-        {children}
+        <PrivyBridgeContext.Provider value={DEFAULT_BRIDGE}>
+          {children}
+        </PrivyBridgeContext.Provider>
       </PrivyAvailableContext.Provider>
     );
   }
@@ -175,43 +277,32 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
     <Suspense
       fallback={
         <PrivyAvailableContext.Provider value={false}>
-          {children}
+          <PrivyBridgeContext.Provider value={DEFAULT_BRIDGE}>
+            {children}
+          </PrivyBridgeContext.Provider>
         </PrivyAvailableContext.Provider>
       }
     >
       <PrivyProviderWithGate
-          appId={appId}
-          config={{
-            loginMethods: ["wallet", "twitter", "email"],
-            externalWallets: {
-              solana: {
-                connectors: solanaConnectors,
-              },
-            },
-            // Required for Privy's embedded wallet transaction UIs.
+        appId={appId}
+        config={{
+          loginMethods: ["wallet", "twitter", "email"],
+          externalWallets: {
             solana: {
-              rpcs: {
-                "solana:mainnet": {
-                  rpc: createSolanaRpc(solanaHttpRpcUrl),
-                  rpcSubscriptions: createSolanaRpcSubscriptions(solanaWsUrl),
-                  blockExplorerUrl: "https://solscan.io",
-                },
+              connectors: solanaConnectors,
+            },
+          },
+          solana: {
+            rpcs: {
+              "solana:mainnet": {
+                rpc: createSolanaRpc(solanaHttpRpcUrl),
+                rpcSubscriptions: createSolanaRpcSubscriptions(solanaWsUrl),
+                blockExplorerUrl: "https://solscan.io",
               },
             },
-            supportedChains: [
-              {
-                id: 56,
-                name: "BNB Smart Chain",
-                nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
-                rpcUrls: {
-                  default: { http: [`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`] },
-                },
-                blockExplorers: {
-                  default: { name: "BscScan", url: "https://bscscan.com" },
-                },
-              } as any,
-            ],
-            defaultChain: {
+          },
+          supportedChains: [
+            {
               id: 56,
               name: "BNB Smart Chain",
               nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
@@ -222,30 +313,42 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
                 default: { name: "BscScan", url: "https://bscscan.com" },
               },
             } as any,
-            appearance: {
-              theme: "dark",
-              accentColor: "#22c55e",
-              logo: saturnLogo,
-              showWalletLoginFirst: true,
-              walletChainType: "ethereum-and-solana",
-              walletList: ["metamask", "phantom", "solflare", "backpack", "detected_wallets"],
+          ],
+          defaultChain: {
+            id: 56,
+            name: "BNB Smart Chain",
+            nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+            rpcUrls: {
+              default: { http: [`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`] },
             },
-            embeddedWallets: {
-              solana: {
-                createOnLogin: "all-users",
-              },
-              ethereum: {
-                createOnLogin: "all-users",
-              },
+            blockExplorers: {
+              default: { name: "BscScan", url: "https://bscscan.com" },
             },
-            legal: {
-              termsAndConditionsUrl: "/terms",
-              privacyPolicyUrl: "/privacy",
+          } as any,
+          appearance: {
+            theme: "dark",
+            accentColor: "#22c55e",
+            logo: saturnLogo,
+            showWalletLoginFirst: true,
+            walletChainType: "ethereum-and-solana",
+            walletList: ["metamask", "phantom", "solflare", "backpack", "detected_wallets"],
+          },
+          embeddedWallets: {
+            solana: {
+              createOnLogin: "all-users",
             },
-          }}
-        >
-          {children}
-        </PrivyProviderWithGate>
+            ethereum: {
+              createOnLogin: "all-users",
+            },
+          },
+          legal: {
+            termsAndConditionsUrl: "/terms",
+            privacyPolicyUrl: "/privacy",
+          },
+        }}
+      >
+        {children}
+      </PrivyProviderWithGate>
     </Suspense>
   );
 }

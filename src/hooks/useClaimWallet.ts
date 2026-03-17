@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { useWallets } from "@privy-io/react-auth/solana";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 
 export type ClaimWalletKind = "embedded" | "external";
 
@@ -26,8 +24,9 @@ const FALLBACK = {
 
 export function useClaimWallet(preferredAddress?: string | null) {
   const privyAvailable = usePrivyAvailable();
-  const { ready, authenticated } = usePrivy();
-  const { wallets } = useWallets();
+  const bridge = usePrivyBridge();
+
+  const { privy, solanaWallets } = bridge;
 
   const isPrivyEmbeddedWallet = useCallback((w: any) => {
     const walletClientType = w?.walletClientType;
@@ -43,7 +42,7 @@ export function useClaimWallet(preferredAddress?: string | null) {
 
   const options: ClaimWalletOption[] = useMemo(() => {
     if (!privyAvailable) return [];
-    const list = (wallets ?? [])
+    const list = (solanaWallets ?? [])
       .filter((w: any) => typeof w?.address === "string" && w.address.length > 30)
       .map((w: any) => {
         const kind: ClaimWalletKind = isPrivyEmbeddedWallet(w) ? "embedded" : "external";
@@ -52,7 +51,7 @@ export function useClaimWallet(preferredAddress?: string | null) {
       });
     list.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "external" ? -1 : 1));
     return list;
-  }, [wallets, isPrivyEmbeddedWallet, privyAvailable]);
+  }, [solanaWallets, isPrivyEmbeddedWallet, privyAvailable]);
 
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
@@ -89,6 +88,6 @@ export function useClaimWallet(preferredAddress?: string | null) {
     selected,
     selectedAddress,
     setSelectedAddress,
-    isReady: ready && authenticated && !!selected?.address,
+    isReady: privy.ready && privy.authenticated && !!selected?.address,
   };
 }

@@ -1,10 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { useWallets, useSignAndSendTransaction as usePrivySolanaSignAndSend, useSignTransaction as usePrivySolanaSign } from "@privy-io/react-auth/solana";
 import { Connection, Transaction, VersionedTransaction, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getRpcUrl } from "./useSolanaWallet";
 import { getCachedBlockhash } from "@/lib/blockhashCache";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 import bs58 from "bs58";
 
 const FALLBACK = {
@@ -26,11 +24,10 @@ const FALLBACK = {
 
 export function useSolanaWalletWithPrivy() {
   const privyAvailable = usePrivyAvailable();
-  const { authenticated, user, ready } = usePrivy();
-  const { wallets } = useWallets();
-  const privySolana = usePrivySolanaSignAndSend();
-  const privySign = usePrivySolanaSign();
+  const bridge = usePrivyBridge();
   const [isConnecting, setIsConnecting] = useState(false);
+
+  const { privy, solanaWallets, solanaSignAndSend: privySolana, solanaSign: privySign } = bridge;
 
   const rpcData = getRpcUrl();
   const rpcUrl = rpcData.url;
@@ -52,14 +49,14 @@ export function useSolanaWalletWithPrivy() {
 
   const getEmbeddedWallet = useCallback(() => {
     if (!privyAvailable) return null;
-    const embedded = wallets?.find((w: any) => isPrivyEmbeddedWallet(w));
+    const embedded = solanaWallets?.find((w: any) => isPrivyEmbeddedWallet(w));
     return embedded || null;
-  }, [wallets, isPrivyEmbeddedWallet, privyAvailable]);
+  }, [solanaWallets, isPrivyEmbeddedWallet, privyAvailable]);
 
   const getSolanaWallet = useCallback(() => getEmbeddedWallet(), [getEmbeddedWallet]);
 
   const walletAddress = getEmbeddedWallet()?.address || null;
-  const isWalletReady = privyAvailable && ready && authenticated && !!walletAddress;
+  const isWalletReady = privyAvailable && privy.ready && privy.authenticated && !!walletAddress;
 
   const signAndSendTransaction = useCallback(
     async (
@@ -68,7 +65,7 @@ export function useSolanaWalletWithPrivy() {
     ): Promise<{ signature: string; confirmed: boolean }> => {
       let wallet: any;
       if (options?.walletAddress) {
-        wallet = wallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
+        wallet = solanaWallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
       } else {
         wallet = getSolanaWallet();
       }
@@ -126,7 +123,7 @@ export function useSolanaWalletWithPrivy() {
         setIsConnecting(false);
       }
     },
-    [getSolanaWallet, getConnection, privySolana, wallets]
+    [getSolanaWallet, getConnection, privySolana, solanaWallets]
   );
 
   const getBalance = useCallback(async (): Promise<number> => {
@@ -154,19 +151,19 @@ export function useSolanaWalletWithPrivy() {
     () => ({
       rpcUrl,
       rpcSource,
-      privyReady: ready,
-      authenticated,
+      privyReady: privy.ready,
+      authenticated: privy.authenticated,
       walletAddress,
       walletSource: walletAddress ? "useWallets_embedded" : "none",
-      wallets: (wallets ?? []).map((w: any) => ({
+      wallets: (solanaWallets ?? []).map((w: any) => ({
         walletClientType: w?.walletClientType,
         standardName: w?.standardWallet?.name,
         address: w?.address,
       })),
-      privyUserWallet: (user as any)?.wallet?.address ?? null,
-      linkedAccountsCount: (user as any)?.linkedAccounts?.length ?? 0,
+      privyUserWallet: privy.user?.wallet?.address ?? null,
+      linkedAccountsCount: privy.user?.linkedAccounts?.length ?? 0,
     }),
-    [rpcUrl, rpcSource, ready, authenticated, walletAddress, wallets, user]
+    [rpcUrl, rpcSource, privy.ready, privy.authenticated, walletAddress, solanaWallets, privy.user]
   );
 
   const getTokenBalance = useCallback(async (mintAddress: string): Promise<number> => {
@@ -185,8 +182,6 @@ export function useSolanaWalletWithPrivy() {
 
       const decimals = (accounts.value[0]?.account.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
       const balance = Number(rawTotal) / (10 ** decimals);
-
-      console.log(`[getTokenBalance] ${mintAddress.slice(0,8)}… raw: ${rawTotal.toString()}, decimals: ${decimals}, balance: ${balance}`);
       return balance;
     } catch (err) {
       console.error("[getTokenBalance] Error:", err);
@@ -211,8 +206,6 @@ export function useSolanaWalletWithPrivy() {
       const decimals = (accounts.value[0]?.account.data as any)?.parsed?.info?.tokenAmount?.decimals ?? 6;
       const balance = Number(rawTotal) / (10 ** decimals);
       const rawAmount = rawTotal.toString();
-
-      console.log(`[getTokenBalanceRaw] ${mintAddress.slice(0,8)}… raw: ${rawAmount}, decimals: ${decimals}, balance: ${balance}`);
       return { balance, decimals, rawAmount };
     } catch (err) {
       console.error("[getTokenBalanceRaw] Error:", err);
@@ -227,7 +220,7 @@ export function useSolanaWalletWithPrivy() {
     ): Promise<T> => {
       let wallet: any;
       if (options?.walletAddress) {
-        wallet = wallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
+        wallet = solanaWallets?.find((w: any) => w.address === options.walletAddress) || getSolanaWallet();
       } else {
         wallet = getSolanaWallet();
       }
@@ -240,11 +233,6 @@ export function useSolanaWalletWithPrivy() {
       }
 
       const serializedTx = transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
-
-      console.log("[useSolanaWalletPrivy] Sign-only via Privy signTransaction", {
-        walletAddress: wallet.address,
-        txBytes: serializedTx.length,
-      });
 
       const result = await privySign.signTransaction({
         transaction: serializedTx,
@@ -265,7 +253,7 @@ export function useSolanaWalletWithPrivy() {
         return Transaction.from(signedBytes) as T;
       }
     },
-    [getSolanaWallet, privySign, wallets]
+    [getSolanaWallet, privySign, solanaWallets]
   );
 
   if (!privyAvailable) return FALLBACK;
