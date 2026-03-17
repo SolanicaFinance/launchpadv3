@@ -99,10 +99,11 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="sticky top-0 z-50 flex items-center gap-3 md:gap-4 lg:gap-5 px-3 md:px-5 lg:px-6"
+        className="fixed inset-x-0 top-0 z-50 flex items-center gap-3 px-3 md:sticky md:gap-4 lg:gap-5 md:px-5 lg:px-6"
         style={{
-          height: "56px",
-          background: "hsl(0 0% 0% / 0.88)",
+          height: "calc(56px + env(safe-area-inset-top, 0px))",
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          background: "hsl(0 0% 0% / 0.92)",
           backdropFilter: "blur(20px) saturate(1.4)",
           WebkitBackdropFilter: "blur(20px) saturate(1.4)",
           borderBottom: "1px solid hsl(84 81% 44% / 0.12)",
