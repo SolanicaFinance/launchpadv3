@@ -349,7 +349,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
           {/* HOLDERS - moved to absolute top-right */}
 
           {/* VOL 24H */}
-          <div className="col-span-2">
+          <div>
             <span className="uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
               Vol 24h
             </span>
