@@ -1,0 +1,1 @@
+UPDATE vanity_keypairs SET status = 'available' WHERE status = 'reserved';
