@@ -93,13 +93,15 @@ function useAuthPrivy(): UseAuthReturn {
 export function useAuth(): UseAuthReturn {
   const privyAvailable = usePrivyAvailable();
 
-  // When Privy is not available, return fallback immediately
-  // This is safe because hook count is constant per component instance —
-  // privyAvailable never changes after mount (context value is static per provider tree).
   if (!privyAvailable) {
     return FALLBACK;
   }
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useAuthPrivy();
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useAuthPrivy();
+  } catch (error) {
+    console.warn("[useAuth] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }

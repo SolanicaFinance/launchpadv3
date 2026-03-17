@@ -79,6 +79,12 @@ function useDelegatedWalletInner() {
 export function useDelegatedWallet() {
   const privyAvailable = usePrivyAvailable();
   if (!privyAvailable) return FALLBACK;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useDelegatedWalletInner();
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useDelegatedWalletInner();
+  } catch (error) {
+    console.warn("[useDelegatedWallet] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }
