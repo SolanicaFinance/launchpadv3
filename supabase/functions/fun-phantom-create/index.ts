@@ -332,6 +332,8 @@ Deno.serve(async (req) => {
           devBuySol, // Dev buy amount - atomic with pool creation to prevent frontrunning
           useVanityAddress: true, // Use pre-generated vanity addresses from pool
           specificVanityId: resolvedVanityId, // Use pre-reserved or user-specified keypair
+          vanityPublicKey: resolvedVanityPublicKey, // Pre-decrypted in edge function
+          vanitySecretKeyHex: resolvedVanitySecretKeyHex, // Pre-decrypted secret key hex
         }),
       });
 
