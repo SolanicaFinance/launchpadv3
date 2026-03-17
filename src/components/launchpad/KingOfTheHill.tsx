@@ -190,6 +190,15 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         />
       )}
 
+      {/* Holders badge - top right corner */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-2 py-1 rounded-lg"
+        style={{ background: "rgba(15,15,26,0.7)", border: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(8px)" }}>
+        <Users className="flex-shrink-0" style={{ width: "12px", height: "12px", color: "#4A4A5A" }} />
+        <span className="font-mono font-bold" style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)" }}>
+          {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
+        </span>
+      </div>
+
       {/* Cosmic speck overlay */}
       <div
         className="absolute inset-0 pointer-events-none rounded-[20px] overflow-hidden"
