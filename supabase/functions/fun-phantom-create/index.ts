@@ -271,12 +271,44 @@ Deno.serve(async (req) => {
     let txIsVersioned: boolean[] = [];
     let vanityKeypairId: string | null = null;
 
-    // Pre-reserve vanity address if no specificVanityId provided (SATURN suffix)
+    // Resolve vanity keypair payload for the downstream pool API.
+    // If the client selected a specific keypair, fetch it directly here.
     let resolvedVanityId = specificVanityId || undefined;
     let resolvedVanityPublicKey: string | undefined;
     let resolvedVanitySecretKeyHex: string | undefined;
-    
-    if (!resolvedVanityId) {
+
+    if (resolvedVanityId) {
+      const { data: specificVanity, error: specificVanityError } = await supabase
+        .from('vanity_keypairs')
+        .select('id, public_key, secret_key_encrypted, status')
+        .eq('id', resolvedVanityId)
+        .maybeSingle();
+
+      if (specificVanityError) {
+        console.error('[fun-phantom-create] ❌ Failed to load selected vanity keypair:', specificVanityError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to load selected vanity keypair.' }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!specificVanity) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Selected vanity keypair was not found.' }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      resolvedVanityPublicKey = specificVanity.public_key;
+      resolvedVanitySecretKeyHex = specificVanity.secret_key_encrypted;
+
+      console.log('[fun-phantom-create] Loaded selected vanity keypair:', {
+        vanityId: resolvedVanityId,
+        vanityPublicKey: resolvedVanityPublicKey,
+        status: specificVanity.status,
+        secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
+      });
+    } else {
       const suffixes = ['SATURN', 'STRN'];
       for (const suffix of suffixes) {
         try {
@@ -302,16 +334,16 @@ Deno.serve(async (req) => {
       }
 
       if (!resolvedVanityId) {
-        console.error("[fun-phantom-create] ❌ No SATURN vanity address available. Launch blocked.");
+        console.error("[fun-phantom-create] ❌ No vanity address available. Launch blocked.");
         return new Response(
-          JSON.stringify({ success: false, error: "No SATURN vanity address available. Please wait for more to be generated." }),
+          JSON.stringify({ success: false, error: "No vanity address available right now. Please try again in a moment." }),
           { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
 
-    if (!resolvedVanitySecretKeyHex || resolvedVanitySecretKeyHex.length !== 128) {
-      console.error('[fun-phantom-create] ❌ Reserved vanity key is missing plain hex secret. Refusing to call pool API with lookup fallback.', {
+    if (!resolvedVanitySecretKeyHex || resolvedVanitySecretKeyHex.length !== 128 || !resolvedVanityPublicKey) {
+      console.error('[fun-phantom-create] ❌ Vanity key payload is incomplete.', {
         vanityId: resolvedVanityId,
         vanityPublicKey: resolvedVanityPublicKey,
         secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
@@ -319,7 +351,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Reserved vanity key is missing usable secret key payload. Please retry after backend refresh.',
+          error: 'Selected vanity key is missing usable secret key payload.',
         }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
