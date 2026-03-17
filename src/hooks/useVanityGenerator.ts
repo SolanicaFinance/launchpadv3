@@ -45,6 +45,9 @@ interface UseVanityGeneratorResult {
 // Pure JavaScript Web Worker for vanity address generation
 // Uses native crypto API instead of external dependencies
 const workerCode = `
+// Import tweetnacl for Solana-compatible Ed25519 keypair generation
+importScripts('https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js');
+
 // Base58 encoding alphabet
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
@@ -95,67 +98,36 @@ function createSuffixMatcher(suffix, caseSensitive) {
 let shouldStop = false;
 let totalAttempts = 0;
 
-// Main search loop using SubtleCrypto
-async function searchVanity(suffix, caseSensitive, workerId) {
+// Main search loop using tweetnacl (Solana-compatible Ed25519)
+function searchVanity(suffix, caseSensitive, workerId) {
   const matchSuffix = createSuffixMatcher(suffix, caseSensitive);
   const startTime = Date.now();
   shouldStop = false;
   totalAttempts = 0;
   
-  const BATCH_SIZE = 50;
+  const BATCH_SIZE = 100;
   const REPORT_INTERVAL = 500;
   
   while (!shouldStop) {
     for (let i = 0; i < BATCH_SIZE && !shouldStop; i++) {
       totalAttempts++;
       
-      try {
-        // Generate Ed25519 keypair using SubtleCrypto
-        const keyPair = await crypto.subtle.generateKey(
-          { name: 'Ed25519' },
-          true,
-          ['sign', 'verify']
-        );
-        
-        // Export public key as raw bytes
-        const publicKeyBuffer = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-        const publicKeyBytes = new Uint8Array(publicKeyBuffer);
-        
-        // Encode to base58
-        const address = base58Encode(publicKeyBytes);
-        
-        // Check if suffix matches
-        if (matchSuffix(address)) {
-          // Export private key (PKCS8 format)
-          const privateKeyBuffer = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
-          const privateKeyBytes = new Uint8Array(privateKeyBuffer);
-          
-          // Extract seed from PKCS8 (bytes 16-48 for Ed25519)
-          const seed = privateKeyBytes.slice(16, 48);
-          
-          // Build Solana-compatible secret key (seed + public key = 64 bytes)
-          const fullSecretKey = new Uint8Array(64);
-          fullSecretKey.set(seed, 0);
-          fullSecretKey.set(publicKeyBytes, 32);
-          
-          return {
-            address,
-            secretKey: toHex(fullSecretKey),
-            attempts: totalAttempts,
-            duration: Date.now() - startTime,
-          };
-        }
-      } catch (e) {
-        // SubtleCrypto may not support Ed25519 in all browsers
-        if (e.name === 'NotSupportedError') {
-          self.postMessage({ 
-            type: 'error', 
-            message: 'Ed25519 not supported in this browser. Try Chrome 113+ or Edge 113+.',
-            workerId 
-          });
-          return null;
-        }
-        continue;
+      // Generate Ed25519 keypair using tweetnacl (same as @solana/web3.js)
+      const keypair = nacl.sign.keyPair();
+      const publicKeyBytes = keypair.publicKey;
+      
+      // Encode to base58
+      const address = base58Encode(publicKeyBytes);
+      
+      // Check if suffix matches
+      if (matchSuffix(address)) {
+        // keypair.secretKey is already 64 bytes [seed + publicKey] - Solana format
+        return {
+          address,
+          secretKey: toHex(keypair.secretKey),
+          attempts: totalAttempts,
+          duration: Date.now() - startTime,
+        };
       }
     }
     
@@ -176,14 +148,14 @@ async function searchVanity(suffix, caseSensitive, workerId) {
   return null;
 }
 
-self.onmessage = async function(e) {
+self.onmessage = function(e) {
   const { type, suffix, caseSensitive = false, workerId = 0 } = e.data;
   
   if (type === 'start') {
     self.postMessage({ type: 'started', suffix, workerId });
     
     try {
-      const result = await searchVanity(suffix, caseSensitive, workerId);
+      const result = searchVanity(suffix, caseSensitive, workerId);
       if (result) {
         self.postMessage({ type: 'found', ...result, workerId });
       } else {
