@@ -1,29 +1,17 @@
 import { useState, useEffect, useId } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { subscribeSolPrice, getCachedSolPrice } from "@/lib/solPriceService";
 
 interface PriceData {
   price: number;
   change24h: number;
 }
 
-const CACHE_KEY = 'sol_price_display_cache';
-const CACHE_TTL = 30000; // 30 seconds
-
 export function SolPriceDisplay() {
-  const [priceData, setPriceData] = useState<PriceData | null>(() => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < 120_000) {
-          return { price: parsed.price, change24h: parsed.change24h };
-        }
-        localStorage.removeItem(CACHE_KEY);
-      }
-    } catch {}
-    return null;
-  });
+  const cached = getCachedSolPrice();
+  const [priceData, setPriceData] = useState<PriceData | null>(
+    cached ? { price: cached.price, change24h: cached.change24h } : null
+  );
   const [isLoading, setIsLoading] = useState(!priceData);
   const svgId = useId().replace(/:/g, "");
   const grad1 = `${svgId}-solGrad1`;
@@ -31,38 +19,11 @@ export function SolPriceDisplay() {
   const grad3 = `${svgId}-solGrad3`;
 
   useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('sol-price');
-        if (error) throw error;
-
-        if (data?.price && typeof data.price === 'number' && data.price > 0) {
-          if (data.stale && data.source === 'fallback') {
-            console.debug('[SolPriceDisplay] Ignoring stale fallback price:', data.price);
-            return;
-          }
-
-          const newData = {
-            price: data.price,
-            change24h: data.change24h || 0,
-          };
-          setPriceData(newData);
-          setIsLoading(false);
-
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            ...newData,
-            timestamp: Date.now(),
-          }));
-        }
-      } catch (error) {
-        console.debug('[SolPriceDisplay] Error:', error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchPrice();
-    const interval = setInterval(fetchPrice, CACHE_TTL);
-    return () => clearInterval(interval);
+    const unsubscribe = subscribeSolPrice((data) => {
+      setPriceData({ price: data.price, change24h: data.change24h });
+      setIsLoading(false);
+    });
+    return unsubscribe;
   }, []);
 
   if (isLoading || !priceData) {
