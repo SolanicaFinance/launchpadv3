@@ -29,8 +29,8 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 }
 
 export default function BrandAssetsPage() {
-  const [headerText, setHeaderText] = useState(BRAND.name);
-  const [headerSubtext, setHeaderSubtext] = useState(BRAND.tagline);
+  const [headerText, setHeaderText] = useState<string>(BRAND.name);
+  const [headerSubtext, setHeaderSubtext] = useState<string>(BRAND.tagline);
   const [assets, setAssets] = useState<GeneratedAsset[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
