@@ -631,31 +631,37 @@ export function KingOfTheHill() {
 
   return (
     <div className="w-full">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4 md:mb-4">
-        <div className="flex items-center gap-2.5">
+      {/* ── Header — sticky on mobile ── */}
+      <div
+        className="flex items-center justify-between mb-3 md:mb-4 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:z-auto md:py-0 md:px-0 md:mx-0 sticky top-0 z-[100] py-2.5 px-3 -mx-4 border-b border-white/[0.04]"
+        style={{
+          background: "rgba(0,0,0,0.85)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        <div className="flex items-center gap-2">
           <img
             src={BRAND.logoPath}
             alt={BRAND.shortName}
-            className="w-7 h-7 md:w-9 md:h-9 object-contain"
+            className="w-6 h-6 md:w-9 md:h-9 object-contain"
             style={{ filter: "drop-shadow(0 0 10px rgba(245,158,11,0.25))" }}
           />
           <div>
             <h2
               className="font-black uppercase tracking-[0.1em]"
-              style={{ fontSize: "clamp(14px, 3.5vw, 16px)", color: "#FFFFFF", textShadow: "0 0 24px rgba(245,158,11,0.12)", lineHeight: 1.3 }}
+              style={{ fontSize: "clamp(12px, 3vw, 16px)", color: "#FFFFFF", textShadow: "0 0 24px rgba(245,158,11,0.12)", lineHeight: 1.2 }}
             >
               King of the Hill
             </h2>
-            <span className="tracking-wide" style={{ fontSize: "11px", color: "#6E6E80" }}>
+            <span className="tracking-wide" style={{ fontSize: "10px", color: "#6E6E80" }}>
               Soon to Graduate
             </span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 md:gap-2">
-          {/* Quick buy amount editor */}
-          <div className="flex items-center gap-1 px-2 py-1.5 md:px-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <Zap style={{ width: "11px", height: "11px", color: "#F0B90B" }} />
+          <div className="flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <Zap style={{ width: "10px", height: "10px", color: "#F0B90B" }} />
             {editingQuickBuy ? (
               <input
                 ref={quickBuyInputRef}
@@ -665,27 +671,27 @@ export function KingOfTheHill() {
                 onChange={(e) => setQuickBuyInput(e.target.value.replace(/[^0-9.]/g, ""))}
                 onBlur={commitQuickBuy}
                 onKeyDown={(e) => { if (e.key === "Enter") commitQuickBuy(); if (e.key === "Escape") { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(false); } }}
-                className="w-12 bg-transparent outline-none font-mono font-bold"
-                style={{ fontSize: "11px", color: "#FFFFFF", borderBottom: "1px solid rgba(0,212,255,0.4)" }}
+                className="w-10 bg-transparent outline-none font-mono font-bold"
+                style={{ fontSize: "10px", color: "#FFFFFF", borderBottom: "1px solid rgba(0,212,255,0.4)" }}
               />
             ) : (
               <button
                 onClick={() => { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(true); }}
                 className="flex items-center gap-0.5 font-mono font-bold transition-colors"
-                style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)" }}
+                style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)" }}
               >
                 {quickBuyAmount} SOL
-                <Pencil style={{ width: "10px", height: "10px", color: "#4A4A5A" }} />
+                <Pencil style={{ width: "9px", height: "9px", color: "#4A4A5A" }} />
               </button>
             )}
           </div>
           <Link
             to="/agents/leaderboard"
-            className="flex items-center gap-1 px-2 py-1.5 md:px-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200"
+            className="flex items-center gap-0.5 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl font-semibold whitespace-nowrap transition-all duration-200"
             style={{ fontSize: "clamp(9px, 2.2vw, 11px)", color: "#00D4FF", background: "rgba(0,212,255,0.06)", border: "1px solid rgba(0,212,255,0.12)" }}
           >
-            <span className="hidden xs:inline">View Full </span>Leaderboard
-            <ArrowUpRight style={{ width: "11px", height: "11px" }} />
+            <span className="hidden sm:inline">Full </span>Board
+            <ArrowUpRight style={{ width: "10px", height: "10px" }} />
           </Link>
         </div>
       </div>
