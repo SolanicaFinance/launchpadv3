@@ -232,10 +232,11 @@ Deno.serve(async (req) => {
     // "URI too long" due to older metadata URI construction.
     // To make preview + current deployment consistent, fallback to the request Origin.
     const origin = req.headers.get("origin")?.replace(/\/$/, "") || "";
-    const configuredApiUrl =
+    const configuredApiUrl = (
       Deno.env.get("METEORA_API_URL") ||
       Deno.env.get("VITE_METEORA_API_URL") ||
-      "";
+      ""
+    ).replace(/\/$/, "");
 
     // Prefer the configured API URL (Vercel deployment with /api routes).
     // Only fall back to origin if no explicit URL is set.
