@@ -231,7 +231,25 @@ export async function getSpecificVanityAddress(keypairId: string): Promise<{
   
   console.log(`[vanity] Found specific vanity keypair: ${data.public_key} (status: ${data.status})`);
   
-  // Decrypt the secret key
+  // Try plain hex first (keys are now stored unencrypted)
+  try {
+    const plainBytes = Buffer.from(data.secret_key_encrypted, 'hex');
+    if (plainBytes.length === 64) {
+      const keypair = Keypair.fromSecretKey(new Uint8Array(plainBytes));
+      if (keypair.publicKey.toBase58() === data.public_key) {
+        console.log(`[vanity] ✅ Plain hex keypair validated for ${data.public_key}`);
+        return {
+          id: data.id,
+          publicKey: data.public_key,
+          keypair,
+        };
+      }
+    }
+  } catch (plainErr) {
+    console.warn(`[vanity] Plain hex attempt failed, trying XOR decrypt...`);
+  }
+  
+  // Fallback: XOR decrypt (legacy encrypted keys)
   const secretKeyBytes = decryptSecretKey(data.secret_key_encrypted, encryptionKey);
   const keypair = Keypair.fromSecretKey(secretKeyBytes);
   
