@@ -13,10 +13,30 @@ import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
 import { BRAND } from "@/config/branding";
 
-// Lazy load Privy - it's a heavy dependency
-const PrivyProvider = lazy(() =>
-  import("@privy-io/react-auth").then((mod) => ({ default: mod.PrivyProvider }))
-);
+// Lazy load Privy AND bundle a ready-gate so we only set privyAvailable=true
+// after Privy's internal contexts (wagmi, etc.) are fully initialized.
+const PrivyProviderWithGate = lazy(async () => {
+  const mod = await import("@privy-io/react-auth");
+
+  function InnerReadyGate({ children }: { children: ReactNode }) {
+    const { ready } = mod.usePrivy();
+    return (
+      <PrivyAvailableContext.Provider value={ready}>
+        {children}
+      </PrivyAvailableContext.Provider>
+    );
+  }
+
+  function WrappedProvider({ children, ...props }: any) {
+    return (
+      <mod.PrivyProvider {...props}>
+        <InnerReadyGate>{children}</InnerReadyGate>
+      </mod.PrivyProvider>
+    );
+  }
+
+  return { default: WrappedProvider };
+});
 
 // Context to track if Privy is available
 const PrivyAvailableContext = createContext(false);
