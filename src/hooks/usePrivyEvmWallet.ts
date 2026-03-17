@@ -45,6 +45,12 @@ function usePrivyEvmWalletInner() {
 export function usePrivyEvmWallet() {
   const privyAvailable = usePrivyAvailable();
   if (!privyAvailable) return FALLBACK;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return usePrivyEvmWalletInner();
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return usePrivyEvmWalletInner();
+  } catch (error) {
+    console.warn("[usePrivyEvmWallet] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }

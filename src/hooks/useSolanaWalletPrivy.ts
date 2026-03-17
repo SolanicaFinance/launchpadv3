@@ -291,6 +291,12 @@ function useSolanaWalletWithPrivyInner() {
 export function useSolanaWalletWithPrivy() {
   const privyAvailable = usePrivyAvailable();
   if (!privyAvailable) return FALLBACK;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useSolanaWalletWithPrivyInner();
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useSolanaWalletWithPrivyInner();
+  } catch (error) {
+    console.warn("[useSolanaWalletWithPrivy] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }

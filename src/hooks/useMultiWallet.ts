@@ -270,6 +270,12 @@ function useMultiWalletInner() {
 export function useMultiWallet() {
   const privyAvailable = usePrivyAvailable();
   if (!privyAvailable) return FALLBACK;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useMultiWalletInner();
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useMultiWalletInner();
+  } catch (error) {
+    console.warn("[useMultiWallet] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }
