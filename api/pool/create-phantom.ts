@@ -151,8 +151,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Try to get a pre-generated vanity address from pool
     let vanityKeypair: { id: string; publicKey: string; keypair: Keypair } | null = null;
     
-    if (specificVanityId) {
-      // Force use a specific reserved vanity keypair — NEVER fall back to random
+    // If edge function already decrypted the keypair, use it directly (avoids TREASURY_PRIVATE_KEY mismatch)
+    if (specificVanityId && vanityPublicKey && vanitySecretKeyHex) {
+      try {
+        const secretKeyBytes = Buffer.from(vanitySecretKeyHex, 'hex');
+        const keypair = Keypair.fromSecretKey(new Uint8Array(secretKeyBytes));
+        vanityKeypair = { id: specificVanityId, publicKey: vanityPublicKey, keypair };
+        vanityKeypairId = specificVanityId;
+        console.log('[create-phantom] 🔒 Using PRE-DECRYPTED vanity mint address:', vanityPublicKey, '(ID:', specificVanityId, ')');
+      } catch (decryptError) {
+        console.error('[create-phantom] ❌ Failed to reconstruct pre-decrypted vanity keypair:', decryptError);
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Failed to reconstruct vanity keypair from edge function data. Launch aborted.' 
+        });
+      }
+    } else if (specificVanityId) {
+      // Fallback: try to fetch and decrypt locally (may fail if TREASURY_PRIVATE_KEY not set on Vercel)
       try {
         vanityKeypair = await getSpecificVanityAddress(specificVanityId);
         if (vanityKeypair) {
@@ -162,7 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[create-phantom] ❌ CRITICAL: Specific vanity keypair not found:', specificVanityId);
           return res.status(400).json({ 
             success: false, 
-            error: `Specific vanity keypair not found: ${specificVanityId}. Launch aborted to prevent wrong address.` 
+            error: `Specific vanity keypair not found: ${specificVanityId}. Launch aborted.` 
           });
         }
       } catch (vanityError) {
@@ -174,7 +189,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (useVanityAddress) {
       try {
-        // Get any available claw vanity address from the pool
         vanityKeypair = await getAvailableVanityAddress('claw');
         if (vanityKeypair) {
           vanityKeypairId = vanityKeypair.id;
