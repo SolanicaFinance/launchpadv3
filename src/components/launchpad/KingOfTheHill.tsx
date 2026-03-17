@@ -178,259 +178,173 @@ function MobileKingCard({ token, rank, quickBuyAmount, sparklineData }: { token:
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         border: `1px solid ${pressed ? r.hoverBorderColor : r.borderColor}`,
-        borderRadius: "18px",
-        padding: "16px",
+        borderRadius: "14px",
+        padding: "12px",
         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        transform: pressed ? "scale(1.015)" : "scale(1)",
+        transform: pressed ? "scale(1.02)" : "scale(1)",
         boxShadow: pressed
-          ? `0 0 24px ${r.glowColor}, 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)`
-          : `0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)`,
+          ? `0 0 20px ${r.glowColor}, 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)`
+          : `0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)`,
       }}
     >
       {/* Top edge glow for #1 */}
       {r.king && (
         <div
-          className="absolute -top-px left-6 right-6 h-[1px] rounded-full"
-          style={{
-            background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.5), rgba(255,215,0,0.6), rgba(245,158,11,0.5), transparent)",
-          }}
+          className="absolute -top-px left-4 right-4 h-[1px] rounded-full"
+          style={{ background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.5), rgba(255,215,0,0.6), rgba(245,158,11,0.5), transparent)" }}
         />
       )}
 
-      {/* ── Row 1: Rank + Avatar + Name + Holders badge ── */}
-      <div className="relative z-10 flex items-center gap-3 mb-3">
-        {/* Rank Badge */}
+      {/* ── Row 1: Rank + Avatar + Name/Ticker + Holders ── */}
+      <div className="relative z-10 flex items-center gap-2.5 mb-2">
+        {/* Rank Badge — compact */}
         <div
-          className="flex-shrink-0 flex items-center justify-center rounded-xl font-black text-white relative"
+          className="flex-shrink-0 flex items-center justify-center rounded-lg font-black text-white relative"
           style={{
             background: r.badgeBg,
             boxShadow: r.badgeShadow,
-            width: "36px",
-            height: "36px",
-            fontSize: "14px",
+            width: "30px",
+            height: "30px",
+            fontSize: "12px",
             animation: r.crownPulse ? "koth-crown-pulse 2s ease-in-out infinite" : undefined,
           }}
         >
           {r.label}
           {r.king && (
-            <Crown
-              className="absolute -top-2 -right-1.5"
-              style={{ width: "14px", height: "14px", color: "#FFD700", filter: "drop-shadow(0 0 4px rgba(255,215,0,0.5))" }}
-            />
+            <Crown className="absolute -top-1.5 -right-1" style={{ width: "12px", height: "12px", color: "#FFD700", filter: "drop-shadow(0 0 3px rgba(255,215,0,0.5))" }} />
           )}
         </div>
 
-        {/* Token Icon — 48px for mobile readability */}
+        {/* Token Icon — 40px */}
         <div
           className="flex-shrink-0 overflow-hidden"
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "14px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: pressed ? "0 0 12px rgba(0,212,255,0.15)" : "none",
-          }}
+          style={{ width: "40px", height: "40px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)" }}
         >
-          <OptimizedTokenImage
-            src={token.image_url}
-            alt={token.name}
-            fallbackText={token.ticker}
-            size={96}
-            className="w-full h-full object-cover"
-          />
+          <OptimizedTokenImage src={token.image_url} alt={token.name} fallbackText={token.ticker} size={80} className="w-full h-full object-cover" />
         </div>
 
-        {/* Name + ticker + badges */}
+        {/* Name + ticker + X link inline */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold leading-tight truncate max-w-[140px]" style={{ color: "#FFFFFF", fontSize: "17px" }}>
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold leading-tight truncate" style={{ color: "#FFFFFF", fontSize: "clamp(14px, 3.8vw, 16px)" }}>
               {token.name}
             </span>
-            <span className="font-mono flex-shrink-0" style={{ color: "#6E6E80", fontSize: "13px" }}>
+            <span className="font-mono flex-shrink-0" style={{ color: "#6E6E80", fontSize: "clamp(11px, 3vw, 13px)" }}>
               ${token.ticker}
             </span>
             {isTrader && (
-              <span
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wider flex-shrink-0"
-                style={{ background: "rgba(0,212,255,0.08)", color: "#00D4FF", border: "1px solid rgba(0,212,255,0.12)" }}
-              >
-                <Bot className="w-3 h-3 inline mr-0.5 -mt-px" />Trader
+              <span className="text-[8px] font-semibold px-1 py-0.5 rounded flex-shrink-0" style={{ background: "rgba(0,212,255,0.08)", color: "#00D4FF", border: "1px solid rgba(0,212,255,0.12)" }}>
+                <Bot className="w-2.5 h-2.5 inline -mt-px" />
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-1.5 mt-1">
-            <LiveAge createdAt={token.created_at} className="text-[10px]" />
             {isPump && <PumpBadge mintAddress={token.mint_address ?? undefined} showText={false} size="sm" className="px-0 py-0 bg-transparent hover:bg-transparent" />}
             {isBags && <BagsBadge mintAddress={token.mint_address ?? undefined} showText={false} />}
+          </div>
+          <div className="flex items-center gap-1 mt-0.5">
+            {xUser ? (
+              <>
+                {xAvatar && <img src={xAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" style={{ border: "1px solid rgba(255,255,255,0.1)" }} />}
+                <span className="truncate" style={{ fontSize: "11px", color: "#00D4FF" }}>@{xUser}</span>
+                {verified && <BadgeCheck className="w-3.5 h-3.5 flex-shrink-0" style={{ color: checkClr }} />}
+              </>
+            ) : (
+              <span style={{ fontSize: "11px", color: "#3A3A4A", fontStyle: "italic" }}>—</span>
+            )}
+            <LiveAge createdAt={token.created_at} className="text-[9px] ml-auto" />
           </div>
         </div>
 
         {/* Holders badge — top right */}
-        <div className="absolute top-0 right-0 z-20 flex items-center gap-1 px-2 py-1 rounded-lg"
+        <div className="absolute top-0 right-0 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md"
           style={{ background: "rgba(15,15,26,0.75)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
-          <Users className="flex-shrink-0" style={{ width: "13px", height: "13px", color: "#6E6E80" }} />
-          <span className="font-mono font-bold" style={{ fontSize: "13px", color: "rgba(255,255,255,0.9)" }}>
+          <Users className="flex-shrink-0" style={{ width: "11px", height: "11px", color: "#6E6E80" }} />
+          <span className="font-mono font-bold" style={{ fontSize: "11px", color: "rgba(255,255,255,0.9)" }}>
             {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
           </span>
         </div>
       </div>
 
-      {/* ── Row 2: Creator / X link ── */}
-      <div className="flex items-center gap-1.5 mb-3 pl-1">
-        <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#4A4A5A" }} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-        {xUser ? (
-          <>
-            {xAvatar && (
-              <img src={xAvatar} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" style={{ border: "1px solid rgba(255,255,255,0.1)" }} />
-            )}
-            <span className="truncate font-medium" style={{ fontSize: "13px", color: "#00D4FF" }}>@{xUser}</span>
-            {verified && <BadgeCheck className="w-4 h-4 flex-shrink-0" style={{ color: checkClr }} />}
-          </>
-        ) : (
-          <span style={{ fontSize: "13px", color: "#3A3A4A", fontStyle: "italic" }}>— None</span>
-        )}
-      </div>
-
-      {/* ── Row 3: Sparkline + Metrics ── */}
-      <div className="relative mb-3 rounded-xl overflow-hidden" style={{ minHeight: "80px" }}>
-        <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.5 }}>
+      {/* ── Row 2: Metrics — compact 2-col with sparkline bg ── */}
+      <div className="relative mb-2 rounded-lg overflow-hidden" style={{ height: "52px" }}>
+        <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.4 }}>
           <SparklineCanvas data={sparklineData && sparklineData.length >= 2 ? sparklineData : [1, 1]} seed={token.mint_address || token.id} />
         </div>
-        <div className="relative z-10 flex flex-col gap-2.5 p-3">
-          {/* MCAP */}
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="block uppercase tracking-[0.12em] font-mono font-semibold mb-0.5" style={{ fontSize: "10px", color: "#6E6E80" }}>
-                MCap
+        <div className="relative z-10 flex items-center justify-between h-full px-2.5 py-1.5">
+          <div>
+            <span className="block uppercase tracking-[0.1em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>MCap</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-black font-mono tabular-nums leading-none" style={{ fontSize: "clamp(15px, 4vw, 18px)", color: "#FFD700", textShadow: "0 0 10px rgba(255,215,0,0.2)" }}>
+                ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
               </span>
-              <div className="flex items-center gap-2">
-                <span
-                  className="font-black font-mono tabular-nums leading-none"
-                  style={{ fontSize: "20px", color: "#FFD700", textShadow: "0 0 12px rgba(255,215,0,0.25)" }}
-                >
-                  ${mcapUsd >= 1_000_000 ? `${(mcapUsd / 1_000_000).toFixed(2)}M` : mcapUsd >= 1_000 ? `${(mcapUsd / 1_000).toFixed(1)}K` : mcapUsd.toFixed(0)}
+              {change24h !== 0 && (
+                <span className="font-mono font-bold px-1.5 py-0.5 rounded" style={{
+                  fontSize: "10px",
+                  color: change24h > 0 ? "#00FFAA" : "#FF4D4D",
+                  background: change24h > 0 ? "rgba(0,255,170,0.1)" : "rgba(255,77,77,0.1)",
+                }}>
+                  {formatChange24h(change24h)}
                 </span>
-                {change24h !== 0 && (
-                  <span
-                    className="font-mono font-bold px-2 py-0.5 rounded-md"
-                    style={{
-                      fontSize: "12px",
-                      color: change24h > 0 ? "#00FFAA" : "#FF4D4D",
-                      background: change24h > 0 ? "rgba(0,255,170,0.12)" : "rgba(255,77,77,0.12)",
-                      border: `1px solid ${change24h > 0 ? "rgba(0,255,170,0.2)" : "rgba(255,77,77,0.2)"}`,
-                    }}
-                  >
-                    {formatChange24h(change24h)}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
-            {/* VOL 24H */}
-            <div className="text-right">
-              <span className="block uppercase tracking-[0.12em] font-mono font-semibold mb-0.5" style={{ fontSize: "10px", color: "#6E6E80" }}>
-                Vol 24h
-              </span>
-              <span className="font-mono font-bold" style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>
-                ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0
-                  ? (token.codex_volume_24h_usd >= 1_000_000
-                    ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M`
-                    : token.codex_volume_24h_usd >= 1_000
-                      ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K`
-                      : token.codex_volume_24h_usd.toFixed(0))
-                  : "0"}
-              </span>
-            </div>
+          </div>
+          <div className="text-right">
+            <span className="block uppercase tracking-[0.1em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>Vol 24h</span>
+            <span className="font-mono font-bold" style={{ fontSize: "clamp(13px, 3.5vw, 15px)", color: "rgba(255,255,255,0.9)" }}>
+              ${token.codex_volume_24h_usd != null && token.codex_volume_24h_usd > 0
+                ? (token.codex_volume_24h_usd >= 1_000_000
+                  ? `${(token.codex_volume_24h_usd / 1_000_000).toFixed(1)}M`
+                  : token.codex_volume_24h_usd >= 1_000
+                    ? `${(token.codex_volume_24h_usd / 1_000).toFixed(1)}K`
+                    : token.codex_volume_24h_usd.toFixed(0))
+                : "0"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* ── Row 4: Progress Bar ── */}
-      <div className="relative z-10 mb-3">
+      {/* ── Row 3: Progress Bar — compact ── */}
+      <div className="relative z-10 mb-2">
         <ProgressBar value={progress} mobile />
       </div>
 
-      {/* ── Row 5: Social + Actions ── */}
-      <div className="relative z-10 flex items-center justify-between pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        {/* Social icons — bigger tap targets */}
-        <div className="flex items-center gap-1">
+      {/* ── Row 4: Social + Actions — single compact row ── */}
+      <div className="relative z-10 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "8px" }}>
+        <div className="flex items-center gap-0.5">
           <TooltipProvider delayDuration={200}>
             {token.twitter_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.twitter_url!)} className="p-2 rounded-lg active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Twitter</TooltipContent>
-              </Tooltip>
+              <button onClick={(e) => handleSocialClick(e, token.twitter_url!)} className="p-1.5 rounded-md active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </button>
             )}
             {token.telegram_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.telegram_url!)} className="p-2 rounded-lg active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
-                    <MessageCircle className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Telegram</TooltipContent>
-              </Tooltip>
+              <button onClick={(e) => handleSocialClick(e, token.telegram_url!)} className="p-1.5 rounded-md active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
+                <MessageCircle className="w-3.5 h-3.5" />
+              </button>
             )}
             {token.website_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => handleSocialClick(e, token.website_url!)} className="p-2 rounded-lg active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
-                    <Globe className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Website</TooltipContent>
-              </Tooltip>
+              <button onClick={(e) => handleSocialClick(e, token.website_url!)} className="p-1.5 rounded-md active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
+                <Globe className="w-3.5 h-3.5" />
+              </button>
             )}
             {token.mint_address && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={handleCopyCA} className="p-2 rounded-lg active:bg-[rgba(0,255,170,0.1)]" style={{ color: copied ? "#00FFAA" : "#6E6E80" }}>
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">{copied ? "Copied!" : "Copy CA"}</TooltipContent>
-              </Tooltip>
+              <button onClick={handleCopyCA} className="p-1.5 rounded-md active:bg-[rgba(0,255,170,0.1)]" style={{ color: copied ? "#00FFAA" : "#6E6E80" }}>
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             )}
             {codexChartUrl && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(codexChartUrl, "_blank"); }} className="p-2 rounded-lg active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
-                    <BarChart3 className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[10px]">Chart</TooltipContent>
-              </Tooltip>
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(codexChartUrl, "_blank"); }} className="p-1.5 rounded-md active:bg-[rgba(0,212,255,0.1)]" style={{ color: "#6E6E80" }}>
+                <BarChart3 className="w-3.5 h-3.5" />
+              </button>
             )}
           </TooltipProvider>
         </div>
-
-        {/* Action buttons */}
-        <div
-          className="flex items-center gap-2"
-          onClickCapture={e => e.stopPropagation()}
-          onTouchStartCapture={e => e.stopPropagation()}
-        >
+        <div className="flex items-center gap-1.5" onClickCapture={e => e.stopPropagation()} onTouchStartCapture={e => e.stopPropagation()}>
           <button
             onClick={(e) => { e.stopPropagation(); navigate(url); }}
-            className="flex items-center justify-center gap-1.5 font-bold font-mono active:scale-[0.95]"
-            style={{
-              height: "36px",
-              padding: "0 14px",
-              borderRadius: "12px",
-              fontSize: "13px",
-              color: "#00D4FF",
-              background: "rgba(0,212,255,0.08)",
-              border: "1px solid rgba(0,212,255,0.18)",
-              letterSpacing: "0.3px",
-            }}
+            className="flex items-center justify-center gap-1 font-bold font-mono active:scale-[0.95]"
+            style={{ height: "32px", padding: "0 12px", borderRadius: "10px", fontSize: "12px", color: "#00D4FF", background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.18)" }}
           >
-            <TrendingUp style={{ width: "14px", height: "14px" }} />
-            Trade
+            <TrendingUp style={{ width: "12px", height: "12px" }} />Trade
           </button>
           <div onClick={e => e.stopPropagation()} className="king-quick-buy-wrapper">
             <PulseQuickBuyButton funToken={funToken} quickBuyAmount={quickBuyAmount} />
@@ -666,17 +580,17 @@ function DesktopKingCard({ token, rank, quickBuyAmount, sparklineData }: { token
 function KingCardSkeleton({ mobile }: { mobile?: boolean }) {
   if (mobile) {
     return (
-      <div className="flex flex-col rounded-[18px] w-full" style={{ background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)", border: "1px solid rgba(255,255,255,0.04)", padding: "16px" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <Skeleton className="w-9 h-9 rounded-xl" />
-          <Skeleton className="w-12 h-12 rounded-[14px]" />
-          <div className="flex-1 space-y-1.5"><Skeleton className="h-5 w-28" /><Skeleton className="h-3 w-16" /></div>
+      <div className="flex flex-col rounded-[14px] w-full" style={{ background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)", border: "1px solid rgba(255,255,255,0.04)", padding: "12px" }}>
+        <div className="flex items-center gap-2.5 mb-2">
+          <Skeleton className="w-[30px] h-[30px] rounded-lg" />
+          <Skeleton className="w-10 h-10 rounded-xl" />
+          <div className="flex-1 space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16" /></div>
         </div>
-        <Skeleton className="h-[80px] w-full rounded-xl mb-3" />
-        <Skeleton className="h-[8px] w-full rounded-full mb-3" />
+        <Skeleton className="h-[52px] w-full rounded-lg mb-2" />
+        <Skeleton className="h-[8px] w-full rounded-full mb-2" />
         <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-2"><Skeleton className="w-8 h-8 rounded-lg" /><Skeleton className="w-8 h-8 rounded-lg" /></div>
-          <div className="flex gap-2"><Skeleton className="h-9 w-20 rounded-xl" /><Skeleton className="h-9 w-24 rounded-xl" /></div>
+          <div className="flex gap-1"><Skeleton className="w-7 h-7 rounded-md" /><Skeleton className="w-7 h-7 rounded-md" /></div>
+          <div className="flex gap-1.5"><Skeleton className="h-8 w-16 rounded-lg" /><Skeleton className="h-8 w-20 rounded-lg" /></div>
         </div>
       </div>
     );
@@ -717,31 +631,37 @@ export function KingOfTheHill() {
 
   return (
     <div className="w-full">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4 md:mb-4">
-        <div className="flex items-center gap-2.5">
+      {/* ── Header — sticky on mobile ── */}
+      <div
+        className="flex items-center justify-between mb-3 md:mb-4 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:z-auto md:py-0 md:px-0 md:mx-0 sticky top-0 z-[100] py-2.5 px-3 -mx-4 border-b border-white/[0.04]"
+        style={{
+          background: "rgba(0,0,0,0.85)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        <div className="flex items-center gap-2">
           <img
             src={BRAND.logoPath}
             alt={BRAND.shortName}
-            className="w-7 h-7 md:w-9 md:h-9 object-contain"
+            className="w-6 h-6 md:w-9 md:h-9 object-contain"
             style={{ filter: "drop-shadow(0 0 10px rgba(245,158,11,0.25))" }}
           />
           <div>
             <h2
               className="font-black uppercase tracking-[0.1em]"
-              style={{ fontSize: "clamp(14px, 3.5vw, 16px)", color: "#FFFFFF", textShadow: "0 0 24px rgba(245,158,11,0.12)", lineHeight: 1.3 }}
+              style={{ fontSize: "clamp(12px, 3vw, 16px)", color: "#FFFFFF", textShadow: "0 0 24px rgba(245,158,11,0.12)", lineHeight: 1.2 }}
             >
               King of the Hill
             </h2>
-            <span className="tracking-wide" style={{ fontSize: "11px", color: "#6E6E80" }}>
+            <span className="tracking-wide" style={{ fontSize: "10px", color: "#6E6E80" }}>
               Soon to Graduate
             </span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 md:gap-2">
-          {/* Quick buy amount editor */}
-          <div className="flex items-center gap-1 px-2 py-1.5 md:px-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <Zap style={{ width: "11px", height: "11px", color: "#F0B90B" }} />
+          <div className="flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <Zap style={{ width: "10px", height: "10px", color: "#F0B90B" }} />
             {editingQuickBuy ? (
               <input
                 ref={quickBuyInputRef}
@@ -751,27 +671,27 @@ export function KingOfTheHill() {
                 onChange={(e) => setQuickBuyInput(e.target.value.replace(/[^0-9.]/g, ""))}
                 onBlur={commitQuickBuy}
                 onKeyDown={(e) => { if (e.key === "Enter") commitQuickBuy(); if (e.key === "Escape") { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(false); } }}
-                className="w-12 bg-transparent outline-none font-mono font-bold"
-                style={{ fontSize: "11px", color: "#FFFFFF", borderBottom: "1px solid rgba(0,212,255,0.4)" }}
+                className="w-10 bg-transparent outline-none font-mono font-bold"
+                style={{ fontSize: "10px", color: "#FFFFFF", borderBottom: "1px solid rgba(0,212,255,0.4)" }}
               />
             ) : (
               <button
                 onClick={() => { setQuickBuyInput(String(quickBuyAmount)); setEditingQuickBuy(true); }}
                 className="flex items-center gap-0.5 font-mono font-bold transition-colors"
-                style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)" }}
+                style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)" }}
               >
                 {quickBuyAmount} SOL
-                <Pencil style={{ width: "10px", height: "10px", color: "#4A4A5A" }} />
+                <Pencil style={{ width: "9px", height: "9px", color: "#4A4A5A" }} />
               </button>
             )}
           </div>
           <Link
             to="/agents/leaderboard"
-            className="flex items-center gap-1 px-2 py-1.5 md:px-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200"
+            className="flex items-center gap-0.5 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl font-semibold whitespace-nowrap transition-all duration-200"
             style={{ fontSize: "clamp(9px, 2.2vw, 11px)", color: "#00D4FF", background: "rgba(0,212,255,0.06)", border: "1px solid rgba(0,212,255,0.12)" }}
           >
-            <span className="hidden xs:inline">View Full </span>Leaderboard
-            <ArrowUpRight style={{ width: "11px", height: "11px" }} />
+            <span className="hidden sm:inline">Full </span>Board
+            <ArrowUpRight style={{ width: "10px", height: "10px" }} />
           </Link>
         </div>
       </div>
