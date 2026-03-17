@@ -190,6 +190,15 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         />
       )}
 
+      {/* Holders badge - top right corner */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-2 py-1 rounded-lg"
+        style={{ background: "rgba(15,15,26,0.7)", border: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(8px)" }}>
+        <Users className="flex-shrink-0" style={{ width: "12px", height: "12px", color: "#4A4A5A" }} />
+        <span className="font-mono font-bold" style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)" }}>
+          {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
+        </span>
+      </div>
+
       {/* Cosmic speck overlay */}
       <div
         className="absolute inset-0 pointer-events-none rounded-[20px] overflow-hidden"
@@ -304,7 +313,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         </div>
 
         {/* Metrics overlay */}
-        <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-2 p-2">
+        <div className="relative z-10 flex flex-col gap-2 p-2">
           {/* MCAP */}
           <div>
             <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
@@ -337,21 +346,10 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
             </div>
           </div>
 
-          {/* HOLDERS */}
-          <div className="text-right">
-            <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
-              Holders
-            </span>
-            <div className="flex items-center gap-1.5 justify-end">
-              <Users className="flex-shrink-0" style={{ width: "14px", height: "14px", color: "#4A4A5A" }} />
-              <span className="font-mono font-bold" style={{ fontSize: "14px", color: "#FFFFFF", opacity: 0.85 }}>
-                {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
-              </span>
-            </div>
-          </div>
+          {/* HOLDERS - moved to absolute top-right */}
 
           {/* VOL 24H */}
-          <div className="col-span-2">
+          <div>
             <span className="uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
               Vol 24h
             </span>
