@@ -159,8 +159,7 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
         </PrivyAvailableContext.Provider>
       }
     >
-      <PrivyAvailableContext.Provider value={true}>
-        <PrivyProvider
+      <PrivyProvider
           appId={appId}
           config={{
             loginMethods: ["wallet", "twitter", "email"],
@@ -225,9 +224,10 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
             },
           }}
         >
-          {children}
+          <PrivyAvailableContext.Provider value={true}>
+            {children}
+          </PrivyAvailableContext.Provider>
         </PrivyProvider>
-      </PrivyAvailableContext.Provider>
     </Suspense>
   );
 }
