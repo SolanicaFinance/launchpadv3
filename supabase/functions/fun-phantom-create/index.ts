@@ -329,8 +329,7 @@ Deno.serve(async (req) => {
           useVanityAddress: true,
           specificVanityId: resolvedVanityId,
           vanityPublicKey: resolvedVanityPublicKey,
-          vanitySecretKeyHex: resolvedVanitySecretKeyHex,
-          vanityEncryptedSecretKey: resolvedVanityEncryptedSecretKey,
+          vanitySecretKeyHex: resolvedVanitySecretKeyHex, // Plain hex, no decryption needed
         }),
       });
 
