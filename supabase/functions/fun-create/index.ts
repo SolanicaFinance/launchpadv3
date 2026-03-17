@@ -41,7 +41,7 @@ function bytesToBase64(bytes: Uint8Array): string {
 
 // Try to get a pre-mined vanity keypair — STRN suffix (case-sensitive uppercase)
 async function getVanityKeypair(supabase: any, encryptionKey: string): Promise<{ publicKey: string; privateKeyBase64: string; id: string } | null> {
-  const suffixes = ['STRN'];
+  const suffixes = ['SATURN', 'STRN'];
   for (const suffix of suffixes) {
     try {
       const { data, error } = await supabase.rpc('backend_reserve_vanity_address', {

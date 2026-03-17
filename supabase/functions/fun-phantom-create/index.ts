@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
     // Pre-reserve vanity address if no specificVanityId provided (STRN suffix)
     let resolvedVanityId = specificVanityId || undefined;
     if (!resolvedVanityId) {
-      const suffixes = ['STRN'];
+      const suffixes = ['SATURN', 'STRN'];
       for (const suffix of suffixes) {
         try {
           const { data: vData, error: vError } = await supabase.rpc('backend_reserve_vanity_address', {
