@@ -271,11 +271,9 @@ Deno.serve(async (req) => {
     let vanityKeypairId: string | null = null;
 
     // Pre-reserve vanity address if no specificVanityId provided (SATURN suffix)
-    // IMPORTANT: suffixes must be lowercase to match DB storage
     let resolvedVanityId = specificVanityId || undefined;
     let resolvedVanityPublicKey: string | undefined;
     let resolvedVanitySecretKeyHex: string | undefined;
-    let resolvedVanityEncryptedSecretKey: string | undefined;
     
     if (!resolvedVanityId) {
       const suffixes = ['SATURN', 'STRN'];
@@ -287,21 +285,10 @@ Deno.serve(async (req) => {
           if (!vError && vData && vData.length > 0) {
             resolvedVanityId = vData[0].id;
             resolvedVanityPublicKey = vData[0].public_key;
-            resolvedVanityEncryptedSecretKey = vData[0].secret_key_encrypted;
+            // secret_key_encrypted is now stored as PLAIN HEX — no decryption needed
+            resolvedVanitySecretKeyHex = vData[0].secret_key_encrypted;
             
-            // Keep direct decrypted payload for the normal path, but also pass the encrypted
-            // payload so the pool API can retry with legacy encryption keys if needed.
-            const encryptionKey = Deno.env.get('TREASURY_PRIVATE_KEY')?.slice(0, 32) || 'default-encryption-key-12345678';
-            const encryptedHex = vData[0].secret_key_encrypted;
-            const keyBytes = new TextEncoder().encode(encryptionKey);
-            const encryptedBytes = new Uint8Array(encryptedHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16)));
-            const decrypted = new Uint8Array(encryptedBytes.length);
-            for (let i = 0; i < encryptedBytes.length; i++) {
-              decrypted[i] = encryptedBytes[i] ^ keyBytes[i % keyBytes.length];
-            }
-            resolvedVanitySecretKeyHex = Array.from(decrypted).map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key);
+            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, '(plain hex, no decryption)');
             break;
           }
           console.log(`[fun-phantom-create] No vanity for suffix '${suffix}'`);
@@ -342,8 +329,7 @@ Deno.serve(async (req) => {
           useVanityAddress: true,
           specificVanityId: resolvedVanityId,
           vanityPublicKey: resolvedVanityPublicKey,
-          vanitySecretKeyHex: resolvedVanitySecretKeyHex,
-          vanityEncryptedSecretKey: resolvedVanityEncryptedSecretKey,
+          vanitySecretKeyHex: resolvedVanitySecretKeyHex, // Plain hex, no decryption needed
         }),
       });
 

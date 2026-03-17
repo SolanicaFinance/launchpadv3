@@ -7,19 +7,6 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-// Simple XOR encryption with a secret key (for basic protection)
-function encryptSecretKey(secretKeyHex: string, encryptionKey: string): string {
-  const keyBytes = new TextEncoder().encode(encryptionKey);
-  const dataBytes = new Uint8Array(secretKeyHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  
-  const encrypted = new Uint8Array(dataBytes.length);
-  for (let i = 0; i < dataBytes.length; i++) {
-    encrypted[i] = dataBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  
-  return Array.from(encrypted).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -44,39 +31,34 @@ Deno.serve(async (req) => {
     }
 
     // Validate suffix
-    if (suffix.length < 1 || suffix.length > 5) {
+    if (suffix.length < 1 || suffix.length > 8) {
       return new Response(
-        JSON.stringify({ error: 'Suffix must be 1-5 characters' }),
+        JSON.stringify({ error: 'Suffix must be 1-8 characters' }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    // Verify the public key ends with the suffix
-    if (!publicKey.toLowerCase().endsWith(suffix.toLowerCase())) {
+    // Verify the public key ends with the suffix (case-sensitive)
+    if (!publicKey.endsWith(suffix)) {
       return new Response(
         JSON.stringify({ error: 'Public key does not match suffix' }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    console.log('[vanity-save] Saving keypair with suffix:', suffix, 'address:', publicKey.slice(0, 8) + '...' + publicKey.slice(-8));
+    console.log('[vanity-save] Saving keypair (PLAIN HEX) with suffix:', suffix, 'address:', publicKey.slice(0, 8) + '...' + publicKey.slice(-8));
 
-    // Get service client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Encrypt the secret key with the treasury private key as encryption key
-    const encryptionKey = Deno.env.get('TREASURY_PRIVATE_KEY')?.slice(0, 32) || 'default-encryption-key-12345678';
-    const encryptedSecretKey = encryptSecretKey(secretKeyHex, encryptionKey);
-
-    // Save to database
+    // Store secret key as PLAIN HEX — no encryption
     const { data, error } = await supabase
       .from('vanity_keypairs')
       .insert({
-        suffix: suffix.toLowerCase(),
+        suffix: suffix,
         public_key: publicKey,
-        secret_key_encrypted: encryptedSecretKey,
+        secret_key_encrypted: secretKeyHex, // Plain hex, NOT encrypted
         status: 'available',
       })
       .select('id, suffix, public_key, status, created_at')

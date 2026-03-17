@@ -16,19 +16,6 @@ const BATCH_SIZE = 10; // Small batches for edge function CPU limits
 const CASE_SENSITIVE = true; // Case-sensitive matching — STRN uppercase only
 const YIELD_EVERY = 1; // Yield CPU every attempt to avoid compute limit
 
-// XOR encryption for secret key storage
-function encryptSecretKey(secretKeyHex: string, encryptionKey: string): string {
-  const keyBytes = new TextEncoder().encode(encryptionKey);
-  const dataBytes = new Uint8Array(secretKeyHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  
-  const encrypted = new Uint8Array(dataBytes.length);
-  for (let i = 0; i < dataBytes.length; i++) {
-    encrypted[i] = dataBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  
-  return Array.from(encrypted).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // Convert bytes to hex string
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -43,11 +30,9 @@ async function generateKeypair(): Promise<{ address: string; secretKeyHex: strin
       ['sign', 'verify']
     ) as CryptoKeyPair;
     
-    // Export public key
     const publicKeyBuffer = await crypto.subtle.exportKey('raw', keyPair.publicKey);
     const publicKeyBytes = new Uint8Array(publicKeyBuffer);
     
-    // Export private key (PKCS8 format)
     const privateKeyBuffer = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
     const privateKeyBytes = new Uint8Array(privateKeyBuffer);
     
@@ -71,7 +56,7 @@ async function generateKeypair(): Promise<{ address: string; secretKeyHex: strin
   }
 }
 
-// Check if address matches suffix (case-sensitive or insensitive based on config)
+// Check if address matches suffix
 function matchesSuffix(address: string, suffix: string, caseSensitive: boolean): boolean {
   if (caseSensitive) {
     return address.endsWith(suffix);
@@ -87,9 +72,8 @@ Deno.serve(async (req) => {
   const startTime = Date.now();
   
   try {
-    console.log('[vanity-cron] Starting background generation...');
+    console.log('[vanity-cron] Starting background generation (PLAIN HEX - no encryption)...');
     
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -108,7 +92,6 @@ Deno.serve(async (req) => {
     
     console.log(`[vanity-cron] Current available: ${availableCount}, target: ${TARGET_AVAILABLE}`);
     
-    // If we have enough, skip generation
     if (availableCount !== null && availableCount >= TARGET_AVAILABLE) {
       console.log('[vanity-cron] Target reached, skipping generation');
       return new Response(
@@ -123,20 +106,15 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Get encryption key
-    const encryptionKey = Deno.env.get('TREASURY_PRIVATE_KEY')?.slice(0, 32) || 'default-encryption-key-12345678';
-    
-    // Generate vanity addresses
+    // Generate vanity addresses — store as PLAIN HEX (no encryption)
     let attempts = 0;
     let found = 0;
     const newAddresses: string[] = [];
     
     while (Date.now() - startTime < MAX_DURATION_MS) {
-      // Generate batch
       for (let i = 0; i < BATCH_SIZE; i++) {
         attempts++;
         
-        // Yield CPU periodically to avoid timeout
         if (attempts % YIELD_EVERY === 0) {
           await new Promise(resolve => setTimeout(resolve, 0));
         }
@@ -145,21 +123,18 @@ Deno.serve(async (req) => {
         if (!keypair) continue;
         
         if (matchesSuffix(keypair.address, TARGET_SUFFIX, CASE_SENSITIVE)) {
-          // Found a match! Save to database
-          const encryptedSecretKey = encryptSecretKey(keypair.secretKeyHex, encryptionKey);
-          
+          // Store secret key as PLAIN HEX — no XOR encryption
           const { error: insertError } = await supabase
             .from('vanity_keypairs')
             .insert({
               suffix: TARGET_SUFFIX,
               public_key: keypair.address,
-              secret_key_encrypted: encryptedSecretKey,
+              secret_key_encrypted: keypair.secretKeyHex, // Plain hex, NOT encrypted
               status: 'available',
             });
           
           if (insertError) {
             if (insertError.code === '23505') {
-              // Duplicate, skip
               console.log(`[vanity-cron] Duplicate address skipped: ${keypair.address.slice(0, 8)}...`);
             } else {
               console.error('[vanity-cron] Insert error:', insertError);
@@ -167,7 +142,7 @@ Deno.serve(async (req) => {
           } else {
             found++;
             newAddresses.push(keypair.address);
-            console.log(`[vanity-cron] Found #${found}: ${keypair.address.slice(0, 8)}...${keypair.address.slice(-8)}`);
+            console.log(`[vanity-cron] Found #${found}: ${keypair.address.slice(0, 8)}...${keypair.address.slice(-8)} (plain hex)`);
           }
         }
       }
@@ -188,7 +163,8 @@ Deno.serve(async (req) => {
         previousAvailable: availableCount,
         newAvailable: (availableCount || 0) + found,
         target: TARGET_AVAILABLE,
-        newAddresses: newAddresses.slice(0, 10), // Return first 10
+        newAddresses: newAddresses.slice(0, 10),
+        encryption: 'none', // Flag: keys stored as plain hex
       }),
       { status: 200, headers: corsHeaders }
     );
