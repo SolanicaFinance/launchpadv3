@@ -150,25 +150,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let vanityKeypair: { id: string; publicKey: string; keypair: Keypair } | null = null;
     
     if (specificVanityId) {
-      // Force use a specific reserved vanity keypair (for official launches)
+      // Try to use a specific reserved vanity keypair, fall back to random if unavailable
       try {
         vanityKeypair = await getSpecificVanityAddress(specificVanityId);
         if (vanityKeypair) {
           vanityKeypairId = vanityKeypair.id;
           console.log('[create-phantom] 🔒 Using SPECIFIC vanity mint address:', vanityKeypair.publicKey, '(ID:', specificVanityId, ')');
         } else {
-          console.error('[create-phantom] ❌ CRITICAL: Specific vanity keypair not found:', specificVanityId);
-          return res.status(400).json({ 
-            success: false, 
-            error: `Specific vanity keypair not found: ${specificVanityId}. Launch aborted to prevent wrong address.` 
-          });
+          console.warn('[create-phantom] ⚠️ Specific vanity keypair not found:', specificVanityId, '— falling back to random mint');
         }
       } catch (vanityError) {
-        console.error('[create-phantom] ❌ CRITICAL: Failed to get specific vanity address:', vanityError);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Failed to retrieve specific vanity keypair. Launch aborted.' 
-        });
+        console.warn('[create-phantom] ⚠️ Failed to get specific vanity address, falling back to random mint:', vanityError);
       }
     } else if (useVanityAddress) {
       try {
