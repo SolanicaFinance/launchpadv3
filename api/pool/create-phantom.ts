@@ -213,41 +213,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Try to get a pre-generated vanity address from pool
     let vanityKeypair: { id: string; publicKey: string; keypair: Keypair } | null = null;
     
-    // If edge function already decrypted the keypair, use it directly (avoids TREASURY_PRIVATE_KEY mismatch)
-    if (specificVanityId && vanityPublicKey && vanitySecretKeyHex) {
-      try {
-        const secretKeyBytes = Buffer.from(vanitySecretKeyHex, 'hex');
-        const keypair = Keypair.fromSecretKey(new Uint8Array(secretKeyBytes));
-        vanityKeypair = { id: specificVanityId, publicKey: vanityPublicKey, keypair };
+    if (specificVanityId && vanityPublicKey) {
+      const resolvedVanity = resolveVanityKeypairFromPayload({
+        vanityPublicKey,
+        vanitySecretKeyHex,
+        vanityEncryptedSecretKey,
+      });
+
+      if (resolvedVanity) {
+        vanityKeypair = { id: specificVanityId, publicKey: vanityPublicKey, keypair: resolvedVanity.keypair };
         vanityKeypairId = specificVanityId;
-        console.log('[create-phantom] 🔒 Using PRE-DECRYPTED vanity mint address:', vanityPublicKey, '(ID:', specificVanityId, ')');
-      } catch (decryptError) {
-        console.error('[create-phantom] ❌ Failed to reconstruct pre-decrypted vanity keypair:', decryptError);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Failed to reconstruct vanity keypair from edge function data. Launch aborted.' 
-        });
-      }
-    } else if (specificVanityId) {
-      // Fallback: try to fetch and decrypt locally (may fail if TREASURY_PRIVATE_KEY not set on Vercel)
-      try {
-        vanityKeypair = await getSpecificVanityAddress(specificVanityId);
-        if (vanityKeypair) {
-          vanityKeypairId = vanityKeypair.id;
-          console.log('[create-phantom] 🔒 Using SPECIFIC vanity mint address:', vanityKeypair.publicKey, '(ID:', specificVanityId, ')');
-        } else {
-          console.error('[create-phantom] ❌ CRITICAL: Specific vanity keypair not found:', specificVanityId);
-          return res.status(400).json({ 
+        console.log('[create-phantom] 🔒 Using vanity mint address from payload:', vanityPublicKey, '(ID:', specificVanityId, 'source:', resolvedVanity.source, ')');
+      } else if (specificVanityId) {
+        try {
+          vanityKeypair = await getSpecificVanityAddress(specificVanityId);
+          if (vanityKeypair) {
+            vanityKeypairId = vanityKeypair.id;
+            console.log('[create-phantom] 🔒 Using SPECIFIC vanity mint address:', vanityKeypair.publicKey, '(ID:', specificVanityId, ')');
+          } else {
+            console.error('[create-phantom] ❌ CRITICAL: Specific vanity keypair not found:', specificVanityId);
+            return res.status(400).json({ 
+              success: false, 
+              error: `Specific vanity keypair not found: ${specificVanityId}. Launch aborted.` 
+            });
+          }
+        } catch (vanityError) {
+          console.error('[create-phantom] ❌ CRITICAL: Failed to get specific vanity address:', vanityError);
+          return res.status(500).json({ 
             success: false, 
-            error: `Specific vanity keypair not found: ${specificVanityId}. Launch aborted.` 
+            error: 'Failed to retrieve specific vanity keypair. Launch aborted.' 
           });
         }
-      } catch (vanityError) {
-        console.error('[create-phantom] ❌ CRITICAL: Failed to get specific vanity address:', vanityError);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Failed to retrieve specific vanity keypair. Launch aborted.' 
-        });
       }
     } else if (useVanityAddress) {
       try {

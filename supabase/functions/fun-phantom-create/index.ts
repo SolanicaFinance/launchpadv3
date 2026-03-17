@@ -268,6 +268,7 @@ Deno.serve(async (req) => {
     let resolvedVanityId = specificVanityId || undefined;
     let resolvedVanityPublicKey: string | undefined;
     let resolvedVanitySecretKeyHex: string | undefined;
+    let resolvedVanityEncryptedSecretKey: string | undefined;
     
     if (!resolvedVanityId) {
       const suffixes = ['SATURN', 'STRN'];
@@ -279,8 +280,10 @@ Deno.serve(async (req) => {
           if (!vError && vData && vData.length > 0) {
             resolvedVanityId = vData[0].id;
             resolvedVanityPublicKey = vData[0].public_key;
+            resolvedVanityEncryptedSecretKey = vData[0].secret_key_encrypted;
             
-            // Decrypt the secret key HERE in the edge function (which has TREASURY_PRIVATE_KEY)
+            // Keep direct decrypted payload for the normal path, but also pass the encrypted
+            // payload so the pool API can retry with legacy encryption keys if needed.
             const encryptionKey = Deno.env.get('TREASURY_PRIVATE_KEY')?.slice(0, 32) || 'default-encryption-key-12345678';
             const encryptedHex = vData[0].secret_key_encrypted;
             const keyBytes = new TextEncoder().encode(encryptionKey);
@@ -291,7 +294,7 @@ Deno.serve(async (req) => {
             }
             resolvedVanitySecretKeyHex = Array.from(decrypted).map(b => b.toString(16).padStart(2, '0')).join('');
             
-            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, '(decrypted in edge fn)');
+            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key);
             break;
           }
           console.log(`[fun-phantom-create] No vanity for suffix '${suffix}'`);
@@ -300,7 +303,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // HARD FAIL: vanity address is required for all launches
       if (!resolvedVanityId) {
         console.error("[fun-phantom-create] ❌ No SATURN vanity address available. Launch blocked.");
         return new Response(
@@ -326,14 +328,15 @@ Deno.serve(async (req) => {
           twitterUrl: twitterUrl || null,
           telegramUrl: telegramUrl || null,
           discordUrl: discordUrl || null,
-          phantomWallet, // User's Phantom wallet as fee payer
-          feeRecipientWallet: phantomWallet, // All fees go to Phantom wallet
-          tradingFeeBps: tradingFeeBps || 200, // Default 2%, allow 0.1%-10%
-          devBuySol, // Dev buy amount - atomic with pool creation to prevent frontrunning
-          useVanityAddress: true, // Use pre-generated vanity addresses from pool
-          specificVanityId: resolvedVanityId, // Use pre-reserved or user-specified keypair
-          vanityPublicKey: resolvedVanityPublicKey, // Pre-decrypted in edge function
-          vanitySecretKeyHex: resolvedVanitySecretKeyHex, // Pre-decrypted secret key hex
+          phantomWallet,
+          feeRecipientWallet: phantomWallet,
+          tradingFeeBps: tradingFeeBps || 200,
+          devBuySol,
+          useVanityAddress: true,
+          specificVanityId: resolvedVanityId,
+          vanityPublicKey: resolvedVanityPublicKey,
+          vanitySecretKeyHex: resolvedVanitySecretKeyHex,
+          vanityEncryptedSecretKey: resolvedVanityEncryptedSecretKey,
         }),
       });
 
