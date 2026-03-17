@@ -142,14 +142,32 @@ export default function BrandAssetsPage() {
         </div>
 
         {/* Preview of current logo */}
-        <Card className="p-4 flex items-center gap-4 border-border bg-card">
-          <div className="w-14 h-14 rounded-lg bg-black flex items-center justify-center overflow-hidden border border-border">
-            <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain" />
+        <Card className="p-4 flex items-center justify-between border-border bg-card">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-lg bg-black flex items-center justify-center overflow-hidden border border-border">
+              <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Current Logo</p>
+              <p className="text-xs text-muted-foreground">saturn-logo.png</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Current Logo</p>
-            <p className="text-xs text-muted-foreground">saturn-logo.png</p>
-          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const logo = await loadLogo();
+              const canvas = document.createElement("canvas");
+              canvas.width = 200;
+              canvas.height = 200;
+              const ctx = canvas.getContext("2d")!;
+              ctx.drawImage(logo, 0, 0, 200, 200);
+              handleDownload(canvas.toDataURL("image/png"), `${BRAND.shortName.toLowerCase()}-logo-200x200.png`);
+            }}
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            200×200
+          </Button>
         </Card>
 
         {/* Header text inputs */}
