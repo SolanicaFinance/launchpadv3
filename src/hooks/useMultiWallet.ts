@@ -42,7 +42,8 @@ const FALLBACK = {
   walletCount: 0,
 } as const;
 
-function useMultiWalletInner() {
+export function useMultiWallet() {
+  const privyAvailable = usePrivyAvailable();
   const { profileId } = useAuth();
   const { wallets, ready } = useWallets();
   const { createWallet } = useCreateWallet();
@@ -56,20 +57,20 @@ function useMultiWalletInner() {
   const rpcUrl = getRpcUrl().url;
 
   const embeddedWallets = useMemo(() => {
-    if (!wallets) return [];
+    if (!privyAvailable || !wallets) return [];
     return wallets.filter((w: any) => {
       const type = w?.walletClientType;
       const name = String(w?.standardWallet?.name ?? w?.name ?? "").toLowerCase();
       return type === "privy" || name.includes("privy") || name.includes("embedded");
     });
-  }, [wallets]);
+  }, [wallets, privyAvailable]);
 
   useEffect(() => {
     embeddedWalletsRef.current = embeddedWallets;
   }, [embeddedWallets]);
 
   useEffect(() => {
-    if (!profileId) return;
+    if (!privyAvailable || !profileId) return;
     supabase
       .from("user_wallets")
       .select("wallet_address, label, is_default, is_hidden")
@@ -85,7 +86,7 @@ function useMultiWalletInner() {
         setLabels(map);
         setHiddenAddresses(hidden);
       });
-  }, [profileId]);
+  }, [profileId, privyAvailable]);
 
   useEffect(() => {
     if (embeddedWallets.length === 0) return;
@@ -97,7 +98,6 @@ function useMultiWalletInner() {
     }
   }, [embeddedWallets]);
 
-  // Auto-recovery: if a rotation order was persisted (page crash), finalize the switch
   useEffect(() => {
     if (embeddedWallets.length === 0 || !profileId) return;
     const order = getPersistedOrder();
@@ -111,7 +111,6 @@ function useMultiWalletInner() {
     setActiveAddress(newAddr);
     localStorage.setItem(ACTIVE_WALLET_KEY, newAddr);
 
-    // Register in DB
     const idx = embeddedWallets.findIndex((w: any) => w.address === newAddr);
     const label = `Wallet ${idx + 1}`;
     supabase.from("user_wallets").upsert({
@@ -138,7 +137,6 @@ function useMultiWalletInner() {
       }));
   }, [embeddedWallets, labels, balances, hiddenAddresses]);
 
-  // All addresses including hidden — for portfolio aggregation
   const allAddresses: string[] = useMemo(() => {
     return embeddedWallets.map((w: any) => w.address);
   }, [embeddedWallets]);
@@ -249,6 +247,8 @@ function useMultiWalletInner() {
     return embeddedWallets.find((w: any) => w.address === address) || null;
   }, [embeddedWallets]);
 
+  if (!privyAvailable) return FALLBACK;
+
   return {
     managedWallets,
     allAddresses,
@@ -265,17 +265,4 @@ function useMultiWalletInner() {
     canCreateMore: embeddedWallets.length < MAX_WALLETS,
     walletCount: embeddedWallets.length,
   };
-}
-
-export function useMultiWallet() {
-  const privyAvailable = usePrivyAvailable();
-  if (!privyAvailable) return FALLBACK;
-
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useMultiWalletInner();
-  } catch (error) {
-    console.warn("[useMultiWallet] Privy not ready yet, returning fallback.", error);
-    return FALLBACK;
-  }
 }

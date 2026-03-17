@@ -14,7 +14,8 @@ const FALLBACK = {
   embeddedWallet: undefined,
 } as const;
 
-function useDelegatedWalletInner() {
+export function useDelegatedWallet() {
+  const privyAvailable = usePrivyAvailable();
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
 
@@ -34,23 +35,22 @@ function useDelegatedWalletInner() {
     }
   });
 
-  const embeddedWallet = wallets?.find(
+  const embeddedWallet = privyAvailable ? wallets?.find(
     (w: any) =>
       w.walletClientType === "privy" ||
       w.standardWallet?.name === "Privy" ||
       String(w?.name ?? "").toLowerCase().includes("privy")
-  );
+  ) : undefined;
 
   useEffect(() => {
+    if (!privyAvailable) return;
     if (embeddedWallet) {
       setIsDelegated(true);
       try {
         localStorage.setItem(DELEGATION_KEY, "true");
       } catch {}
     }
-  }, [embeddedWallet]);
-
-  const needsDelegation = false;
+  }, [embeddedWallet, privyAvailable]);
 
   const requestDelegation = useCallback(async () => {
     setIsDelegated(true);
@@ -66,25 +66,14 @@ function useDelegatedWalletInner() {
     } catch {}
   }, []);
 
+  if (!privyAvailable) return FALLBACK;
+
   return {
     isDelegated,
     isDelegating,
-    needsDelegation,
+    needsDelegation: false,
     requestDelegation,
     dismiss,
     embeddedWallet,
   };
-}
-
-export function useDelegatedWallet() {
-  const privyAvailable = usePrivyAvailable();
-  if (!privyAvailable) return FALLBACK;
-
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useDelegatedWalletInner();
-  } catch (error) {
-    console.warn("[useDelegatedWallet] Privy not ready yet, returning fallback.", error);
-    return FALLBACK;
-  }
 }

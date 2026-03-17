@@ -36,30 +36,37 @@ const FALLBACK: UseAuthReturn = {
   logout: async () => {},
 };
 
-// Real auth using Privy — ONLY safe to call inside PrivyProvider
-function useAuthPrivy(): UseAuthReturn {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+export function useAuth(): UseAuthReturn {
+  const privyAvailable = usePrivyAvailable();
+
+  // Always call all hooks unconditionally
+  const privy = usePrivy();
   const { wallets } = useWallets();
   const [profileId, setProfileId] = useState<string | null>(null);
 
-  // Convert Privy DID to deterministic UUID (must match server-side sync-privy-user)
+  const user = privy?.user ?? null;
+  const ready = privy?.ready ?? false;
+  const authenticated = privy?.authenticated ?? false;
+
   useEffect(() => {
+    if (!privyAvailable) return;
     if (user?.id) {
       privyUserIdToUuid(user.id).then(setProfileId);
     } else {
       setProfileId(null);
     }
-  }, [user?.id]);
+  }, [user?.id, privyAvailable]);
 
   const solanaAddress = useMemo(() => {
+    if (!privyAvailable) return null;
     if (user?.wallet?.address) return user.wallet.address;
     const solanaWallet = wallets?.find((w) => w.address?.length > 30);
     if (solanaWallet?.address) return solanaWallet.address;
     return null;
-  }, [wallets, user?.wallet?.address]);
+  }, [wallets, user?.wallet?.address, privyAvailable]);
 
   const authUser = useMemo<AuthUser | null>(() => {
-    if (!user) return null;
+    if (!privyAvailable || !user) return null;
     return {
       id: user.id,
       privyId: user.id,
@@ -76,7 +83,9 @@ function useAuthPrivy(): UseAuthReturn {
         ? { address: solanaAddress }
         : undefined,
     };
-  }, [user, solanaAddress]);
+  }, [user, solanaAddress, privyAvailable]);
+
+  if (!privyAvailable) return FALLBACK;
 
   return {
     user: authUser,
@@ -84,24 +93,7 @@ function useAuthPrivy(): UseAuthReturn {
     isLoading: !ready,
     solanaAddress,
     profileId,
-    login,
-    logout,
+    login: privy.login,
+    logout: privy.logout,
   };
-}
-
-// Main hook that switches between implementations
-export function useAuth(): UseAuthReturn {
-  const privyAvailable = usePrivyAvailable();
-
-  if (!privyAvailable) {
-    return FALLBACK;
-  }
-
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useAuthPrivy();
-  } catch (error) {
-    console.warn("[useAuth] Privy not ready yet, returning fallback.", error);
-    return FALLBACK;
-  }
 }

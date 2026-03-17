@@ -24,8 +24,8 @@ const FALLBACK = {
   getEmbeddedWallet: () => null,
 } as const;
 
-// Inner hook — MUST only be called inside PrivyProvider
-function useSolanaWalletWithPrivyInner() {
+export function useSolanaWalletWithPrivy() {
+  const privyAvailable = usePrivyAvailable();
   const { authenticated, user, ready } = usePrivy();
   const { wallets } = useWallets();
   const privySolana = usePrivySolanaSignAndSend();
@@ -42,7 +42,6 @@ function useSolanaWalletWithPrivyInner() {
     const walletClientType = w?.walletClientType;
     const standardName = w?.standardWallet?.name;
     const name = String(w?.name ?? "").toLowerCase();
-
     return (
       walletClientType === "privy" ||
       standardName === "Privy" ||
@@ -52,14 +51,15 @@ function useSolanaWalletWithPrivyInner() {
   }, []);
 
   const getEmbeddedWallet = useCallback(() => {
+    if (!privyAvailable) return null;
     const embedded = wallets?.find((w: any) => isPrivyEmbeddedWallet(w));
     return embedded || null;
-  }, [wallets, isPrivyEmbeddedWallet]);
+  }, [wallets, isPrivyEmbeddedWallet, privyAvailable]);
 
   const getSolanaWallet = useCallback(() => getEmbeddedWallet(), [getEmbeddedWallet]);
 
   const walletAddress = getEmbeddedWallet()?.address || null;
-  const isWalletReady = ready && authenticated && !!walletAddress;
+  const isWalletReady = privyAvailable && ready && authenticated && !!walletAddress;
 
   const signAndSendTransaction = useCallback(
     async (
@@ -108,7 +108,6 @@ function useSolanaWalletWithPrivyInner() {
 
         console.log("[useSolanaWalletPrivy] Tx sent, signature:", signature);
 
-        // Privy already submitted — just confirm in background, no Jito fan-out needed
         connection.confirmTransaction(
           { signature, blockhash, lastValidBlockHeight },
           "confirmed"
@@ -269,6 +268,8 @@ function useSolanaWalletWithPrivyInner() {
     [getSolanaWallet, privySign, wallets]
   );
 
+  if (!privyAvailable) return FALLBACK;
+
   return {
     walletAddress,
     isWalletReady,
@@ -285,18 +286,4 @@ function useSolanaWalletWithPrivyInner() {
     getSolanaWallet,
     getEmbeddedWallet,
   };
-}
-
-// Guarded export — safe to call outside PrivyProvider
-export function useSolanaWalletWithPrivy() {
-  const privyAvailable = usePrivyAvailable();
-  if (!privyAvailable) return FALLBACK;
-
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useSolanaWalletWithPrivyInner();
-  } catch (error) {
-    console.warn("[useSolanaWalletWithPrivy] Privy not ready yet, returning fallback.", error);
-    return FALLBACK;
-  }
 }
