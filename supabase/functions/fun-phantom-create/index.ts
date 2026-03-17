@@ -232,10 +232,14 @@ Deno.serve(async (req) => {
     // "URI too long" due to older metadata URI construction.
     // To make preview + current deployment consistent, fallback to the request Origin.
     const origin = req.headers.get("origin")?.replace(/\/$/, "") || "";
-    const meteoraApiUrl =
+    const configuredApiUrl =
       Deno.env.get("METEORA_API_URL") ||
       Deno.env.get("VITE_METEORA_API_URL") ||
-      origin;
+      "";
+
+    // Prefer the current app origin so preview/published launches always hit the
+    // matching deployment instead of a stale external URL.
+    const meteoraApiUrl = origin || configuredApiUrl;
 
     if (!meteoraApiUrl) {
       console.error("[fun-phantom-create] ❌ METEORA_API_URL not configured and no Origin header present");
@@ -251,7 +255,10 @@ Deno.serve(async (req) => {
     console.log(
       "[fun-phantom-create] 📡 Calling pool creation API for Phantom launch:",
       `${meteoraApiUrl}/api/pool/create-phantom`,
-      { usedOriginFallback: !Deno.env.get("METEORA_API_URL") && !Deno.env.get("VITE_METEORA_API_URL") }
+      {
+        usedOrigin: Boolean(origin),
+        configuredApiUrl,
+      }
     );
 
     let mintAddress: string;
