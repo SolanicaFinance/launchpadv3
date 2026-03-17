@@ -633,12 +633,7 @@ export function KingOfTheHill() {
     <div className="w-full">
       {/* ── Header — sticky on mobile ── */}
       <div
-        className="flex items-center justify-between mb-3 md:mb-4 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:z-auto md:py-0 md:px-0 md:mx-0 sticky top-0 z-[100] py-2.5 px-3 -mx-4 border-b border-white/[0.04]"
-        style={{
-          background: "rgba(0,0,0,0.85)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
+        className="flex items-center justify-between mb-3 md:mb-4"
       >
         <div className="flex items-center gap-2">
           <img

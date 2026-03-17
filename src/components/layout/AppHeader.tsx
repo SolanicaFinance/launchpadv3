@@ -99,10 +99,10 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="sticky top-0 z-30 flex items-center gap-3 md:gap-4 lg:gap-5 px-3 md:px-5 lg:px-6"
+        className="sticky top-0 z-50 flex items-center gap-3 md:gap-4 lg:gap-5 px-3 md:px-5 lg:px-6"
         style={{
           height: "56px",
-          background: "hsl(0 0% 0% / 0.55)",
+          background: "hsl(0 0% 0% / 0.88)",
           backdropFilter: "blur(20px) saturate(1.4)",
           WebkitBackdropFilter: "blur(20px) saturate(1.4)",
           borderBottom: "1px solid hsl(84 81% 44% / 0.12)",
