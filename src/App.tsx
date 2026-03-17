@@ -54,6 +54,7 @@ const DecompressPage = lazyWithRetry(() => import("./pages/DecompressPage"));
 const FunModePage = lazyWithRetry(() => import("./pages/FunModePage"));
 const AdminPanelPage = lazyWithRetry(() => import("./pages/AdminPanelPage"));
 const BrandingAdminPage = lazyWithRetry(() => import("./pages/BrandingAdminPage"));
+const BrandAssetsPage = lazyWithRetry(() => import("./pages/BrandAssetsPage"));
 
 const BannerMakerPage = lazyWithRetry(() => import("./pages/BannerMakerPage"));
 const AlphaTrackerPage = lazyWithRetry(() => import("./pages/AlphaTrackerPage"));
@@ -137,6 +138,7 @@ const App = () => (
                     <Route path="/site" element={<LaunchpadTemplatePage />} />
                     <Route path="/admin" element={<AdminPanelPage />} />
                     <Route path="/admin/branding" element={<BrandingAdminPage />} />
+                    <Route path="/admin/brand-assets" element={<BrandAssetsPage />} />
                     <Route path="/admin/twitter" element={<Navigate to="/admin?tab=xbots" replace />} />
                     <Route path="/admin/treasury" element={<Navigate to="/admin?tab=treasury" replace />} />
                     <Route path="/trade" element={<TradePage />} />
