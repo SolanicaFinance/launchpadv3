@@ -266,6 +266,9 @@ Deno.serve(async (req) => {
     // Pre-reserve vanity address if no specificVanityId provided (SATURN suffix)
     // IMPORTANT: suffixes must be lowercase to match DB storage
     let resolvedVanityId = specificVanityId || undefined;
+    let resolvedVanityPublicKey: string | undefined;
+    let resolvedVanitySecretKeyHex: string | undefined;
+    
     if (!resolvedVanityId) {
       const suffixes = ['saturn', 'strn'];
       for (const suffix of suffixes) {
@@ -275,7 +278,20 @@ Deno.serve(async (req) => {
           });
           if (!vError && vData && vData.length > 0) {
             resolvedVanityId = vData[0].id;
-            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key);
+            resolvedVanityPublicKey = vData[0].public_key;
+            
+            // Decrypt the secret key HERE in the edge function (which has TREASURY_PRIVATE_KEY)
+            const encryptionKey = Deno.env.get('TREASURY_PRIVATE_KEY')?.slice(0, 32) || 'default-encryption-key-12345678';
+            const encryptedHex = vData[0].secret_key_encrypted;
+            const keyBytes = new TextEncoder().encode(encryptionKey);
+            const encryptedBytes = new Uint8Array(encryptedHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16)));
+            const decrypted = new Uint8Array(encryptedBytes.length);
+            for (let i = 0; i < encryptedBytes.length; i++) {
+              decrypted[i] = encryptedBytes[i] ^ keyBytes[i % keyBytes.length];
+            }
+            resolvedVanitySecretKeyHex = Array.from(decrypted).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, '(decrypted in edge fn)');
             break;
           }
           console.log(`[fun-phantom-create] No vanity for suffix '${suffix}'`);
@@ -316,6 +332,8 @@ Deno.serve(async (req) => {
           devBuySol, // Dev buy amount - atomic with pool creation to prevent frontrunning
           useVanityAddress: true, // Use pre-generated vanity addresses from pool
           specificVanityId: resolvedVanityId, // Use pre-reserved or user-specified keypair
+          vanityPublicKey: resolvedVanityPublicKey, // Pre-decrypted in edge function
+          vanitySecretKeyHex: resolvedVanitySecretKeyHex, // Pre-decrypted secret key hex
         }),
       });
 
