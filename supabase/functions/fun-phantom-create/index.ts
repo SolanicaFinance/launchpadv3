@@ -307,22 +307,22 @@ Deno.serve(async (req) => {
           JSON.stringify({ success: false, error: "No SATURN vanity address available. Please wait for more to be generated." }),
           { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-
-      if (!resolvedVanitySecretKeyHex || resolvedVanitySecretKeyHex.length !== 128) {
-        console.error('[fun-phantom-create] ❌ Reserved vanity key is missing plain hex secret. Refusing to call pool API with lookup fallback.', {
-          vanityId: resolvedVanityId,
-          vanityPublicKey: resolvedVanityPublicKey,
-          secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
-        });
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Reserved vanity key is missing usable secret key payload. Please retry after backend refresh.',
-          }),
-          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
       }
+    }
 
+    if (!resolvedVanitySecretKeyHex || resolvedVanitySecretKeyHex.length !== 128) {
+      console.error('[fun-phantom-create] ❌ Reserved vanity key is missing plain hex secret. Refusing to call pool API with lookup fallback.', {
+        vanityId: resolvedVanityId,
+        vanityPublicKey: resolvedVanityPublicKey,
+        secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Reserved vanity key is missing usable secret key payload. Please retry after backend refresh.',
+        }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     try {
