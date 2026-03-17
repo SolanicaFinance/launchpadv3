@@ -263,10 +263,11 @@ Deno.serve(async (req) => {
     let txIsVersioned: boolean[] = [];
     let vanityKeypairId: string | null = null;
 
-    // Pre-reserve vanity address if no specificVanityId provided (STRN suffix)
+    // Pre-reserve vanity address if no specificVanityId provided (SATURN suffix)
+    // IMPORTANT: suffixes must be lowercase to match DB storage
     let resolvedVanityId = specificVanityId || undefined;
     if (!resolvedVanityId) {
-      const suffixes = ['SATURN', 'STRN'];
+      const suffixes = ['saturn', 'strn'];
       for (const suffix of suffixes) {
         try {
           const { data: vData, error: vError } = await supabase.rpc('backend_reserve_vanity_address', {
@@ -281,6 +282,15 @@ Deno.serve(async (req) => {
         } catch (e) {
           console.warn(`[fun-phantom-create] Vanity reservation failed for '${suffix}':`, e);
         }
+      }
+
+      // HARD FAIL: vanity address is required for all launches
+      if (!resolvedVanityId) {
+        console.error("[fun-phantom-create] ❌ No SATURN vanity address available. Launch blocked.");
+        return new Response(
+          JSON.stringify({ success: false, error: "No SATURN vanity address available. Please wait for more to be generated." }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
