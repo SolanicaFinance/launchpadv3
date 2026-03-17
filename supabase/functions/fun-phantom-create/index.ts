@@ -237,9 +237,9 @@ Deno.serve(async (req) => {
       Deno.env.get("VITE_METEORA_API_URL") ||
       "";
 
-    // Prefer the current app origin so preview/published launches always hit the
-    // matching deployment instead of a stale external URL.
-    const meteoraApiUrl = origin || configuredApiUrl;
+    // Prefer the configured API URL (Vercel deployment with /api routes).
+    // Only fall back to origin if no explicit URL is set.
+    const meteoraApiUrl = configuredApiUrl || origin;
 
     if (!meteoraApiUrl) {
       console.error("[fun-phantom-create] ❌ METEORA_API_URL not configured and no Origin header present");
