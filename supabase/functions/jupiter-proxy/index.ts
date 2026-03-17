@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const JUPITER_SWAP_API = "https://api.jup.ag/swap/v1";
-const JUPITER_PRICE_API = "https://api.jup.ag/price/v2";
+const JUPITER_PRICE_API = "https://lite-api.jup.ag/price/v2";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

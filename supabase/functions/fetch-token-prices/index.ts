@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (jupApiKey) {
       headers["x-api-key"] = jupApiKey;
     }
-    const res = await fetch(`https://api.jup.ag/price/v2?ids=${ids}`, { headers });
+    const res = await fetch(`https://lite-api.jup.ag/price/v2?ids=${ids}`, { headers });
     if (!res.ok) {
       console.error("Jupiter price API error:", res.status, await res.text());
       return new Response(JSON.stringify({ prices: {} }), {
