@@ -84,7 +84,7 @@ export function SolPriceDisplay() {
   const isPositive = priceData.change24h >= 0;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/20 backdrop-blur-sm border border-border/20 group hover:border-border/40 transition-all duration-300">
+    <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-card/30 md:bg-card/20 backdrop-blur-sm border border-border/30 md:border-border/20 group hover:border-border/40 transition-all duration-300">
       {/* Solana Logo */}
       <svg viewBox="0 0 397.7 311.7" className="h-4 w-4 flex-shrink-0" fill="none">
         <linearGradient id="solGrad1" x1="360.879" x2="141.213" y1="351.455" y2="-69.294" gradientTransform="matrix(1 0 0 -1 0 314)" gradientUnits="userSpaceOnUse">
