@@ -1,7 +1,8 @@
-import { ReactNode, lazy, Suspense } from 'react';
+import { ReactNode, Suspense } from 'react';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
-// Lazy load the heavy EVM wallet stack - only needed when user interacts with EVM features
-const EvmWalletProviderInner = lazy(() => import('./EvmWalletProviderInner'));
+// Lazy load the heavy EVM wallet stack with retry to handle transient fetch failures
+const EvmWalletProviderInner = lazyWithRetry(() => import('./EvmWalletProviderInner'));
 
 interface EvmWalletProviderProps {
   children: ReactNode;
