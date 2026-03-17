@@ -96,6 +96,12 @@ function useClaimWalletInner(preferredAddress?: string | null) {
 export function useClaimWallet(preferredAddress?: string | null) {
   const privyAvailable = usePrivyAvailable();
   if (!privyAvailable) return FALLBACK;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useClaimWalletInner(preferredAddress);
+
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useClaimWalletInner(preferredAddress);
+  } catch (error) {
+    console.warn("[useClaimWallet] Privy not ready yet, returning fallback.", error);
+    return FALLBACK;
+  }
 }
