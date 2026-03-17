@@ -286,10 +286,13 @@ Deno.serve(async (req) => {
           if (!vError && vData && vData.length > 0) {
             resolvedVanityId = vData[0].id;
             resolvedVanityPublicKey = vData[0].public_key;
-            // secret_key_encrypted is now stored as PLAIN HEX — no decryption needed
             resolvedVanitySecretKeyHex = vData[0].secret_key_encrypted;
-            
-            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, '(plain hex, no decryption)');
+
+            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, {
+              vanityId: resolvedVanityId,
+              hasSecretKeyHex: Boolean(resolvedVanitySecretKeyHex),
+              secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
+            });
             break;
           }
           console.log(`[fun-phantom-create] No vanity for suffix '${suffix}'`);
@@ -305,6 +308,21 @@ Deno.serve(async (req) => {
           { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    }
+
+    if (!resolvedVanitySecretKeyHex || resolvedVanitySecretKeyHex.length !== 128) {
+      console.error('[fun-phantom-create] ❌ Reserved vanity key is missing plain hex secret. Refusing to call pool API with lookup fallback.', {
+        vanityId: resolvedVanityId,
+        vanityPublicKey: resolvedVanityPublicKey,
+        secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Reserved vanity key is missing usable secret key payload. Please retry after backend refresh.',
+        }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     try {
