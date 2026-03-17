@@ -24,7 +24,8 @@ const FALLBACK = {
   isReady: false,
 } as const;
 
-function useClaimWalletInner(preferredAddress?: string | null) {
+export function useClaimWallet(preferredAddress?: string | null) {
+  const privyAvailable = usePrivyAvailable();
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
 
@@ -32,7 +33,6 @@ function useClaimWalletInner(preferredAddress?: string | null) {
     const walletClientType = w?.walletClientType;
     const standardName = w?.standardWallet?.name;
     const name = String(w?.name ?? "").toLowerCase();
-
     return (
       walletClientType === "privy" ||
       standardName === "Privy" ||
@@ -42,6 +42,7 @@ function useClaimWalletInner(preferredAddress?: string | null) {
   }, []);
 
   const options: ClaimWalletOption[] = useMemo(() => {
+    if (!privyAvailable) return [];
     const list = (wallets ?? [])
       .filter((w: any) => typeof w?.address === "string" && w.address.length > 30)
       .map((w: any) => {
@@ -49,15 +50,14 @@ function useClaimWalletInner(preferredAddress?: string | null) {
         const label = kind === "embedded" ? `Embedded (${shortAddr(w.address)})` : `${w?.standardWallet?.name ?? w?.name ?? "Wallet"} (${shortAddr(w.address)})`;
         return { address: w.address, kind, label, wallet: w };
       });
-
     list.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "external" ? -1 : 1));
     return list;
-  }, [wallets, isPrivyEmbeddedWallet]);
+  }, [wallets, isPrivyEmbeddedWallet, privyAvailable]);
 
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!options.length) {
+    if (!privyAvailable || !options.length) {
       if (selectedAddress !== null) setSelectedAddress(null);
       return;
     }
@@ -75,33 +75,20 @@ function useClaimWalletInner(preferredAddress?: string | null) {
     if (!selectedAddress || !options.some((o) => o.address === selectedAddress)) {
       setSelectedAddress(options[0].address);
     }
-  }, [options, preferredAddress, selectedAddress]);
+  }, [options, preferredAddress, selectedAddress, privyAvailable]);
 
   const selected = useMemo(() => {
     if (!selectedAddress) return null;
     return options.find((o) => o.address === selectedAddress) ?? null;
   }, [options, selectedAddress]);
 
-  const isReady = ready && authenticated && !!selected?.address;
+  if (!privyAvailable) return FALLBACK;
 
   return {
     options,
     selected,
     selectedAddress,
     setSelectedAddress,
-    isReady,
+    isReady: ready && authenticated && !!selected?.address,
   };
-}
-
-export function useClaimWallet(preferredAddress?: string | null) {
-  const privyAvailable = usePrivyAvailable();
-  if (!privyAvailable) return FALLBACK;
-
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useClaimWalletInner(preferredAddress);
-  } catch (error) {
-    console.warn("[useClaimWallet] Privy not ready yet, returning fallback.", error);
-    return FALLBACK;
-  }
 }
