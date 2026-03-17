@@ -169,11 +169,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       phantomWallet,
       feeRecipientWallet,
       useVanityAddress = true,
-      specificVanityId = null, // Force use a specific vanity keypair by ID (for official launches)
-      vanityPublicKey = null, // Pre-decrypted vanity public key from edge function
-      vanitySecretKeyHex = null, // Pre-decrypted vanity secret key hex from edge function
-      tradingFeeBps: rawFeeBps = 200, // Default 2%, range 10-1000 (0.1%-10%)
-      devBuySol = 0, // Optional dev buy amount in SOL (atomic with pool creation)
+      specificVanityId = null,
+      vanityPublicKey = null,
+      vanitySecretKeyHex = null,
+      vanityEncryptedSecretKey = null,
+      tradingFeeBps: rawFeeBps = 200,
+      devBuySol = 0,
     } = req.body;
 
     // Validate and constrain trading fee to valid range (10-1000 bps = 0.1%-10%)
