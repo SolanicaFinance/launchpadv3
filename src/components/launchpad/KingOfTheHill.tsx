@@ -580,17 +580,17 @@ function DesktopKingCard({ token, rank, quickBuyAmount, sparklineData }: { token
 function KingCardSkeleton({ mobile }: { mobile?: boolean }) {
   if (mobile) {
     return (
-      <div className="flex flex-col rounded-[18px] w-full" style={{ background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)", border: "1px solid rgba(255,255,255,0.04)", padding: "16px" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <Skeleton className="w-9 h-9 rounded-xl" />
-          <Skeleton className="w-12 h-12 rounded-[14px]" />
-          <div className="flex-1 space-y-1.5"><Skeleton className="h-5 w-28" /><Skeleton className="h-3 w-16" /></div>
+      <div className="flex flex-col rounded-[14px] w-full" style={{ background: "linear-gradient(165deg, rgba(15,15,26,0.95) 0%, rgba(5,5,15,0.98) 100%)", border: "1px solid rgba(255,255,255,0.04)", padding: "12px" }}>
+        <div className="flex items-center gap-2.5 mb-2">
+          <Skeleton className="w-[30px] h-[30px] rounded-lg" />
+          <Skeleton className="w-10 h-10 rounded-xl" />
+          <div className="flex-1 space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16" /></div>
         </div>
-        <Skeleton className="h-[80px] w-full rounded-xl mb-3" />
-        <Skeleton className="h-[8px] w-full rounded-full mb-3" />
+        <Skeleton className="h-[52px] w-full rounded-lg mb-2" />
+        <Skeleton className="h-[8px] w-full rounded-full mb-2" />
         <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-2"><Skeleton className="w-8 h-8 rounded-lg" /><Skeleton className="w-8 h-8 rounded-lg" /></div>
-          <div className="flex gap-2"><Skeleton className="h-9 w-20 rounded-xl" /><Skeleton className="h-9 w-24 rounded-xl" /></div>
+          <div className="flex gap-1"><Skeleton className="w-7 h-7 rounded-md" /><Skeleton className="w-7 h-7 rounded-md" /></div>
+          <div className="flex gap-1.5"><Skeleton className="h-8 w-16 rounded-lg" /><Skeleton className="h-8 w-20 rounded-lg" /></div>
         </div>
       </div>
     );
