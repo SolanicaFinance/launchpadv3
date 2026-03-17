@@ -97,36 +97,36 @@ export function LeverageTerminal() {
 
   // Desktop: 3-panel terminal layout
   return (
-    <div className="flex flex-col h-[calc(100vh-96px)]">
+    <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-3 py-2 border-b border-border bg-card/50">
+      <div className="flex items-center gap-3 px-3 py-2 border-b border-border bg-card/50 overflow-x-auto">
         <LeverageMarketSelector markets={markets} selected={symbol} onSelect={setSymbol} search={search} onSearch={setSearch} />
         {selectedMarket && (
           <>
-            <span className="text-sm font-bold text-foreground tabular-nums">${parseFloat(selectedMarket.lastPrice).toLocaleString()}</span>
-            <span className={cn("text-xs tabular-nums", parseFloat(selectedMarket.priceChangePercent) >= 0 ? "text-green-400" : "text-red-400")}>
+            <span className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">${parseFloat(selectedMarket.lastPrice).toLocaleString()}</span>
+            <span className={cn("text-xs tabular-nums whitespace-nowrap", parseFloat(selectedMarket.priceChangePercent) >= 0 ? "text-green-400" : "text-red-400")}>
               {parseFloat(selectedMarket.priceChangePercent) >= 0 ? "+" : ""}
               {parseFloat(selectedMarket.priceChangePercent).toFixed(2)}%
             </span>
-            <div className="h-4 w-px bg-border" />
-            <span className="text-[10px] text-muted-foreground">24h Vol: <span className="text-foreground">${parseFloat(selectedMarket.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
-            <span className="text-[10px] text-muted-foreground">Funding: <span className={cn(parseFloat(selectedMarket.fundingRate) >= 0 ? "text-green-400" : "text-red-400")}>{(parseFloat(selectedMarket.fundingRate) * 100).toFixed(4)}%</span></span>
-            <span className="text-[10px] text-muted-foreground">OI: <span className="text-foreground">${parseFloat(selectedMarket.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
+            <div className="h-4 w-px bg-border shrink-0" />
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap">24h Vol: <span className="text-foreground">${parseFloat(selectedMarket.quoteVolume).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden lg:inline">Funding: <span className={cn(parseFloat(selectedMarket.fundingRate) >= 0 ? "text-green-400" : "text-red-400")}>{(parseFloat(selectedMarket.fundingRate) * 100).toFixed(4)}%</span></span>
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden lg:inline">OI: <span className="text-foreground">${parseFloat(selectedMarket.openInterest).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
           </>
         )}
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         <div className="flex-1 flex flex-col min-w-0 border-r border-border">
           <div className="flex-1">
             <LeverageChart bars={bars} loading={klinesLoading} interval={interval} onIntervalChange={setInterval} symbol={symbol} />
           </div>
         </div>
-        <div className="w-[220px] flex-shrink-0 border-r border-border bg-card/30">
+        <div className="w-[180px] lg:w-[220px] flex-shrink-0 border-r border-border bg-card/30 hidden md:block">
           <LeverageOrderbook orderbook={orderbook} />
         </div>
-        <div className="w-[240px] flex-shrink-0 bg-card/50 overflow-y-auto">
+        <div className="w-[200px] lg:w-[240px] flex-shrink-0 bg-card/50 overflow-y-auto">
           <LeverageTradePanel {...tradePanelProps} />
         </div>
       </div>
