@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { useWallets } from "@privy-io/react-auth/solana";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 
 const DELEGATION_KEY = "claw_wallet_delegated";
 
@@ -16,26 +14,19 @@ const FALLBACK = {
 
 export function useDelegatedWallet() {
   const privyAvailable = usePrivyAvailable();
-  const { ready, authenticated } = usePrivy();
-  const { wallets } = useWallets();
+  const bridge = usePrivyBridge();
+
+  const { solanaWallets } = bridge;
 
   const [isDelegated, setIsDelegated] = useState(() => {
-    try {
-      return localStorage.getItem(DELEGATION_KEY) === "true";
-    } catch {
-      return false;
-    }
+    try { return localStorage.getItem(DELEGATION_KEY) === "true"; } catch { return false; }
   });
   const [isDelegating, setIsDelegating] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
-    try {
-      return sessionStorage.getItem("claw_delegation_dismissed") === "true";
-    } catch {
-      return false;
-    }
+    try { return sessionStorage.getItem("claw_delegation_dismissed") === "true"; } catch { return false; }
   });
 
-  const embeddedWallet = privyAvailable ? wallets?.find(
+  const embeddedWallet = privyAvailable ? solanaWallets?.find(
     (w: any) =>
       w.walletClientType === "privy" ||
       w.standardWallet?.name === "Privy" ||
@@ -46,24 +37,18 @@ export function useDelegatedWallet() {
     if (!privyAvailable) return;
     if (embeddedWallet) {
       setIsDelegated(true);
-      try {
-        localStorage.setItem(DELEGATION_KEY, "true");
-      } catch {}
+      try { localStorage.setItem(DELEGATION_KEY, "true"); } catch {}
     }
   }, [embeddedWallet, privyAvailable]);
 
   const requestDelegation = useCallback(async () => {
     setIsDelegated(true);
-    try {
-      localStorage.setItem(DELEGATION_KEY, "true");
-    } catch {}
+    try { localStorage.setItem(DELEGATION_KEY, "true"); } catch {}
   }, []);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
-    try {
-      sessionStorage.setItem("claw_delegation_dismissed", "true");
-    } catch {}
+    try { sessionStorage.setItem("claw_delegation_dismissed", "true"); } catch {}
   }, []);
 
   if (!privyAvailable) return FALLBACK;

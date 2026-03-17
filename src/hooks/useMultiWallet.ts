@@ -6,12 +6,11 @@
  */
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { useWallets, useCreateWallet } from "@privy-io/react-auth/solana";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 import { getPersistedOrder, clearPersistedOrder } from "@/hooks/useDevWalletRotation";
 
 const MAX_WALLETS = 25;
@@ -44,9 +43,11 @@ const FALLBACK = {
 
 export function useMultiWallet() {
   const privyAvailable = usePrivyAvailable();
+  const bridge = usePrivyBridge();
   const { profileId } = useAuth();
-  const { wallets, ready } = useWallets();
-  const { createWallet } = useCreateWallet();
+
+  const { solanaWallets: wallets, solanaWalletsReady: ready, solanaCreateWallet } = bridge;
+
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [hiddenAddresses, setHiddenAddresses] = useState<Set<string>>(new Set());
@@ -159,7 +160,7 @@ export function useMultiWallet() {
 
     setCreating(true);
     try {
-      const newWallet = await createWallet({ createAdditional: true });
+      const newWallet = await solanaCreateWallet.createWallet({ createAdditional: true });
       let address = (newWallet as any)?.address as string | undefined;
 
       if (!address) {
@@ -193,7 +194,7 @@ export function useMultiWallet() {
     } finally {
       setCreating(false);
     }
-  }, [createWallet, embeddedWallets.length, profileId]);
+  }, [solanaCreateWallet, embeddedWallets.length, profileId]);
 
   const renameWallet = useCallback(async (address: string, newLabel: string) => {
     setLabels((prev) => ({ ...prev, [address]: newLabel }));

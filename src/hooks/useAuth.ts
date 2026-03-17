@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 import { privyUserIdToUuid } from "@/lib/privyUuid";
 
 export interface AuthUser {
@@ -38,32 +37,27 @@ const FALLBACK: UseAuthReturn = {
 
 export function useAuth(): UseAuthReturn {
   const privyAvailable = usePrivyAvailable();
-
-  // Always call all hooks unconditionally
-  const privy = usePrivy();
-  const { wallets } = useWallets();
+  const bridge = usePrivyBridge();
   const [profileId, setProfileId] = useState<string | null>(null);
 
-  const user = privy?.user ?? null;
-  const ready = privy?.ready ?? false;
-  const authenticated = privy?.authenticated ?? false;
+  const { privy, evmWallets } = bridge;
+  const user = privy.user;
 
   useEffect(() => {
-    if (!privyAvailable) return;
-    if (user?.id) {
-      privyUserIdToUuid(user.id).then(setProfileId);
-    } else {
+    if (!privyAvailable || !user?.id) {
       setProfileId(null);
+      return;
     }
+    privyUserIdToUuid(user.id).then(setProfileId);
   }, [user?.id, privyAvailable]);
 
   const solanaAddress = useMemo(() => {
     if (!privyAvailable) return null;
     if (user?.wallet?.address) return user.wallet.address;
-    const solanaWallet = wallets?.find((w) => w.address?.length > 30);
+    const solanaWallet = evmWallets?.find((w: any) => w.address?.length > 30);
     if (solanaWallet?.address) return solanaWallet.address;
     return null;
-  }, [wallets, user?.wallet?.address, privyAvailable]);
+  }, [evmWallets, user?.wallet?.address, privyAvailable]);
 
   const authUser = useMemo<AuthUser | null>(() => {
     if (!privyAvailable || !user) return null;
@@ -89,8 +83,8 @@ export function useAuth(): UseAuthReturn {
 
   return {
     user: authUser,
-    isAuthenticated: authenticated,
-    isLoading: !ready,
+    isAuthenticated: privy.authenticated,
+    isLoading: !privy.ready,
     solanaAddress,
     profileId,
     login: privy.login,

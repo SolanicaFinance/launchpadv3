@@ -1,46 +1,45 @@
 import { useMemo, useEffect, useState } from "react";
-import { useWallets, useCreateWallet, usePrivy } from "@privy-io/react-auth";
-import { usePrivyAvailable } from "@/providers/PrivyProviderWrapper";
+import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 
 const FALLBACK = { address: undefined, isReady: true, wallet: null } as const;
 
 export function usePrivyEvmWallet() {
   const privyAvailable = usePrivyAvailable();
-  const { wallets } = useWallets();
-  const { ready, authenticated } = usePrivy();
-  const { createWallet } = useCreateWallet();
+  const bridge = usePrivyBridge();
   const [creatingWallet, setCreatingWallet] = useState(false);
 
+  const { privy, evmWallets, evmCreateWallet } = bridge;
+
   const evmWallet = useMemo(() => {
-    if (!privyAvailable || !wallets || wallets.length === 0) return null;
-    return wallets.find(
-      (w) => w.walletClientType === "privy" && w.address?.startsWith("0x")
-    ) || wallets.find(
-      (w) => w.address?.startsWith("0x")
+    if (!privyAvailable || !evmWallets || evmWallets.length === 0) return null;
+    return evmWallets.find(
+      (w: any) => w.walletClientType === "privy" && w.address?.startsWith("0x")
+    ) || evmWallets.find(
+      (w: any) => w.address?.startsWith("0x")
     ) || null;
-  }, [wallets, privyAvailable]);
+  }, [evmWallets, privyAvailable]);
 
   const address = evmWallet?.address || undefined;
 
   useEffect(() => {
-    if (!privyAvailable || !ready || !authenticated || evmWallet || creatingWallet) return;
+    if (!privyAvailable || !privy.ready || !privy.authenticated || evmWallet || creatingWallet) return;
 
     setCreatingWallet(true);
-    createWallet()
-      .then((wallet) => {
+    evmCreateWallet.createWallet()
+      .then((wallet: any) => {
         console.log("[usePrivyEvmWallet] Created EVM wallet:", wallet?.address);
       })
       .catch((err: any) => {
         console.warn("[usePrivyEvmWallet] Create wallet:", err?.message || err);
       })
       .finally(() => setCreatingWallet(false));
-  }, [ready, authenticated, evmWallet, createWallet, creatingWallet, privyAvailable]);
+  }, [privy.ready, privy.authenticated, evmWallet, evmCreateWallet, creatingWallet, privyAvailable]);
 
   if (!privyAvailable) return FALLBACK;
 
   return {
     address,
-    isReady: ready && !creatingWallet,
+    isReady: privy.ready && !creatingWallet,
     wallet: evmWallet,
   };
 }
