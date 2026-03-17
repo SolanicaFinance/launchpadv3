@@ -337,18 +337,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
             </div>
           </div>
 
-          {/* HOLDERS */}
-          <div className="text-right">
-            <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
-              Holders
-            </span>
-            <div className="flex items-center gap-1.5 justify-end">
-              <Users className="flex-shrink-0" style={{ width: "14px", height: "14px", color: "#4A4A5A" }} />
-              <span className="font-mono font-bold" style={{ fontSize: "14px", color: "#FFFFFF", opacity: 0.85 }}>
-                {holders >= 1000 ? `${(holders / 1000).toFixed(1)}K` : holders}
-              </span>
-            </div>
-          </div>
+          {/* HOLDERS - moved to absolute top-right */}
 
           {/* VOL 24H */}
           <div className="col-span-2">
