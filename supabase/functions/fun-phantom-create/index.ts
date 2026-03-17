@@ -286,10 +286,13 @@ Deno.serve(async (req) => {
           if (!vError && vData && vData.length > 0) {
             resolvedVanityId = vData[0].id;
             resolvedVanityPublicKey = vData[0].public_key;
-            // secret_key_encrypted is now stored as PLAIN HEX — no decryption needed
             resolvedVanitySecretKeyHex = vData[0].secret_key_encrypted;
-            
-            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, '(plain hex, no decryption)');
+
+            console.log(`[fun-phantom-create] Pre-reserved vanity (${suffix}):`, vData[0].public_key, {
+              vanityId: resolvedVanityId,
+              hasSecretKeyHex: Boolean(resolvedVanitySecretKeyHex),
+              secretKeyHexLength: resolvedVanitySecretKeyHex?.length ?? 0,
+            });
             break;
           }
           console.log(`[fun-phantom-create] No vanity for suffix '${suffix}'`);
