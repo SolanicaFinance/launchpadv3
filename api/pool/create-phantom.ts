@@ -84,6 +84,67 @@ function getTreasuryKeypair(): Keypair {
   }
 }
 
+function getVanityDecryptionKeys(): string[] {
+  return Array.from(new Set([
+    process.env.TREASURY_PRIVATE_KEY?.slice(0, 32),
+    process.env.WALLET_ENCRYPTION_KEY?.slice(0, 32),
+    process.env.API_ENCRYPTION_KEY?.slice(0, 32),
+    'default-encryption-key-12345678',
+  ].filter((value): value is string => Boolean(value))));
+}
+
+function xorDecryptHex(hex: string, encryptionKey: string): string {
+  const keyBytes = Buffer.from(encryptionKey, 'utf8');
+  const encryptedBytes = Buffer.from(hex, 'hex');
+  const decrypted = Buffer.alloc(encryptedBytes.length);
+
+  for (let i = 0; i < encryptedBytes.length; i++) {
+    decrypted[i] = encryptedBytes[i] ^ keyBytes[i % keyBytes.length];
+  }
+
+  return decrypted.toString('hex');
+}
+
+function tryBuildVanityKeypair(secretKeyHex: string, expectedPublicKey: string): Keypair | null {
+  try {
+    const secretKeyBytes = Buffer.from(secretKeyHex, 'hex');
+    if (secretKeyBytes.length !== 64) return null;
+    const keypair = Keypair.fromSecretKey(new Uint8Array(secretKeyBytes));
+    return keypair.publicKey.toBase58() === expectedPublicKey ? keypair : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveVanityKeypairFromPayload(params: {
+  vanityPublicKey: string;
+  vanitySecretKeyHex?: string | null;
+  vanityEncryptedSecretKey?: string | null;
+}): { keypair: Keypair; source: string } | null {
+  const { vanityPublicKey, vanitySecretKeyHex, vanityEncryptedSecretKey } = params;
+
+  if (vanitySecretKeyHex) {
+    const directKeypair = tryBuildVanityKeypair(vanitySecretKeyHex, vanityPublicKey);
+    if (directKeypair) {
+      return { keypair: directKeypair, source: 'edge-decrypted' };
+    }
+    console.warn('[create-phantom] Direct vanity payload did not validate against expected public key');
+  }
+
+  if (vanityEncryptedSecretKey) {
+    for (const encryptionKey of getVanityDecryptionKeys()) {
+      const decryptedHex = xorDecryptHex(vanityEncryptedSecretKey, encryptionKey);
+      const decryptedKeypair = tryBuildVanityKeypair(decryptedHex, vanityPublicKey);
+      if (decryptedKeypair) {
+        return { keypair: decryptedKeypair, source: 'encrypted-fallback' };
+      }
+    }
+    console.warn('[create-phantom] Encrypted vanity payload could not be decrypted with available keys');
+  }
+
+  return null;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
