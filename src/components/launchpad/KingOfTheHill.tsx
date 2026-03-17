@@ -313,7 +313,7 @@ function KingCard({ token, rank, quickBuyAmount, sparklineData }: { token: KingT
         </div>
 
         {/* Metrics overlay */}
-        <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-2 p-2">
+        <div className="relative z-10 flex flex-col gap-2 p-2">
           {/* MCAP */}
           <div>
             <span className="block mb-0.5 uppercase tracking-[0.12em] font-mono font-semibold" style={{ fontSize: "9px", color: "#6E6E80" }}>
