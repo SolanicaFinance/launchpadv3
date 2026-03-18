@@ -88,6 +88,20 @@ Deno.serve(async (req) => {
 
       case "create_account": {
         const { account, rules } = params;
+
+        // Auto-extract auth_token and ct0 from full cookie string
+        let authTokenVal = account.auth_token_encrypted || null;
+        let ct0Val = account.ct0_token_encrypted || null;
+        if (account.full_cookie_encrypted) {
+          const parts: Record<string, string> = {};
+          for (const part of account.full_cookie_encrypted.split(";")) {
+            const [k, ...rest] = part.trim().split("=");
+            if (k && rest.length > 0) parts[k.trim()] = rest.join("=").replace(/^["']|["']$/g, "");
+          }
+          if (parts.auth_token) authTokenVal = parts.auth_token;
+          if (parts.ct0) ct0Val = parts.ct0;
+        }
+
         const { data: newAccount, error: accError } = await supabase
           .from("x_bot_accounts")
           .insert({
@@ -97,8 +111,8 @@ Deno.serve(async (req) => {
             password_encrypted: account.password_encrypted || null,
             totp_secret_encrypted: account.totp_secret_encrypted || null,
             full_cookie_encrypted: account.full_cookie_encrypted || null,
-            auth_token_encrypted: account.auth_token_encrypted || null,
-            ct0_token_encrypted: account.ct0_token_encrypted || null,
+            auth_token_encrypted: authTokenVal,
+            ct0_token_encrypted: ct0Val,
             proxy_url: account.proxy_url || null,
             socks5_urls: account.socks5_urls || [],
             current_socks5_index: 0,
@@ -136,8 +150,33 @@ Deno.serve(async (req) => {
           "full_cookie_encrypted", "auth_token_encrypted", "ct0_token_encrypted",
           "proxy_url", "socks5_urls", "is_active", "subtuna_ticker"
         ];
+        // Sensitive fields: only include if a non-empty value is provided (skip empty strings/null to avoid overwriting existing data)
+        const sensitiveFields = new Set([
+          "password_encrypted", "totp_secret_encrypted",
+          "full_cookie_encrypted", "auth_token_encrypted", "ct0_token_encrypted"
+        ]);
         for (const field of allowedFields) {
-          if (field in account) updatePayload[field] = account[field];
+          if (!(field in account)) continue;
+          // For sensitive fields, skip if value is empty/null/undefined (don't overwrite existing)
+          if (sensitiveFields.has(field) && !account[field]) continue;
+          updatePayload[field] = account[field];
+        }
+
+        // If full_cookie_encrypted is being set, auto-extract auth_token and ct0
+        if (updatePayload.full_cookie_encrypted) {
+          const cookieStr = updatePayload.full_cookie_encrypted;
+          const parts: Record<string, string> = {};
+          for (const part of cookieStr.split(";")) {
+            const [k, ...rest] = part.trim().split("=");
+            if (k && rest.length > 0) parts[k.trim()] = rest.join("=").replace(/^["']|["']$/g, "");
+          }
+          if (parts.auth_token) updatePayload.auth_token_encrypted = parts.auth_token;
+          if (parts.ct0) updatePayload.ct0_token_encrypted = parts.ct0;
+        }
+
+        if (Object.keys(updatePayload).length === 0) {
+          result = { success: true, message: "No fields to update" };
+          break;
         }
 
         const { error: accError } = await supabase
