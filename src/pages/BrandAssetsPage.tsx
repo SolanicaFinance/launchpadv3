@@ -174,7 +174,7 @@ export default function BrandAssetsPage() {
   }, []);
 
   return (
-    <LaunchpadLayout>
+    <div>
       <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground mb-1">Brand Asset Generator</h1>
