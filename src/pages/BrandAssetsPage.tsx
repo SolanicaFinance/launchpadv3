@@ -65,6 +65,51 @@ export default function BrandAssetsPage() {
     return canvas.toDataURL("image/png");
   }, []);
 
+  const generateRotatingGif = useCallback(async (logo: HTMLImageElement): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const size = 200;
+      const logoSize = 140;
+      const frames = 36;
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: size,
+        height: size,
+        workerScript: "https://unpkg.com/gif.js@0.2.0/dist/gif.worker.js",
+        transparent: null,
+      });
+
+      for (let i = 0; i < frames; i++) {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d")!;
+
+        ctx.fillStyle = "#212124";
+        ctx.fillRect(0, 0, size, size);
+
+        const angle = (i / frames) * Math.PI * 2;
+        const cx = size / 2;
+        const cy = size / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.drawImage(logo, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
+        ctx.restore();
+
+        gif.addFrame(canvas, { delay: 50, copy: true });
+      }
+
+      gif.on("finished", (blob: Blob) => {
+        resolve(URL.createObjectURL(blob));
+      });
+
+      gif.on("error", reject);
+      gif.render();
+    });
+  }, []);
+
   const generateHeaderImage = useCallback(async (logo: HTMLImageElement, title: string, subtitle: string): Promise<string> => {
     const canvas = document.createElement("canvas");
     canvas.width = 600;
