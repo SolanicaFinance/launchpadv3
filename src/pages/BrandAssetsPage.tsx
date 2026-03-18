@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Download, ImageIcon, Loader2 } from "lucide-react";
-import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 import GIF from "gif.js";
