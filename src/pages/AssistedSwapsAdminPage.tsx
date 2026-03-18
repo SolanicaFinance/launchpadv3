@@ -61,35 +61,46 @@ export default function AssistedSwapsAdminPage() {
     setUserBalance(null);
 
     try {
-      // First resolve the wallet address if it's not already one
-      let wallet = userIdentifier.trim();
-      const isWallet = !wallet.startsWith("did:privy:") && !/^[0-9a-f]{8}-/i.test(wallet);
+      // Normalize the identifier
+      let identifier = userIdentifier.trim();
+      
+      // Auto-detect bare Privy user IDs (alphanumeric, starts with "cm", no special chars, not a valid base58 solana address)
+      // Solana addresses are 32-44 chars of base58. Privy IDs are shorter lowercase alphanumeric.
+      const isPrivyDid = identifier.startsWith("did:privy:");
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(identifier);
+      const looksLikeSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
+      const isBarePrivyId = !isPrivyDid && !isUuid && !looksLikeSolanaAddress && /^[a-z0-9]{10,}$/.test(identifier);
+      
+      if (isBarePrivyId) {
+        identifier = `did:privy:${identifier}`;
+      }
 
-      if (!isWallet) {
-        // Need to look up wallet from DB
-        let profile;
-        if (wallet.startsWith("did:privy:")) {
-          const { data } = await supabase
-            .from("profiles")
-            .select("solana_wallet_address")
-            .eq("privy_did", wallet)
-            .maybeSingle();
-          profile = data;
-        } else {
-          const { data } = await supabase
-            .from("profiles")
-            .select("solana_wallet_address")
-            .eq("id", wallet)
-            .maybeSingle();
-          profile = data;
-        }
-        if (profile?.solana_wallet_address) {
-          wallet = profile.solana_wallet_address;
-        } else {
-          toast.error("Could not resolve wallet address");
-          setFetchingBalance(false);
-          return;
-        }
+      // Resolve wallet address from DB
+      let wallet: string | null = null;
+      
+      if (identifier.startsWith("did:privy:")) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("solana_wallet_address")
+          .eq("privy_did", identifier)
+          .maybeSingle();
+        wallet = data?.solana_wallet_address || null;
+      } else if (isUuid) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("solana_wallet_address")
+          .eq("id", identifier)
+          .maybeSingle();
+        wallet = data?.solana_wallet_address || null;
+      } else {
+        // It's already a wallet address
+        wallet = identifier;
+      }
+
+      if (!wallet) {
+        toast.error("Could not resolve wallet address from this identifier");
+        setFetchingBalance(false);
+        return;
       }
 
       setResolvedWallet(wallet);
