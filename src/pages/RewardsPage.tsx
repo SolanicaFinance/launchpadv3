@@ -241,6 +241,35 @@ export default function RewardsPage() {
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <XIcon className="h-4 w-4" />}
               {linking ? "Authorizing..." : "Authorize X Account"}
             </button>
+
+            {/* Already linked conflict resolution */}
+            {alreadyLinkedInfo && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left space-y-3">
+                <p className="text-xs font-mono font-bold text-destructive uppercase tracking-wider">
+                  Account Conflict Detected
+                </p>
+                <p className="text-[11px] font-mono text-muted-foreground">
+                  Your X account <span className="text-foreground font-bold">@{alreadyLinkedInfo.twitterUsername}</span> is linked to a different session.
+                </p>
+                <div className="text-[10px] font-mono text-muted-foreground/70 space-y-1">
+                  <p>Privy DID: <span className="text-foreground/60 break-all">{alreadyLinkedInfo.existingPrivyDid}</span></p>
+                  {alreadyLinkedInfo.wallets?.length > 0 && (
+                    <p>Wallets: {alreadyLinkedInfo.wallets.map((w: any) => 
+                      <span key={w.address} className="text-foreground/60 break-all block">{w.address} ({w.chain})</span>
+                    )}</p>
+                  )}
+                  <p>{alreadyLinkedInfo.isSameUser ? "✅ Same user (safe to unlink)" : "⚠️ Different user session"}</p>
+                </div>
+                <button
+                  onClick={handleForceUnlink}
+                  disabled={unlinking}
+                  className="w-full py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-widest bg-destructive/15 text-destructive border border-destructive/20 hover:bg-destructive/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {unlinking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {unlinking ? "Unlinking..." : "Unlink from old session & retry"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </LaunchpadLayout>
