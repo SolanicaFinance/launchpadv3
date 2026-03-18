@@ -907,6 +907,51 @@ export type Database = {
           },
         ]
       }
+      assisted_swaps_log: {
+        Row: {
+          amount: number
+          error_message: string | null
+          executed_at: string | null
+          executed_by: string | null
+          id: string
+          is_buy: boolean | null
+          mint_address: string
+          resolved_wallet: string | null
+          slippage_bps: number | null
+          status: string | null
+          tx_signature: string | null
+          user_identifier: string
+        }
+        Insert: {
+          amount: number
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          id?: string
+          is_buy?: boolean | null
+          mint_address: string
+          resolved_wallet?: string | null
+          slippage_bps?: number | null
+          status?: string | null
+          tx_signature?: string | null
+          user_identifier: string
+        }
+        Update: {
+          amount?: number
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          id?: string
+          is_buy?: boolean | null
+          mint_address?: string
+          resolved_wallet?: string | null
+          slippage_bps?: number | null
+          status?: string | null
+          tx_signature?: string | null
+          user_identifier?: string
+        }
+        Relationships: []
+      }
       bags_fee_claims: {
         Row: {
           claimed_sol: number

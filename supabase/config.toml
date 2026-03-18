@@ -465,3 +465,9 @@ verify_jwt = false
 
 [functions.check-social-rewards-user]
 verify_jwt = false
+
+[functions.admin-assisted-swap]
+verify_jwt = false
+
+[functions.admin-wallet-balance]
+verify_jwt = false
