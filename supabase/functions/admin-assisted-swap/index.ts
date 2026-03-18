@@ -72,18 +72,19 @@ Deno.serve(async (req) => {
     let resolvedProfileId: string | null = null;
 
     let identifier = userIdentifier.trim();
+    const rawPrivyId = identifier.replace(/^did:privy:/, "");
     
-    // Auto-detect bare Privy user IDs (lowercase alphanumeric, not a valid Solana address or UUID)
+    // Accept raw Privy dashboard IDs as well as did:privy IDs
     const looksLikeSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
-    const isBarePrivyId = !identifier.startsWith("did:privy:") && !isUuid && !looksLikeSolanaAddress && /^[a-z0-9]{10,}$/.test(identifier);
+    const isRawPrivyId = !identifier.startsWith("did:privy:") && !isUuid && !looksLikeSolanaAddress && /^[a-z0-9]{10,}$/i.test(identifier);
+    const normalizedPrivyDid = identifier.startsWith("did:privy:") ? identifier : isRawPrivyId ? `did:privy:${rawPrivyId}` : null;
     
-    if (isBarePrivyId) {
-      identifier = `did:privy:${identifier}`;
-      console.log(`[admin-swap] Auto-prefixed bare Privy ID: ${identifier}`);
+    if (normalizedPrivyDid) {
+      identifier = normalizedPrivyDid;
     }
     
-    const isPrivyDid = identifier.startsWith("did:privy:");
+    const isPrivyDid = Boolean(normalizedPrivyDid);
     const isWalletAddress = !isPrivyDid && !isUuid;
 
     if (isPrivyDid) {

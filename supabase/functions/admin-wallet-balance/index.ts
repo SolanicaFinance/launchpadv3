@@ -24,9 +24,9 @@ function looksLikeSolanaAddress(value: string) {
 function normalizePrivyIdentifier(value: string) {
   const trimmed = value.trim();
 
-  if (trimmed.startsWith("did:privy:")) return trimmed;
   if (isUuid(trimmed)) return trimmed;
   if (looksLikeSolanaAddress(trimmed)) return trimmed;
+  if (trimmed.startsWith("did:privy:")) return trimmed;
   if (/^[a-z0-9]{10,}$/i.test(trimmed)) return `did:privy:${trimmed}`;
 
   return trimmed;
