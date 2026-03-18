@@ -94,12 +94,14 @@ export default function AssistedSwapsAdminPage() {
 
       setResolvedWallet(wallet);
 
-      const { data, error } = await supabase.functions.invoke("admin-wallet-balance", {
-        body: { walletAddress: wallet, adminPassword: ADMIN_PASSWORD },
-      });
+      const balanceUrl = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-wallet-balance`);
+      balanceUrl.searchParams.set("walletAddress", wallet);
+      balanceUrl.searchParams.set("adminPassword", ADMIN_PASSWORD);
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const response = await fetch(balanceUrl.toString(), { method: "GET" });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data?.error || "Failed to fetch balance");
 
       setUserBalance(data.balanceSol);
       toast.success(`Balance: ${data.balanceSol.toFixed(4)} SOL`);
