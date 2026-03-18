@@ -124,7 +124,7 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
         body: JSON.stringify({
           user_name: xBotFull.username,
-          email: xBotFull.email_encrypted,
+          email: xBotFull.email,
           password: xBotFull.password_encrypted,
           proxy: proxyUrl,
           ...(xBotFull.totp_secret_encrypted ? { totp_secret: xBotFull.totp_secret_encrypted } : {}),
