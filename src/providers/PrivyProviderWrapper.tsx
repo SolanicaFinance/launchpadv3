@@ -59,6 +59,7 @@ const DEFAULT_BRIDGE: PrivyBridgeData = {
   solanaCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
   solanaSignAndSend: { signAndSendTransaction: async () => { throw new Error("Privy not ready"); } },
   solanaSign: { signTransaction: async () => { throw new Error("Privy not ready"); } },
+  delegateWallet: async () => { throw new Error("Privy not ready"); },
 };
 
 const PrivyBridgeContext = createContext<PrivyBridgeData>(DEFAULT_BRIDGE);
