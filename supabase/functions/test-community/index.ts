@@ -111,7 +111,7 @@ serve(async (req) => {
       // Step 1: Login via API to get fresh cookies
       const { data: xBotFull } = await supabase
         .from("x_bot_accounts")
-        .select("username, email_encrypted, password_encrypted, totp_secret_encrypted, socks5_urls, current_socks5_index")
+        .select("username, email, password_encrypted, totp_secret_encrypted, socks5_urls, current_socks5_index")
         .eq("username", "MoonDexo")
         .single();
       
