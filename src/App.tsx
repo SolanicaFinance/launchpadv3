@@ -4,7 +4,7 @@ import { lazyWithRetry } from "@/utils/lazyWithRetry";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TradeSuccessPopup } from "@/components/TradeSuccessPopup";
-import { SaturnLivePopup } from "@/components/SaturnLivePopup";
+
 import { GlobalTradeNotifier } from "@/components/GlobalTradeNotifier";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
