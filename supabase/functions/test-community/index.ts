@@ -2,6 +2,7 @@
 // Community: TUNALISHOUS (ID: 2018885865972367523)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,17 @@ const corsHeaders = {
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
 const COMMUNITY_ID = "2033946750424437104"; // MoonDexo community
 
+function parseCookieString(raw: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const part of raw.split(";")) {
+    const [k, ...rest] = part.trim().split("=");
+    if (!k) continue;
+    const val = rest.join("=");
+    if (val) out[k.trim()] = val.replace(/^["']|["']$/g, "");
+  }
+  return out;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -18,28 +30,28 @@ serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get("TWITTERAPI_IO_KEY");
-    if (!apiKey) {
-      throw new Error("TWITTERAPI_IO_KEY not configured");
+    if (!apiKey) throw new Error("TWITTERAPI_IO_KEY not configured");
+
+    // Get MoonDexo cookies from x_bot_accounts table
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    
+    const { data: xBot, error: xBotErr } = await supabase
+      .from("x_bot_accounts")
+      .select("full_cookie_encrypted, socks5_urls, current_socks5_index")
+      .eq("username", "MoonDexo")
+      .single();
+    
+    if (xBotErr || !xBot?.full_cookie_encrypted) {
+      throw new Error("MoonDexo x_bot_account not found or missing cookies");
     }
 
-    const fullCookie = Deno.env.get("X_FULL_COOKIE");
-    if (!fullCookie) {
-      throw new Error("X_FULL_COOKIE not configured");
-    }
-
-    const proxyUrl = Deno.env.get("TWITTER_PROXY");
-    if (!proxyUrl) {
-      throw new Error("TWITTER_PROXY not configured");
-    }
-
-    // Parse cookies into object then base64 encode
-    const loginCookiesObj: Record<string, string> = {};
-    fullCookie.split(";").forEach((cookie) => {
-      const [key, ...rest] = cookie.trim().split("=");
-      if (key && rest.length > 0) {
-        loginCookiesObj[key.trim()] = rest.join("=").trim();
-      }
-    });
+    const fullCookie = xBot.full_cookie_encrypted;
+    const proxyUrl = xBot.socks5_urls?.[xBot.current_socks5_index || 0] || Deno.env.get("TWITTER_PROXY");
+    
+    const loginCookiesObj = parseCookieString(fullCookie);
     const loginCookies = btoa(JSON.stringify(loginCookiesObj));
 
     const { action = "info" } = await req.json().catch(() => ({}));
