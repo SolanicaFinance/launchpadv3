@@ -29,6 +29,7 @@ const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
 const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
 const BrandAssetsPage = lazy(() => import("./BrandAssetsPage"));
 const BatchLaunchAdminPage = lazy(() => import("./BatchLaunchAdminPage"));
+const AssistedSwapsAdminPage = lazy(() => import("./AssistedSwapsAdminPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
