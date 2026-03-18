@@ -28,6 +28,7 @@ const SaturnForumAdminPage = lazy(() => import("./SaturnForumAdminPage"));
 const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
 const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
+const BrandAssetsPage = lazy(() => import("./BrandAssetsPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -42,17 +43,17 @@ function TabLoader() {
 
 const TAB_CONFIG = [
   { value: "treasury", label: "Treasury", icon: Wallet },
-  { value: "announcements", label: "Announcements", icon: Megaphone },
-  { value: "deployer", label: "Deployer Dust", icon: Database },
+  { value: "announcements", label: "Announce", icon: Megaphone },
+  { value: "deployer", label: "Deployer", icon: Database },
   { value: "xbots", label: "X Bots", icon: Bot },
-  { value: "agent-logs", label: "Agent Logs", icon: ScrollText },
-  
+  { value: "agent-logs", label: "Logs", icon: ScrollText },
   { value: "follower-scan", label: "Followers", icon: Users },
-  { value: "promo", label: "Promo/Influencer", icon: Shield },
+  { value: "promo", label: "Promo", icon: Shield },
   { value: "forum", label: BRAND.forumName, icon: Shield },
-  { value: "saturn-launch", label: "Saturn Launch", icon: Rocket },
-  { value: "partner-fees", label: "Partner Fees", icon: Wallet },
-  { value: "x-restyler", label: "X Restyler", icon: Wand2 },
+  { value: "saturn-launch", label: "Launch", icon: Rocket },
+  { value: "partner-fees", label: "Fees", icon: Wallet },
+  { value: "x-restyler", label: "Restyler", icon: Wand2 },
+  { value: "brand-assets", label: "Assets", icon: Wand2 },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -148,11 +149,11 @@ export default function AdminPanelPage() {
               onValueChange={(v) => setSearchParams({ tab: v })}
               className="w-full"
             >
-              <div className="overflow-x-auto pb-2">
-                <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
+              <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                <TabsList className="inline-flex flex-wrap gap-1 h-auto p-1 w-full md:w-auto">
                   {TAB_CONFIG.map(({ value, label, icon: Icon }) => (
-                    <TabsTrigger key={value} value={value} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                      <Icon className="h-3.5 w-3.5" />
+                    <TabsTrigger key={value} value={value} className="flex items-center gap-1 text-[11px] px-2 py-1.5 whitespace-nowrap">
+                      <Icon className="h-3 w-3" />
                       {label}
                     </TabsTrigger>
                   ))}
@@ -224,6 +225,12 @@ export default function AdminPanelPage() {
               <TabsContent value="x-restyler" className="mt-6">
                 <Suspense fallback={<TabLoader />}>
                   <XPostRestylerPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="brand-assets" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <BrandAssetsPage />
                 </Suspense>
               </TabsContent>
             </Tabs>
