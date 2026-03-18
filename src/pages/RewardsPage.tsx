@@ -123,16 +123,36 @@ export default function RewardsPage() {
     }
   };
 
+  const [alreadyLinkedInfo, setAlreadyLinkedInfo] = useState<any>(null);
+  const [unlinking, setUnlinking] = useState(false);
+
   const handleLinkTwitter = async () => {
     setLinking(true);
+    setAlreadyLinkedInfo(null);
     try {
       await linkTwitter();
     } catch (err: any) {
       const msg = err?.message || String(err);
       if (msg.includes("closed") || msg.includes("cancelled")) {
-        // User closed the popup — do nothing
+        // User closed popup
       } else if (msg.includes("already been linked") || msg.includes("already linked")) {
-        toast.error("This X account is already linked to another user. Please use a different X account or log in with that account instead.");
+        toast.error("This X account is already linked to another session. Checking details...");
+        // Try to find which account has it
+        try {
+          const twitterUsername = prompt("Enter your X username (without @) to look up:");
+          if (twitterUsername) {
+            const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
+              body: { twitterUsername, action: "info", currentPrivyDid: user?.privyId },
+            });
+            if (data?.found) {
+              setAlreadyLinkedInfo({ ...data, twitterUsername });
+            } else {
+              toast.error("Could not find linked account. Try logging out and back in.");
+            }
+          }
+        } catch (lookupErr) {
+          console.error("Lookup failed:", lookupErr);
+        }
       } else {
         toast.error("Failed to link X account. Please try again.");
         console.error("linkTwitter error:", err);
@@ -142,7 +162,29 @@ export default function RewardsPage() {
     }
   };
 
-  // Privy still initializing — show spinner
+  const handleForceUnlink = async () => {
+    if (!alreadyLinkedInfo?.twitterUsername) return;
+    setUnlinking(true);
+    try {
+      const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
+        body: { 
+          twitterUsername: alreadyLinkedInfo.twitterUsername, 
+          action: "unlink",
+          currentPrivyDid: user?.privyId 
+        },
+      });
+      if (data?.success) {
+        toast.success("X account unlinked! You can now link it to your current account.");
+        setAlreadyLinkedInfo(null);
+      } else {
+        toast.error(data?.message || "Failed to unlink");
+      }
+    } catch (err: any) {
+      toast.error("Failed to unlink: " + (err.message || "Unknown error"));
+    } finally {
+      setUnlinking(false);
+    }
+  };
   if (!ready || isLoading) {
     return (
       <LaunchpadLayout>
