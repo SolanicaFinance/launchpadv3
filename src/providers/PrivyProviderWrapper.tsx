@@ -129,6 +129,7 @@ const PrivyProviderWithGate = lazy(async () => {
       solanaCreateWallet: DEFAULT_BRIDGE.solanaCreateWallet,
       solanaSignAndSend: DEFAULT_BRIDGE.solanaSignAndSend,
       solanaSign: DEFAULT_BRIDGE.solanaSign,
+      delegateWallet: DEFAULT_BRIDGE.delegateWallet,
     });
 
     const bridgeValue = useMemo<PrivyBridgeData>(() => ({
