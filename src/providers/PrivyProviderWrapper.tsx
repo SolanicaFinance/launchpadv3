@@ -36,6 +36,7 @@ export interface PrivyBridgeData {
   solanaCreateWallet: any;
   solanaSignAndSend: any;
   solanaSign: any;
+  delegateWallet: (params: { address: string; chainType: "solana" | "ethereum" }) => Promise<void>;
 }
 
 const noopAsync = async () => {};
@@ -58,6 +59,7 @@ const DEFAULT_BRIDGE: PrivyBridgeData = {
   solanaCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
   solanaSignAndSend: { signAndSendTransaction: async () => { throw new Error("Privy not ready"); } },
   solanaSign: { signTransaction: async () => { throw new Error("Privy not ready"); } },
+  delegateWallet: async () => { throw new Error("Privy not ready"); },
 };
 
 const PrivyBridgeContext = createContext<PrivyBridgeData>(DEFAULT_BRIDGE);
@@ -91,6 +93,7 @@ const PrivyProviderWithGate = lazy(async () => {
     const solCreate = solanaMod.useCreateWallet();
     const solSign = solanaMod.useSignAndSendTransaction();
     const solSignOnly = solanaMod.useSignTransaction();
+    const { delegateWallet } = mod.useHeadlessDelegatedActions();
 
     // Stable identity keys to avoid infinite effect loops
     const evmKey = (evmResult.wallets ?? []).map((w: any) => w.address).join(",");
@@ -106,6 +109,7 @@ const PrivyProviderWithGate = lazy(async () => {
         solanaCreateWallet: solCreate,
         solanaSignAndSend: solSign,
         solanaSign: solSignOnly,
+        delegateWallet,
       });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [evmKey, solKey, solReady, onData]);
@@ -125,6 +129,7 @@ const PrivyProviderWithGate = lazy(async () => {
       solanaCreateWallet: DEFAULT_BRIDGE.solanaCreateWallet,
       solanaSignAndSend: DEFAULT_BRIDGE.solanaSignAndSend,
       solanaSign: DEFAULT_BRIDGE.solanaSign,
+      delegateWallet: DEFAULT_BRIDGE.delegateWallet,
     });
 
     const bridgeValue = useMemo<PrivyBridgeData>(() => ({
