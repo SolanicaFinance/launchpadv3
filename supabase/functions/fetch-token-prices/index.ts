@@ -18,8 +18,9 @@ Deno.serve(async (req) => {
     }
 
     const prices: Record<string, number> = {};
+    const changes24h: Record<string, number> = {};
 
-    // Try Jupiter first
+    // Try Jupiter first for prices
     const jupApiKey = Deno.env.get("JUPITER_API_KEY") || Deno.env.get("VITE_JUPITER_API_KEY");
     const ids = mints.join(",");
     const headers: Record<string, string> = {};
@@ -44,44 +45,44 @@ Deno.serve(async (req) => {
       console.error("Jupiter fetch error:", e);
     }
 
-    // Fallback to DexScreener for any mints not found
-    const missing = mints.filter((m) => !prices[m]);
-    if (missing.length > 0) {
-      try {
-        const dsRes = await fetch(
-          `https://api.dexscreener.com/tokens/v1/solana/${missing.join(",")}`
-        );
-        if (dsRes.ok) {
-          const dsData = await dsRes.json();
-          // DexScreener returns an array of pairs
-          if (Array.isArray(dsData)) {
-            for (const mint of missing) {
-              // Find the pair with highest liquidity for this token
-              const pairs = dsData.filter(
-                (p: any) => p.baseToken?.address === mint
+    // Always hit DexScreener for 24h change data (and fallback prices)
+    try {
+      const dsRes = await fetch(
+        `https://api.dexscreener.com/tokens/v1/solana/${mints.join(",")}`
+      );
+      if (dsRes.ok) {
+        const dsData = await dsRes.json();
+        if (Array.isArray(dsData)) {
+          for (const mint of mints) {
+            const pairs = dsData.filter(
+              (p: any) => p.baseToken?.address === mint
+            );
+            if (pairs.length > 0) {
+              pairs.sort(
+                (a: any, b: any) =>
+                  (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)
               );
-              if (pairs.length > 0) {
-                // Sort by liquidity descending, pick best
-                pairs.sort(
-                  (a: any, b: any) =>
-                    (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)
-                );
-                const price = parseFloat(pairs[0].priceUsd);
-                if (price > 0) {
-                  prices[mint] = price;
-                }
+              const best = pairs[0];
+              // Fallback price
+              if (!prices[mint]) {
+                const price = parseFloat(best.priceUsd);
+                if (price > 0) prices[mint] = price;
+              }
+              // 24h change
+              if (best.priceChange?.h24 !== undefined) {
+                changes24h[mint] = Number(best.priceChange.h24);
               }
             }
           }
-        } else {
-          console.error("DexScreener API error:", dsRes.status);
         }
-      } catch (e) {
-        console.error("DexScreener fetch error:", e);
+      } else {
+        console.error("DexScreener API error:", dsRes.status);
       }
+    } catch (e) {
+      console.error("DexScreener fetch error:", e);
     }
 
-    return new Response(JSON.stringify({ prices }), {
+    return new Response(JSON.stringify({ prices, changes24h }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

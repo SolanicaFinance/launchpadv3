@@ -1,24 +1,14 @@
 import { TrendingUp, TrendingDown, Copy, Check } from "lucide-react";
 import { useTokenPrices } from "@/hooks/useTokenPrices";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 const SATURN_MINT = "36gRjqLAaVcfd7hRzWAYyfZsED6ChxmF5hfZYv9zpump";
 
 export function SaturnTokenPriceDisplay() {
-  const { data: prices } = useTokenPrices([SATURN_MINT]);
-  const currentPrice = prices?.[SATURN_MINT] ?? 0;
-
-  const prevPriceRef = useRef(currentPrice);
-  const [change, setChange] = useState(0);
+  const { data } = useTokenPrices([SATURN_MINT]);
+  const currentPrice = data?.prices?.[SATURN_MINT] ?? 0;
+  const change24h = data?.changes24h?.[SATURN_MINT] ?? 0;
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (currentPrice > 0 && prevPriceRef.current > 0 && currentPrice !== prevPriceRef.current) {
-      const pct = ((currentPrice - prevPriceRef.current) / prevPriceRef.current) * 100;
-      setChange(pct);
-    }
-    if (currentPrice > 0) prevPriceRef.current = currentPrice;
-  }, [currentPrice]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(SATURN_MINT);
@@ -26,7 +16,7 @@ export function SaturnTokenPriceDisplay() {
     setTimeout(() => setCopied(false), 1500);
   }, []);
 
-  const isUp = change >= 0;
+  const isUp = change24h >= 0;
 
   const formatPrice = (p: number) => {
     if (p === 0) return "$0.00";
@@ -52,7 +42,7 @@ export function SaturnTokenPriceDisplay() {
         isUp ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10"
       }`}>
         {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-        <span className="tabular-nums">{isUp ? "+" : ""}{change.toFixed(2)}%</span>
+        <span className="tabular-nums">{isUp ? "+" : ""}{change24h.toFixed(2)}%</span>
       </div>
 
       <button

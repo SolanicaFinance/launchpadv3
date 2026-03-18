@@ -1,8 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface TokenPriceData {
+  prices: Record<string, number>;
+  changes24h: Record<string, number>;
+}
+
 export function useTokenPrices(mints: string[]) {
-  return useQuery<Record<string, number>>({
+  return useQuery<TokenPriceData>({
     queryKey: ["token-prices", mints.sort().join(",")],
     enabled: mints.length > 0,
     staleTime: 30_000,
@@ -12,7 +17,10 @@ export function useTokenPrices(mints: string[]) {
         body: { mints },
       });
       if (error) throw error;
-      return (data?.prices ?? {}) as Record<string, number>;
+      return {
+        prices: (data?.prices ?? {}) as Record<string, number>,
+        changes24h: (data?.changes24h ?? {}) as Record<string, number>,
+      };
     },
   });
 }
