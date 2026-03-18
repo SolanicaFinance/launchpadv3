@@ -184,18 +184,29 @@ async function getWalletAuthDebug(walletId: string): Promise<string> {
 /**
  * Look up a Privy user and return their linked accounts.
  */
-export async function getPrivyUser(privyDid: string): Promise<PrivyUser> {
-  const res = await fetch(`${PRIVY_API_BASE}/api/v1/users/${encodeURIComponent(privyDid)}`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
+export async function getPrivyUser(privyIdOrDid: string): Promise<PrivyUser> {
+  const rawId = privyIdOrDid.replace(/^did:privy:/, "");
+  const candidates = Array.from(new Set([privyIdOrDid, rawId, `did:privy:${rawId}`]));
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Privy getUser failed (${res.status}): ${body}`);
+  let lastError = "Unknown error";
+
+  for (const candidate of candidates) {
+    const res = await fetch(`${PRIVY_API_BASE}/api/v1/users/${encodeURIComponent(candidate)}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (res.ok) {
+      return res.json();
+    }
+
+    lastError = await res.text();
+    if (res.status !== 404) {
+      throw new Error(`Privy getUser failed (${res.status}): ${lastError}`);
+    }
   }
 
-  return res.json();
+  throw new Error(`Privy getUser failed (404): ${lastError}`);
 }
 
 /**
