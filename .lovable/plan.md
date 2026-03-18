@@ -1,104 +1,61 @@
 
-## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-### Problem
-TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
-Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+# Rewards Dashboard Redesign
 
-### Architecture
-1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
-   - Privy embedded wallet handles all on-chain signing (same as trading)
-   - Users logged in via Privy can launch directly — no Phantom popup
-   - Logged-out users can still generate memes, prompted to login on Launch
+## Problem
+1. The rewards page looks bare and unfinished — plain text blocks, no visual hierarchy
+2. Shows "0 users joined" because the `social_rewards` table is empty (join flow may have failed or user hasn't completed it)
+3. No "Update Data" button for manual tweet scanning
+4. No leaderboard, no post history panel, no verification badges
+5. No per-user scan with 1-hour cooldown
 
-2. **Simplify the "phantom" mode → "launch" mode**
-   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
-   - Rename to generic wallet references since Privy handles everything
-   - Keep all sub-modes (random, describe, realistic, custom)
+## Plan
 
-3. **On-chain flow change:**
-   ```
-   Before: Phantom popup → user signs → broadcast
-   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
-   ```
+### 1. New Edge Function: `check-social-rewards-user`
+A per-user scan function (distinct from the batch `check-social-rewards` cron):
+- Accepts `{ twitterUsername, socialRewardId }` 
+- Enforces **1-hour cooldown** by checking `last_checked_at` timestamp on the `social_rewards` row
+- Fetches last 10 tweets via `twitterapi.io` (`/twitter/user/last_tweets`)
+- Filters tweets newer than `last_checked_post_id`
+- Checks for `$saturn` / `@saturnterminal` keywords
+- Inserts reward events (mention + engagement points) into `social_reward_events`
+- Updates `social_rewards.points`, `last_checked_at`, `last_checked_post_id`
+- Returns: `{ success, pointsEarned, tweetsChecked, nextUpdateAt, newEvents[] }`
 
-4. **Auth gate on launch:**
-   - Check `useAuth()` / `usePrivy()` for logged-in state
-   - If not logged in → trigger Privy login modal
-   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
+### 2. Complete Redesign of `RewardsPage.tsx`
+Replace the current page with a proper dashboard layout:
 
-### Files to modify:
-- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
-- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
-- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
-- `src/components/launchpad/CreateTokenModal.tsx` — same
-- `src/pages/FunLauncherPage.tsx` — same
+**Left Column / Main Area:**
+- **Profile Card** — avatar, display name, @username, verified badge (if `twitter_followers > 10000` = gold, `> 1000` = blue), follower count, join date
+- **Points Display** — large prominent points counter with animated number
+- **"Update Data" Button** — triggers `check-social-rewards-user`, shows cooldown timer if < 1 hour since last check, displays remaining time
+- **Qualifying Posts Panel** — scrollable list of all `social_reward_events` grouped by tweet, showing post text preview, link to tweet, individual point breakdowns (mention/views/RTs/comments), timestamps
 
-### Dependencies:
-- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
-- `src/hooks/useAuth.ts` (already exists)
-- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+**Right Column / Sidebar:**
+- **Point System Card** (existing, refined styling)
+- **Leaderboard** — top 10 users by points from `social_rewards` table, showing rank, avatar, username, points. Highlight current user's position
+- **Stats** — total users joined, total points distributed, user's rank
 
----
+**Pre-join states** (login, link X, join) remain as centered cards but with improved styling matching the dashboard aesthetic.
 
-## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
+### 3. Database — No Schema Changes Needed
+The existing `social_rewards` and `social_reward_events` tables have all necessary columns. RLS already allows public reads and service-role writes.
 
-### What was built:
-1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
-   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
-   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
-   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
-   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
-   - Records trade in DB + alpha_trades (non-blocking)
-   - Returns signature immediately with timing breakdown
+### 4. Fix "0 Users" Issue  
+The count query works but the table is empty. Ensure `handleJoin` properly calls `social-rewards-join` and surface any errors. Add a fallback auto-join on page load if Twitter is linked but no reward row exists.
 
-2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
-   - Single `supabase.functions.invoke('turbo-trade')` call
-   - No client-side tx building or signing
-   - Background query invalidation after 500ms
-   - Logs client roundtrip vs server execution time
+### 5. Leaderboard Component
+New `RewardsLeaderboard` component:
+- Fetches top 20 from `social_rewards` ordered by `points DESC`
+- Shows rank badges (gold/silver/bronze for top 3)
+- Highlights current user row
+- Shows avatar, username, points
 
-3. **Wired into trade components:**
-   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
-   - `PortfolioModal.tsx` — uses `useTurboSwap`
+### Expansion Ideas
+- **Referral system** — unique invite links, bonus points for referred users who join
+- **Weekly/monthly challenges** — bonus multipliers for posting streaks
+- **Tier system** — Bronze/Silver/Gold/Platinum based on cumulative points, each tier unlocks perks
+- **Post templates** — one-click tweet composer with pre-filled $SATURN mentions
+- **Achievement badges** — "First Post", "100 Points", "Top 10 Leaderboard", etc.
+- **Points redemption** — convert points to token airdrops or whitelist spots
 
-### Expected latency:
-```
-Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
-After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
-```
-
----
-
-## 6-Phase Axiom Feature Integration Plan (SAVED)
-
-### Phase 1: Copy Trade Execution
-- New `copy-trade-execute` edge function
-- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
-- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
-- New `copy_trade_log` table
-
-### Phase 2: Limit Orders (SL/TP)
-- Jupiter limit order program integration
-- `limit-order-create` edge function
-- `limit_orders` DB table
-- Limit order tab in trade panel
-
-### Phase 3: Real-Time WebSocket Token Feed
-- Helius WebSocket for sub-1s new pair detection
-- Replace Codex polling (~30s) 
-- Edge function → Supabase Realtime channel
-
-### Phase 4: DCA (Dollar Cost Averaging)
-- `dca_orders` DB table
-- `dca-execute` cron edge function
-- DCA tab in trade panel
-
-### Phase 5: Enhanced Token Safety
-- LP lock status, mint authority, honeypot detection
-- Safety score badge on Pulse cards
-
-### Phase 6: Wallet PnL Analytics
-- `wallet-pnl-calculate` edge function
-- Per-wallet realized/unrealized PnL
-- Rank tracked wallets by performance
