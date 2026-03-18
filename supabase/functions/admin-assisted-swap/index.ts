@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
 
     const deployerKeypair = parseKeypair(deployerPrivateKey);
     const walletAddress = deployerKeypair.publicKey.toBase58();
+    const connection = new Connection(heliusRpcUrl, "confirmed");
 
     console.log(`[admin-swap] Using deployer wallet: ${walletAddress}`);
     console.log(`[admin-swap] ${isBuy ? "BUY" : "SELL"} ${amount} on ${mintAddress}`);
