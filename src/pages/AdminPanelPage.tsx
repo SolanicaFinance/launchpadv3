@@ -227,6 +227,12 @@ export default function AdminPanelPage() {
                   <XPostRestylerPage />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="brand-assets" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <BrandAssetsPage />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
