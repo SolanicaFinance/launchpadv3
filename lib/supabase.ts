@@ -174,6 +174,47 @@ export async function getTokenByMint(mintAddress: string): Promise<Token | null>
       updated_at: funToken.updated_at,
     } as Token;
   }
+
+  // Fallback to claw_tokens table
+  const { data: clawToken, error: clawError } = await supabase
+    .from('claw_tokens')
+    .select('*')
+    .eq('mint_address', mintAddress)
+    .maybeSingle();
+
+  if (clawError) {
+    console.error('Error fetching token from claw_tokens:', clawError);
+    return null;
+  }
+
+  if (clawToken) {
+    return {
+      id: clawToken.id,
+      mint_address: clawToken.mint_address,
+      name: clawToken.name,
+      ticker: clawToken.ticker,
+      creator_wallet: clawToken.creator_wallet,
+      creator_id: null,
+      dbc_pool_address: clawToken.dbc_pool_address,
+      damm_pool_address: null,
+      virtual_sol_reserves: 30,
+      virtual_token_reserves: 1_000_000_000,
+      real_sol_reserves: 0,
+      real_token_reserves: 0,
+      total_supply: 1_000_000_000,
+      bonding_curve_progress: clawToken.bonding_progress || 0,
+      graduation_threshold_sol: 85,
+      price_sol: clawToken.price_sol || 0,
+      market_cap_sol: clawToken.market_cap_sol || 0,
+      volume_24h_sol: clawToken.volume_24h_sol || 0,
+      status: clawToken.status === 'active' ? 'bonding' : clawToken.status,
+      migration_status: 'pending',
+      holder_count: clawToken.holder_count || 0,
+      graduated_at: null,
+      created_at: clawToken.created_at,
+      updated_at: clawToken.updated_at,
+    } as Token;
+  }
   
   return null;
 }
