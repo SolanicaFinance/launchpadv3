@@ -187,7 +187,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Rewards</span>
             </Link>
             <a
-              href="https://x.com/saturntrade"
+              href="https://x.com/saturnterminal"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
