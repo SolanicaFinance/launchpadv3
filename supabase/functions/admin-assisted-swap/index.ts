@@ -126,8 +126,26 @@ Deno.serve(async (req) => {
     const txBytes = new Uint8Array(await pumpRes.arrayBuffer());
 
     // Deserialize and sign — do NOT replace blockhash, PumpPortal provides a fresh one
-    const connection = new Connection(heliusRpcUrl, "confirmed");
     const tx = VersionedTransaction.deserialize(txBytes);
+
+    // Guard: admin buys execute from deployer wallet, so ensure it has enough SOL first
+    if (isBuy) {
+      const deployerBalanceLamports = await connection.getBalance(deployerKeypair.publicKey, "confirmed");
+      const deployerBalanceSol = deployerBalanceLamports / 1_000_000_000;
+      const estimatedRequiredSol = Number(amount) + 0.01; // trade amount + ATA rent + priority/network fees + buffer
+
+      if (deployerBalanceSol < estimatedRequiredSol) {
+        const errMsg = `Deployer wallet has insufficient SOL for this admin buy. Balance=${deployerBalanceSol.toFixed(6)} SOL, required≈${estimatedRequiredSol.toFixed(6)} SOL`;
+        console.error(`[admin-swap] ❌ ${errMsg}`);
+        if (logId) {
+          await supabase.from("assisted_swaps_log").update({ status: "failed", error_message: errMsg }).eq("id", logId);
+        }
+        return new Response(
+          JSON.stringify({ error: errMsg, walletAddress, deployerBalanceSol }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Extract the blockhash PumpPortal used (for confirmation tracking)
     const blockhash = tx.message.recentBlockhash;
@@ -136,9 +154,30 @@ Deno.serve(async (req) => {
     // Sign with deployer keypair
     tx.sign([deployerKeypair]);
 
+    // Preflight simulation so we can surface the real program logs before sending
+    const simulation = await connection.simulateTransaction(tx, {
+      commitment: "confirmed",
+      replaceRecentBlockhash: false,
+      sigVerify: false,
+    });
+
+    if (simulation.value.err) {
+      const simulationLogs = simulation.value.logs?.slice(-12) ?? [];
+      const errMsg = `Simulation failed: ${JSON.stringify(simulation.value.err)}${simulationLogs.length ? ` | logs=${simulationLogs.join(" || ")}` : ""}`;
+      console.error(`[admin-swap] ❌ ${errMsg}`);
+      if (logId) {
+        await supabase.from("assisted_swaps_log").update({ status: "failed", error_message: errMsg }).eq("id", logId);
+      }
+      return new Response(
+        JSON.stringify({ error: errMsg, walletAddress }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log("[admin-swap] Sending signed transaction...");
     const signature = await connection.sendRawTransaction(tx.serialize(), {
-      skipPreflight: true,
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
       maxRetries: 3,
     });
 
