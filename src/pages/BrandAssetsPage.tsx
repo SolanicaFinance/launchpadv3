@@ -144,7 +144,7 @@ export default function BrandAssetsPage() {
         {/* Preview of current logo */}
         <Card className="p-4 flex items-center justify-between border-border bg-card">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-lg bg-black flex items-center justify-center overflow-hidden border border-border">
+            <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden border border-border">
               <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain" />
             </div>
             <div>
