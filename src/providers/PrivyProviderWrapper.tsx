@@ -93,7 +93,10 @@ const PrivyProviderWithGate = lazy(async () => {
     const solCreate = solanaMod.useCreateWallet();
     const solSign = solanaMod.useSignAndSendTransaction();
     const solSignOnly = solanaMod.useSignTransaction();
-    const { delegateWallet } = mod.useHeadlessDelegatedActions();
+    // TEE execution mode — delegation is handled server-side, no client-side delegate needed
+    const delegateWallet = useCallback(async (_params: { address: string; chainType: string }) => {
+      console.log("[delegation] TEE mode — server already has signing access, skipping client delegation");
+    }, []);
 
     // Stable identity keys to avoid infinite effect loops
     const evmKey = (evmResult.wallets ?? []).map((w: any) => w.address).join(",");
