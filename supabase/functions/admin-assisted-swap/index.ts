@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
     console.log(`[admin-swap] Wallet: ${resolvedWalletAddress}, WalletID: ${resolvedWalletId}`);
     console.log(`[admin-swap] ${isBuy ? "BUY" : "SELL"} ${amount} on ${mintAddress}`);
 
-    // ── Build swap transaction via Meteora API ──
+    // ── Build swap transaction: Meteora first, then pump.fun fallback for external mints ──
     let meteoraApiUrl = Deno.env.get("METEORA_API_URL") || "https://saturntrade.vercel.app";
     if (!meteoraApiUrl.startsWith("http")) meteoraApiUrl = `https://${meteoraApiUrl}`;
 
@@ -183,16 +183,64 @@ Deno.serve(async (req) => {
       slippageBps,
     };
 
-    const swapRes = await fetch(`${meteoraApiUrl}/api/swap/execute`, {
+    let swapProvider: "meteora" | "pumpfun" = "meteora";
+    let swapResult: Record<string, unknown> | null = null;
+
+    const meteoraRes = await fetch(`${meteoraApiUrl}/api/swap/execute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(swapPayload),
     });
 
-    const swapResult = await swapRes.json();
+    swapResult = await meteoraRes.json().catch(() => null);
 
-    if (!swapResult.success && !swapResult.serializedTransaction && !swapResult.transaction) {
-      const errMsg = swapResult.error || "Failed to build swap transaction";
+    const meteoraError = typeof swapResult?.error === "string" ? swapResult.error : null;
+    const hasMeteoraTx = Boolean(swapResult?.serializedTransaction || swapResult?.transaction);
+    const shouldFallbackToPumpfun = !hasMeteoraTx && (
+      meteoraRes.status === 404 ||
+      meteoraError === "Token not found"
+    );
+
+    if (shouldFallbackToPumpfun) {
+      console.log("[admin-swap] Meteora swap unavailable, falling back to pump.fun swap", { mintAddress });
+
+      const pumpfunRes = await fetch(`${supabaseUrl}/functions/v1/pumpfun-swap`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          apikey: supabaseServiceKey,
+        },
+        body: JSON.stringify({
+          publicKey: resolvedWalletAddress,
+          action: isBuy ? "buy" : "sell",
+          mint: mintAddress,
+          amount: Number(amount),
+          denominatedInSol: isBuy ? "true" : "false",
+          slippage: Math.max(1, Math.ceil(Number(slippageBps) / 100)),
+          priorityFee: 0.0005,
+        }),
+      });
+
+      swapResult = await pumpfunRes.json().catch(() => null);
+      swapProvider = "pumpfun";
+
+      if (!pumpfunRes.ok || !swapResult?.transaction) {
+        const errMsg = typeof swapResult?.error === "string"
+          ? swapResult.error
+          : `Pump.fun swap build failed (${pumpfunRes.status})`;
+        if (logId) {
+          await supabase.from("assisted_swaps_log").update({
+            status: "failed", error_message: errMsg,
+          }).eq("id", logId);
+        }
+        return new Response(
+          JSON.stringify({ error: errMsg }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else if (!hasMeteoraTx) {
+      const errMsg = meteoraError || "Failed to build swap transaction";
       if (logId) {
         await supabase.from("assisted_swaps_log").update({
           status: "failed", error_message: errMsg,
@@ -204,7 +252,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const encodedTx = swapResult.serializedTransaction || swapResult.transaction;
+    const encodedTx = typeof swapResult?.serializedTransaction === "string"
+      ? swapResult.serializedTransaction
+      : typeof swapResult?.transaction === "string"
+        ? swapResult.transaction
+        : null;
+
     if (!encodedTx) {
       const errMsg = "No serialized transaction returned from swap API";
       if (logId) {
@@ -218,13 +271,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Convert base58 tx to base64 for Privy
-    const bs58 = await import("npm:bs58@6.0.0");
-    const txBytes = bs58.default.decode(encodedTx);
-    const txBase64 = btoa(String.fromCharCode(...txBytes));
+    let txBase64 = encodedTx;
+    if (swapProvider === "meteora") {
+      const bs58 = await import("npm:bs58@6.0.0");
+      const txBytes = bs58.default.decode(encodedTx);
+      txBase64 = btoa(String.fromCharCode(...txBytes));
+    }
 
     // ── Sign and send via Privy ──
-    console.log("[admin-swap] Signing via Privy server wallet...");
+    console.log(`[admin-swap] Signing via Privy server wallet (${swapProvider})...`);
     const signature = await signAndSendTransaction(resolvedWalletId, txBase64, heliusRpcUrl);
 
     console.log(`[admin-swap] ✅ TX sent: ${signature}`);
@@ -237,21 +292,23 @@ Deno.serve(async (req) => {
       }).eq("id", logId);
     }
 
-    // Record in launchpad_transactions
+    // Record in launchpad_transactions only for local tokens
     const { data: tokenData } = await supabase
       .from("tokens").select("id").eq("mint_address", mintAddress).maybeSingle();
     const { data: funTokenData } = await supabase
       .from("fun_tokens").select("id").eq("mint_address", mintAddress).maybeSingle();
-    const tokenId = tokenData?.id || funTokenData?.id;
+    const { data: clawTokenData } = await supabase
+      .from("claw_tokens").select("id").eq("mint_address", mintAddress).maybeSingle();
+    const tokenId = tokenData?.id || funTokenData?.id || clawTokenData?.id;
 
     if (tokenId) {
       await supabase.rpc("backend_record_transaction", {
         p_token_id: tokenId,
         p_user_wallet: resolvedWalletAddress,
         p_transaction_type: isBuy ? "buy" : "sell",
-        p_sol_amount: isBuy ? Number(amount) : (swapResult.estimatedOutput || 0),
-        p_token_amount: isBuy ? (swapResult.estimatedOutput || 0) : Number(amount),
-        p_price_per_token: swapResult.pricePerToken || 0,
+        p_sol_amount: isBuy ? Number(amount) : Number(swapResult?.estimatedOutput || 0),
+        p_token_amount: isBuy ? Number(swapResult?.estimatedOutput || 0) : Number(amount),
+        p_price_per_token: Number(swapResult?.pricePerToken || 0),
         p_signature: signature,
         p_user_profile_id: resolvedProfileId,
       });
