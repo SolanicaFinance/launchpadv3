@@ -71,9 +71,19 @@ Deno.serve(async (req) => {
     let resolvedWalletAddress: string | null = null;
     let resolvedProfileId: string | null = null;
 
-    const identifier = userIdentifier.trim();
-    const isPrivyDid = identifier.startsWith("did:privy:");
+    let identifier = userIdentifier.trim();
+    
+    // Auto-detect bare Privy user IDs (lowercase alphanumeric, not a valid Solana address or UUID)
+    const looksLikeSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    const isBarePrivyId = !identifier.startsWith("did:privy:") && !isUuid && !looksLikeSolanaAddress && /^[a-z0-9]{10,}$/.test(identifier);
+    
+    if (isBarePrivyId) {
+      identifier = `did:privy:${identifier}`;
+      console.log(`[admin-swap] Auto-prefixed bare Privy ID: ${identifier}`);
+    }
+    
+    const isPrivyDid = identifier.startsWith("did:privy:");
     const isWalletAddress = !isPrivyDid && !isUuid;
 
     if (isPrivyDid) {
