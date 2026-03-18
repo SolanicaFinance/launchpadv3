@@ -53,7 +53,7 @@ export default function BagsAgentsPage() {
         name: data.meme.name,
         ticker: data.meme.ticker,
         description: data.meme.description,
-        twitter: "https://x.com/saturntrade",
+        twitter: "https://x.com/saturnterminal",
         website: "",
       });
 
