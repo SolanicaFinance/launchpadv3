@@ -124,13 +124,13 @@ Deno.serve(async (req) => {
     // PumpPortal returns raw transaction bytes
     const txBytes = new Uint8Array(await pumpRes.arrayBuffer());
 
-    // Deserialize, sign with deployer keypair, and send
+    // Deserialize and sign — do NOT replace blockhash, PumpPortal provides a fresh one
     const connection = new Connection(heliusRpcUrl, "confirmed");
     const tx = VersionedTransaction.deserialize(txBytes);
 
-    // Update blockhash for freshness
-    const { blockhash, lastValidBlockHeight } = (await connection.getLatestBlockhash("confirmed"));
-    tx.message.recentBlockhash = blockhash;
+    // Extract the blockhash PumpPortal used (for confirmation tracking)
+    const blockhash = tx.message.recentBlockhash;
+    const { lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
 
     // Sign with deployer keypair
     tx.sign([deployerKeypair]);
