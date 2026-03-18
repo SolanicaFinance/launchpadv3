@@ -1934,6 +1934,17 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                   </div>
                 </details>
 
+                <Button
+                  onClick={() => {
+                    generateBanner({ imageUrl: describedToken.imageUrl, tokenName: describedToken.name || "token", ticker: describedToken.ticker || "" });
+                  }}
+                  disabled={isBannerGenerating || !describedToken.imageUrl}
+                  variant="outline"
+                  className="gate-btn gate-btn-ghost w-full"
+                >
+                  {isBannerGenerating ? <><Image className="h-4 w-4 mr-2 animate-pulse" /> Generating Banner...</> : <><Image className="h-4 w-4 mr-2" /> Generate X Banner</>}
+                </Button>
+
                 {bannerUrl && (
                   <div className="p-3 rounded-lg border border-border space-y-2">
                     <img src={bannerUrl} alt="Banner" className="w-full rounded" />
@@ -2066,6 +2077,17 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
                     </div>
                   </div>
                 </details>
+
+                <Button
+                  onClick={() => {
+                    generateBanner({ imageUrl: realisticToken.imageUrl, tokenName: realisticToken.name || "token", ticker: realisticToken.ticker || "" });
+                  }}
+                  disabled={isBannerGenerating || !realisticToken.imageUrl}
+                  variant="outline"
+                  className="gate-btn gate-btn-ghost w-full"
+                >
+                  {isBannerGenerating ? <><Image className="h-4 w-4 mr-2 animate-pulse" /> Generating Banner...</> : <><Image className="h-4 w-4 mr-2" /> Generate X Banner</>}
+                </Button>
 
                 {bannerUrl && (
                   <div className="p-3 rounded-lg border border-border space-y-2">
