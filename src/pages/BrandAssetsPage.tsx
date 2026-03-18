@@ -211,7 +211,7 @@ export default function BrandAssetsPage() {
                     Download
                   </Button>
                 </div>
-                <div className="rounded-lg overflow-hidden border border-border bg-black flex items-center justify-center">
+                <div className="rounded-lg overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
                   <img src={asset.url} alt={asset.label} style={{ maxWidth: "100%", height: "auto" }} />
                 </div>
               </Card>
