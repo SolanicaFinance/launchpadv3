@@ -58,33 +58,7 @@ export function useDelegatedWallet() {
     });
   }, []);
 
-  // Auto-delegate on login: if embedded wallet exists but not yet delegated
-  useEffect(() => {
-    if (!privyAvailable || !walletAddress || isDelegated || isDelegating) return;
-
-    // Attempt silent auto-delegation
-    let cancelled = false;
-    const autoDel = async () => {
-      try {
-        setIsDelegating(true);
-        console.log("[delegation] Auto-delegating wallet:", walletAddress);
-        await delegateWallet({ address: walletAddress, chainType: "solana" });
-        if (!cancelled) {
-          console.log("[delegation] ✅ Auto-delegation succeeded for:", walletAddress);
-          saveDelegated(walletAddress);
-        }
-      } catch (e: any) {
-        // If auto-delegation fails, user will see the prompt
-        console.warn("[delegation] Auto-delegation failed, will show prompt:", e?.message);
-      } finally {
-        if (!cancelled) setIsDelegating(false);
-      }
-    };
-
-    // Small delay to let Privy fully initialize
-    const timer = setTimeout(autoDel, 2000);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [privyAvailable, walletAddress, isDelegated, isDelegating, delegateWallet, saveDelegated]);
+  // No auto-delegation — user must click "Enable" manually
 
   const requestDelegation = useCallback(async () => {
     if (!walletAddress) throw new Error("No embedded wallet found");
