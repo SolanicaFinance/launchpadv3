@@ -143,6 +143,16 @@ export function XBotAccountsPanel({
                       <Badge variant="outline" className="text-xs">
                         {account.rules?.min_follower_count?.toLocaleString() || 5000}+ followers
                       </Badge>
+                      {account.has_full_cookie ? (
+                        <Badge variant="outline" className="text-xs">
+                          Cookies saved
+                        </Badge>
+                      ) : null}
+                      {account.socks5_urls?.length ? (
+                        <Badge variant="outline" className="text-xs">
+                          {account.socks5_urls.length} SOCKS5
+                        </Badge>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
