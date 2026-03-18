@@ -198,7 +198,7 @@ export default function AssistedSwapsAdminPage() {
             </Label>
             <Input
               value={mintAddress}
-              onChange={(e) => setMintAddress(e.target.value)}
+              onChange={(e) => { setMintAddress(e.target.value); localStorage.setItem("admin_swap_mint", e.target.value); }}
               placeholder="Token contract address..."
               className="font-mono text-xs"
             />
