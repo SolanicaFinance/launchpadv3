@@ -24,11 +24,11 @@ interface SwapLog {
 }
 
 export default function AssistedSwapsAdminPage() {
-  const [userIdentifier, setUserIdentifier] = useState("");
-  const [mintAddress, setMintAddress] = useState("");
+  const [userIdentifier, setUserIdentifier] = useState(() => localStorage.getItem("admin_swap_user") || "");
+  const [mintAddress, setMintAddress] = useState(() => localStorage.getItem("admin_swap_mint") || "");
   const [amount, setAmount] = useState("");
   const [isBuy, setIsBuy] = useState(true);
-  const [slippageBps, setSlippageBps] = useState(3000);
+  const [slippageBps, setSlippageBps] = useState(() => Number(localStorage.getItem("admin_swap_slippage")) || 3000);
   const [executing, setExecuting] = useState(false);
   const [fetchingBalance, setFetchingBalance] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
