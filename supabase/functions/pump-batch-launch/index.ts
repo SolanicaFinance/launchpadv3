@@ -34,20 +34,35 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
     const {
       adminPassword,
+      action,
       tokens,
       imageUrl,
       twitter,
       telegram,
       website,
       initialBuySol = 0.01,
-    } = await req.json();
+    } = body;
 
     // Auth check
     if (adminPassword !== ADMIN_PASSWORD) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Info mode - return deployer wallet address
+    if (action === "info") {
+      const deployerPrivateKey = Deno.env.get("PUMP_DEPLOYER_PRIVATE_KEY");
+      if (!deployerPrivateKey) throw new Error("PUMP_DEPLOYER_PRIVATE_KEY not configured");
+      const deployerKeypair = parseDeployerKeypair(deployerPrivateKey);
+      return new Response(JSON.stringify({ 
+        deployerAddress: deployerKeypair.publicKey.toBase58(),
+        pumpPortalKeyConfigured: !!Deno.env.get("PUMPPORTAL_API_KEY"),
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
