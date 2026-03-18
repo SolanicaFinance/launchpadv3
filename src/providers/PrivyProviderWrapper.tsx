@@ -48,6 +48,8 @@ const DEFAULT_BRIDGE: PrivyBridgeData = {
     user: null,
     login: noopLogin,
     logout: noopAsync,
+    linkTwitter: noopAsync,
+    linkEmail: noopAsync,
   },
   evmWallets: [],
   evmCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
