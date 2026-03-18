@@ -86,9 +86,9 @@ const generateXBanner = async (params: BannerParams): Promise<Blob> => {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, BANNER_WIDTH, BANNER_HEIGHT);
 
-  // 5. Draw Token Image centered (circular mask)
+  // 5. Draw Token Image on the right side (circular mask)
   const imgSize = BANNER_HEIGHT * 0.85; // 85% of banner height
-  const imgX = (BANNER_WIDTH - imgSize) / 2; // Centered horizontally
+  const imgX = BANNER_WIDTH - imgSize - (BANNER_HEIGHT * 0.075); // Right-aligned with small padding
   const imgY = (BANNER_HEIGHT - imgSize) / 2;
   
   // Create circular clipping mask
