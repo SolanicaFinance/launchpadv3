@@ -94,12 +94,14 @@ export default function AssistedSwapsAdminPage() {
 
       setResolvedWallet(wallet);
 
-      const { data, error } = await supabase.functions.invoke("admin-wallet-balance", {
-        body: { walletAddress: wallet, adminPassword: ADMIN_PASSWORD },
-      });
+      const balanceUrl = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-wallet-balance`);
+      balanceUrl.searchParams.set("walletAddress", wallet);
+      balanceUrl.searchParams.set("adminPassword", ADMIN_PASSWORD);
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const response = await fetch(balanceUrl.toString(), { method: "GET" });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data?.error || "Failed to fetch balance");
 
       setUserBalance(data.balanceSol);
       toast.success(`Balance: ${data.balanceSol.toFixed(4)} SOL`);
@@ -129,19 +131,21 @@ export default function AssistedSwapsAdminPage() {
 
     setExecuting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-assisted-swap", {
-        body: {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-assisted-swap`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
           adminPassword: ADMIN_PASSWORD,
           userIdentifier: userIdentifier.trim(),
           mintAddress: mintAddress.trim(),
           amount: Number(amount),
           isBuy,
           slippageBps,
-        },
+        }),
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Swap failed");
 
       toast.success(
         <div className="space-y-1">

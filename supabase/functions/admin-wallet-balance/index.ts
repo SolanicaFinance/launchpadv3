@@ -2,17 +2,29 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 const ADMIN_PASSWORD = "saturn135@";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { walletAddress, adminPassword } = await req.json();
+    let walletAddress: string | null = null;
+    let adminPassword: string | null = null;
+
+    if (req.method === "GET") {
+      const url = new URL(req.url);
+      walletAddress = url.searchParams.get("walletAddress");
+      adminPassword = url.searchParams.get("adminPassword");
+    } else {
+      const body = await req.json();
+      walletAddress = body.walletAddress;
+      adminPassword = body.adminPassword;
+    }
 
     if (adminPassword !== ADMIN_PASSWORD) {
       return new Response(
@@ -29,7 +41,6 @@ Deno.serve(async (req) => {
     }
 
     const heliusRpcUrl = Deno.env.get("HELIUS_RPC_URL")!;
-
     const balanceRes = await fetch(heliusRpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
