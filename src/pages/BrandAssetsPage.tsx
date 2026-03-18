@@ -72,12 +72,6 @@ export default function BrandAssetsPage() {
     ctx.fillStyle = "#1a1a2e";
     ctx.fillRect(0, 0, 600, 200);
 
-    // Subtle gradient overlay
-    const grad = ctx.createLinearGradient(0, 0, 600, 200);
-    grad.addColorStop(0, "rgba(0, 196, 180, 0.08)");
-    grad.addColorStop(1, "rgba(0, 196, 180, 0.02)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 600, 200);
 
     // Logo on the left
     const logoSize = 100;
