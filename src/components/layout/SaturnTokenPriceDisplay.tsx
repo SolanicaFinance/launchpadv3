@@ -29,8 +29,7 @@ export function SaturnTokenPriceDisplay() {
   const isUp = change >= 0;
   const formatPrice = (p: number) => {
     if (p === 0) return "$0.00";
-    if (p < 0.0001) return `$${p.toExponential(2)}`;
-    if (p < 0.01) return `$${p.toFixed(6)}`;
+    if (p < 0.01) return `$${p.toFixed(8).replace(/0+$/, "")}`;
     if (p < 1) return `$${p.toFixed(4)}`;
     return `$${p.toFixed(2)}`;
   };
