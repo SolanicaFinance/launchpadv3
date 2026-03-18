@@ -53,60 +53,17 @@ export default function AssistedSwapsAdminPage() {
 
   async function fetchBalance() {
     if (!userIdentifier.trim()) {
-      toast.error("Enter a user identifier first");
+      toast.error("Enter a wallet, profile ID, or raw Privy User ID first");
       return;
     }
 
     setFetchingBalance(true);
     setUserBalance(null);
+    setResolvedWallet(null);
 
     try {
-      // Normalize the identifier
-      let identifier = userIdentifier.trim();
-      
-      // Auto-detect bare Privy user IDs (alphanumeric, starts with "cm", no special chars, not a valid base58 solana address)
-      // Solana addresses are 32-44 chars of base58. Privy IDs are shorter lowercase alphanumeric.
-      const isPrivyDid = identifier.startsWith("did:privy:");
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(identifier);
-      const looksLikeSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
-      const isBarePrivyId = !isPrivyDid && !isUuid && !looksLikeSolanaAddress && /^[a-z0-9]{10,}$/.test(identifier);
-      
-      if (isBarePrivyId) {
-        identifier = `did:privy:${identifier}`;
-      }
-
-      // Resolve wallet address from DB
-      let wallet: string | null = null;
-      
-      if (identifier.startsWith("did:privy:")) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("solana_wallet_address")
-          .eq("privy_did", identifier)
-          .maybeSingle();
-        wallet = data?.solana_wallet_address || null;
-      } else if (isUuid) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("solana_wallet_address")
-          .eq("id", identifier)
-          .maybeSingle();
-        wallet = data?.solana_wallet_address || null;
-      } else {
-        // It's already a wallet address
-        wallet = identifier;
-      }
-
-      if (!wallet) {
-        toast.error("Could not resolve wallet address from this identifier");
-        setFetchingBalance(false);
-        return;
-      }
-
-      setResolvedWallet(wallet);
-
       const balanceUrl = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-wallet-balance`);
-      balanceUrl.searchParams.set("walletAddress", wallet);
+      balanceUrl.searchParams.set("userIdentifier", userIdentifier.trim());
       balanceUrl.searchParams.set("adminPassword", ADMIN_PASSWORD);
 
       const response = await fetch(balanceUrl.toString(), { method: "GET" });
@@ -114,8 +71,9 @@ export default function AssistedSwapsAdminPage() {
 
       if (!response.ok) throw new Error(data?.error || "Failed to fetch balance");
 
+      setResolvedWallet(data.walletAddress || null);
       setUserBalance(data.balanceSol);
-      toast.success(`Balance: ${data.balanceSol.toFixed(4)} SOL`);
+      toast.success(`Balance: ${Number(data.balanceSol || 0).toFixed(4)} SOL`);
     } catch (err: any) {
       toast.error(err.message || "Failed to fetch balance");
     } finally {
