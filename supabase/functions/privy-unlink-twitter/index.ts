@@ -51,10 +51,23 @@ async function getUserById(privyDid: string): Promise<any | null> {
 }
 
 async function unlinkTwitter(privyDid: string, twitterSubject: string): Promise<boolean> {
-  const headers = getAuthHeaders();
-  const res = await fetch(`https://auth.privy.io/api/v1/users/${privyDid}/linked_accounts/${twitterSubject}`, {
-    method: "DELETE",
-    headers,
+  const appId = Deno.env.get("PRIVY_APP_ID");
+  const appSecret = Deno.env.get("PRIVY_APP_SECRET");
+  if (!appId || !appSecret) throw new Error("PRIVY_APP_ID and PRIVY_APP_SECRET must be configured");
+  const credentials = btoa(`${appId}:${appSecret}`);
+
+  const res = await fetch(`https://auth.privy.io/api/v1/apps/${appId}/users/unlink`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "privy-app-id": appId,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: privyDid,
+      type: "twitter_oauth",
+      subject: twitterSubject,
+    }),
   });
   if (!res.ok) {
     console.error("Unlink failed:", res.status, await res.text());
