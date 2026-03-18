@@ -273,7 +273,7 @@ export default function BatchLaunchAdminPage() {
 
       {isLaunching && (
         <p className="text-xs text-muted-foreground text-center animate-pulse">
-          Deploying sequentially with 2s delay between each...
+          Deploying sequentially with 15s delay between each… ETA ~{Math.max(1, Math.round((config.count * 15) / 60))} min
         </p>
       )}
 
