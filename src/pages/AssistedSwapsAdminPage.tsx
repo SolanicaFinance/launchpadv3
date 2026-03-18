@@ -131,19 +131,21 @@ export default function AssistedSwapsAdminPage() {
 
     setExecuting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-assisted-swap", {
-        body: {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-assisted-swap`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
           adminPassword: ADMIN_PASSWORD,
           userIdentifier: userIdentifier.trim(),
           mintAddress: mintAddress.trim(),
           amount: Number(amount),
           isBuy,
           slippageBps,
-        },
+        }),
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Swap failed");
 
       toast.success(
         <div className="space-y-1">
