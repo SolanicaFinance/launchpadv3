@@ -34,6 +34,8 @@ export default function BrandAssetsPage() {
   const [headerSubtext, setHeaderSubtext] = useState<string>(BRAND.tagline);
   const [assets, setAssets] = useState<GeneratedAsset[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
 
   const loadLogo = useCallback((): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
