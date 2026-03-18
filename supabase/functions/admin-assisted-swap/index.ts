@@ -143,25 +143,63 @@ Deno.serve(async (req) => {
 
     console.log(`[admin-swap] ✅ TX sent: ${signature}`);
 
-    // Confirm
+    // Confirm and verify success
+    let txSuccess = false;
     try {
-      await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
-      console.log(`[admin-swap] ✅ TX confirmed: ${signature}`);
+      const confirmation = await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
+      if (confirmation.value?.err) {
+        const errMsg = `TX confirmed but FAILED on-chain: ${JSON.stringify(confirmation.value.err)}`;
+        console.error(`[admin-swap] ❌ ${errMsg}`);
+        if (logId) {
+          await supabase.from("assisted_swaps_log").update({ status: "failed", tx_signature: signature, error_message: errMsg }).eq("id", logId);
+        }
+        return new Response(
+          JSON.stringify({ error: errMsg, signature }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      txSuccess = true;
+      console.log(`[admin-swap] ✅ TX confirmed & succeeded: ${signature}`);
     } catch (e) {
-      console.warn(`[admin-swap] Confirmation timeout (tx may still land): ${e}`);
+      console.warn(`[admin-swap] Confirmation timeout, checking tx status...`);
+      // Fallback: fetch the transaction to check status
+      try {
+        await new Promise(r => setTimeout(r, 3000));
+        const txResult = await connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+        if (txResult?.meta?.err) {
+          const errMsg = `TX landed but FAILED: ${JSON.stringify(txResult.meta.err)}`;
+          console.error(`[admin-swap] ❌ ${errMsg}`);
+          if (logId) {
+            await supabase.from("assisted_swaps_log").update({ status: "failed", tx_signature: signature, error_message: errMsg }).eq("id", logId);
+          }
+          return new Response(
+            JSON.stringify({ error: errMsg, signature }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (txResult) {
+          txSuccess = true;
+          console.log(`[admin-swap] ✅ TX verified via getTransaction: ${signature}`);
+        } else {
+          console.warn(`[admin-swap] ⚠️ TX not found yet, may still land: ${signature}`);
+        }
+      } catch (fetchErr) {
+        console.warn(`[admin-swap] Could not verify tx: ${fetchErr}`);
+      }
     }
 
     // Update log
     if (logId) {
       await supabase.from("assisted_swaps_log").update({
-        status: "success",
+        status: txSuccess ? "success" : "pending",
         tx_signature: signature,
       }).eq("id", logId);
     }
 
     return new Response(
       JSON.stringify({
-        success: true,
+        success: txSuccess,
+        pending: !txSuccess,
         signature,
         walletAddress,
       }),
