@@ -1,20 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Rocket, Plus, Trash2, Copy, Check, ExternalLink } from "lucide-react";
+import { Loader2, Rocket, Copy, Check, ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface TokenEntry {
-  id: string;
-  name: string;
-  ticker: string;
-  description: string;
-}
+const STORAGE_KEY = "batch-launch-config";
 
 interface LaunchResult {
   index: number;
@@ -27,45 +21,52 @@ interface LaunchResult {
   error?: string;
 }
 
-const DEFAULT_TOKEN_COUNT = 7;
-
-function makeId() {
-  return Math.random().toString(36).slice(2, 9);
+interface SavedConfig {
+  name: string;
+  ticker: string;
+  description: string;
+  imageUrl: string;
+  twitter: string;
+  telegram: string;
+  website: string;
+  initialBuySol: string;
+  count: number;
 }
 
-function createEmptyToken(): TokenEntry {
-  return { id: makeId(), name: "", ticker: "", description: "" };
-}
+const DEFAULT_CONFIG: SavedConfig = {
+  name: "",
+  ticker: "",
+  description: "",
+  imageUrl: "",
+  twitter: "https://x.com/saturntrade",
+  telegram: "",
+  website: "https://saturntrade.lovable.app",
+  initialBuySol: "0.01",
+  count: 7,
+};
 
 export default function BatchLaunchAdminPage() {
-  const [tokens, setTokens] = useState<TokenEntry[]>(
-    Array.from({ length: DEFAULT_TOKEN_COUNT }, createEmptyToken)
-  );
-  const [imageUrl, setImageUrl] = useState("");
-  const [twitter, setTwitter] = useState("https://x.com/saturntrade");
-  const [telegram, setTelegram] = useState("");
-  const [website, setWebsite] = useState("https://saturntrade.lovable.app");
-  const [initialBuySol, setInitialBuySol] = useState("0.01");
+  const [config, setConfig] = useState<SavedConfig>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : DEFAULT_CONFIG;
+    } catch {
+      return DEFAULT_CONFIG;
+    }
+  });
+
   const [isLaunching, setIsLaunching] = useState(false);
   const [results, setResults] = useState<LaunchResult[] | null>(null);
   const [deployerWallet, setDeployerWallet] = useState("");
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-  const updateToken = useCallback((id: string, field: keyof TokenEntry, value: string) => {
-    setTokens((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
-    );
+  const update = useCallback((field: keyof SavedConfig, value: string | number) => {
+    setConfig((prev) => {
+      const next = { ...prev, [field]: value };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
-
-  const addToken = () => {
-    if (tokens.length >= 10) return;
-    setTokens((prev) => [...prev, createEmptyToken()]);
-  };
-
-  const removeToken = (id: string) => {
-    if (tokens.length <= 1) return;
-    setTokens((prev) => prev.filter((t) => t.id !== id));
-  };
 
   const copyCA = (mint: string, idx: number) => {
     navigator.clipboard.writeText(mint);
@@ -74,18 +75,18 @@ export default function BatchLaunchAdminPage() {
   };
 
   const handleLaunch = async () => {
-    const validTokens = tokens.filter((t) => t.name.trim() && t.ticker.trim());
-    if (validTokens.length === 0) {
-      toast.error("Add at least one token with name and ticker");
+    if (!config.name.trim() || !config.ticker.trim()) {
+      toast.error("Name and ticker are required");
       return;
     }
-    if (!imageUrl.trim()) {
+    if (!config.imageUrl.trim()) {
       toast.error("Image URL is required");
       return;
     }
 
+    const totalSol = (parseFloat(config.initialBuySol) || 0.01) * config.count;
     const confirmed = window.confirm(
-      `Launch ${validTokens.length} tokens on pump.fun?\n\nThis will use SOL from the deployer wallet for each token's initial buy (${initialBuySol} SOL × ${validTokens.length} = ${(parseFloat(initialBuySol) * validTokens.length).toFixed(3)} SOL total).`
+      `Launch ${config.count}× $${config.ticker.toUpperCase()} on pump.fun?\n\nTotal SOL needed: ~${totalSol.toFixed(3)} SOL (${config.initialBuySol} × ${config.count})`
     );
     if (!confirmed) return;
 
@@ -93,19 +94,21 @@ export default function BatchLaunchAdminPage() {
     setResults(null);
 
     try {
+      const tokens = Array.from({ length: config.count }, () => ({
+        name: config.name.trim(),
+        ticker: config.ticker.trim(),
+        description: config.description.trim(),
+      }));
+
       const { data, error } = await supabase.functions.invoke("pump-batch-launch", {
         body: {
           adminPassword: "saturn135@",
-          tokens: validTokens.map(({ name, ticker, description }) => ({
-            name: name.trim(),
-            ticker: ticker.trim(),
-            description: description.trim(),
-          })),
-          imageUrl: imageUrl.trim(),
-          twitter: twitter.trim() || undefined,
-          telegram: telegram.trim() || undefined,
-          website: website.trim() || undefined,
-          initialBuySol: parseFloat(initialBuySol) || 0.01,
+          tokens,
+          imageUrl: config.imageUrl.trim(),
+          twitter: config.twitter.trim() || undefined,
+          telegram: config.telegram.trim() || undefined,
+          website: config.website.trim() || undefined,
+          initialBuySol: parseFloat(config.initialBuySol) || 0.01,
         },
       });
 
@@ -113,7 +116,9 @@ export default function BatchLaunchAdminPage() {
 
       setResults(data.results);
       setDeployerWallet(data.deployerWallet || "");
-      toast.success(`Launched ${data.success}/${data.total} tokens`);
+      const s = data.success;
+      const f = data.failed;
+      toast.success(`Done: ${s} launched, ${f} failed`);
     } catch (err: any) {
       toast.error(err.message || "Batch launch failed");
     } finally {
@@ -123,155 +128,151 @@ export default function BatchLaunchAdminPage() {
 
   const successCount = results?.filter((r) => r.status === "success").length ?? 0;
   const failCount = results?.filter((r) => r.status === "error").length ?? 0;
+  const isReady = config.name.trim() && config.ticker.trim() && config.imageUrl.trim();
 
   return (
     <div className="space-y-6">
-      {/* Shared Config */}
+      {/* Config */}
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-mono uppercase tracking-widest text-primary flex items-center gap-2">
-            <Rocket className="h-4 w-4" /> Batch Launch Config
+            <Rocket className="h-4 w-4" /> Batch Launch — Same Token × {config.count}
           </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Config auto-saves. Fill once, click launch anytime.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label className="text-xs text-muted-foreground">Token Image URL (shared)</Label>
+              <Label className="text-xs text-muted-foreground">Token Name</Label>
               <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                value={config.name}
+                onChange={(e) => update("name", e.target.value)}
+                placeholder="Saturn"
+                className="font-mono text-xs"
+                maxLength={32}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Ticker</Label>
+              <Input
+                value={config.ticker}
+                onChange={(e) => update("ticker", e.target.value)}
+                placeholder="STRN"
+                className="font-mono text-xs uppercase"
+                maxLength={10}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">How Many</Label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={config.count}
+                onChange={(e) => update("count", Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="font-mono text-xs"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground">Description</Label>
+            <Input
+              value={config.description}
+              onChange={(e) => update("description", e.target.value)}
+              placeholder="Optional description"
+              className="text-xs"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Image URL (shared for all)</Label>
+              <Input
+                value={config.imageUrl}
+                onChange={(e) => update("imageUrl", e.target.value)}
                 placeholder="https://example.com/token.png"
                 className="font-mono text-xs"
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Initial Buy (SOL per token)</Label>
+              <Label className="text-xs text-muted-foreground">Dev Buy (SOL each)</Label>
               <Input
                 type="number"
                 step="0.001"
-                value={initialBuySol}
-                onChange={(e) => setInitialBuySol(e.target.value)}
+                value={config.initialBuySol}
+                onChange={(e) => update("initialBuySol", e.target.value)}
                 className="font-mono text-xs"
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label className="text-xs text-muted-foreground">Twitter URL</Label>
+              <Label className="text-xs text-muted-foreground">Twitter</Label>
               <Input
-                value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
-                placeholder="https://x.com/..."
+                value={config.twitter}
+                onChange={(e) => update("twitter", e.target.value)}
                 className="font-mono text-xs"
               />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Telegram</Label>
               <Input
-                value={telegram}
-                onChange={(e) => setTelegram(e.target.value)}
-                placeholder="https://t.me/..."
+                value={config.telegram}
+                onChange={(e) => update("telegram", e.target.value)}
                 className="font-mono text-xs"
               />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Website</Label>
               <Input
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://..."
+                value={config.website}
+                onChange={(e) => update("website", e.target.value)}
                 className="font-mono text-xs"
               />
             </div>
           </div>
-          {imageUrl && (
+
+          {config.imageUrl && (
             <div className="flex items-center gap-3">
-              <img src={imageUrl} alt="preview" className="h-12 w-12 rounded-lg border border-border object-cover" />
-              <span className="text-xs text-muted-foreground">Shared image preview</span>
+              <img
+                src={config.imageUrl}
+                alt="preview"
+                className="h-12 w-12 rounded-lg border border-border object-cover"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
+              <span className="text-xs text-muted-foreground">Image preview</span>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Token List */}
-      <Card className="border-border bg-card">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-mono uppercase tracking-widest text-foreground">
-            Tokens ({tokens.length})
-          </CardTitle>
-          <Button size="sm" variant="outline" onClick={addToken} disabled={tokens.length >= 10}>
-            <Plus className="h-3 w-3 mr-1" /> Add
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {tokens.map((token, i) => (
-            <div
-              key={token.id}
-              className="flex flex-col md:flex-row gap-2 p-3 rounded-lg border border-border/50 bg-muted/20"
-            >
-              <div className="flex items-center gap-2 md:w-8 shrink-0">
-                <span className="text-xs font-mono text-muted-foreground font-bold">#{i + 1}</span>
-              </div>
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                <Input
-                  value={token.name}
-                  onChange={(e) => updateToken(token.id, "name", e.target.value)}
-                  placeholder="Token Name"
-                  className="text-xs"
-                  maxLength={32}
-                />
-                <Input
-                  value={token.ticker}
-                  onChange={(e) => updateToken(token.id, "ticker", e.target.value)}
-                  placeholder="TICKER"
-                  className="text-xs font-mono uppercase"
-                  maxLength={10}
-                />
-                <Input
-                  value={token.description}
-                  onChange={(e) => updateToken(token.id, "description", e.target.value)}
-                  placeholder="Description (optional)"
-                  className="text-xs"
-                />
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                onClick={() => removeToken(token.id)}
-                disabled={tokens.length <= 1}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Launch Button */}
-      <div className="flex flex-col items-center gap-3">
-        <Button
-          size="lg"
-          onClick={handleLaunch}
-          disabled={isLaunching}
-          className="w-full md:w-auto px-12 py-3 font-mono text-sm uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {isLaunching ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching...
-            </>
-          ) : (
-            <>
-              <Rocket className="h-4 w-4 mr-2" /> Launch {tokens.filter((t) => t.name && t.ticker).length} Tokens
-            </>
-          )}
-        </Button>
-        {isLaunching && (
-          <p className="text-xs text-muted-foreground animate-pulse">
-            Launching tokens sequentially with 2s delay between each...
-          </p>
+      {/* Launch */}
+      <Button
+        size="lg"
+        onClick={handleLaunch}
+        disabled={isLaunching || !isReady}
+        className="w-full py-4 font-mono text-sm uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90"
+      >
+        {isLaunching ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching {config.count} tokens...
+          </>
+        ) : (
+          <>
+            <Rocket className="h-4 w-4 mr-2" /> Launch {config.count}× ${config.ticker.toUpperCase() || "???"}
+          </>
         )}
-      </div>
+      </Button>
+
+      {isLaunching && (
+        <p className="text-xs text-muted-foreground text-center animate-pulse">
+          Deploying sequentially with 2s delay between each...
+        </p>
+      )}
 
       {/* Results */}
       {results && (
@@ -280,17 +281,17 @@ export default function BatchLaunchAdminPage() {
             <CardTitle className="text-sm font-mono uppercase tracking-widest flex items-center gap-3">
               Results
               <Badge variant="outline" className="text-emerald-400 border-emerald-400/30">
-                {successCount} success
+                {successCount} ✅
               </Badge>
               {failCount > 0 && (
                 <Badge variant="outline" className="text-destructive border-destructive/30">
-                  {failCount} failed
+                  {failCount} ❌
                 </Badge>
               )}
             </CardTitle>
             {deployerWallet && (
               <p className="text-xs text-muted-foreground font-mono">
-                Deployer: {deployerWallet.slice(0, 8)}...{deployerWallet.slice(-6)}
+                Deployer: {deployerWallet.slice(0, 8)}…{deployerWallet.slice(-6)}
               </p>
             )}
           </CardHeader>
@@ -298,33 +299,25 @@ export default function BatchLaunchAdminPage() {
             {results.map((r, i) => (
               <div
                 key={i}
-                className={`flex flex-col md:flex-row items-start md:items-center gap-2 p-3 rounded-lg border ${
+                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 p-3 rounded-lg border ${
                   r.status === "success"
                     ? "border-emerald-500/20 bg-emerald-500/5"
                     : "border-destructive/20 bg-destructive/5"
                 }`}
               >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Badge
-                    variant={r.status === "success" ? "default" : "destructive"}
-                    className="text-[10px] shrink-0"
-                  >
-                    {r.status === "success" ? "✅" : "❌"}
-                  </Badge>
-                  <span className="text-xs font-mono font-bold truncate">
-                    {r.name} (${r.ticker})
-                  </span>
-                </div>
+                <span className="text-xs font-mono font-bold">
+                  #{i + 1} {r.status === "success" ? "✅" : "❌"}
+                </span>
 
                 {r.status === "success" && r.mintAddress && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <code className="text-[10px] text-muted-foreground font-mono">
-                      {r.mintAddress.slice(0, 6)}...{r.mintAddress.slice(-4)}
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <code className="text-[11px] text-muted-foreground font-mono truncate">
+                      {r.mintAddress}
                     </code>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-6 w-6"
+                      className="h-6 w-6 shrink-0"
                       onClick={() => copyCA(r.mintAddress!, i)}
                     >
                       {copiedIdx === i ? (
@@ -337,7 +330,7 @@ export default function BatchLaunchAdminPage() {
                       href={r.pumpfunUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:text-primary/80"
+                      className="shrink-0 text-primary hover:text-primary/80"
                     >
                       <ExternalLink className="h-3 w-3" />
                     </a>
@@ -345,7 +338,7 @@ export default function BatchLaunchAdminPage() {
                 )}
 
                 {r.status === "error" && (
-                  <span className="text-[10px] text-destructive truncate max-w-xs">
+                  <span className="text-[10px] text-destructive truncate">
                     {r.error}
                   </span>
                 )}
