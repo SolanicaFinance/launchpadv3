@@ -111,9 +111,13 @@ Deno.serve(async (req) => {
       source = "profile";
 
       if (!resolvedWalletAddress && resolvedPrivyDid) {
-        const user = await getPrivyUser(resolvedPrivyDid);
-        const wallet = findSolanaEmbeddedWallet(user);
-        resolvedWalletAddress = wallet?.address || null;
+        try {
+          const user = await getPrivyUser(resolvedPrivyDid);
+          const wallet = findSolanaEmbeddedWallet(user);
+          resolvedWalletAddress = wallet?.address || null;
+        } catch (_e) {
+          // Privy user not found
+        }
       }
     } else {
       resolvedWalletAddress = identifier;
