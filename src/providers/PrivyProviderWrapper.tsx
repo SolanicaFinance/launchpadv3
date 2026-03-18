@@ -93,6 +93,7 @@ const PrivyProviderWithGate = lazy(async () => {
     const solCreate = solanaMod.useCreateWallet();
     const solSign = solanaMod.useSignAndSendTransaction();
     const solSignOnly = solanaMod.useSignTransaction();
+    const { delegateWallet } = mod.useHeadlessDelegatedActions();
 
     // Stable identity keys to avoid infinite effect loops
     const evmKey = (evmResult.wallets ?? []).map((w: any) => w.address).join(",");
@@ -108,6 +109,7 @@ const PrivyProviderWithGate = lazy(async () => {
         solanaCreateWallet: solCreate,
         solanaSignAndSend: solSign,
         solanaSign: solSignOnly,
+        delegateWallet,
       });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [evmKey, solKey, solReady, onData]);
