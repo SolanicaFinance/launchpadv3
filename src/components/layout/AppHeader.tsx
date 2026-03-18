@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { SolPriceDisplay } from "./SolPriceDisplay";
 import { EthPriceDisplay } from "./EthPriceDisplay";
 import { BnbPriceDisplay } from "./BnbPriceDisplay";
-import { SaturnTokenPriceDisplay } from "./SaturnTokenPriceDisplay";
+
 import { useChain } from "@/contexts/ChainContext";
 import { ChainSwitcher } from "@/components/launchpad/ChainSwitcher";
 import { usePanelNav } from "@/hooks/usePanelNav";
@@ -165,7 +165,6 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           {/* ── Center: SOL Price + Saturn Token (desktop only) ── */}
           <div className="hidden md:flex flex-1 items-center justify-center gap-2">
             {chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
-            <SaturnTokenPriceDisplay />
           </div>
 
           {/* ── Right: X link, Wallet, Panel, Create ── */}
