@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2, Wand2, Layers
+  Users, Shield, Loader2, Wand2, Layers, Repeat
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
