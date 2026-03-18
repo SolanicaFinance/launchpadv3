@@ -159,16 +159,16 @@ export default function AssistedSwapsAdminPage() {
         <CardContent className="space-y-4">
           {/* User Identifier */}
           <div className="space-y-1.5">
-            <Label className="font-mono text-[11px] text-muted-foreground uppercase">
-              User (Wallet / Profile ID / Privy DID)
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                value={userIdentifier}
-                onChange={(e) => setUserIdentifier(e.target.value)}
-                placeholder="Enter wallet address, UUID, or did:privy:..."
-                className="font-mono text-xs"
-              />
+              <Label className="font-mono text-[11px] text-muted-foreground uppercase">
+                User (Wallet / Profile ID / Privy User ID)
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  value={userIdentifier}
+                  onChange={(e) => setUserIdentifier(e.target.value)}
+                  placeholder="Paste wallet, profile UUID, or raw Privy User ID"
+                  className="font-mono text-xs"
+                />
               <Button
                 variant="outline"
                 size="sm"
