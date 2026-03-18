@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
         resolvedWalletAddress = profile.solana_wallet_address;
         resolvedWalletId = profile.privy_wallet_id;
         if (!resolvedWalletId && profile.privy_did) {
-          const user = await getPrivyUser(profile.privy_did);
-          const wallet = findSolanaEmbeddedWallet(user);
+          const user = await resolvePrivyUser(profile.privy_did);
+          const wallet = user ? findSolanaEmbeddedWallet(user) : null;
           if (wallet) {
             resolvedWalletId = wallet.walletId;
             resolvedWalletAddress = wallet.address;
