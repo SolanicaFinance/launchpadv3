@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Twitter, Mail, ExternalLink } from "lucide-react";
@@ -12,13 +11,12 @@ interface VerifyAccountModalProps {
 }
 
 export function VerifyAccountModal({ open, onOpenChange }: VerifyAccountModalProps) {
-  const { user, linkTwitter, linkEmail } = usePrivy();
-  const { profileId } = useAuth();
+  const { profileId, linkTwitter, linkEmail, linkedAccounts } = useAuth();
   const [updating, setUpdating] = useState(false);
 
-  const twitterLinked = user?.linkedAccounts?.some(a => a.type === "twitter_oauth");
-  const emailLinked = user?.linkedAccounts?.some(a => a.type === "email");
-  const twitterUsername = user?.linkedAccounts?.find(a => a.type === "twitter_oauth")?.username;
+  const twitterLinked = linkedAccounts.some((a: any) => a.type === "twitter_oauth");
+  const emailLinked = linkedAccounts.some((a: any) => a.type === "email");
+  const twitterUsername = linkedAccounts.find((a: any) => a.type === "twitter_oauth")?.username;
 
   const handleLinkTwitter = async () => {
     try {

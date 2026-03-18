@@ -19,20 +19,30 @@ export interface UseAuthReturn {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  ready: boolean;
   solanaAddress: string | null;
   profileId: string | null;
+  linkedAccounts: any[];
   login: () => void;
   logout: () => Promise<void>;
+  linkTwitter: () => Promise<void>;
+  linkEmail: () => Promise<void>;
 }
+
+const noopAsync = async () => {};
 
 const FALLBACK: UseAuthReturn = {
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  ready: false,
   solanaAddress: null,
   profileId: null,
+  linkedAccounts: [],
   login: () => console.warn("Privy not available - check PRIVY_APP_ID secret"),
-  logout: async () => {},
+  logout: noopAsync,
+  linkTwitter: noopAsync,
+  linkEmail: noopAsync,
 };
 
 export function useAuth(): UseAuthReturn {
@@ -79,15 +89,24 @@ export function useAuth(): UseAuthReturn {
     };
   }, [user, solanaAddress, privyAvailable]);
 
+  const linkedAccounts = useMemo(() => {
+    if (!privyAvailable || !user) return [];
+    return user.linkedAccounts ?? [];
+  }, [user, privyAvailable]);
+
   if (!privyAvailable) return FALLBACK;
 
   return {
     user: authUser,
     isAuthenticated: privy.authenticated,
     isLoading: !privy.ready,
+    ready: privy.ready,
     solanaAddress,
     profileId,
+    linkedAccounts,
     login: privy.login,
     logout: privy.logout,
+    linkTwitter: privy.linkTwitter,
+    linkEmail: privy.linkEmail,
   };
 }

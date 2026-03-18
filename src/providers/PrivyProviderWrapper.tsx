@@ -26,6 +26,8 @@ export interface PrivyBridgeData {
     user: any;
     login: () => void;
     logout: () => Promise<void>;
+    linkTwitter: () => Promise<void>;
+    linkEmail: () => Promise<void>;
   };
   evmWallets: any[];
   evmCreateWallet: any;
@@ -46,6 +48,8 @@ const DEFAULT_BRIDGE: PrivyBridgeData = {
     user: null,
     login: noopLogin,
     logout: noopAsync,
+    linkTwitter: noopAsync,
+    linkEmail: noopAsync,
   },
   evmWallets: [],
   evmCreateWallet: { createWallet: async () => { throw new Error("Privy not ready"); } },
@@ -130,6 +134,8 @@ const PrivyProviderWithGate = lazy(async () => {
         user: privyResult.user,
         login: privyResult.login,
         logout: privyResult.logout,
+        linkTwitter: (privyResult as any).linkTwitter ?? noopAsync,
+        linkEmail: (privyResult as any).linkEmail ?? noopAsync,
       },
       ...walletData,
     }), [
@@ -138,6 +144,8 @@ const PrivyProviderWithGate = lazy(async () => {
       privyResult.user,
       privyResult.login,
       privyResult.logout,
+      (privyResult as any).linkTwitter,
+      (privyResult as any).linkEmail,
       walletData,
     ]);
 
