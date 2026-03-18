@@ -51,38 +51,45 @@ async function getUserById(privyDid: string): Promise<any | null> {
 }
 
 async function unlinkTwitter(privyDid: string, twitterSubject: string): Promise<boolean> {
-  const headers = getAuthHeaders();
-  const encodedDid = encodeURIComponent(privyDid);
-  
-  // Try unlink endpoint  
-  const unlinkUrl = `https://auth.privy.io/api/v1/users/${encodedDid}/linked_accounts/twitter_oauth`;
-  console.log("Trying DELETE:", unlinkUrl);
-  const res1 = await fetch(unlinkUrl, { method: "DELETE", headers });
-  console.log("DELETE status:", res1.status);
-  if (res1.ok) return true;
-  const t1 = await res1.text();
-  console.error("DELETE failed:", res1.status, t1.substring(0, 300));
+  const appId = Deno.env.get("PRIVY_APP_ID");
+  const appSecret = Deno.env.get("PRIVY_APP_SECRET");
+  if (!appId || !appSecret) throw new Error("Missing credentials");
+  const credentials = btoa(`${appId}:${appSecret}`);
+  const headers = {
+    Authorization: `Basic ${credentials}`,
+    "privy-app-id": appId,
+    "Content-Type": "application/json",
+  };
 
-  // Try POST unlink
-  const unlinkUrl2 = `https://auth.privy.io/api/v1/users/${encodedDid}/unlink`;
-  console.log("Trying POST unlink:", unlinkUrl2);
-  const res2 = await fetch(unlinkUrl2, {
+  // Approach 1: Docs format - POST /api/v1/apps/{app_id}/users/unlink
+  const url1 = `https://auth.privy.io/api/v1/apps/${appId}/users/unlink`;
+  console.log("Approach 1:", url1);
+  const r1 = await fetch(url1, {
     method: "POST", headers,
-    body: JSON.stringify({ type: "twitter_oauth", subject: twitterSubject }),
+    body: JSON.stringify({ user_id: privyDid, type: "twitter_oauth", subject: twitterSubject }),
   });
-  console.log("POST unlink status:", res2.status);
-  if (res2.ok) return true;
-  const t2 = await res2.text();
-  console.error("POST unlink failed:", res2.status, t2.substring(0, 300));
+  console.log("R1 status:", r1.status, "content-type:", r1.headers.get("content-type"));
+  if (r1.ok) { console.log("Unlink succeeded via approach 1"); return true; }
+  const t1 = await r1.text();
+  console.error("R1 body:", t1.substring(0, 500));
 
-  // Last resort: delete entire orphaned user
-  const deleteUrl = `https://auth.privy.io/api/v1/users/${encodedDid}`;
-  console.log("Trying DELETE user:", deleteUrl);
-  const res3 = await fetch(deleteUrl, { method: "DELETE", headers });
-  console.log("DELETE user status:", res3.status);
-  if (res3.ok || res3.status === 204) return true;
-  const t3 = await res3.text();
-  console.error("DELETE user failed:", res3.status, t3.substring(0, 300));
+  // Approach 2: Delete user entirely
+  const url2 = `https://auth.privy.io/api/v1/users/${encodeURIComponent(privyDid)}`;
+  console.log("Approach 2 (delete user):", url2);
+  const r2 = await fetch(url2, { method: "DELETE", headers });
+  console.log("R2 status:", r2.status);
+  if (r2.ok || r2.status === 204) { console.log("Delete user succeeded"); return true; }
+  const t2 = await r2.text();
+  console.error("R2 body:", t2.substring(0, 500));
+
+  // Approach 3: Try without /api prefix
+  const url3 = `https://auth.privy.io/v1/users/${encodeURIComponent(privyDid)}`;
+  console.log("Approach 3:", url3);
+  const r3 = await fetch(url3, { method: "DELETE", headers });
+  console.log("R3 status:", r3.status);
+  if (r3.ok || r3.status === 204) { console.log("Delete succeeded via approach 3"); return true; }
+  const t3 = await r3.text();
+  console.error("R3 body:", t3.substring(0, 500));
 
   return false;
 }
