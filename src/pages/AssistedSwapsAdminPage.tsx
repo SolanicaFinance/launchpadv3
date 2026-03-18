@@ -163,9 +163,9 @@ export default function AssistedSwapsAdminPage() {
                 User (Wallet / Profile ID / Privy User ID)
               </Label>
               <div className="flex gap-2">
-                <Input
+              <Input
                   value={userIdentifier}
-                  onChange={(e) => setUserIdentifier(e.target.value)}
+                  onChange={(e) => { setUserIdentifier(e.target.value); localStorage.setItem("admin_swap_user", e.target.value); }}
                   placeholder="Paste wallet, profile UUID, or raw Privy User ID"
                   className="font-mono text-xs"
                 />
