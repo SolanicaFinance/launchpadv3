@@ -11,6 +11,9 @@ export interface XBotAccount {
   full_cookie_encrypted: string | null;
   auth_token_encrypted: string | null;
   ct0_token_encrypted: string | null;
+  has_full_cookie?: boolean;
+  has_auth_token?: boolean;
+  has_ct0_token?: boolean;
   proxy_url: string | null;
   socks5_urls: string[];
   current_socks5_index: number;

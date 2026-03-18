@@ -37,10 +37,31 @@ Deno.serve(async (req) => {
       case "list_accounts": {
         const { data, error } = await supabase
           .from("x_bot_accounts")
-          .select("id, name, username, email, is_active, created_at, updated_at, subtuna_ticker, proxy_url, socks5_urls, current_socks5_index, last_socks5_failure_at")
+          .select("id, name, username, email, is_active, created_at, updated_at, subtuna_ticker, proxy_url, socks5_urls, current_socks5_index, last_socks5_failure_at, full_cookie_encrypted, auth_token_encrypted, ct0_token_encrypted")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        result = { accounts: data };
+        result = {
+          accounts: (data || []).map((account) => ({
+            id: account.id,
+            name: account.name,
+            username: account.username,
+            email: account.email,
+            is_active: account.is_active,
+            created_at: account.created_at,
+            updated_at: account.updated_at,
+            subtuna_ticker: account.subtuna_ticker,
+            proxy_url: account.proxy_url,
+            socks5_urls: account.socks5_urls,
+            current_socks5_index: account.current_socks5_index,
+            last_socks5_failure_at: account.last_socks5_failure_at,
+            full_cookie_encrypted: null,
+            auth_token_encrypted: null,
+            ct0_token_encrypted: null,
+            has_full_cookie: !!account.full_cookie_encrypted,
+            has_auth_token: !!account.auth_token_encrypted,
+            has_ct0_token: !!account.ct0_token_encrypted,
+          })),
+        };
         break;
       }
 
