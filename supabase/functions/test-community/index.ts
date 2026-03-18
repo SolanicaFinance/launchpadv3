@@ -106,33 +106,63 @@ serve(async (req) => {
       results.response = JSON.parse(responseText);
     }
 
-    // ===== ACTION: Join Community (V2 endpoint) =====
+    // ===== ACTION: Join Community (dynamic login first, then join) =====
     if (action === "join") {
-      console.log(`[test-community] Joining community ${COMMUNITY_ID}...`);
-      console.log(`[test-community] Cookie keys: ${Object.keys(loginCookiesObj).join(', ')}`);
-      console.log(`[test-community] Has auth_token: ${!!loginCookiesObj.auth_token}`);
-      console.log(`[test-community] Has ct0: ${!!loginCookiesObj.ct0}`);
+      // Step 1: Login via API to get fresh cookies
+      const { data: xBotFull } = await supabase
+        .from("x_bot_accounts")
+        .select("username, email_encrypted, password_encrypted, totp_secret_encrypted, socks5_urls, current_socks5_index")
+        .eq("username", "MoonDexo")
+        .single();
       
-      const response = await fetch(`${TWITTERAPI_BASE}/twitter/join_community_v2`, {
+      if (!xBotFull) throw new Error("MoonDexo account not found");
+      
+      console.log(`[test-community] Step 1: Logging in as ${xBotFull.username}...`);
+      
+      const loginResponse = await fetch(`${TWITTERAPI_BASE}/twitter/user_login_v2`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey,
-        },
+        headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
         body: JSON.stringify({
-          login_cookies: loginCookies,
+          user_name: xBotFull.username,
+          email: xBotFull.email_encrypted,
+          password: xBotFull.password_encrypted,
+          proxy: proxyUrl,
+          ...(xBotFull.totp_secret_encrypted ? { totp_secret: xBotFull.totp_secret_encrypted } : {}),
+        }),
+      });
+      
+      const loginData = await loginResponse.json();
+      console.log(`[test-community] Login response: ${loginResponse.status} - ${JSON.stringify(loginData).slice(0, 500)}`);
+      
+      const dynamicCookies = loginData.login_cookies || loginData.cookies || loginData.cookie || loginData?.data?.login_cookies;
+      
+      if (!dynamicCookies) {
+        results.status = loginResponse.status;
+        results.response = { error: "Login failed - no cookies returned", loginData };
+        return new Response(JSON.stringify(results, null, 2), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      console.log(`[test-community] Step 2: Joining community ${COMMUNITY_ID} with fresh cookies...`);
+      
+      // Step 2: Join with the fresh API-issued cookies
+      const joinResponse = await fetch(`${TWITTERAPI_BASE}/twitter/join_community_v2`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+        body: JSON.stringify({
+          login_cookies: dynamicCookies,
           community_id: COMMUNITY_ID,
           proxy: proxyUrl,
         }),
       });
-
-      const responseText = await response.text();
-      console.log(`[test-community] Join response: ${response.status} - ${responseText.slice(0, 500)}`);
       
-      results.status = response.status;
-      results.response = JSON.parse(responseText);
-      results.cookieFormat = "base64_json";
-      results.cookieKeys = Object.keys(loginCookiesObj);
+      const joinText = await joinResponse.text();
+      console.log(`[test-community] Join response: ${joinResponse.status} - ${joinText.slice(0, 500)}`);
+      
+      results.status = joinResponse.status;
+      results.response = JSON.parse(joinText);
+      results.loginSuccess = true;
     }
 
     // ===== ACTION: Join Community (raw cookie format test) =====
