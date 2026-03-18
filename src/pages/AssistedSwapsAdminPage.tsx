@@ -147,6 +147,64 @@ export default function AssistedSwapsAdminPage() {
     }
   }
 
+  async function executeSendSol() {
+    if (!sendToAddress.trim() || !sendAmount || Number(sendAmount) <= 0) {
+      toast.error("Fill destination address and amount");
+      return;
+    }
+    setSending(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-send-sol`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adminPassword: ADMIN_PASSWORD,
+          toAddress: sendToAddress.trim(),
+          amountSol: Number(sendAmount),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Send failed");
+
+      setDeployerAddress(data.fromAddress);
+      setDeployerBalance(data.newBalanceSol);
+      toast.success(
+        <div className="space-y-1">
+          <p className="font-mono text-xs">✅ Sent {data.amountSol} SOL</p>
+          <a href={`https://solscan.io/tx/${data.signature}`} target="_blank" rel="noopener noreferrer" className="text-primary underline text-[10px] font-mono">
+            {data.signature?.slice(0, 20)}...
+          </a>
+        </div>
+      );
+      setSendAmount("");
+    } catch (err: any) {
+      // Extract balance info from error if present
+      toast.error(err.message || "Send failed");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function checkDeployerBalance() {
+    try {
+      // Send a tiny invalid request to get balance info back
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-send-sol`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adminPassword: ADMIN_PASSWORD,
+          toAddress: sendToAddress.trim() || "11111111111111111111111111111111",
+          amountSol: 999999, // will fail with balance info
+        }),
+      });
+      const data = await response.json();
+      if (data.balanceSol !== undefined) {
+        setDeployerBalance(data.balanceSol);
+        setDeployerAddress(data.fromAddress);
+      }
+    } catch { /* ignore */ }
+  }
+
   const statusIcon = (status: string) => {
     if (status === "success") return <CheckCircle2 className="h-3.5 w-3.5 text-primary" />;
     if (status === "failed") return <XCircle className="h-3.5 w-3.5 text-destructive" />;
@@ -155,6 +213,62 @@ export default function AssistedSwapsAdminPage() {
 
   return (
     <div className="space-y-6">
+      {/* Send SOL Panel */}
+      <Card className="border-border bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-mono text-sm uppercase tracking-wider text-foreground flex items-center gap-2">
+            <Send className="h-4 w-4 text-primary" />
+            Send SOL (Deployer Wallet)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {deployerAddress && (
+            <p className="text-[11px] font-mono text-muted-foreground">
+              From: <span className="text-foreground">{deployerAddress.slice(0, 8)}...{deployerAddress.slice(-6)}</span>
+              {deployerBalance !== null && (
+                <span className="ml-2">Balance: <span className="text-primary font-bold">{deployerBalance.toFixed(6)} SOL</span></span>
+              )}
+            </p>
+          )}
+          {!deployerAddress && (
+            <Button variant="outline" size="sm" onClick={checkDeployerBalance} className="text-[11px] font-mono">
+              Check Deployer Balance
+            </Button>
+          )}
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[11px] text-muted-foreground uppercase">Destination Address</Label>
+            <Input
+              value={sendToAddress}
+              onChange={(e) => { setSendToAddress(e.target.value); localStorage.setItem("admin_send_to", e.target.value); }}
+              placeholder="Solana wallet address..."
+              className="font-mono text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[11px] text-muted-foreground uppercase">Amount (SOL)</Label>
+            <Input
+              type="number"
+              value={sendAmount}
+              onChange={(e) => setSendAmount(e.target.value)}
+              placeholder="0.05"
+              className="font-mono text-xs"
+              step="0.001"
+            />
+          </div>
+          <Button
+            onClick={executeSendSol}
+            disabled={sending || !sendToAddress.trim() || !sendAmount || Number(sendAmount) <= 0}
+            className="w-full font-mono uppercase tracking-wider"
+          >
+            {sending ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+            ) : (
+              `Send ${sendAmount || "0"} SOL`
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Execution Panel */}
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
