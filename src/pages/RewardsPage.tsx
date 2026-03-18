@@ -252,6 +252,36 @@ export default function RewardsPage() {
               {linking ? "Authorizing..." : "Authorize X Account"}
             </button>
 
+            {/* Username input for conflict lookup */}
+            {showConflictInput && !alreadyLinkedInfo && (
+              <div className="rounded-xl border border-border/40 bg-card/20 p-4 text-left space-y-3">
+                <p className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">
+                  Resolve Account Conflict
+                </p>
+                <p className="text-[11px] font-mono text-muted-foreground">
+                  Enter your X username so we can find and unlink it from the old session.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="@username"
+                    value={conflictUsername}
+                    onChange={(e) => setConflictUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLookupConflict()}
+                    className="flex-1 px-3 py-2 rounded-lg border border-border/40 bg-background/60 text-foreground font-mono text-xs placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50"
+                  />
+                  <button
+                    onClick={handleLookupConflict}
+                    disabled={lookingUp || !conflictUsername.trim()}
+                    className="px-4 py-2 rounded-lg font-mono text-xs font-bold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {lookingUp ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    {lookingUp ? "Looking up..." : "Look up"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Already linked conflict resolution */}
             {alreadyLinkedInfo && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left space-y-3">
