@@ -257,6 +257,21 @@ export default function BatchLaunchAdminPage() {
         </CardContent>
       </Card>
 
+      {/* Cost Estimate */}
+      <Card className="border-border bg-card">
+        <CardContent className="pt-4 space-y-1">
+          <p className="text-xs font-mono text-muted-foreground">
+            Cost per launch: <span className="text-foreground">{parseFloat(config.initialBuySol) || 0.01} SOL</span> (dev buy) + ~0.02 SOL (fees/rent) ≈ <span className="text-foreground">{((parseFloat(config.initialBuySol) || 0.01) + 0.02).toFixed(3)} SOL</span>
+          </p>
+          <p className="text-xs font-mono text-muted-foreground">
+            {config.count}× batch: <span className="text-primary font-bold">{(((parseFloat(config.initialBuySol) || 0.01) + 0.02) * config.count).toFixed(3)} SOL</span>
+          </p>
+          <p className="text-xs font-mono text-muted-foreground">
+            100× estimate: <span className="text-primary font-bold">{(((parseFloat(config.initialBuySol) || 0.01) + 0.02) * 100).toFixed(2)} SOL</span> (~25 min)
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Launch Button */}
       <Button
         size="lg"
@@ -273,7 +288,7 @@ export default function BatchLaunchAdminPage() {
 
       {isLaunching && (
         <p className="text-xs text-muted-foreground text-center animate-pulse">
-          Deploying sequentially with 2s delay between each...
+          Deploying sequentially with 15s delay between each… ETA ~{Math.max(1, Math.round((config.count * 15) / 60))} min
         </p>
       )}
 

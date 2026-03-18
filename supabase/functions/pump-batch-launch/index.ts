@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
 
         // Small delay between launches
         if (i < tokens.length - 1) {
-          await new Promise((r) => setTimeout(r, 2000));
+          await new Promise((r) => setTimeout(r, 15000));
         }
       } catch (err) {
         console.error(`[batch-launch] ❌ ${token.ticker}:`, err);
