@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { SolPriceDisplay } from "./SolPriceDisplay";
 import { EthPriceDisplay } from "./EthPriceDisplay";
 import { BnbPriceDisplay } from "./BnbPriceDisplay";
-import { SaturnTokenPriceDisplay } from "./SaturnTokenPriceDisplay";
+
 import { useChain } from "@/contexts/ChainContext";
 import { ChainSwitcher } from "@/components/launchpad/ChainSwitcher";
 import { usePanelNav } from "@/hooks/usePanelNav";
