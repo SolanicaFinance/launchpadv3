@@ -210,6 +210,67 @@ export async function getPrivyUser(privyIdOrDid: string): Promise<PrivyUser> {
 }
 
 /**
+ * Resolve a Privy user by direct lookup first, then by scanning the app's user list.
+ */
+export async function resolvePrivyUser(privyIdOrDid: string): Promise<PrivyUser | null> {
+  try {
+    return await getPrivyUser(privyIdOrDid);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes("(404)")) {
+      throw error;
+    }
+  }
+
+  const rawId = privyIdOrDid.replace(/^did:privy:/, "");
+  const candidates = new Set([privyIdOrDid, rawId, `did:privy:${rawId}`]);
+  let cursor: string | undefined;
+
+  do {
+    const url = new URL(`${PRIVY_API_BASE}/api/v1/users`);
+    url.searchParams.set("limit", "100");
+    if (cursor) url.searchParams.set("cursor", cursor);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Privy listUsers failed (${res.status}): ${body}`);
+    }
+
+    const page = await res.json();
+    const users = page.data || page.users || [];
+
+    for (const user of users as PrivyUser[]) {
+      const userCandidates = new Set<string>([
+        user.id,
+        user.id.replace(/^did:privy:/, ""),
+      ]);
+
+      const linkedAccounts = Array.isArray(user.linked_accounts) ? user.linked_accounts : [];
+      for (const account of linkedAccounts as Array<PrivyWalletAccount & { subject?: string }>) {
+        if (account.id) userCandidates.add(account.id);
+        if (account.address) userCandidates.add(account.address);
+        if (account.subject) userCandidates.add(account.subject);
+      }
+
+      for (const candidate of candidates) {
+        if (userCandidates.has(candidate)) {
+          return user;
+        }
+      }
+    }
+
+    cursor = page.next_cursor || undefined;
+  } while (cursor);
+
+  return null;
+}
+
+/**
  * Find the Solana embedded wallet from a Privy user's linked accounts.
  */
 export function findSolanaEmbeddedWallet(

@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import {
-  getPrivyUser,
+  resolvePrivyUser,
   findSolanaEmbeddedWallet,
   signAndSendTransaction,
 } from "../_shared/privy-server-wallet.ts";
@@ -100,8 +100,8 @@ Deno.serve(async (req) => {
       }
       // If no cached wallet ID, fetch from Privy
       if (!resolvedWalletId) {
-        const user = await getPrivyUser(identifier);
-        const wallet = findSolanaEmbeddedWallet(user);
+        const user = await resolvePrivyUser(identifier);
+        const wallet = user ? findSolanaEmbeddedWallet(user) : null;
         if (wallet) {
           resolvedWalletId = wallet.walletId;
           resolvedWalletAddress = wallet.address;
@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
         resolvedWalletAddress = profile.solana_wallet_address;
         resolvedWalletId = profile.privy_wallet_id;
         if (!resolvedWalletId && profile.privy_did) {
-          const user = await getPrivyUser(profile.privy_did);
-          const wallet = findSolanaEmbeddedWallet(user);
+          const user = await resolvePrivyUser(profile.privy_did);
+          const wallet = user ? findSolanaEmbeddedWallet(user) : null;
           if (wallet) {
             resolvedWalletId = wallet.walletId;
             resolvedWalletAddress = wallet.address;
@@ -138,8 +138,8 @@ Deno.serve(async (req) => {
         resolvedWalletId = profile.privy_wallet_id;
         resolvedWalletAddress = profile.solana_wallet_address;
         if (!resolvedWalletId && profile.privy_did) {
-          const user = await getPrivyUser(profile.privy_did);
-          const wallet = findSolanaEmbeddedWallet(user);
+          const user = await resolvePrivyUser(profile.privy_did);
+          const wallet = user ? findSolanaEmbeddedWallet(user) : null;
           if (wallet) {
             resolvedWalletId = wallet.walletId;
             resolvedWalletAddress = wallet.address;

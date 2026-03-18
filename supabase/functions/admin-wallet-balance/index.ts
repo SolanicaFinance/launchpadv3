@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import {
-  getPrivyUser,
+  resolvePrivyUser,
   findSolanaEmbeddedWallet,
 } from "../_shared/privy-server-wallet.ts";
 
@@ -91,13 +91,10 @@ Deno.serve(async (req) => {
       source = "privy";
 
       if (!resolvedWalletAddress) {
-        try {
-          const user = await getPrivyUser(identifier);
-          const wallet = findSolanaEmbeddedWallet(user);
-          resolvedWalletAddress = wallet?.address || null;
-        } catch (_e) {
-          // Privy user not found — will fall through to 404 below
-        }
+        const user = await resolvePrivyUser(identifier);
+        const wallet = user ? findSolanaEmbeddedWallet(user) : null;
+        resolvedWalletAddress = wallet?.address || null;
+        resolvedPrivyDid = user?.id || resolvedPrivyDid;
       }
     } else if (isUuid(identifier)) {
       const { data: profile } = await supabase
@@ -111,13 +108,10 @@ Deno.serve(async (req) => {
       source = "profile";
 
       if (!resolvedWalletAddress && resolvedPrivyDid) {
-        try {
-          const user = await getPrivyUser(resolvedPrivyDid);
-          const wallet = findSolanaEmbeddedWallet(user);
-          resolvedWalletAddress = wallet?.address || null;
-        } catch (_e) {
-          // Privy user not found
-        }
+        const user = await resolvePrivyUser(resolvedPrivyDid);
+        const wallet = user ? findSolanaEmbeddedWallet(user) : null;
+        resolvedWalletAddress = wallet?.address || null;
+        resolvedPrivyDid = user?.id || resolvedPrivyDid;
       }
     } else {
       resolvedWalletAddress = identifier;
