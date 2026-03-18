@@ -49,8 +49,8 @@ export default function BrandAssetsPage() {
     canvas.height = 200;
     const ctx = canvas.getContext("2d")!;
 
-    // Modern dark background
-    ctx.fillStyle = "#1a1a2e";
+    // Modern dark background (matches muted token)
+    ctx.fillStyle = "#212124";
     ctx.fillRect(0, 0, 200, 200);
 
     // Center logo
