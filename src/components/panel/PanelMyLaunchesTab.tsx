@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Twitter, Loader2, DollarSign, ExternalLink, Rocket, CheckCircle, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { BRAND } from "@/config/branding";
