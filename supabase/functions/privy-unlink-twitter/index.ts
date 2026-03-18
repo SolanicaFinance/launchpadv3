@@ -52,55 +52,38 @@ async function getUserById(privyDid: string): Promise<any | null> {
 
 async function unlinkTwitter(privyDid: string, twitterSubject: string): Promise<boolean> {
   const headers = getAuthHeaders();
+  const encodedDid = encodeURIComponent(privyDid);
   
-  // Try multiple API endpoint formats for unlinking
-  const endpoints = [
-    // Format 1: REST-style unlink
-    {
-      url: `https://auth.privy.io/api/v1/users/${privyDid}/linked_accounts/twitter_oauth`,
-      method: "DELETE",
-      body: null,
-    },
-    // Format 2: App-scoped unlink (from docs)  
-    {
-      url: `https://auth.privy.io/api/v1/users/${privyDid}/unlink`,
-      method: "POST",
-      body: JSON.stringify({ type: "twitter_oauth", subject: twitterSubject }),
-    },
-  ];
+  // Try unlink endpoint  
+  const unlinkUrl = `https://auth.privy.io/api/v1/users/${encodedDid}/linked_accounts/twitter_oauth`;
+  console.log("Trying DELETE:", unlinkUrl);
+  const res1 = await fetch(unlinkUrl, { method: "DELETE", headers });
+  console.log("DELETE status:", res1.status);
+  if (res1.ok) return true;
+  const t1 = await res1.text();
+  console.error("DELETE failed:", res1.status, t1.substring(0, 300));
 
-  for (const ep of endpoints) {
-    console.log(`Trying unlink endpoint: ${ep.method} ${ep.url}`);
-    const res = await fetch(ep.url, {
-      method: ep.method,
-      headers,
-      ...(ep.body ? { body: ep.body } : {}),
-    });
-    
-    if (res.ok) {
-      console.log("Unlink succeeded with endpoint:", ep.url);
-      return true;
-    }
-    
-    const text = await res.text();
-    // Only log first 200 chars to avoid HTML dumps
-    console.error(`Unlink attempt failed (${res.status}):`, text.substring(0, 200));
-  }
-  
-  // Last resort: delete the entire orphaned user
-  console.log("All unlink attempts failed, trying to delete orphaned user:", privyDid);
-  const deleteRes = await fetch(`https://auth.privy.io/api/v1/users/${privyDid}`, {
-    method: "DELETE",
-    headers,
+  // Try POST unlink
+  const unlinkUrl2 = `https://auth.privy.io/api/v1/users/${encodedDid}/unlink`;
+  console.log("Trying POST unlink:", unlinkUrl2);
+  const res2 = await fetch(unlinkUrl2, {
+    method: "POST", headers,
+    body: JSON.stringify({ type: "twitter_oauth", subject: twitterSubject }),
   });
-  
-  if (deleteRes.ok || deleteRes.status === 204) {
-    console.log("Successfully deleted orphaned user:", privyDid);
-    return true;
-  }
-  
-  const deleteText = await deleteRes.text();
-  console.error("Delete user also failed:", deleteRes.status, deleteText.substring(0, 200));
+  console.log("POST unlink status:", res2.status);
+  if (res2.ok) return true;
+  const t2 = await res2.text();
+  console.error("POST unlink failed:", res2.status, t2.substring(0, 300));
+
+  // Last resort: delete entire orphaned user
+  const deleteUrl = `https://auth.privy.io/api/v1/users/${encodedDid}`;
+  console.log("Trying DELETE user:", deleteUrl);
+  const res3 = await fetch(deleteUrl, { method: "DELETE", headers });
+  console.log("DELETE user status:", res3.status);
+  if (res3.ok || res3.status === 204) return true;
+  const t3 = await res3.text();
+  console.error("DELETE user failed:", res3.status, t3.substring(0, 300));
+
   return false;
 }
 
