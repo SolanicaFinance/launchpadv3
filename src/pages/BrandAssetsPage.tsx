@@ -2,10 +2,11 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Download, ImageIcon } from "lucide-react";
+import { Download, ImageIcon, Loader2 } from "lucide-react";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
+import GIF from "gif.js";
 
 interface GeneratedAsset {
   label: string;
@@ -33,6 +34,8 @@ export default function BrandAssetsPage() {
   const [headerSubtext, setHeaderSubtext] = useState<string>(BRAND.tagline);
   const [assets, setAssets] = useState<GeneratedAsset[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
 
   const loadLogo = useCallback((): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -60,6 +63,51 @@ export default function BrandAssetsPage() {
     ctx.drawImage(logo, x, y, logoSize, logoSize);
 
     return canvas.toDataURL("image/png");
+  }, []);
+
+  const generateRotatingGif = useCallback(async (logo: HTMLImageElement): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const size = 200;
+      const logoSize = 140;
+      const frames = 36;
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: size,
+        height: size,
+        workerScript: "https://unpkg.com/gif.js@0.2.0/dist/gif.worker.js",
+        transparent: null,
+      });
+
+      for (let i = 0; i < frames; i++) {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d")!;
+
+        ctx.fillStyle = "#212124";
+        ctx.fillRect(0, 0, size, size);
+
+        const angle = (i / frames) * Math.PI * 2;
+        const cx = size / 2;
+        const cy = size / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.drawImage(logo, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
+        ctx.restore();
+
+        gif.addFrame(canvas, { delay: 50, copy: true });
+      }
+
+      gif.on("finished", (blob: Blob) => {
+        resolve(URL.createObjectURL(blob));
+      });
+
+      gif.on("error", reject);
+      gif.render();
+    });
   }, []);
 
   const generateHeaderImage = useCallback(async (logo: HTMLImageElement, title: string, subtitle: string): Promise<string> => {
@@ -185,6 +233,50 @@ export default function BrandAssetsPage() {
           <ImageIcon className="h-4 w-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Assets"}
         </Button>
+
+        <Button
+          onClick={async () => {
+            setIsGeneratingGif(true);
+            try {
+              const logo = await loadLogo();
+              const url = await generateRotatingGif(logo);
+              setGifUrl(url);
+            } catch (err) {
+              console.error("Failed to generate GIF:", err);
+            } finally {
+              setIsGeneratingGif(false);
+            }
+          }}
+          disabled={isGeneratingGif}
+          variant="outline"
+          className="w-full"
+        >
+          {isGeneratingGif ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+          {isGeneratingGif ? "Generating GIF..." : "Generate Rotating Logo GIF"}
+        </Button>
+
+        {/* Rotating GIF */}
+        {gifUrl && (
+          <Card className="p-4 space-y-3 border-border bg-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Rotating Logo GIF</p>
+                <p className="text-xs text-muted-foreground">200×200px animated</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDownload(gifUrl, `${BRAND.shortName.toLowerCase()}-rotating-logo.gif`)}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Download
+              </Button>
+            </div>
+            <div className="rounded-lg overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
+              <img src={gifUrl} alt="Rotating Logo" style={{ maxWidth: "100%", height: "auto" }} />
+            </div>
+          </Card>
+        )}
 
         {/* Generated assets */}
         {assets.length > 0 && (
