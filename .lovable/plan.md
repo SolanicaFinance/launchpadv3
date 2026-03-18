@@ -1,104 +1,85 @@
 
-## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-### Problem
-TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
-Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+# Admin Assisted Swaps Page
 
-### Architecture
-1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
-   - Privy embedded wallet handles all on-chain signing (same as trading)
-   - Users logged in via Privy can launch directly — no Phantom popup
-   - Logged-out users can still generate memes, prompted to login on Launch
+## What Already Works
+The `server-trade` edge function already does exactly what's needed — it accepts a wallet address / profileId / privyUserId, resolves the Privy embedded wallet ID, builds a swap via the Meteora API, signs server-side via Privy, and broadcasts. All required secrets (`PRIVY_APP_ID`, `PRIVY_APP_SECRET`, `PRIVY_AUTHORIZATION_KEY`, `PRIVY_AUTHORIZATION_KEY_ID`, `HELIUS_RPC_URL`, `METEORA_API_URL`) are already configured.
 
-2. **Simplify the "phantom" mode → "launch" mode**
-   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
-   - Rename to generic wallet references since Privy handles everything
-   - Keep all sub-modes (random, describe, realistic, custom)
+**No new edge function is needed.** The admin page just calls `server-trade` with the right parameters.
 
-3. **On-chain flow change:**
-   ```
-   Before: Phantom popup → user signs → broadcast
-   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
-   ```
+## What Needs to Be Built
 
-4. **Auth gate on launch:**
-   - Check `useAuth()` / `usePrivy()` for logged-in state
-   - If not logged in → trigger Privy login modal
-   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
+### 1. New Admin Tab: "Swaps" in AdminPanelPage
+Add a new tab `assisted-swaps` to the existing `TAB_CONFIG` array with a `Repeat` icon. Lazy-load a new `AssistedSwapsAdminPage`.
 
-### Files to modify:
-- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
-- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
-- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
-- `src/components/launchpad/CreateTokenModal.tsx` — same
-- `src/pages/FunLauncherPage.tsx` — same
+### 2. New Page: `src/pages/AssistedSwapsAdminPage.tsx`
+A simple admin form with:
 
-### Dependencies:
-- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
-- `src/hooks/useAuth.ts` (already exists)
-- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+**Manual Swap Execution Panel:**
+- **User Identifier** — input field accepting wallet address, profile ID, or Privy DID (any of the three)
+- **Token Mint Address (CA)** — the token to buy/sell
+- **Amount** — SOL amount for buy, token amount for sell
+- **Buy/Sell toggle** — defaults to Buy
+- **Slippage** — defaults to 3000 bps (30%)
+- **"Use % of balance"** — quick buttons: 25%, 50%, 75%, 99% that fetch the user's SOL balance via Helius RPC and auto-fill the amount field
+- **Execute button** — calls `server-trade` with admin password auth, shows loading state, displays tx signature on success or error message on failure
 
----
+**Execution Log Panel (below):**
+- Shows recent assisted swaps with: timestamp, user wallet, token CA, amount, buy/sell, tx signature (linked to Solscan), status
+- Stored in a new `assisted_swaps_log` table for audit trail
 
-## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
-
-### What was built:
-1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
-   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
-   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
-   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
-   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
-   - Records trade in DB + alpha_trades (non-blocking)
-   - Returns signature immediately with timing breakdown
-
-2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
-   - Single `supabase.functions.invoke('turbo-trade')` call
-   - No client-side tx building or signing
-   - Background query invalidation after 500ms
-   - Logs client roundtrip vs server execution time
-
-3. **Wired into trade components:**
-   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
-   - `PortfolioModal.tsx` — uses `useTurboSwap`
-
-### Expected latency:
-```
-Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
-After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
+### 3. Database: `assisted_swaps_log` table
+```sql
+create table public.assisted_swaps_log (
+  id uuid primary key default gen_random_uuid(),
+  user_identifier text not null,
+  resolved_wallet text,
+  mint_address text not null,
+  amount numeric not null,
+  is_buy boolean default true,
+  slippage_bps int default 3000,
+  tx_signature text,
+  status text default 'pending',
+  error_message text,
+  executed_at timestamptz default now(),
+  executed_by text default 'admin'
+);
+alter table public.assisted_swaps_log enable row level security;
+-- No public access, service_role only (admin edge function writes)
 ```
 
----
+### 4. Wrapper Edge Function: `admin-assisted-swap`
+Thin wrapper around `server-trade` logic that:
+- Validates admin password from request body
+- Optionally fetches user's SOL balance (for % buttons) via Helius RPC
+- Calls `server-trade` logic directly (inline, not HTTP)
+- Logs result to `assisted_swaps_log`
+- Returns result to admin UI
 
-## 6-Phase Axiom Feature Integration Plan (SAVED)
+This avoids duplicating the swap logic — it imports the same `privy-server-wallet.ts` helpers and reuses the Meteora swap builder pattern from `server-trade`.
 
-### Phase 1: Copy Trade Execution
-- New `copy-trade-execute` edge function
-- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
-- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
-- New `copy_trade_log` table
+### 5. Balance Lookup: `admin-wallet-balance`  
+Small edge function that:
+- Accepts `{ walletAddress, adminPassword }`
+- Validates admin password
+- Calls Helius RPC `getBalance` for SOL
+- Returns `{ balanceSol }` for the % buttons
 
-### Phase 2: Limit Orders (SL/TP)
-- Jupiter limit order program integration
-- `limit-order-create` edge function
-- `limit_orders` DB table
-- Limit order tab in trade panel
+## Flow for Executing a Trade
+1. Admin enters wallet address + token CA + amount (or clicks 99%)
+2. Clicks "Execute Swap"
+3. Frontend calls `admin-assisted-swap` edge function
+4. Edge function validates admin password → resolves wallet via DB/Privy → builds tx via Meteora → signs via Privy server wallet → broadcasts
+5. Result (signature or error) displayed in UI and logged to `assisted_swaps_log`
 
-### Phase 3: Real-Time WebSocket Token Feed
-- Helius WebSocket for sub-1s new pair detection
-- Replace Codex polling (~30s) 
-- Edge function → Supabase Realtime channel
+## What's Required (Already in Place)
+- `PRIVY_APP_ID` — configured
+- `PRIVY_APP_SECRET` — configured  
+- `PRIVY_AUTHORIZATION_KEY` — configured
+- `PRIVY_AUTHORIZATION_KEY_ID` — configured
+- `HELIUS_RPC_URL` — configured
+- `METEORA_API_URL` — configured
+- `privy-server-wallet.ts` shared helper — exists and working
 
-### Phase 4: DCA (Dollar Cost Averaging)
-- `dca_orders` DB table
-- `dca-execute` cron edge function
-- DCA tab in trade panel
+**Nothing additional is needed. All secrets and infrastructure are ready.**
 
-### Phase 5: Enhanced Token Safety
-- LP lock status, mint authority, honeypot detection
-- Safety score badge on Pulse cards
-
-### Phase 6: Wallet PnL Analytics
-- `wallet-pnl-calculate` edge function
-- Per-wallet realized/unrealized PnL
-- Rank tracked wallets by performance
