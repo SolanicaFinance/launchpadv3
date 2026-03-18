@@ -91,9 +91,13 @@ Deno.serve(async (req) => {
       source = "privy";
 
       if (!resolvedWalletAddress) {
-        const user = await getPrivyUser(identifier);
-        const wallet = findSolanaEmbeddedWallet(user);
-        resolvedWalletAddress = wallet?.address || null;
+        try {
+          const user = await getPrivyUser(identifier);
+          const wallet = findSolanaEmbeddedWallet(user);
+          resolvedWalletAddress = wallet?.address || null;
+        } catch (_e) {
+          // Privy user not found — will fall through to 404 below
+        }
       }
     } else if (isUuid(identifier)) {
       const { data: profile } = await supabase
@@ -107,9 +111,13 @@ Deno.serve(async (req) => {
       source = "profile";
 
       if (!resolvedWalletAddress && resolvedPrivyDid) {
-        const user = await getPrivyUser(resolvedPrivyDid);
-        const wallet = findSolanaEmbeddedWallet(user);
-        resolvedWalletAddress = wallet?.address || null;
+        try {
+          const user = await getPrivyUser(resolvedPrivyDid);
+          const wallet = findSolanaEmbeddedWallet(user);
+          resolvedWalletAddress = wallet?.address || null;
+        } catch (_e) {
+          // Privy user not found
+        }
       }
     } else {
       resolvedWalletAddress = identifier;
