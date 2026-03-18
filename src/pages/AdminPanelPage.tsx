@@ -149,11 +149,11 @@ export default function AdminPanelPage() {
               onValueChange={(v) => setSearchParams({ tab: v })}
               className="w-full"
             >
-              <div className="overflow-x-auto pb-2">
-                <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
+              <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                <TabsList className="inline-flex flex-wrap gap-1 h-auto p-1 w-full md:w-auto">
                   {TAB_CONFIG.map(({ value, label, icon: Icon }) => (
-                    <TabsTrigger key={value} value={value} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                      <Icon className="h-3.5 w-3.5" />
+                    <TabsTrigger key={value} value={value} className="flex items-center gap-1 text-[11px] px-2 py-1.5 whitespace-nowrap">
+                      <Icon className="h-3 w-3" />
                       {label}
                     </TabsTrigger>
                   ))}
