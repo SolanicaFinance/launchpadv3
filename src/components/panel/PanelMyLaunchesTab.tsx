@@ -21,7 +21,7 @@ function isInIframe(): boolean {
 }
 
 function LinkXButton() {
-  const { linkTwitter } = usePrivy();
+  const { privy: { linkTwitter } } = usePrivyBridge();
   const [linking, setLinking] = useState(false);
 
   if (isInIframe()) {

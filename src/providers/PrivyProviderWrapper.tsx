@@ -134,6 +134,8 @@ const PrivyProviderWithGate = lazy(async () => {
         user: privyResult.user,
         login: privyResult.login,
         logout: privyResult.logout,
+        linkTwitter: (privyResult as any).linkTwitter ?? noopAsync,
+        linkEmail: (privyResult as any).linkEmail ?? noopAsync,
       },
       ...walletData,
     }), [
@@ -142,6 +144,8 @@ const PrivyProviderWithGate = lazy(async () => {
       privyResult.user,
       privyResult.login,
       privyResult.logout,
+      (privyResult as any).linkTwitter,
+      (privyResult as any).linkEmail,
       walletData,
     ]);
 

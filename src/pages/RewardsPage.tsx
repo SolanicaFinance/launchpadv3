@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { XIcon } from "@/components/icons/XIcon";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
@@ -38,16 +36,15 @@ const REWARD_TYPE_MAP: Record<string, { label: string; icon: typeof Star }> = {
 };
 
 export default function RewardsPage() {
-  const { isAuthenticated, login, user } = useAuth();
-  const { user: privyUser, linkTwitter, ready } = usePrivy();
-  const navigate = useNavigate();
+  const { isAuthenticated, isLoading, ready, login, user, linkTwitter, linkedAccounts } = useAuth();
   const [reward, setReward] = useState<SocialReward | null>(null);
   const [events, setEvents] = useState<RewardEvent[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [linking, setLinking] = useState(false);
 
-  const twitterAccount = privyUser?.linkedAccounts?.find(
+  const twitterAccount = linkedAccounts.find(
     (a: any) => a.type === "twitter_oauth"
   ) as any;
 
@@ -127,12 +124,28 @@ export default function RewardsPage() {
   };
 
   const handleLinkTwitter = async () => {
+    setLinking(true);
     try {
       await linkTwitter();
-    } catch (err) {
-      console.warn("Twitter link cancelled:", err);
+    } catch (err: any) {
+      if (!err?.message?.includes("closed")) {
+        console.warn("Twitter link cancelled:", err);
+      }
+    } finally {
+      setLinking(false);
     }
   };
+
+  // Privy still initializing — show spinner
+  if (!ready || isLoading) {
+    return (
+      <LaunchpadLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </LaunchpadLayout>
+    );
+  }
 
   // Not authenticated
   if (!isAuthenticated) {
@@ -174,10 +187,11 @@ export default function RewardsPage() {
             </p>
             <button
               onClick={handleLinkTwitter}
-              className="w-full py-3 rounded-xl font-mono text-sm font-bold uppercase tracking-widest bg-foreground text-background hover:opacity-90 transition-all flex items-center justify-center gap-2"
+              disabled={linking}
+              className="w-full py-3 rounded-xl font-mono text-sm font-bold uppercase tracking-widest bg-foreground text-background hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <XIcon className="h-4 w-4" />
-              Authorize X Account
+              {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <XIcon className="h-4 w-4" />}
+              {linking ? "Authorizing..." : "Authorize X Account"}
             </button>
           </div>
         </div>
@@ -185,7 +199,7 @@ export default function RewardsPage() {
     );
   }
 
-  // Loading
+  // Loading reward data
   if (loading) {
     return (
       <LaunchpadLayout>
