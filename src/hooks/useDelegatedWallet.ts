@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { usePrivyAvailable, usePrivyBridge } from "@/providers/PrivyProviderWrapper";
 
 const DELEGATION_KEY = "claw_wallet_delegated";
@@ -16,7 +16,7 @@ export function useDelegatedWallet() {
   const privyAvailable = usePrivyAvailable();
   const bridge = usePrivyBridge();
 
-  const { solanaWallets, delegateWallet } = bridge;
+  const { solanaWallets } = bridge;
 
   // Track which addresses have been delegated (persisted per-address)
   const [delegatedAddresses, setDelegatedAddresses] = useState<Set<string>>(() => {
@@ -25,7 +25,6 @@ export function useDelegatedWallet() {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) return new Set(parsed);
-        // Legacy: was "true" boolean string — treat as empty (re-delegate)
       }
       return new Set<string>();
     } catch {
@@ -58,20 +57,20 @@ export function useDelegatedWallet() {
     });
   }, []);
 
-  // No auto-delegation — user must click "Enable" manually
-
+  // TEE mode: "delegation" just marks the address as ready since server already has signing access
   const requestDelegation = useCallback(async () => {
     if (!walletAddress) throw new Error("No embedded wallet found");
     setIsDelegating(true);
     try {
-      console.log("[delegation] Manual delegation for:", walletAddress);
-      await delegateWallet({ address: walletAddress, chainType: "solana" });
-      console.log("[delegation] ✅ Manual delegation succeeded for:", walletAddress);
+      console.log("[delegation] TEE mode — marking wallet as ready:", walletAddress);
+      // In TEE mode, the server already has signing access.
+      // We just persist the flag so the prompt doesn't show again.
       saveDelegated(walletAddress);
+      console.log("[delegation] ✅ Wallet marked as ready:", walletAddress);
     } finally {
       setIsDelegating(false);
     }
-  }, [walletAddress, delegateWallet, saveDelegated]);
+  }, [walletAddress, saveDelegated]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
