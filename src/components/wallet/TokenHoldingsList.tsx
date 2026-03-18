@@ -28,7 +28,8 @@ export default function TokenHoldingsList({ walletAddress, solBalance, onSendTok
 
   const mints = holdings.map((h) => h.mint);
   const { data: metadata = {} } = useTokenMetadata(mints);
-  const { data: prices = {} } = useTokenPrices(mints);
+  const { data: tokenPriceData } = useTokenPrices(mints);
+  const prices = tokenPriceData?.prices ?? {};
   const { solPrice } = useSolPrice();
   const { executeTurboSwap } = useTurboSwap();
 
