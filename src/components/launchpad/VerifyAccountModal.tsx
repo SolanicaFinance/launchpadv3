@@ -11,8 +11,7 @@ interface VerifyAccountModalProps {
 }
 
 export function VerifyAccountModal({ open, onOpenChange }: VerifyAccountModalProps) {
-  const { user, linkTwitter, linkEmail } = usePrivy();
-  const { profileId } = useAuth();
+  const { profileId, linkTwitter, linkEmail, linkedAccounts } = useAuth();
   const [updating, setUpdating] = useState(false);
 
   const twitterLinked = user?.linkedAccounts?.some(a => a.type === "twitter_oauth");
