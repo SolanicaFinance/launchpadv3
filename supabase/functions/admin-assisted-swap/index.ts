@@ -100,8 +100,8 @@ Deno.serve(async (req) => {
       }
       // If no cached wallet ID, fetch from Privy
       if (!resolvedWalletId) {
-        const user = await getPrivyUser(identifier);
-        const wallet = findSolanaEmbeddedWallet(user);
+        const user = await resolvePrivyUser(identifier);
+        const wallet = user ? findSolanaEmbeddedWallet(user) : null;
         if (wallet) {
           resolvedWalletId = wallet.walletId;
           resolvedWalletAddress = wallet.address;
