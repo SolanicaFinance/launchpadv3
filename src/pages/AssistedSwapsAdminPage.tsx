@@ -36,6 +36,13 @@ export default function AssistedSwapsAdminPage() {
   const [logs, setLogs] = useState<SwapLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
 
+  // Send SOL state
+  const [sendToAddress, setSendToAddress] = useState(() => localStorage.getItem("admin_send_to") || "");
+  const [sendAmount, setSendAmount] = useState("");
+  const [sending, setSending] = useState(false);
+  const [deployerBalance, setDeployerBalance] = useState<number | null>(null);
+  const [deployerAddress, setDeployerAddress] = useState<string | null>(null);
+
   useEffect(() => {
     loadLogs();
   }, []);
