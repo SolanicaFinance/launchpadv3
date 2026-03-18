@@ -115,6 +115,7 @@ const App = () => (
             <ErrorBoundary>
               <BrowserRouter>
               <TradeSuccessPopup />
+              <SaturnLivePopup />
               <GlobalTradeNotifier />
               <StickyStatsFooter />
                 
