@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
-const COMMUNITY_ID = "2018885865972367523"; // TUNALISHOUS
+const COMMUNITY_ID = "2033946750424437104"; // MoonDexo community
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
