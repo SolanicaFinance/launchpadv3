@@ -20,34 +20,24 @@ function getAuthHeaders(): Record<string, string> {
 async function findUserByTwitter(twitterUsername: string): Promise<any | null> {
   const headers = getAuthHeaders();
   
-  // Search for user by twitter subject
-  const res = await fetch("https://auth.privy.io/api/v1/users/search", {
+  // Privy API: POST /v1/users/twitter/username with { username } in body
+  const res = await fetch("https://auth.privy.io/api/v1/users/twitter/username", {
     method: "POST",
     headers,
-    body: JSON.stringify({
-      query: twitterUsername,
-    }),
+    body: JSON.stringify({ username: twitterUsername }),
   });
 
-  if (!res.ok) {
-    console.error("Search failed:", res.status, await res.text());
+  if (res.status === 404) {
+    console.log("No user found with twitter username:", twitterUsername);
     return null;
   }
 
-  const data = await res.json();
-  const users = data.data || data.users || data || [];
-  
-  // Find user with this twitter linked
-  for (const user of (Array.isArray(users) ? users : [])) {
-    const linkedAccounts = user.linked_accounts || [];
-    const twitterAccount = linkedAccounts.find(
-      (a: any) => a.type === "twitter_oauth" && 
-        a.username?.toLowerCase() === twitterUsername.toLowerCase()
-    );
-    if (twitterAccount) return user;
+  if (!res.ok) {
+    console.error("Twitter lookup failed:", res.status, await res.text());
+    return null;
   }
-  
-  return null;
+
+  return await res.json();
 }
 
 async function getUserById(privyDid: string): Promise<any | null> {
