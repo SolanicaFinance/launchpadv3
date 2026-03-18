@@ -125,10 +125,14 @@ export default function RewardsPage() {
 
   const [alreadyLinkedInfo, setAlreadyLinkedInfo] = useState<any>(null);
   const [unlinking, setUnlinking] = useState(false);
+  const [conflictUsername, setConflictUsername] = useState("");
+  const [showConflictInput, setShowConflictInput] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   const handleLinkTwitter = async () => {
     setLinking(true);
     setAlreadyLinkedInfo(null);
+    setShowConflictInput(false);
     try {
       await linkTwitter();
     } catch (err: any) {
@@ -136,29 +140,35 @@ export default function RewardsPage() {
       if (msg.includes("closed") || msg.includes("cancelled")) {
         // User closed popup
       } else if (msg.includes("already been linked") || msg.includes("already linked")) {
-        toast.error("This X account is already linked to another session. Checking details...");
-        // Try to find which account has it
-        try {
-          const twitterUsername = prompt("Enter your X username (without @) to look up:");
-          if (twitterUsername) {
-            const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
-              body: { twitterUsername, action: "info", currentPrivyDid: user?.privyId },
-            });
-            if (data?.found) {
-              setAlreadyLinkedInfo({ ...data, twitterUsername });
-            } else {
-              toast.error("Could not find linked account. Try logging out and back in.");
-            }
-          }
-        } catch (lookupErr) {
-          console.error("Lookup failed:", lookupErr);
-        }
+        toast.error("This X account is already linked to another session.");
+        setShowConflictInput(true);
       } else {
         toast.error("Failed to link X account. Please try again.");
         console.error("linkTwitter error:", err);
       }
     } finally {
       setLinking(false);
+    }
+  };
+
+  const handleLookupConflict = async () => {
+    if (!conflictUsername.trim()) return;
+    setLookingUp(true);
+    try {
+      const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
+        body: { twitterUsername: conflictUsername.trim().replace(/^@/, ""), action: "info", currentPrivyDid: user?.privyId },
+      });
+      if (data?.found) {
+        setAlreadyLinkedInfo({ ...data, twitterUsername: conflictUsername.trim().replace(/^@/, "") });
+        setShowConflictInput(false);
+      } else {
+        toast.error("No account found with that X username linked.");
+      }
+    } catch (lookupErr) {
+      console.error("Lookup failed:", lookupErr);
+      toast.error("Lookup failed. Try again.");
+    } finally {
+      setLookingUp(false);
     }
   };
 
