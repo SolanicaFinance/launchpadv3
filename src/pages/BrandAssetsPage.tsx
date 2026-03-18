@@ -305,6 +305,6 @@ export default function BrandAssetsPage() {
           </div>
         )}
       </div>
-    </LaunchpadLayout>
+    </div>
   );
 }
