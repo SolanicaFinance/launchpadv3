@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Lock, Wallet, Skull, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2, Wand2
+  Lock, Wallet, Rocket, Database, Megaphone, Bot, ScrollText,
+  Users, Shield, Loader2, Wand2, Layers
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -19,7 +19,6 @@ const ADMIN_PASSWORD = "saturn135@";
 const TreasuryAdminContent = lazy(() => import("./TreasuryAdminPage").then(m => ({ default: m.default })));
 const XBotAdminPage = lazy(() => import("./XBotAdminPage"));
 const AgentLogsAdminPage = lazy(() => import("./AgentLogsAdminPage"));
-
 const FollowerScanPage = lazy(() => import("./FollowerScanPage"));
 const InfluencerRepliesAdminPage = lazy(() => import("./InfluencerRepliesAdminPage"));
 const PromoMentionsAdminPage = lazy(() => import("./PromoMentionsAdminPage"));
@@ -29,6 +28,7 @@ const SaturnAdminLaunchPage = lazy(() => import("./SaturnAdminLaunchPage"));
 const PartnerFeesPage = lazy(() => import("./PartnerFeesPage"));
 const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
 const BrandAssetsPage = lazy(() => import("./BrandAssetsPage"));
+const BatchLaunchAdminPage = lazy(() => import("./BatchLaunchAdminPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -43,6 +43,7 @@ function TabLoader() {
 
 const TAB_CONFIG = [
   { value: "treasury", label: "Treasury", icon: Wallet },
+  { value: "batch-launch", label: "Batch", icon: Layers },
   { value: "announcements", label: "Announce", icon: Megaphone },
   { value: "deployer", label: "Deployer", icon: Database },
   { value: "xbots", label: "X Bots", icon: Bot },
@@ -112,7 +113,7 @@ export default function AdminPanelPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-500 text-center">{error}</p>
+                  <p className="text-sm text-destructive text-center">{error}</p>
                 )}
                 <Button className="w-full" onClick={handleLogin}>
                   <Lock className="w-4 h-4 mr-2" />
@@ -166,6 +167,12 @@ export default function AdminPanelPage() {
                 </Suspense>
               </TabsContent>
 
+              <TabsContent value="batch-launch" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <BatchLaunchAdminPage />
+                </Suspense>
+              </TabsContent>
+
               <TabsContent value="announcements" className="mt-6">
                 <AnnouncementManager />
               </TabsContent>
@@ -187,7 +194,6 @@ export default function AdminPanelPage() {
                   <AgentLogsAdminPage />
                 </Suspense>
               </TabsContent>
-
 
               <TabsContent value="follower-scan" className="mt-6">
                 <Suspense fallback={<TabLoader />}>

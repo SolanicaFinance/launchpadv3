@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Download, ImageIcon, Loader2 } from "lucide-react";
-import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 import GIF from "gif.js";
@@ -174,7 +173,7 @@ export default function BrandAssetsPage() {
   }, []);
 
   return (
-    <LaunchpadLayout>
+    <div>
       <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground mb-1">Brand Asset Generator</h1>
@@ -305,6 +304,6 @@ export default function BrandAssetsPage() {
           </div>
         )}
       </div>
-    </LaunchpadLayout>
+    </div>
   );
 }
