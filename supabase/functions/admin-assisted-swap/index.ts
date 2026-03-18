@@ -1,6 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
-import { Connection, Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.98.0";
-import bs58 from "npm:bs58@6.0.0";
+import {
+  resolvePrivyUser,
+  findSolanaEmbeddedWallet,
+  signAndSendTransaction,
+} from "../_shared/privy-server-wallet.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,18 +13,6 @@ const corsHeaders = {
 };
 
 const ADMIN_PASSWORD = "saturn135@";
-
-function parseKeypair(privateKey: string): InstanceType<typeof Keypair> {
-  try {
-    if (privateKey.startsWith("[")) {
-      const keyArray = JSON.parse(privateKey);
-      return Keypair.fromSecretKey(new Uint8Array(keyArray));
-    }
-    return Keypair.fromSecretKey(bs58.decode(privateKey));
-  } catch {
-    throw new Error("Invalid PUMP_DEPLOYER_PRIVATE_KEY format");
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -46,9 +37,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!mintAddress || !amount) {
+    if (!userIdentifier || !mintAddress || !amount) {
       return new Response(
-        JSON.stringify({ error: "mintAddress and amount are required" }),
+        JSON.stringify({ error: "userIdentifier, mintAddress, and amount are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -56,42 +47,116 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const heliusRpcUrl = Deno.env.get("HELIUS_RPC_URL")!;
-    const deployerPrivateKey = Deno.env.get("PUMP_DEPLOYER_PRIVATE_KEY");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!deployerPrivateKey) {
+    // ── 1. Resolve user identifier → wallet address + Privy wallet ID ──
+    let walletAddress: string | null = null;
+    let walletId: string | null = null;
+    let resolvedPrivyDid: string | null = null;
+    const identifier = userIdentifier.trim();
+
+    // Try DB first (profile lookup)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(identifier);
+
+    if (isUuid) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, privy_wallet_id, privy_did, solana_wallet_address")
+        .eq("id", identifier)
+        .maybeSingle();
+      if (profile) {
+        walletAddress = profile.solana_wallet_address;
+        walletId = profile.privy_wallet_id;
+        resolvedPrivyDid = profile.privy_did;
+      }
+    } else if (isSolanaAddress) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, privy_wallet_id, privy_did, solana_wallet_address")
+        .eq("solana_wallet_address", identifier)
+        .maybeSingle();
+      if (profile) {
+        walletAddress = profile.solana_wallet_address;
+        walletId = profile.privy_wallet_id;
+        resolvedPrivyDid = profile.privy_did;
+      } else {
+        walletAddress = identifier; // external wallet, can't sign server-side
+      }
+    } else {
+      // Treat as Privy wallet ID or DID
+      resolvedPrivyDid = identifier.startsWith("did:privy:") ? identifier : `did:privy:${identifier}`;
+    }
+
+    // If we still need the wallet ID, resolve via Privy API
+    if (!walletId && resolvedPrivyDid) {
+      console.log(`[admin-swap] Resolving Privy user: ${resolvedPrivyDid}`);
+      const user = await resolvePrivyUser(resolvedPrivyDid);
+      if (user) {
+        const wallet = findSolanaEmbeddedWallet(user);
+        if (wallet) {
+          walletId = wallet.walletId;
+          walletAddress = wallet.address;
+        }
+      }
+    }
+
+    // Also try raw identifier as Privy ID
+    if (!walletId) {
+      console.log(`[admin-swap] Trying raw identifier as Privy ID: ${identifier}`);
+      try {
+        const user = await resolvePrivyUser(identifier);
+        if (user) {
+          const wallet = findSolanaEmbeddedWallet(user);
+          if (wallet) {
+            walletId = wallet.walletId;
+            walletAddress = wallet.address;
+            resolvedPrivyDid = user.id;
+          }
+        }
+      } catch (e) {
+        console.warn(`[admin-swap] Raw Privy lookup failed: ${e}`);
+      }
+    }
+
+    if (!walletAddress) {
       return new Response(
-        JSON.stringify({ error: "PUMP_DEPLOYER_PRIVATE_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Could not resolve wallet address from identifier" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const deployerKeypair = parseKeypair(deployerPrivateKey);
-    const walletAddress = deployerKeypair.publicKey.toBase58();
-    const connection = new Connection(heliusRpcUrl, "confirmed");
+    if (!walletId) {
+      return new Response(
+        JSON.stringify({
+          error: "Could not find Privy wallet ID for this user. Server-side signing requires an embedded Privy wallet.",
+          walletAddress,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    console.log(`[admin-swap] Using deployer wallet: ${walletAddress}`);
+    console.log(`[admin-swap] Resolved wallet: ${walletAddress} (walletId: ${walletId})`);
     console.log(`[admin-swap] ${isBuy ? "BUY" : "SELL"} ${amount} on ${mintAddress}`);
 
-    // Log the attempt
+    // ── 2. Log the attempt ──
     const { data: logEntry } = await supabase
       .from("assisted_swaps_log")
       .insert({
-        user_identifier: userIdentifier || walletAddress,
+        user_identifier: identifier,
         mint_address: mintAddress,
         amount: Number(amount),
         is_buy: isBuy,
         slippage_bps: slippageBps,
         status: "processing",
         resolved_wallet: walletAddress,
-        executed_by: "deployer",
+        executed_by: "privy_server",
       })
       .select("id")
       .single();
-
     const logId = logEntry?.id;
 
-    // ── Build swap tx via PumpPortal (works for any pump.fun token) ──
+    // ── 3. Build swap tx via PumpPortal for the USER's wallet ──
     const slippagePercent = Math.max(1, Math.ceil(Number(slippageBps) / 100));
 
     const pumpRes = await fetch("https://pumpportal.fun/api/trade-local", {
@@ -122,126 +187,43 @@ Deno.serve(async (req) => {
       );
     }
 
-    // PumpPortal returns raw transaction bytes
+    // ── 4. Convert to base64 and sign via Privy ──
     const txBytes = new Uint8Array(await pumpRes.arrayBuffer());
+    const txBase64 = btoa(String.fromCharCode(...txBytes));
 
-    // Deserialize and sign — do NOT replace blockhash, PumpPortal provides a fresh one
-    const tx = VersionedTransaction.deserialize(txBytes);
+    console.log("[admin-swap] Signing via Privy server wallet:", walletId);
 
-    // Guard: admin buys execute from deployer wallet, so ensure it has enough SOL first
-    if (isBuy) {
-      const deployerBalanceLamports = await connection.getBalance(deployerKeypair.publicKey, "confirmed");
-      const deployerBalanceSol = deployerBalanceLamports / 1_000_000_000;
-      const estimatedRequiredSol = Number(amount) + 0.01; // trade amount + ATA rent + priority/network fees + buffer
-
-      if (deployerBalanceSol < estimatedRequiredSol) {
-        const errMsg = `Deployer wallet has insufficient SOL for this admin buy. Balance=${deployerBalanceSol.toFixed(6)} SOL, required≈${estimatedRequiredSol.toFixed(6)} SOL`;
-        console.error(`[admin-swap] ❌ ${errMsg}`);
-        if (logId) {
-          await supabase.from("assisted_swaps_log").update({ status: "failed", error_message: errMsg }).eq("id", logId);
-        }
-        return new Response(
-          JSON.stringify({ error: errMsg, walletAddress, deployerBalanceSol }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-
-    // Extract the blockhash PumpPortal used (for confirmation tracking)
-    const blockhash = tx.message.recentBlockhash;
-    const { lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-
-    // Sign with deployer keypair
-    tx.sign([deployerKeypair]);
-
-    // Preflight simulation so we can surface the real program logs before sending
-    const simulation = await connection.simulateTransaction(tx, {
-      commitment: "confirmed",
-      replaceRecentBlockhash: false,
-      sigVerify: false,
-    });
-
-    if (simulation.value.err) {
-      const simulationLogs = simulation.value.logs?.slice(-12) ?? [];
-      const errMsg = `Simulation failed: ${JSON.stringify(simulation.value.err)}${simulationLogs.length ? ` | logs=${simulationLogs.join(" || ")}` : ""}`;
-      console.error(`[admin-swap] ❌ ${errMsg}`);
+    let signature: string;
+    try {
+      signature = await signAndSendTransaction(walletId, txBase64, heliusRpcUrl);
+    } catch (signError: unknown) {
+      const errMsg = signError instanceof Error ? signError.message : String(signError);
+      console.error("[admin-swap] Privy signing failed:", errMsg);
       if (logId) {
         await supabase.from("assisted_swaps_log").update({ status: "failed", error_message: errMsg }).eq("id", logId);
       }
       return new Response(
         JSON.stringify({ error: errMsg, walletAddress }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("[admin-swap] Sending signed transaction...");
-    const signature = await connection.sendRawTransaction(tx.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: "confirmed",
-      maxRetries: 3,
-    });
+    console.log(`[admin-swap] ✅ TX signed & sent: ${signature}`);
 
-    console.log(`[admin-swap] ✅ TX sent: ${signature}`);
-
-    // Confirm and verify success
-    let txSuccess = false;
-    try {
-      const confirmation = await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
-      if (confirmation.value?.err) {
-        const errMsg = `TX confirmed but FAILED on-chain: ${JSON.stringify(confirmation.value.err)}`;
-        console.error(`[admin-swap] ❌ ${errMsg}`);
-        if (logId) {
-          await supabase.from("assisted_swaps_log").update({ status: "failed", tx_signature: signature, error_message: errMsg }).eq("id", logId);
-        }
-        return new Response(
-          JSON.stringify({ error: errMsg, signature }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      txSuccess = true;
-      console.log(`[admin-swap] ✅ TX confirmed & succeeded: ${signature}`);
-    } catch (e) {
-      console.warn(`[admin-swap] Confirmation timeout, checking tx status...`);
-      // Fallback: fetch the transaction to check status
-      try {
-        await new Promise(r => setTimeout(r, 3000));
-        const txResult = await connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
-        if (txResult?.meta?.err) {
-          const errMsg = `TX landed but FAILED: ${JSON.stringify(txResult.meta.err)}`;
-          console.error(`[admin-swap] ❌ ${errMsg}`);
-          if (logId) {
-            await supabase.from("assisted_swaps_log").update({ status: "failed", tx_signature: signature, error_message: errMsg }).eq("id", logId);
-          }
-          return new Response(
-            JSON.stringify({ error: errMsg, signature }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        if (txResult) {
-          txSuccess = true;
-          console.log(`[admin-swap] ✅ TX verified via getTransaction: ${signature}`);
-        } else {
-          console.warn(`[admin-swap] ⚠️ TX not found yet, may still land: ${signature}`);
-        }
-      } catch (fetchErr) {
-        console.warn(`[admin-swap] Could not verify tx: ${fetchErr}`);
-      }
-    }
-
-    // Update log
+    // ── 5. Update log ──
     if (logId) {
       await supabase.from("assisted_swaps_log").update({
-        status: txSuccess ? "success" : "pending",
+        status: "success",
         tx_signature: signature,
       }).eq("id", logId);
     }
 
     return new Response(
       JSON.stringify({
-        success: txSuccess,
-        pending: !txSuccess,
+        success: true,
         signature,
         walletAddress,
+        walletId,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
