@@ -43,17 +43,17 @@ function TabLoader() {
 
 const TAB_CONFIG = [
   { value: "treasury", label: "Treasury", icon: Wallet },
-  { value: "announcements", label: "Announcements", icon: Megaphone },
-  { value: "deployer", label: "Deployer Dust", icon: Database },
+  { value: "announcements", label: "Announce", icon: Megaphone },
+  { value: "deployer", label: "Deployer", icon: Database },
   { value: "xbots", label: "X Bots", icon: Bot },
-  { value: "agent-logs", label: "Agent Logs", icon: ScrollText },
-  
+  { value: "agent-logs", label: "Logs", icon: ScrollText },
   { value: "follower-scan", label: "Followers", icon: Users },
-  { value: "promo", label: "Promo/Influencer", icon: Shield },
+  { value: "promo", label: "Promo", icon: Shield },
   { value: "forum", label: BRAND.forumName, icon: Shield },
-  { value: "saturn-launch", label: "Saturn Launch", icon: Rocket },
-  { value: "partner-fees", label: "Partner Fees", icon: Wallet },
-  { value: "x-restyler", label: "X Restyler", icon: Wand2 },
+  { value: "saturn-launch", label: "Launch", icon: Rocket },
+  { value: "partner-fees", label: "Fees", icon: Wallet },
+  { value: "x-restyler", label: "Restyler", icon: Wand2 },
+  { value: "brand-assets", label: "Assets", icon: Wand2 },
 ] as const;
 
 export default function AdminPanelPage() {
