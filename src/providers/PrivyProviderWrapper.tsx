@@ -36,6 +36,7 @@ export interface PrivyBridgeData {
   solanaCreateWallet: any;
   solanaSignAndSend: any;
   solanaSign: any;
+  delegateWallet: (params: { address: string; chainType: "solana" | "ethereum" }) => Promise<void>;
 }
 
 const noopAsync = async () => {};
