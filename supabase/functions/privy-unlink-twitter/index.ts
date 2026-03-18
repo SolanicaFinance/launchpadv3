@@ -20,34 +20,45 @@ function getAuthHeaders(): Record<string, string> {
 async function findUserByTwitter(twitterUsername: string): Promise<any | null> {
   const headers = getAuthHeaders();
   
-  // Search for user by twitter subject
-  const res = await fetch("https://auth.privy.io/api/v1/users/search", {
-    method: "POST",
+  // Use Privy's get user by twitter username endpoint
+  const res = await fetch(`https://auth.privy.io/api/v1/users/twitter/username/${encodeURIComponent(twitterUsername)}`, {
+    method: "GET",
     headers,
-    body: JSON.stringify({
-      query: twitterUsername,
-    }),
   });
 
-  if (!res.ok) {
-    console.error("Search failed:", res.status, await res.text());
+  if (res.status === 404) {
+    // Try search with searchTerm
+    const searchRes = await fetch("https://auth.privy.io/api/v1/users/search", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ searchTerm: twitterUsername }),
+    });
+    
+    if (!searchRes.ok) {
+      console.error("Search failed:", searchRes.status, await searchRes.text());
+      return null;
+    }
+    
+    const searchData = await searchRes.json();
+    const users = searchData.data || searchData.users || searchData || [];
+    
+    for (const user of (Array.isArray(users) ? users : [])) {
+      const linkedAccounts = user.linked_accounts || [];
+      const twitterAccount = linkedAccounts.find(
+        (a: any) => a.type === "twitter_oauth" && 
+          a.username?.toLowerCase() === twitterUsername.toLowerCase()
+      );
+      if (twitterAccount) return user;
+    }
     return null;
   }
 
-  const data = await res.json();
-  const users = data.data || data.users || data || [];
-  
-  // Find user with this twitter linked
-  for (const user of (Array.isArray(users) ? users : [])) {
-    const linkedAccounts = user.linked_accounts || [];
-    const twitterAccount = linkedAccounts.find(
-      (a: any) => a.type === "twitter_oauth" && 
-        a.username?.toLowerCase() === twitterUsername.toLowerCase()
-    );
-    if (twitterAccount) return user;
+  if (!res.ok) {
+    console.error("Twitter lookup failed:", res.status, await res.text());
+    return null;
   }
-  
-  return null;
+
+  return await res.json();
 }
 
 async function getUserById(privyDid: string): Promise<any | null> {
