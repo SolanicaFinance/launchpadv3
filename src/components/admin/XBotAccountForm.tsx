@@ -188,6 +188,12 @@ export function XBotAccountForm({
                 Paste the full cookie string from your browser. Must include auth_token and ct0.
               </div>
 
+              {account?.has_full_cookie ? (
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  A full cookie string is already saved for this account. For security, it is never shown again here. Leave this field empty to keep the existing cookie, or paste a new one to replace it.
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <Label htmlFor="full_cookie">Full Cookie String</Label>
                 <Textarea
@@ -199,7 +205,7 @@ export function XBotAccountForm({
                       full_cookie_encrypted: e.target.value,
                     }))
                   }
-                  placeholder="auth_token=xxx; ct0=yyy; guest_id=...; ..."
+                  placeholder={account?.has_full_cookie ? "Stored securely — paste a new cookie only if you want to replace it" : "auth_token=xxx; ct0=yyy; guest_id=...; ..."}
                   rows={4}
                   className="font-mono text-xs"
                 />
