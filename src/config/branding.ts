@@ -18,8 +18,8 @@ export const BRAND = {
   // ── Domain & URLs ──
   domain: "saturn.trade",
   appUrl: "https://saturn.trade",
-  twitterHandle: "@saturntrade",
-  twitterUrl: "https://x.com/saturntrade",
+  twitterHandle: "@saturnterminal",
+  twitterUrl: "https://x.com/saturnterminal",
 
   // ── Assets ──
   logoPath: "/saturn-logo.png",
@@ -64,7 +64,7 @@ export const BRAND = {
     "OpenTuna": "Saturn SDK",
     "Saturn Trade": "Saturn",
     "saturn.trade": "saturn.trade",
-    "@saturntrade": "@saturntrade",
+    "@saturntrade": "@saturnterminal",
     "MoonDexo": "Saturn",
   },
 } as const;

@@ -38,7 +38,7 @@ const DEFAULT_CONFIG: SavedConfig = {
   ticker: "",
   description: "",
   imageUrl: "",
-  twitter: "https://x.com/saturntrade",
+  twitter: "https://x.com/saturnterminal",
   telegram: "",
   website: "https://saturntrade.lovable.app",
   initialBuySol: "0.01",

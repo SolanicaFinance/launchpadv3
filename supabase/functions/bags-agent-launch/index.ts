@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     }
 
     const finalWebsite = website || `https://${BRAND.domain}/t/${ticker.toUpperCase()}`;
-    const finalTwitter = twitter || "https://x.com/saturntrade";
+    const finalTwitter = twitter || "https://x.com/saturnterminal";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
