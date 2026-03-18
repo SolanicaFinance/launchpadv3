@@ -241,6 +241,12 @@ export default function AdminPanelPage() {
                   <BrandAssetsPage />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="assisted-swaps" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <AssistedSwapsAdminPage />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
