@@ -123,16 +123,25 @@ export default function RewardsPage() {
     }
   };
 
+  const [alreadyLinkedInfo, setAlreadyLinkedInfo] = useState<any>(null);
+  const [unlinking, setUnlinking] = useState(false);
+  const [conflictUsername, setConflictUsername] = useState("");
+  const [showConflictInput, setShowConflictInput] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
+
   const handleLinkTwitter = async () => {
     setLinking(true);
+    setAlreadyLinkedInfo(null);
+    setShowConflictInput(false);
     try {
       await linkTwitter();
     } catch (err: any) {
       const msg = err?.message || String(err);
       if (msg.includes("closed") || msg.includes("cancelled")) {
-        // User closed the popup — do nothing
+        // User closed popup
       } else if (msg.includes("already been linked") || msg.includes("already linked")) {
-        toast.error("This X account is already linked to another user. Please use a different X account or log in with that account instead.");
+        toast.error("This X account is already linked to another session.");
+        setShowConflictInput(true);
       } else {
         toast.error("Failed to link X account. Please try again.");
         console.error("linkTwitter error:", err);
@@ -142,7 +151,50 @@ export default function RewardsPage() {
     }
   };
 
-  // Privy still initializing — show spinner
+  const handleLookupConflict = async () => {
+    if (!conflictUsername.trim()) return;
+    setLookingUp(true);
+    try {
+      const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
+        body: { twitterUsername: conflictUsername.trim().replace(/^@/, ""), action: "info", currentPrivyDid: user?.privyId },
+      });
+      if (data?.found) {
+        setAlreadyLinkedInfo({ ...data, twitterUsername: conflictUsername.trim().replace(/^@/, "") });
+        setShowConflictInput(false);
+      } else {
+        toast.error("No account found with that X username linked.");
+      }
+    } catch (lookupErr) {
+      console.error("Lookup failed:", lookupErr);
+      toast.error("Lookup failed. Try again.");
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const handleForceUnlink = async () => {
+    if (!alreadyLinkedInfo?.twitterUsername) return;
+    setUnlinking(true);
+    try {
+      const { data } = await supabase.functions.invoke("privy-unlink-twitter", {
+        body: { 
+          twitterUsername: alreadyLinkedInfo.twitterUsername, 
+          action: "unlink",
+          currentPrivyDid: user?.privyId 
+        },
+      });
+      if (data?.success) {
+        toast.success("X account unlinked! You can now link it to your current account.");
+        setAlreadyLinkedInfo(null);
+      } else {
+        toast.error(data?.message || "Failed to unlink");
+      }
+    } catch (err: any) {
+      toast.error("Failed to unlink: " + (err.message || "Unknown error"));
+    } finally {
+      setUnlinking(false);
+    }
+  };
   if (!ready || isLoading) {
     return (
       <LaunchpadLayout>
@@ -199,6 +251,65 @@ export default function RewardsPage() {
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <XIcon className="h-4 w-4" />}
               {linking ? "Authorizing..." : "Authorize X Account"}
             </button>
+
+            {/* Username input for conflict lookup */}
+            {showConflictInput && !alreadyLinkedInfo && (
+              <div className="rounded-xl border border-border/40 bg-card/20 p-4 text-left space-y-3">
+                <p className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">
+                  Resolve Account Conflict
+                </p>
+                <p className="text-[11px] font-mono text-muted-foreground">
+                  Enter your X username so we can find and unlink it from the old session.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="@username"
+                    value={conflictUsername}
+                    onChange={(e) => setConflictUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLookupConflict()}
+                    className="flex-1 px-3 py-2 rounded-lg border border-border/40 bg-background/60 text-foreground font-mono text-xs placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50"
+                  />
+                  <button
+                    onClick={handleLookupConflict}
+                    disabled={lookingUp || !conflictUsername.trim()}
+                    className="px-4 py-2 rounded-lg font-mono text-xs font-bold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {lookingUp ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    {lookingUp ? "Looking up..." : "Look up"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Already linked conflict resolution */}
+            {alreadyLinkedInfo && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left space-y-3">
+                <p className="text-xs font-mono font-bold text-destructive uppercase tracking-wider">
+                  Account Conflict Detected
+                </p>
+                <p className="text-[11px] font-mono text-muted-foreground">
+                  Your X account <span className="text-foreground font-bold">@{alreadyLinkedInfo.twitterUsername}</span> is linked to a different session.
+                </p>
+                <div className="text-[10px] font-mono text-muted-foreground/70 space-y-1">
+                  <p>Privy DID: <span className="text-foreground/60 break-all">{alreadyLinkedInfo.existingPrivyDid}</span></p>
+                  {alreadyLinkedInfo.wallets?.length > 0 && (
+                    <p>Wallets: {alreadyLinkedInfo.wallets.map((w: any) => 
+                      <span key={w.address} className="text-foreground/60 break-all block">{w.address} ({w.chain})</span>
+                    )}</p>
+                  )}
+                  <p>{alreadyLinkedInfo.isSameUser ? "✅ Same user (safe to unlink)" : "⚠️ Different user session"}</p>
+                </div>
+                <button
+                  onClick={handleForceUnlink}
+                  disabled={unlinking}
+                  className="w-full py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-widest bg-destructive/15 text-destructive border border-destructive/20 hover:bg-destructive/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {unlinking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {unlinking ? "Unlinking..." : "Unlink from old session & retry"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </LaunchpadLayout>
