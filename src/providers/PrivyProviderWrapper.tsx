@@ -26,6 +26,8 @@ export interface PrivyBridgeData {
     user: any;
     login: () => void;
     logout: () => Promise<void>;
+    linkTwitter: () => Promise<void>;
+    linkEmail: () => Promise<void>;
   };
   evmWallets: any[];
   evmCreateWallet: any;
