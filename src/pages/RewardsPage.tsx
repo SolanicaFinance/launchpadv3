@@ -128,8 +128,14 @@ export default function RewardsPage() {
     try {
       await linkTwitter();
     } catch (err: any) {
-      if (!err?.message?.includes("closed")) {
-        console.warn("Twitter link cancelled:", err);
+      const msg = err?.message || String(err);
+      if (msg.includes("closed") || msg.includes("cancelled")) {
+        // User closed the popup — do nothing
+      } else if (msg.includes("already been linked") || msg.includes("already linked")) {
+        toast.error("This X account is already linked to another user. Please use a different X account or log in with that account instead.");
+      } else {
+        toast.error("Failed to link X account. Please try again.");
+        console.error("linkTwitter error:", err);
       }
     } finally {
       setLinking(false);
