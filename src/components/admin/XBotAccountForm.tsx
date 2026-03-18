@@ -35,7 +35,7 @@ export function XBotAccountForm({
     email: account?.email || "",
     password_encrypted: "",
     totp_secret_encrypted: "",
-    full_cookie_encrypted: account?.full_cookie_encrypted || "",
+    full_cookie_encrypted: "",
     proxy_url: account?.proxy_url || "",
     socks5_urls: account?.socks5_urls || [],
     is_active: account?.is_active ?? true,
