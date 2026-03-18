@@ -234,6 +234,50 @@ export default function BrandAssetsPage() {
           {isGenerating ? "Generating..." : "Generate Assets"}
         </Button>
 
+        <Button
+          onClick={async () => {
+            setIsGeneratingGif(true);
+            try {
+              const logo = await loadLogo();
+              const url = await generateRotatingGif(logo);
+              setGifUrl(url);
+            } catch (err) {
+              console.error("Failed to generate GIF:", err);
+            } finally {
+              setIsGeneratingGif(false);
+            }
+          }}
+          disabled={isGeneratingGif}
+          variant="outline"
+          className="w-full"
+        >
+          {isGeneratingGif ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+          {isGeneratingGif ? "Generating GIF..." : "Generate Rotating Logo GIF"}
+        </Button>
+
+        {/* Rotating GIF */}
+        {gifUrl && (
+          <Card className="p-4 space-y-3 border-border bg-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Rotating Logo GIF</p>
+                <p className="text-xs text-muted-foreground">200×200px animated</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDownload(gifUrl, `${BRAND.shortName.toLowerCase()}-rotating-logo.gif`)}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Download
+              </Button>
+            </div>
+            <div className="rounded-lg overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
+              <img src={gifUrl} alt="Rotating Logo" style={{ maxWidth: "100%", height: "auto" }} />
+            </div>
+          </Card>
+        )}
+
         {/* Generated assets */}
         {assets.length > 0 && (
           <div className="space-y-6">
