@@ -266,7 +266,7 @@ export default function AssistedSwapsAdminPage() {
               <Input
                 type="number"
                 value={slippageBps}
-                onChange={(e) => setSlippageBps(Number(e.target.value))}
+                onChange={(e) => { setSlippageBps(Number(e.target.value)); localStorage.setItem("admin_swap_slippage", e.target.value); }}
                 className="font-mono text-xs w-24"
               />
             </div>
