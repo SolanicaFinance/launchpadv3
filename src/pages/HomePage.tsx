@@ -311,6 +311,7 @@ export default function HomePage() {
   }, [codexNewPairs, codexCompleting, codexGraduated]);
 
   return (
+    <>
     <LaunchpadLayout hideFooter noPadding>
       <div className="relative z-10">
         {/* ═══ Hero Section — Maximum Premium ═══ */}
