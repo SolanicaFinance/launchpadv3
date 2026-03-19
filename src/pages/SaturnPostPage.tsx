@@ -95,7 +95,7 @@ export default function SaturnPostPage() {
   const handleVote = useCallback((voteType: 1 | -1) => {
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to vote", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
