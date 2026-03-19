@@ -26,7 +26,8 @@ import "@/styles/forum-theme.css";
 import { BRAND } from "@/config/branding";
 
 export default function SaturnForumAdminPage() {
-  const { solanaAddress, isAuthenticated, login } = useAuth();
+  const { solanaAddress, isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { isAdmin, isLoading: isLoadingAdmin } = useIsAdmin(solanaAddress);
   const {
     reports,
