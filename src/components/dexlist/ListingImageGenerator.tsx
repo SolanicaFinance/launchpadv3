@@ -69,7 +69,7 @@ export function ListingImageGenerator({
     try {
       const [template, tokenImg] = await Promise.all([
         loadImage(templateSrc),
-        loadImage(tokenImageUrl),
+        loadImageWithProxy(tokenImageUrl),
       ]);
 
       const canvas = document.createElement("canvas");
