@@ -32,7 +32,8 @@ export default function SaturnCommunityPage() {
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
   
 
-  const { user, isAuthenticated, profileId, login } = useAuth();
+  const { user, isAuthenticated, profileId } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { data: subtuna, isLoading: isLoadingSubtuna } = useSaturnCommunity(ticker);
   const { posts, isLoading: isLoadingPosts, vote, guestVote } = useSaturnPosts({
     subtunaId: subtuna?.id,
