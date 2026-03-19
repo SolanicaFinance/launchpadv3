@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useParams, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
