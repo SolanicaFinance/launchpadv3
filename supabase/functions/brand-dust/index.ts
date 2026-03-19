@@ -262,6 +262,40 @@ serve(async (req) => {
       return json({ logs: data });
     }
 
+    // ─── CRON: Auto-execute all active campaigns ───
+    if (action === "execute_cron") {
+      const { data: activeCampaigns } = await supabase
+        .from("dust_campaigns")
+        .select("id")
+        .eq("is_active", true);
+
+      if (!activeCampaigns?.length) {
+        return json({ message: "No active campaigns" });
+      }
+
+      const results = [];
+      for (const c of activeCampaigns) {
+        try {
+          // Re-invoke execute logic inline by calling self
+          const execUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/brand-dust`;
+          const res = await fetch(execUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({ action: "execute", adminPassword: ADMIN_PASSWORD, campaignId: c.id }),
+          });
+          const result = await res.json();
+          results.push({ campaignId: c.id, ...result });
+        } catch (e: any) {
+          results.push({ campaignId: c.id, error: e.message });
+        }
+      }
+
+      return json({ cronResults: results });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (error: any) {
     console.error("[brand-dust] Error:", error);
