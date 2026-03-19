@@ -195,8 +195,8 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             ))}
           </div>
 
-          {/* Leverage Trading Banner */}
-
+          {/* Leverage Trading Banner - full width */}
+          <LeverageTradingBanner />
 
 
           {token.graduationPercent !== null && !token.completed && !token.migrated && (
