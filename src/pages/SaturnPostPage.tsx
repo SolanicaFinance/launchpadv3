@@ -430,9 +430,12 @@ export default function SaturnPostPage() {
                       {user?.displayName || "User"}
                     </span>
                   ) : (
-                    <button onClick={login} className="text-[hsl(var(--forum-primary))] hover:underline">
+                    <>
+                    <button onClick={() => setShowLoginModal(true)} className="text-[hsl(var(--forum-primary))] hover:underline">
                       Login to comment
                     </button>
+                    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+                    </>
                   )}
                 </p>
                 <Textarea

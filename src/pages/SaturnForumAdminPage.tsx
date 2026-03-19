@@ -59,9 +59,10 @@ export default function SaturnForumAdminPage() {
             <p className="text-[hsl(var(--forum-text-secondary))] mb-6">
               Please login to access the admin panel.
             </p>
-            <Button onClick={login} className="bg-[hsl(var(--forum-primary))]">
+            <Button onClick={() => setShowLoginModal(true)} className="bg-[hsl(var(--forum-primary))]">
               Login
             </Button>
+            <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
           </div>
         </LaunchpadLayout>
       </div>

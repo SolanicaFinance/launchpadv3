@@ -164,7 +164,7 @@ export function WalletTrackerPanel({
           <Wallet style={{ width: "32px", height: "32px", color: dim, margin: "0 auto 8px" }} />
           <div style={{ fontSize: sz.fs.val, color: muted, marginBottom: "12px" }}>Connect to track wallets</div>
           <button
-            onClick={login}
+            onClick={() => setShowLoginModal(true)}
             style={{
               background: g,
               color: "#000",
@@ -179,6 +179,7 @@ export function WalletTrackerPanel({
           >
             Connect Wallet
           </button>
+          <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
         </div>
       ) : (
         <>
