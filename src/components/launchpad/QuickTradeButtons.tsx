@@ -107,7 +107,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
 
   const handleQuickSell = async (percentage: number, index: number) => {
     if (!isAuthenticated) {
-      login();
+      setShowLoginModal(true);
       return;
     }
 
