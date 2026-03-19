@@ -3457,6 +3457,136 @@ export type Database = {
         }
         Relationships: []
       }
+      dust_campaigns: {
+        Row: {
+          batch_size: number | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          lamports_per_recipient: number | null
+          last_error: string | null
+          last_run_at: string | null
+          name: string
+          total_sent: number | null
+          total_sol_spent: number | null
+          total_txs: number | null
+          total_unique_wallets: number | null
+          updated_at: string | null
+          wallet_address: string
+          wallet_private_key_encrypted: string
+        }
+        Insert: {
+          batch_size?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lamports_per_recipient?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          name?: string
+          total_sent?: number | null
+          total_sol_spent?: number | null
+          total_txs?: number | null
+          total_unique_wallets?: number | null
+          updated_at?: string | null
+          wallet_address: string
+          wallet_private_key_encrypted: string
+        }
+        Update: {
+          batch_size?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lamports_per_recipient?: number | null
+          last_error?: string | null
+          last_run_at?: string | null
+          name?: string
+          total_sent?: number | null
+          total_sol_spent?: number | null
+          total_txs?: number | null
+          total_unique_wallets?: number | null
+          updated_at?: string | null
+          wallet_address?: string
+          wallet_private_key_encrypted?: string
+        }
+        Relationships: []
+      }
+      dust_run_log: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          sol_spent: number | null
+          txs_sent: number | null
+          wallets_sent: number | null
+          wallets_targeted: number | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          sol_spent?: number | null
+          txs_sent?: number | null
+          wallets_sent?: number | null
+          wallets_targeted?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          sol_spent?: number | null
+          txs_sent?: number | null
+          wallets_sent?: number | null
+          wallets_targeted?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dust_run_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dust_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dust_sent_addresses: {
+        Row: {
+          campaign_id: string
+          id: string
+          sent_at: string | null
+          tx_signature: string | null
+          wallet_address: string
+        }
+        Insert: {
+          campaign_id: string
+          id?: string
+          sent_at?: string | null
+          tx_signature?: string | null
+          wallet_address: string
+        }
+        Update: {
+          campaign_id?: string
+          id?: string
+          sent_at?: string | null
+          tx_signature?: string | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dust_sent_addresses_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dust_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fee_claims: {
         Row: {
           amount_sol: number

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2, Wand2, Layers, Repeat
+  Users, Shield, Loader2, Wand2, Layers, Repeat, Radio
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -30,6 +30,7 @@ const XPostRestylerPage = lazy(() => import("./XPostRestylerPage"));
 const BrandAssetsPage = lazy(() => import("./BrandAssetsPage"));
 const BatchLaunchAdminPage = lazy(() => import("./BatchLaunchAdminPage"));
 const AssistedSwapsAdminPage = lazy(() => import("./AssistedSwapsAdminPage"));
+const DustCampaignTabLazy = lazy(() => import("@/components/admin/DustCampaignTab").then(m => ({ default: m.DustCampaignTab })));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -57,6 +58,7 @@ const TAB_CONFIG = [
   { value: "x-restyler", label: "Restyler", icon: Wand2 },
   { value: "brand-assets", label: "Assets", icon: Wand2 },
   { value: "assisted-swaps", label: "Swaps", icon: Repeat },
+  { value: "brand-dust", label: "Dust", icon: Radio },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -245,6 +247,12 @@ export default function AdminPanelPage() {
               <TabsContent value="assisted-swaps" className="mt-6">
                 <Suspense fallback={<TabLoader />}>
                   <AssistedSwapsAdminPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="brand-dust" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <DustCampaignTabLazy />
                 </Suspense>
               </TabsContent>
             </Tabs>
