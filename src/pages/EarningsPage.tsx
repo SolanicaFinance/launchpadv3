@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { Link } from "react-router-dom";
 import { useLaunchpad, formatSolAmount } from "@/hooks/useLaunchpad";
 import { useAuth } from "@/hooks/useAuth";
