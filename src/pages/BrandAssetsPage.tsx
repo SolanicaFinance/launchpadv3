@@ -65,11 +65,14 @@ export default function BrandAssetsPage() {
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 200, 200);
 
-    // Center logo
-    const logoSize = 140;
-    const x = (200 - logoSize) / 2;
-    const y = (200 - logoSize) / 2;
-    ctx.drawImage(logo, x, y, logoSize, logoSize);
+    // Center logo preserving aspect ratio
+    const maxSize = 140;
+    const aspect = logo.naturalWidth / logo.naturalHeight;
+    const drawW = aspect >= 1 ? maxSize : maxSize * aspect;
+    const drawH = aspect >= 1 ? maxSize / aspect : maxSize;
+    const x = (200 - drawW) / 2;
+    const y = (200 - drawH) / 2;
+    ctx.drawImage(logo, x, y, drawW, drawH);
 
     return canvas.toDataURL("image/png");
   }, []);
