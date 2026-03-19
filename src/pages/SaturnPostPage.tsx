@@ -146,7 +146,7 @@ export default function SaturnPostPage() {
         },
       }
     );
-  }, [newComment, isAuthenticated, profileId, login, addComment, post?.is_locked]);
+  }, [newComment, isAuthenticated, profileId, addComment, post?.is_locked]);
 
   const handleReply = useCallback((parentCommentId: string, content: string) => {
     if (!isAuthenticated || !profileId) {
