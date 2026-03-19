@@ -390,6 +390,15 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
           </div>
         )}
 
+        {/* ── Buy with Credit Card ── */}
+        <button
+          onClick={() => setShowLoginModal(true)}
+          className="w-full h-12 rounded-xl font-mono text-[13px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black"
+        >
+          <CreditCard className="h-4 w-4" />
+          Buy ${token.ticker} With Credit Card
+        </button>
+
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
           <Button className="w-full h-13 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => setShowLoginModal(true)}>
