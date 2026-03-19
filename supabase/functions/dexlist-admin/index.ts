@@ -317,6 +317,21 @@ Start Trading 👉 https://saturn.trade/trade/${mintAddress}
   }
 }
 
+async function handleProxyImage(body: any) {
+  const { url } = body;
+  if (!url) return jsonResp({ error: "url required" }, 400);
+
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+  });
+  if (!res.ok) return jsonResp({ error: `Image fetch failed: ${res.status}` }, res.status);
+
+  const arrayBuf = await res.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+  const contentType = res.headers.get("content-type") || "image/png";
+  return jsonResp({ dataUrl: `data:${contentType};base64,${base64}` });
+}
+
 // ---- Main handler ----
 
 serve(async (req) => {
@@ -341,6 +356,7 @@ serve(async (req) => {
       case "get-x-config": return handleGetXConfig();
       case "save-x-config": return handleSaveXConfig(body);
       case "post-to-x": return handlePostToX(body);
+      case "proxy-image": return handleProxyImage(body);
       default: return jsonResp({ error: "Unknown action" }, 400);
     }
   } catch (error) {

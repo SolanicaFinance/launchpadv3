@@ -36,15 +36,12 @@ async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
   try {
     return await loadImage(src);
   } catch {
-    // CORS fallback: fetch blob and convert to data URL
-    const res = await fetch(src);
-    const blob = await res.blob();
-    const dataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
+    // CORS fallback: proxy through edge function
+    const { data, error } = await supabase.functions.invoke("dexlist-admin", {
+      body: { action: "proxy-image", modPassword: "mod135@", url: src },
     });
-    return loadImage(dataUrl);
+    if (error || data?.error) throw new Error(data?.error || "Image proxy failed");
+    return loadImage(data.dataUrl);
   }
 }
 
