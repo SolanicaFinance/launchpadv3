@@ -257,6 +257,12 @@ export default function AdminPanelPage() {
                   <DustCampaignTabLazy />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="dex-listing" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <DexListingAdminTab />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
