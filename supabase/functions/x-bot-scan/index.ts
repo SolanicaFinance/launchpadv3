@@ -12,6 +12,14 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Parse Twitter's date format "Thu Mar 16 12:00:00 +0000 2026" or ISO strings
+function parseTwitterDate(dateStr: string): number {
+  const ts = new Date(dateStr).getTime();
+  if (!isNaN(ts)) return ts;
+  // Fallback: treat unparseable dates as very old so they get skipped
+  return 0;
+}
+
 interface TweetResult {
   id: string;
   text: string;
