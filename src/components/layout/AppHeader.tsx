@@ -222,7 +222,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             )}
 
             <button
-              onClick={goToPanel}
+              onClick={handleLaunchAppClick}
               className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold
                          transition-all duration-200
                          border border-primary/30 text-primary
