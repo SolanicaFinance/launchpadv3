@@ -29,7 +29,7 @@ export default function DexListPage() {
   const [listedTokens, setListedTokens] = useState<any[]>([]);
 
   const handleLogin = () => {
-    if (password === "mod135@") {
+    if (password === "mod135@" || password === "saturn135@") {
       localStorage.setItem(STORAGE_KEY, "true");
       setAuthed(true);
       fetchListedTokens();
