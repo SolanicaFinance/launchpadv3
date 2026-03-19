@@ -14,6 +14,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 import type { Token } from "@/hooks/useLaunchpad";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TokenInfo {
   mint_address: string;

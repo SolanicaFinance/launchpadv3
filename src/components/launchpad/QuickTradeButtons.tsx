@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useRealSwap } from "@/hooks/useRealSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface QuickTradeButtonsProps {
   token: Token;

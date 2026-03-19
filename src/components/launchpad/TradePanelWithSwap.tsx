@@ -12,6 +12,7 @@ import { useRealSwap } from "@/hooks/useRealSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TradePanelWithSwapProps {
   token: Token;

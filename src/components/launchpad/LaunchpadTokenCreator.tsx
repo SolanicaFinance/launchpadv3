@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface LaunchpadTokenCreatorProps {
   launchpadId: string;

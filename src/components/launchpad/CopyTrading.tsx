@@ -26,6 +26,7 @@ import {
   Wallet
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TrackedWallet {
   id: string;

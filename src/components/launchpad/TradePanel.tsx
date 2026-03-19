@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ArrowDown, Loader2, Wallet, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TradePanelProps {
   token: Token;

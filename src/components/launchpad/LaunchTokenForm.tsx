@@ -16,6 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { isBlockedName } from "@/lib/hiddenTokens";
 import { MathCaptcha } from "./MathCaptcha";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface LaunchTokenFormProps {
   onSuccess?: (mintAddress: string) => void;

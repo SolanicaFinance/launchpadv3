@@ -5,6 +5,7 @@ import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowDownToLine } from "lucide-react";
 import { recordAlphaTradeInBackground } from "@/lib/recordAlphaTrade";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 
 const BNB_PRESETS = [0.01, 0.05, 0.1, 0.25, 0.5, 1];

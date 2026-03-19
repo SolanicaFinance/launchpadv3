@@ -12,6 +12,7 @@ import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { Token, calculateBuyQuote, calculateSellQuote, formatTokenAmount, formatSolAmount } from "@/hooks/useLaunchpad";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : "https://mainnet.helius-rpc.com");
 const SOL_LOGO = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png";
