@@ -477,8 +477,8 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
       ) : (
         <button
           type="button"
-          onClick={() => login()}
-          className="w-full h-14 bg-[#e84040] hover:bg-[#c73333] text-white font-mono uppercase tracking-widest text-sm rounded transition-all flex items-center justify-center gap-2"
+          onClick={() => setShowLoginModal(true)}
+          className="w-full h-14 bg-[#e84040] hover:bg-[#c73333] text-white font-mono uppercase tracking-widest text-sm rounded transition-allманд flex items-center justify-center gap-2"
         >
           <Rocket className="h-4 w-4" />
           Log In To Launch

@@ -453,7 +453,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         {!isAuthenticated ? (
           <Button
             className="w-full h-12 font-mono text-sm uppercase tracking-widest border-0 bg-green-500 hover:bg-green-600 text-white"
-            onClick={() => login()}
+            onClick={() => setShowLoginModal(true)}
           >
             <Wallet className="h-4 w-4 mr-2" />
             Connect Wallet

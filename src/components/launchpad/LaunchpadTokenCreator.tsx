@@ -138,7 +138,7 @@ export function LaunchpadTokenCreator({
   if (!isAuthenticated) {
     return (
       <Button
-        onClick={() => login()}
+        onClick={() => setShowLoginModal(true)}
         style={{
           backgroundColor: colors.primary,
           color: "#fff",

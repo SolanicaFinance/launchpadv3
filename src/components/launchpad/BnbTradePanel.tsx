@@ -28,7 +28,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
 
   const handleSwap = useCallback(async () => {
     if (!isAuthenticated) {
-      login();
+      setShowLoginModal(true);
       return;
     }
 

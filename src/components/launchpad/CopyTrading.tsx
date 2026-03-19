@@ -229,7 +229,7 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
         <p className="text-muted-foreground text-sm mb-4">
           Track wallets and copy their trades automatically
         </p>
-        <Button onClick={() => login()}>
+        <Button onClick={() => setShowLoginModal(true)}>
           <Wallet className="h-4 w-4 mr-2" />
           Connect Wallet
         </Button>

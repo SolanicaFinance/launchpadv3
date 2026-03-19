@@ -447,7 +447,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
           <button
-            onClick={() => login()}
+            onClick={() => setShowLoginModal(true)}
             className="w-full h-13 rounded-xl font-mono text-[14px] font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <Wallet className="h-4 w-4" />

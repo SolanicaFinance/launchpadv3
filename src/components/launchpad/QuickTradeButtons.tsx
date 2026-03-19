@@ -268,6 +268,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
           Balance: {formatTokenAmount(displayBalance)} {token.ticker}
         </p>
       )}
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }
