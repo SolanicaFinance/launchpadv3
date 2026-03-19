@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useLaunchpad, formatTokenAmount, formatSolAmount, type Token } from "@/hooks/useLaunchpad";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
