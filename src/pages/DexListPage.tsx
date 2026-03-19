@@ -94,9 +94,35 @@ export default function DexListPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Token listed successfully!");
+      fetchListedTokens();
+
+      // Auto-post to X
+      if (generatedImageBase64) {
+        setPostXStatus("posting");
+        try {
+          const { data: xData, error: xError } = await callDexlistAdmin({
+            action: "post-to-x",
+            modPassword: "mod135@",
+            imageBase64: generatedImageBase64,
+            ticker: lookupResult.tokenInfo.ticker,
+            maxLeverage,
+            mintAddress: mintInput.trim(),
+          });
+          if (xError) throw xError;
+          if (xData?.error) throw new Error(xData.error);
+          setPostXStatus("success");
+          setTweetUrl(xData?.tweetUrl || null);
+          toast.success("Posted to X!");
+        } catch (xErr: any) {
+          setPostXStatus("error");
+          setPostXError(xErr.message || "Failed to post to X");
+          toast.error(xErr.message || "Failed to post to X");
+        }
+      }
+
       setLookupResult(null);
       setMintInput("");
-      fetchListedTokens();
+      setGeneratedImageBase64(null);
     } catch (e: any) {
       toast.error(e.message || "Failed to list");
     } finally {
