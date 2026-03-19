@@ -58,6 +58,7 @@ interface WalletTrade {
 export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(function CopyTrading(_props, ref) {
   const { profileId, isAuthenticated, login } = useAuth();
   const { toast } = useToast();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newWalletAddress, setNewWalletAddress] = useState('');
