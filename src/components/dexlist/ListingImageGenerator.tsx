@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Send, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Download, Loader2, Send, CheckCircle, XCircle, RotateCcw, Copy, Check } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import templateSrc from "@/assets/listing-template.jpg";
