@@ -123,7 +123,8 @@ export function ListingImageGenerator({
       ctx.closePath();
       ctx.clip();
 
-      const imageAspect = tokenImg.width / tokenImg.height;
+      const { sx, sy, sw, sh } = getOpaqueBounds(tokenImg);
+      const imageAspect = sw / sh;
       const targetSize = CIRCLE_RADIUS * 2;
       let drawWidth = targetSize;
       let drawHeight = targetSize;
@@ -138,7 +139,7 @@ export function ListingImageGenerator({
 
       const drawX = CIRCLE_CX - drawWidth / 2;
       const drawY = CIRCLE_CY - drawHeight / 2;
-      ctx.drawImage(tokenImg, drawX, drawY, drawWidth, drawHeight);
+      ctx.drawImage(tokenImg, sx, sy, sw, sh, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
 
       const url = canvas.toDataURL("image/jpeg", 1.0);
