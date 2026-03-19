@@ -5,34 +5,249 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saturn Trade — Connect to Trade</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0a0a0a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0F0F1A;
+    color: #e0e0e0;
   }
 
-  /* Background layer */
+  /* ─── BG: HTML Terminal ─── */
   .bg {
     position: fixed;
     inset: 0;
     z-index: 0;
-  }
-  .bg img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .bg-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
+    display: flex;
   }
 
-  /* Modal container */
+  /* Sidebar */
+  .bg-sidebar {
+    width: 48px;
+    flex-shrink: 0;
+    background: rgba(15,15,26,0.95);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 16px;
+  }
+  .bg-sidebar .sb-logo {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #C8FF00 0%, #8ab800 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #0a0a0a;
+  }
+  .bg-sidebar .sb-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .bg-sidebar .sb-icon.active {
+    background: rgba(200,255,0,0.1);
+    border-color: rgba(200,255,0,0.2);
+  }
+
+  /* Main area */
+  .bg-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Header bar */
+  .bg-header {
+    height: 44px;
+    background: rgba(15,15,26,0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .bg-header .hdr-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #C8FF00;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .bg-header .hdr-nav {
+    display: flex; gap: 8px; margin-left: auto;
+  }
+  .bg-header .hdr-nav span {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .bg-header .hdr-nav span.active {
+    background: rgba(200,255,0,0.08);
+    color: #C8FF00;
+  }
+
+  /* Ticker bar */
+  .bg-ticker {
+    height: 32px;
+    background: rgba(15,15,26,0.7);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .bg-ticker .tick {
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .bg-ticker .tick-name {
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(255,255,255,0.5);
+    font-weight: 500;
+  }
+  .bg-ticker .tick-price {
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .tick-up { color: #00D4FF; }
+  .tick-down { color: #FF4D4D; }
+
+  /* Terminal content area */
+  .bg-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 14px;
+    overflow: hidden;
+  }
+
+  /* Column */
+  .bg-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .bg-col-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .bg-col-header .col-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .dot-cyan { background: #00D4FF; box-shadow: 0 0 6px #00D4FF40; }
+  .dot-yellow { background: #FFD700; box-shadow: 0 0 6px #FFD70040; }
+  .dot-green { background: #00FF88; box-shadow: 0 0 6px #00FF8840; }
+  .bg-col-header .col-title {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.5);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .bg-col-header .col-count {
+    font-size: 8px;
+    color: rgba(255,255,255,0.25);
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Token card */
+  .bg-token {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .bg-token:hover { border-color: rgba(0,212,255,0.15); }
+  .tk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tk-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--av1) 0%, var(--av2) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+  }
+  .tk-info { flex: 1; min-width: 0; }
+  .tk-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tk-ticker {
+    font-size: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(255,255,255,0.35);
+  }
+  .tk-mc {
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: #FFD700;
+    text-shadow: 0 0 8px rgba(255,215,0,0.2);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .tk-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .tk-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+  .tk-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* Dark overlay */
+  .bg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: rgba(10,10,20,0.65);
+    backdrop-filter: blur(2px);
+  }
+
+  /* ─── MODAL ─── */
   .modal-wrap {
     position: fixed;
     inset: 0;
@@ -42,32 +257,26 @@
     justify-content: center;
     padding: 1rem;
   }
-
-  /* Card */
   .card {
     width: 100%;
     max-width: 380px;
-    background: #121212;
+    background: #121218;
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid rgba(200, 255, 0, 0.2);
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(200,255,0,0.05);
   }
-
   .accent-line {
     height: 2px;
     width: 100%;
     background: linear-gradient(to right, transparent, #C8FF00, transparent);
   }
-
   .card-body {
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
   }
-
-  /* Header */
   .header {
     display: flex;
     flex-direction: column;
@@ -75,120 +284,75 @@
     text-align: center;
     gap: 12px;
   }
-
   .icon-box {
-    width: 48px;
-    height: 48px;
+    width: 48px; height: 48px;
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     background: rgba(200, 255, 0, 0.1);
     border: 1px solid rgba(200, 255, 0, 0.2);
   }
   .icon-box svg {
-    width: 20px;
-    height: 20px;
-    stroke: #C8FF00;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 20px; height: 20px;
+    stroke: #C8FF00; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
   }
-
   .header h3 {
-    font-size: 14px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-    color: #f0f0f0;
-    outline: none;
+    font-size: 14px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    font-family: 'JetBrains Mono', monospace;
+    color: #f0f0f0; outline: none;
   }
   .header p {
-    font-size: 11px;
-    line-height: 1.6;
-    color: #888;
-    max-width: 280px;
-    outline: none;
+    font-size: 11px; line-height: 1.6;
+    color: #888; max-width: 280px; outline: none;
   }
-
-  /* Feature rows */
-  .features {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  .features { display: flex; flex-direction: column; gap: 8px; }
   .feature-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.08);
-    background: hsl(0 0% 10%);
+    background: rgba(255,255,255,0.03);
   }
   .feature-row svg {
-    width: 14px;
-    height: 14px;
-    stroke: #C8FF00;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 14px; height: 14px;
+    stroke: #C8FF00; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     flex-shrink: 0;
   }
   .feature-row span {
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 10px; font-weight: 500;
     color: rgba(240,240,240,0.7);
-    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'JetBrains Mono', monospace;
     outline: none;
   }
-
-  /* CTA */
   .cta-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-    background: #C8FF00;
-    color: #0a0a0a;
+    width: 100%; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em;
+    font-family: 'JetBrains Mono', monospace;
+    background: #C8FF00; color: #0a0a0a;
     box-shadow: 0 4px 20px rgba(200, 255, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
     transition: filter 0.15s, transform 0.1s;
     outline: none;
   }
   .cta-btn:hover { filter: brightness(1.1); }
   .cta-btn:active { transform: scale(0.98); }
-
-  /* Terms */
   .terms {
-    font-size: 9px;
-    text-align: center;
-    color: rgba(136,136,136,0.4);
-    line-height: 1.6;
-    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-    outline: none;
+    font-size: 9px; text-align: center;
+    color: rgba(136,136,136,0.4); line-height: 1.6;
+    font-family: 'JetBrains Mono', monospace; outline: none;
   }
-
-  /* Editable hint */
-  [contenteditable="true"]:hover {
-    outline: 1px dashed rgba(200, 255, 0, 0.3);
-    outline-offset: 2px;
-  }
-  [contenteditable="true"]:focus {
-    outline: 1px solid rgba(200, 255, 0, 0.5);
-    outline-offset: 2px;
-  }
+  [contenteditable="true"]:hover { outline: 1px dashed rgba(200,255,0,0.3); outline-offset: 2px; }
+  [contenteditable="true"]:focus { outline: 1px solid rgba(200,255,0,0.5); outline-offset: 2px; }
 
   /* Responsive */
+  @media (max-width: 768px) {
+    .bg-sidebar { display: none; }
+    .bg-content { grid-template-columns: 1fr 1fr; }
+    .bg-col:nth-child(3) { display: none; }
+  }
   @media (max-width: 480px) {
+    .bg-content { grid-template-columns: 1fr; }
+    .bg-col:nth-child(2) { display: none; }
     .card { max-width: calc(100vw - 2rem); }
     .card-body { padding: 20px; gap: 16px; }
     .header h3 { font-size: 13px; }
@@ -197,58 +361,182 @@
     .cta-btn { font-size: 11px; padding: 11px; }
     .icon-box { width: 40px; height: 40px; border-radius: 10px; }
     .icon-box svg { width: 18px; height: 18px; }
-  }
-
-  @media (min-width: 481px) and (max-width: 768px) {
-    .card { max-width: 360px; }
-    .card-body { padding: 22px; }
+    .bg-header .hdr-nav { display: none; }
   }
 </style>
 </head>
 <body>
 
-<!-- Background: trade page screenshot -->
+<!-- ─── Background: Adaptive HTML Terminal ─── -->
 <div class="bg">
-  <img src="images/trade-bg.jpg" alt="Trade page background" loading="eager">
-  <div class="bg-overlay"></div>
+  <!-- Sidebar -->
+  <div class="bg-sidebar">
+    <div class="sb-logo">S</div>
+    <div class="sb-icon active"></div>
+    <div class="sb-icon"></div>
+    <div class="sb-icon"></div>
+    <div class="sb-icon"></div>
+    <div class="sb-icon"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="bg-main">
+    <!-- Header -->
+    <div class="bg-header">
+      <span class="hdr-brand">Saturn</span>
+      <div class="hdr-nav">
+        <span class="active">Pulse</span>
+        <span>Launch</span>
+        <span>Portfolio</span>
+        <span>Agents</span>
+      </div>
+    </div>
+
+    <!-- Ticker -->
+    <div class="bg-ticker">
+      <div class="tick"><span class="tick-name">SOL</span><span class="tick-price tick-up">$187.42</span></div>
+      <div class="tick"><span class="tick-name">BTC</span><span class="tick-price tick-up">$104,218</span></div>
+      <div class="tick"><span class="tick-name">ETH</span><span class="tick-price tick-down">$3,842</span></div>
+      <div class="tick"><span class="tick-name">JUP</span><span class="tick-price tick-up">$1.24</span></div>
+      <div class="tick"><span class="tick-name">RAY</span><span class="tick-price tick-down">$6.18</span></div>
+      <div class="tick"><span class="tick-name">ORCA</span><span class="tick-price tick-up">$4.52</span></div>
+      <div class="tick"><span class="tick-name">BONK</span><span class="tick-price tick-up">$0.0000312</span></div>
+    </div>
+
+    <!-- Content: 3 columns -->
+    <div class="bg-content">
+      <!-- New Pairs -->
+      <div class="bg-col">
+        <div class="bg-col-header">
+          <div class="col-dot dot-cyan"></div>
+          <span class="col-title">New Pairs</span>
+          <span class="col-count">24</span>
+        </div>
+        <div class="bg-token" style="--av1:#FF6B6B;--av2:#EE5A24">
+          <div class="tk-row"><div class="tk-avatar">M</div><div class="tk-info"><div class="tk-name">MoonCat</div><div class="tk-ticker">$MCAT</div></div><div class="tk-mc">$4.2K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:12%;background:linear-gradient(90deg,#00D4FF,#0088cc)"></div></div>
+          <div class="tk-meta"><span>2m ago</span><span>Vol: 1.2 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#A29BFE;--av2:#6C5CE7">
+          <div class="tk-row"><div class="tk-avatar">D</div><div class="tk-info"><div class="tk-name">DeFi Owl</div><div class="tk-ticker">$DOWL</div></div><div class="tk-mc">$8.7K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:24%;background:linear-gradient(90deg,#00D4FF,#0088cc)"></div></div>
+          <div class="tk-meta"><span>5m ago</span><span>Vol: 3.8 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FD79A8;--av2:#E84393">
+          <div class="tk-row"><div class="tk-avatar">S</div><div class="tk-info"><div class="tk-name">SolPepe</div><div class="tk-ticker">$SPEPE</div></div><div class="tk-mc">$2.1K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:6%;background:linear-gradient(90deg,#00D4FF,#0088cc)"></div></div>
+          <div class="tk-meta"><span>8m ago</span><span>Vol: 0.4 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FDCB6E;--av2:#E17055">
+          <div class="tk-row"><div class="tk-avatar">R</div><div class="tk-info"><div class="tk-name">RocketFi</div><div class="tk-ticker">$RKTFI</div></div><div class="tk-mc">$15.3K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:38%;background:linear-gradient(90deg,#00D4FF,#0088cc)"></div></div>
+          <div class="tk-meta"><span>12m ago</span><span>Vol: 8.2 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#55E6C1;--av2:#1ABC9C">
+          <div class="tk-row"><div class="tk-avatar">N</div><div class="tk-info"><div class="tk-name">NeonDAO</div><div class="tk-ticker">$NEON</div></div><div class="tk-mc">$6.4K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:18%;background:linear-gradient(90deg,#00D4FF,#0088cc)"></div></div>
+          <div class="tk-meta"><span>15m ago</span><span>Vol: 2.1 SOL</span></div>
+        </div>
+      </div>
+
+      <!-- Final Stretch -->
+      <div class="bg-col">
+        <div class="bg-col-header">
+          <div class="col-dot dot-yellow"></div>
+          <span class="col-title">Final Stretch</span>
+          <span class="col-count">8</span>
+        </div>
+        <div class="bg-token" style="--av1:#74B9FF;--av2:#0984E3">
+          <div class="tk-row"><div class="tk-avatar">W</div><div class="tk-info"><div class="tk-name">WhaleFin</div><div class="tk-ticker">$WHAL</div></div><div class="tk-mc">$62.1K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:87%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+          <div class="tk-meta"><span>78% filled</span><span>Vol: 42.5 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#00CEC9;--av2:#00B894">
+          <div class="tk-row"><div class="tk-avatar">A</div><div class="tk-info"><div class="tk-name">AlphaVault</div><div class="tk-ticker">$AVLT</div></div><div class="tk-mc">$54.8K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:72%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+          <div class="tk-meta"><span>72% filled</span><span>Vol: 31.2 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FF7675;--av2:#D63031">
+          <div class="tk-row"><div class="tk-avatar">T</div><div class="tk-info"><div class="tk-name">TurboSwap</div><div class="tk-ticker">$TURBO</div></div><div class="tk-mc">$71.4K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:92%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+          <div class="tk-meta"><span>92% filled</span><span>Vol: 58.9 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FFEAA7;--av2:#FDCB6E">
+          <div class="tk-row"><div class="tk-avatar">G</div><div class="tk-info"><div class="tk-name">GigaChad</div><div class="tk-ticker">$GIGA</div></div><div class="tk-mc">$48.2K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:65%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+          <div class="tk-meta"><span>65% filled</span><span>Vol: 24.7 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#DFE6E9;--av2:#B2BEC3">
+          <div class="tk-row"><div class="tk-avatar">P</div><div class="tk-info"><div class="tk-name">PixelApe</div><div class="tk-ticker">$PXAP</div></div><div class="tk-mc">$39.6K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:55%;background:linear-gradient(90deg,#FFD700,#FFA500)"></div></div>
+          <div class="tk-meta"><span>55% filled</span><span>Vol: 18.3 SOL</span></div>
+        </div>
+      </div>
+
+      <!-- Migrated -->
+      <div class="bg-col">
+        <div class="bg-col-header">
+          <div class="col-dot dot-green"></div>
+          <span class="col-title">Migrated</span>
+          <span class="col-count">142</span>
+        </div>
+        <div class="bg-token" style="--av1:#00FF88;--av2:#00CC6A">
+          <div class="tk-row"><div class="tk-avatar">Z</div><div class="tk-info"><div class="tk-name">ZenithAI</div><div class="tk-ticker">$ZAI</div></div><div class="tk-mc">$284K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:100%;background:linear-gradient(90deg,#00FF88,#00CC6A)"></div></div>
+          <div class="tk-meta"><span>Raydium</span><span>Vol: 412 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FF9FF3;--av2:#F368E0">
+          <div class="tk-row"><div class="tk-avatar">C</div><div class="tk-info"><div class="tk-name">CosmicDog</div><div class="tk-ticker">$CDOG</div></div><div class="tk-mc">$192K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:100%;background:linear-gradient(90deg,#00FF88,#00CC6A)"></div></div>
+          <div class="tk-meta"><span>Raydium</span><span>Vol: 287 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#48DBFB;--av2:#0ABDE3">
+          <div class="tk-row"><div class="tk-avatar">V</div><div class="tk-info"><div class="tk-name">VortexLabs</div><div class="tk-ticker">$VRTX</div></div><div class="tk-mc">$518K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:100%;background:linear-gradient(90deg,#00FF88,#00CC6A)"></div></div>
+          <div class="tk-meta"><span>Meteora</span><span>Vol: 1.2K SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#FF6348;--av2:#EE5A24">
+          <div class="tk-row"><div class="tk-avatar">B</div><div class="tk-info"><div class="tk-name">BasedFrog</div><div class="tk-ticker">$BFROG</div></div><div class="tk-mc">$87.3K</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:100%;background:linear-gradient(90deg,#00FF88,#00CC6A)"></div></div>
+          <div class="tk-meta"><span>Raydium</span><span>Vol: 156 SOL</span></div>
+        </div>
+        <div class="bg-token" style="--av1:#C8FF00;--av2:#A8D800">
+          <div class="tk-row"><div class="tk-avatar">L</div><div class="tk-info"><div class="tk-name">LunarKing</div><div class="tk-ticker">$LNRK</div></div><div class="tk-mc">$1.4M</div></div>
+          <div class="tk-bar"><div class="tk-bar-fill" style="width:100%;background:linear-gradient(90deg,#00FF88,#00CC6A)"></div></div>
+          <div class="tk-meta"><span>Meteora</span><span>Vol: 3.8K SOL</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Dark overlay -->
+<div class="bg-overlay"></div>
 
 <!-- Modal popup -->
 <div class="modal-wrap">
   <div class="card">
     <div class="accent-line"></div>
     <div class="card-body">
-
-      <!-- Icon + Header -->
       <div class="header">
         <div class="icon-box">
-          <!-- Link2 icon -->
           <svg viewBox="0 0 24 24"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6A5 5 0 0 1 6 7h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </div>
         <h3 contenteditable="true">Connect to Trade</h3>
         <p contenteditable="true">Log in to start trading tokens instantly with one-click quick buy</p>
       </div>
-
-      <!-- Features -->
       <div class="features">
         <div class="feature-row">
-          <!-- Zap icon -->
           <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <span contenteditable="true">One-click quick buy with preset amounts</span>
         </div>
         <div class="feature-row">
-          <!-- Shield icon -->
           <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span contenteditable="true">Secure embedded wallet — no extensions needed</span>
         </div>
       </div>
-
-      <!-- CTA Button -->
       <button class="cta-btn" contenteditable="true">Connect Wallet</button>
-
-      <!-- Terms -->
       <p class="terms" contenteditable="true">By connecting, you agree to the Terms of Service and acknowledge the risks of trading digital assets.</p>
-
     </div>
   </div>
 </div>
