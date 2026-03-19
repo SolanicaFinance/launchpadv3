@@ -200,7 +200,7 @@ export function ListingImageGenerator({
         </Button>
         {previewUrl && (
           <div className="space-y-2">
-            <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-full max-w-md rounded-lg border border-border" />
+            <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-[300px] h-[300px] rounded-lg border border-border object-cover" />
             <Button variant="secondary" size="sm" onClick={download} className="gap-2">
               <Download className="w-3.5 h-3.5" /> Download PNG
             </Button>
