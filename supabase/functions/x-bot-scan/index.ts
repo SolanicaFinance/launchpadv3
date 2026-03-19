@@ -216,9 +216,10 @@ Deno.serve(async (req) => {
               if (existingIds.has(tweet.id)) continue;
 
               // ── Freshness gate: only reply to tweets from the last 15 minutes ──
-              const tweetAge = Date.now() - new Date(tweet.created_at).getTime();
+              const tweetTs = parseTwitterDate(tweet.created_at);
+              const tweetAge = Date.now() - tweetTs;
               const MAX_TWEET_AGE_MS = 15 * 60 * 1000; // 15 minutes
-              if (tweetAge > MAX_TWEET_AGE_MS) {
+              if (tweetAge > MAX_TWEET_AGE_MS || tweetTs === 0) {
                 continue;
               }
 
