@@ -1,8 +1,10 @@
+import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Trash2, Check, X, ExternalLink } from "lucide-react";
+import { Trash2, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { ListingImageGenerator } from "./ListingImageGenerator";
 
 interface ListedToken {
   id: string;
@@ -27,6 +29,7 @@ interface ListedTokensTableProps {
 export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
+  const [imageGenId, setImageGenId] = useState<string | null>(null);
 
   if (!tokens.length) {
     return <p className="text-sm text-muted-foreground text-center py-8">No tokens listed yet.</p>;
@@ -48,7 +51,8 @@ export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTa
         </TableHeader>
         <TableBody>
           {tokens.map((t) => (
-            <TableRow key={t.id} className={!t.is_active ? "opacity-50" : ""}>
+            <React.Fragment key={t.id}>
+            <TableRow className={!t.is_active ? "opacity-50" : ""}>
               <TableCell>
                 {t.image_url ? (
                   <img src={t.image_url} className="w-7 h-7 rounded-full object-cover" alt="" />
@@ -118,12 +122,33 @@ export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTa
                   />
                 </button>
               </TableCell>
-              <TableCell>
+              <TableCell className="flex gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={() => setImageGenId(imageGenId === t.id ? null : t.id)}
+                  title="Generate listing image"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                </Button>
                 <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => onRemove(t.id)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </TableCell>
             </TableRow>
+            {imageGenId === t.id && t.image_url && t.token_ticker && (
+              <TableRow>
+                <TableCell colSpan={7} className="p-4">
+                  <ListingImageGenerator
+                    tokenImageUrl={t.image_url}
+                    ticker={t.token_ticker}
+                    tokenName={t.token_name || undefined}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
