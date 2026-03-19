@@ -12,6 +12,14 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Parse Twitter's date format "Thu Mar 16 12:00:00 +0000 2026" or ISO strings
+function parseTwitterDate(dateStr: string): number {
+  const ts = new Date(dateStr).getTime();
+  if (!isNaN(ts)) return ts;
+  // Fallback: treat unparseable dates as very old so they get skipped
+  return 0;
+}
+
 interface TweetResult {
   id: string;
   text: string;
@@ -127,10 +135,16 @@ Deno.serve(async (req) => {
       console.log(`[x-bot-scan] 🗑️ Purged ${purgedCount} stale pending queue items`);
     }
 
+    // Also clean stuck "processing" items older than 5 minutes
+    const stuckCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    await supabase
+      .from("x_bot_account_queue")
+      .delete()
+      .eq("status", "processing")
+      .lt("created_at", stuckCutoff);
+
     let totalQueued = 0;
     const errors: string[] = [];
-
-    for (const account of accounts) {
       const rules = rulesMap.get(account.id);
       if (!rules) {
         console.log(`[x-bot-scan] Skipping ${account.username} - no enabled rules`);
@@ -201,16 +215,27 @@ Deno.serve(async (req) => {
         for (const query of queries) {
           try {
             const tweets = await searchTweets(query, twitterApiIoKey);
-            console.log(`[x-bot-scan] Query "${query}" returned ${tweets.length} tweets`);
+            
+            // Log first tweet date for debugging freshness filter
+            if (tweets.length > 0) {
+              const oldest = tweets[tweets.length - 1];
+              const newest = tweets[0];
+              console.log(`[x-bot-scan] Query "${query}" returned ${tweets.length} tweets (newest: ${newest.created_at}, oldest: ${oldest.created_at})`);
+            } else {
+              console.log(`[x-bot-scan] Query "${query}" returned 0 tweets`);
+            }
 
+            let skippedStale = 0;
             for (const tweet of tweets) {
               // Skip already processed
               if (existingIds.has(tweet.id)) continue;
 
               // ── Freshness gate: only reply to tweets from the last 15 minutes ──
-              const tweetAge = Date.now() - new Date(tweet.created_at).getTime();
+              const tweetTs = parseTwitterDate(tweet.created_at);
+              const tweetAge = Date.now() - tweetTs;
               const MAX_TWEET_AGE_MS = 15 * 60 * 1000; // 15 minutes
-              if (tweetAge > MAX_TWEET_AGE_MS) {
+              if (tweetAge > MAX_TWEET_AGE_MS || tweetTs === 0) {
+                skippedStale++;
                 continue;
               }
 
@@ -279,6 +304,10 @@ Deno.serve(async (req) => {
                 accountQueued++;
                 totalQueued++;
               }
+            }
+
+            if (skippedStale > 0) {
+              console.log(`[x-bot-scan] ⏭️ Skipped ${skippedStale} stale tweets (>15min old) for query "${query}"`);
             }
 
             // Small delay between queries to avoid rate limiting
