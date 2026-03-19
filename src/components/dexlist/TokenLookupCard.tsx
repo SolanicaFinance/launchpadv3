@@ -92,6 +92,7 @@ export function TokenLookupCard({ tokenInfo, pools, mintAddress, onConfirm, isSu
           mintAddress={mintAddress}
           maxLeverage={maxLeverage}
           autoGenerate
+          onImageGenerated={onImageGenerated}
         />
       )}
 
