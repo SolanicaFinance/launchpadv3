@@ -3457,6 +3457,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dex_listing_x_config: {
+        Row: {
+          full_cookie_encrypted: string | null
+          id: string
+          socks5_urls: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          full_cookie_encrypted?: string | null
+          id?: string
+          socks5_urls?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          full_cookie_encrypted?: string | null
+          id?: string
+          socks5_urls?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dust_campaigns: {
         Row: {
           batch_size: number | null
