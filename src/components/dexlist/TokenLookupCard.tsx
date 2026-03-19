@@ -32,14 +32,10 @@ interface TokenLookupCardProps {
   mintAddress: string;
   onConfirm: (poolAddress: string, maxLeverage: number) => void;
   isSubmitting: boolean;
-  postStatus?: "idle" | "posting" | "success" | "error";
-  tweetUrl?: string | null;
-  postError?: string | null;
-  onPostToX?: () => void;
-  onRetryPost?: () => void;
+  onImageGenerated?: (dataUrl: string) => void;
 }
 
-export function TokenLookupCard({ tokenInfo, pools, mintAddress, onConfirm, isSubmitting }: TokenLookupCardProps) {
+export function TokenLookupCard({ tokenInfo, pools, mintAddress, onConfirm, isSubmitting, onImageGenerated }: TokenLookupCardProps) {
   const [selectedPool, setSelectedPool] = useState(pools[0]?.pairAddress || "");
   const [manualPool, setManualPool] = useState("");
   const [useManual, setUseManual] = useState(false);
