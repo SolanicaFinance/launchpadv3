@@ -16,9 +16,9 @@ interface ListingImageGeneratorProps {
 }
 
 const TEMPLATE_SIZE = 1024;
-const CIRCLE_CX = 513;
-const CIRCLE_CY = 393;
-const CIRCLE_RADIUS = 168;
+const CIRCLE_CX = 507;
+const CIRCLE_CY = 398;
+const CIRCLE_RADIUS = 178;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -28,6 +28,48 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = reject;
     img.src = src;
   });
+}
+
+function getOpaqueBounds(image: HTMLImageElement) {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!ctx) {
+    return { sx: 0, sy: 0, sw: image.width, sh: image.height };
+  }
+
+  ctx.drawImage(image, 0, 0);
+  const { data } = ctx.getImageData(0, 0, image.width, image.height);
+
+  let minX = image.width;
+  let minY = image.height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const alpha = data[(y * image.width + x) * 4 + 3];
+      if (alpha > 8) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX === -1 || maxY === -1) {
+    return { sx: 0, sy: 0, sw: image.width, sh: image.height };
+  }
+
+  return {
+    sx: minX,
+    sy: minY,
+    sw: Math.max(1, maxX - minX + 1),
+    sh: Math.max(1, maxY - minY + 1),
+  };
 }
 
 async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
@@ -81,7 +123,8 @@ export function ListingImageGenerator({
       ctx.closePath();
       ctx.clip();
 
-      const imageAspect = tokenImg.width / tokenImg.height;
+      const { sx, sy, sw, sh } = getOpaqueBounds(tokenImg);
+      const imageAspect = sw / sh;
       const targetSize = CIRCLE_RADIUS * 2;
       let drawWidth = targetSize;
       let drawHeight = targetSize;
@@ -96,7 +139,7 @@ export function ListingImageGenerator({
 
       const drawX = CIRCLE_CX - drawWidth / 2;
       const drawY = CIRCLE_CY - drawHeight / 2;
-      ctx.drawImage(tokenImg, drawX, drawY, drawWidth, drawHeight);
+      ctx.drawImage(tokenImg, sx, sy, sw, sh, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
 
       const url = canvas.toDataURL("image/jpeg", 1.0);
