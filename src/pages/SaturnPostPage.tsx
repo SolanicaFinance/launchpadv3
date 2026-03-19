@@ -119,7 +119,7 @@ export default function SaturnPostPage() {
       return { ...prev, [commentId]: voteType };
     });
     voteComment({ commentId, voteType, userId: profileId });
-  }, [isAuthenticated, profileId, login, voteComment]);
+  }, [isAuthenticated, profileId, voteComment]);
 
   const handleSubmitComment = useCallback(() => {
     if (!newComment.trim()) return;
