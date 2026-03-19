@@ -32,7 +32,8 @@ export default function SaturnPostPage() {
   const [newComment, setNewComment] = useState("");
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const { user, isAuthenticated, profileId, login } = useAuth();
+  const { user, isAuthenticated, profileId } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { data: recentCommunities } = useRecentCommunities();
   const { vote: voteOnPost } = useSaturnPosts({});
   const { createReport, isCreating: isReporting } = useCreateSaturnReport();
