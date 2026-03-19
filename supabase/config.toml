@@ -474,3 +474,6 @@ verify_jwt = false
 
 [functions.dexlist-admin]
 verify_jwt = false
+
+[functions.dust-analyzer]
+verify_jwt = false
