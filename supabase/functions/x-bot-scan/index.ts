@@ -135,10 +135,16 @@ Deno.serve(async (req) => {
       console.log(`[x-bot-scan] 🗑️ Purged ${purgedCount} stale pending queue items`);
     }
 
+    // Also clean stuck "processing" items older than 5 minutes
+    const stuckCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    await supabase
+      .from("x_bot_account_queue")
+      .delete()
+      .eq("status", "processing")
+      .lt("created_at", stuckCutoff);
+
     let totalQueued = 0;
     const errors: string[] = [];
-
-    for (const account of accounts) {
       const rules = rulesMap.get(account.id);
       if (!rules) {
         console.log(`[x-bot-scan] Skipping ${account.username} - no enabled rules`);
