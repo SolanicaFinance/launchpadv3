@@ -34,6 +34,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const [search, setSearch] = useState(() => isOnTrade ? (searchParams.get("q") || "") : "");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLaunchAppModal, setShowLaunchAppModal] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
