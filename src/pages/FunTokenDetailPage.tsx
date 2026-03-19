@@ -30,8 +30,6 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { LeverageTradingBanner } from "@/components/launchpad/LeverageTradingBanner";
-  ChevronUp,
-} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 import { BagsBadge } from "@/components/forum/BagsBadge";
