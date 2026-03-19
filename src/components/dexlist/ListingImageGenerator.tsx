@@ -16,9 +16,9 @@ interface ListingImageGeneratorProps {
 }
 
 const TEMPLATE_SIZE = 1024;
-const CIRCLE_CX = 400;
-const CIRCLE_CY = 390;
-const CIRCLE_RADIUS = 135;
+const CIRCLE_CX = 517;
+const CIRCLE_CY = 399;
+const CIRCLE_RADIUS = 155;
 const TICKER_Y = 660;
 const TICKER_X = TEMPLATE_SIZE / 2;
 const LEVERAGE_Y = 763;
@@ -200,7 +200,7 @@ export function ListingImageGenerator({
         </Button>
         {previewUrl && (
           <div className="space-y-2">
-            <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-full max-w-md rounded-lg border border-border" />
+            <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-[300px] h-[300px] rounded-lg border border-border object-cover" />
             <Button variant="secondary" size="sm" onClick={download} className="gap-2">
               <Download className="w-3.5 h-3.5" /> Download PNG
             </Button>
@@ -222,7 +222,7 @@ export function ListingImageGenerator({
       {previewUrl && (
         <div className="space-y-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Listing Announcement Preview</p>
-          <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-full rounded-lg border border-border" />
+          <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-[300px] h-[300px] rounded-lg border border-border object-cover" />
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={download} className="gap-2">
               <Download className="w-3.5 h-3.5" /> Download
