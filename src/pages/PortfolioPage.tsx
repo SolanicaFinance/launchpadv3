@@ -125,6 +125,8 @@ export default function PortfolioPage() {
     }
   };
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   if (!isAuthenticated) {
     return (
       <LaunchpadLayout hideFooter>
@@ -132,7 +134,8 @@ export default function PortfolioPage() {
           <Wallet className="h-16 w-16 text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold mb-2 text-foreground">Connect Wallet</h2>
           <p className="text-muted-foreground mb-4 text-center">Connect your wallet to view your portfolio</p>
-          <Button onClick={() => login()}>Connect Wallet</Button>
+          <Button onClick={() => setShowLoginModal(true)}>Connect Wallet</Button>
+          <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
         </div>
       </LaunchpadLayout>
     );

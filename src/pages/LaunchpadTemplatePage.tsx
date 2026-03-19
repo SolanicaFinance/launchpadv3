@@ -730,7 +730,7 @@ export default function LaunchpadTemplatePage() {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => login()}
+                onClick={() => setShowLoginModal(true)}
                 style={{
                   backgroundColor: design.colors.primary,
                   color: "#fff",
