@@ -1,104 +1,64 @@
 
-## Privy-Powered 1-Click Token Launcher 🚀 PLANNED
 
-### Problem
-TokenLauncher (3078 lines) uses `usePhantomWallet` — requires Phantom browser extension. 
-Rest of the platform already uses Privy embedded wallet. Users shouldn't need Phantom to launch tokens.
+## Plan: Dex Listing X Account Config in Admin + Auto-Generate Image on Lookup
 
-### Architecture
-1. **Replace `usePhantomWallet` with `useSolanaWalletPrivy`** in TokenLauncher
-   - Privy embedded wallet handles all on-chain signing (same as trading)
-   - Users logged in via Privy can launch directly — no Phantom popup
-   - Logged-out users can still generate memes, prompted to login on Launch
+### What Changes
 
-2. **Simplify the "phantom" mode → "launch" mode**
-   - Remove Phantom-specific naming (`phantomWallet`, `isPhantomLaunching`, etc.)
-   - Rename to generic wallet references since Privy handles everything
-   - Keep all sub-modes (random, describe, realistic, custom)
+**1. Admin Panel — New "Dex Listing" tab**
+Add a new tab in the Admin Panel (`/admin?tab=dex-listing`) for managing the X account used for dex listing announcements. Same pattern as X Bot accounts — fields for full cookie string and SOCKS5 proxies. Stored in a new `dex_listing_x_config` table (single row, service_role-only RLS).
 
-3. **On-chain flow change:**
-   ```
-   Before: Phantom popup → user signs → broadcast
-   After:  Privy embedded wallet → auto-sign (1-click) → broadcast
-   ```
+**2. DexListPage — Auto-show listing image on CA lookup**
+When a CA is entered and looked up, immediately auto-generate and display the listing announcement image (using the existing `ListingImageGenerator` canvas logic) right in the `TokenLookupCard`, before the moderator confirms. The moderator sees the preview image as part of the lookup result.
 
-4. **Auth gate on launch:**
-   - Check `useAuth()` / `usePrivy()` for logged-in state
-   - If not logged in → trigger Privy login modal
-   - If logged in → use embedded wallet address, sign tx via `useSolanaWalletPrivy`
+**3. Post-to-X flow on confirm**
+After the moderator clicks confirm (list token), the system:
+- Uploads the generated image to temporary storage
+- Posts the formatted tweet using `twitterapi.io` with cookies/socks5 from the `dex_listing_x_config` table
+- Shows the tweet link or error with retry button
 
-### Files to modify:
-- `src/components/launchpad/TokenLauncher.tsx` — swap wallet hook, remove Phantom refs
-- `src/components/panel/PanelPhantomTab.tsx` — rename, use Privy
-- `src/pages/CreateTokenPage.tsx` — remove `defaultMode="phantom"` refs
-- `src/components/launchpad/CreateTokenModal.tsx` — same
-- `src/pages/FunLauncherPage.tsx` — same
+### Database
 
-### Dependencies:
-- `src/hooks/useSolanaWalletPrivy.ts` (already exists, used by trading)
-- `src/hooks/useAuth.ts` (already exists)
-- Can potentially remove `src/hooks/usePhantomWallet.ts` entirely after migration
+New table `dex_listing_x_config`:
+- `id` (uuid, PK)
+- `full_cookie_encrypted` (text) — full X cookie string
+- `socks5_urls` (text[]) — SOCKS5 proxy list
+- `updated_at` (timestamptz)
+- RLS: deny all public access (service_role only)
 
----
+### New/Modified Files
 
-## Turbo Trade — Server-Side Execution Pipeline ✅ IMPLEMENTED
+| File | Action |
+|------|--------|
+| `src/pages/DexListingAdminTab.tsx` | **Create** — Admin tab with cookie + SOCKS5 form, same UI pattern as XBotAccountForm |
+| `src/pages/AdminPanelPage.tsx` | **Edit** — Add "Dex List" tab to TAB_CONFIG and TabsContent |
+| `src/components/dexlist/TokenLookupCard.tsx` | **Edit** — Embed `ListingImageGenerator` inline, auto-generate on mount |
+| `src/components/dexlist/ListingImageGenerator.tsx` | **Edit** — Add auto-generate on mount option, add "Post to X" button with status feedback |
+| `supabase/functions/dexlist-admin/index.ts` | **Edit** — Add actions: `get-x-config`, `save-x-config`, `post-to-x` (upload image via twitterapi.io, post tweet with formatted text) |
 
-### What was built:
-1. **`supabase/functions/turbo-trade/index.ts`** — Server-side swap pipeline:
-   - Resolves wallet from DB cache (skips Privy API when `privy_wallet_id` cached)
-   - Builds swap tx via Jupiter Quote + Swap API (works for all tokens)
-   - Signs via Privy `signTransaction` (sign-only, ~300ms vs ~1000ms for signAndSend)
-   - Broadcasts signed tx in parallel to all 5 Jito regions + Helius RPC
-   - Records trade in DB + alpha_trades (non-blocking)
-   - Returns signature immediately with timing breakdown
-
-2. **`src/hooks/useTurboSwap.ts`** — Minimal client hook:
-   - Single `supabase.functions.invoke('turbo-trade')` call
-   - No client-side tx building or signing
-   - Background query invalidation after 500ms
-   - Logs client roundtrip vs server execution time
-
-3. **Wired into trade components:**
-   - `PulseQuickBuyButton.tsx` — uses `useTurboSwap` 
-   - `PortfolioModal.tsx` — uses `useTurboSwap`
-
-### Expected latency:
+### Tweet Template
 ```
-Before: Client build (~200ms) + Privy sign (~1000ms) + Privy send (~400ms) = ~1600ms
-After:  Edge invoke (~100ms) + Jupiter quote+build (~150ms) + Privy sign-only (~300ms) + broadcast (~1ms) = ~550ms
+🪐 Saturn New Leverage Trading Listing $TICKER
+
+📊 Leverage Up to {maxLeverage}x
+
+✅ Deposit open Now
+✅ Full trading enabled
+
+Start Trading 👉 https://saturn.trade/trade/{mintAddress}
+
+#Solana #Binance #okx #trading $sol
 ```
 
----
+### Flow Summary
+```text
+Admin Panel → Dex Listing tab → Enter X cookies + SOCKS5 → Save to DB
 
-## 6-Phase Axiom Feature Integration Plan (SAVED)
+DexListPage → Enter CA → Lookup → Image auto-generated + shown
+  → Moderator selects pool, leverage → Clicks "List Token"
+  → Token saved to DB + tweet posted automatically
+  → Tweet link shown (or error + retry)
+```
 
-### Phase 1: Copy Trade Execution
-- New `copy-trade-execute` edge function
-- Wire into `wallet-trade-webhook` when `is_copy_trading_enabled = true`
-- Add `max_copy_amount_sol`, `copy_slippage_bps`, `cooldown_seconds` to tracked_wallets
-- New `copy_trade_log` table
+### Zero AI Credits
+All image generation remains client-side Canvas compositing. The tweet posting uses `twitterapi.io` REST API only.
 
-### Phase 2: Limit Orders (SL/TP)
-- Jupiter limit order program integration
-- `limit-order-create` edge function
-- `limit_orders` DB table
-- Limit order tab in trade panel
-
-### Phase 3: Real-Time WebSocket Token Feed
-- Helius WebSocket for sub-1s new pair detection
-- Replace Codex polling (~30s) 
-- Edge function → Supabase Realtime channel
-
-### Phase 4: DCA (Dollar Cost Averaging)
-- `dca_orders` DB table
-- `dca-execute` cron edge function
-- DCA tab in trade panel
-
-### Phase 5: Enhanced Token Safety
-- LP lock status, mint authority, honeypot detection
-- Safety score badge on Pulse cards
-
-### Phase 6: Wallet PnL Analytics
-- `wallet-pnl-calculate` edge function
-- Per-wallet realized/unrealized PnL
-- Rank tracked wallets by performance
