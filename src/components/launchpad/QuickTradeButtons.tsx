@@ -27,6 +27,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [onChainTokenBalance, setOnChainTokenBalance] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isGraduated = token.status === 'graduated';
 
