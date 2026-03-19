@@ -24,6 +24,7 @@ import bs58 from "bs58";
 import { debugLog } from "@/lib/debugLogger";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { TokenLaunchForm } from "./TokenLaunchForm";
+import { NotLoggedInModal } from "./NotLoggedInModal";
 
 import {
   Shuffle,
