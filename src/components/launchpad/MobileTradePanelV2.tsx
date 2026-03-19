@@ -6,7 +6,7 @@ import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2 } from "lucide-react";
+import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2, CreditCard } from "lucide-react";
 import { AdvancedSettingsSheet } from "./AdvancedSettingsSheet";
 import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
 import { Connection, PublicKey } from "@solana/web3.js";
