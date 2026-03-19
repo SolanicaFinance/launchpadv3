@@ -48,6 +48,7 @@ export function WalletTrackerPanel({
   const [newAddr, setNewAddr] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [showCopyTradeInfo, setShowCopyTradeInfo] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const f = "'Inter','SF Pro Display',-apple-system,sans-serif";
 
