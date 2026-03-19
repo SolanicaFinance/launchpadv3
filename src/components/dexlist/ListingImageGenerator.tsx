@@ -18,7 +18,7 @@ interface ListingImageGeneratorProps {
 const TEMPLATE_SIZE = 1024;
 const CIRCLE_CX = 504;
 const CIRCLE_CY = 397;
-const CIRCLE_RADIUS = 140;
+const CIRCLE_RADIUS = 152;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -74,13 +74,29 @@ export function ListingImageGenerator({
 
       ctx.drawImage(template, 0, 0, TEMPLATE_SIZE, TEMPLATE_SIZE);
 
-      // Draw token image inside the circular frame
+      // Draw token image inside the circular frame using cover-fit so it stays centered
       ctx.save();
       ctx.beginPath();
       ctx.arc(CIRCLE_CX, CIRCLE_CY, CIRCLE_RADIUS, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(tokenImg, CIRCLE_CX - CIRCLE_RADIUS, CIRCLE_CY - CIRCLE_RADIUS, CIRCLE_RADIUS * 2, CIRCLE_RADIUS * 2);
+
+      const imageAspect = tokenImg.width / tokenImg.height;
+      const targetSize = CIRCLE_RADIUS * 2;
+      let drawWidth = targetSize;
+      let drawHeight = targetSize;
+
+      if (imageAspect > 1) {
+        drawHeight = targetSize;
+        drawWidth = drawHeight * imageAspect;
+      } else {
+        drawWidth = targetSize;
+        drawHeight = drawWidth / imageAspect;
+      }
+
+      const drawX = CIRCLE_CX - drawWidth / 2;
+      const drawY = CIRCLE_CY - drawHeight / 2;
+      ctx.drawImage(tokenImg, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
 
       const url = canvas.toDataURL("image/jpeg", 1.0);
