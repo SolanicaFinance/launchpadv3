@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
-import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { Connection, PublicKey } from "@solana/web3.js";
