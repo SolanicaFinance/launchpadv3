@@ -23,6 +23,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
   const { executeBnbSwap, isLoading } = useBnbSwap();
   const [isBuy, setIsBuy] = useState(true);
   const [amount, setAmount] = useState("0.05");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const userWallet = evmAddress || "unknown";
 
   const handleSwap = useCallback(async () => {
