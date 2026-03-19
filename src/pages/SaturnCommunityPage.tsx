@@ -130,7 +130,7 @@ export default function SaturnCommunityPage() {
       join();
       toast.success("Joined community!");
     }
-  }, [isAuthenticated, isMember, join, leave, login]);
+  }, [isAuthenticated, isMember, join, leave]);
 
 
   if (isLoadingSubtuna) {
