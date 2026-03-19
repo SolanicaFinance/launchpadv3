@@ -115,6 +115,18 @@ Deno.serve(async (req) => {
       rulesMap.set(r.account_id, r);
     }
 
+    // ── Purge stale backlog: delete pending items older than 15 minutes ──
+    const staleCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { count: purgedCount } = await supabase
+      .from("x_bot_account_queue")
+      .delete({ count: "exact" })
+      .eq("status", "pending")
+      .lt("created_at", staleCutoff);
+
+    if (purgedCount && purgedCount > 0) {
+      console.log(`[x-bot-scan] 🗑️ Purged ${purgedCount} stale pending queue items`);
+    }
+
     let totalQueued = 0;
     const errors: string[] = [];
 
@@ -194,6 +206,13 @@ Deno.serve(async (req) => {
             for (const tweet of tweets) {
               // Skip already processed
               if (existingIds.has(tweet.id)) continue;
+
+              // ── Freshness gate: only reply to tweets from the last 15 minutes ──
+              const tweetAge = Date.now() - new Date(tweet.created_at).getTime();
+              const MAX_TWEET_AGE_MS = 15 * 60 * 1000; // 15 minutes
+              if (tweetAge > MAX_TWEET_AGE_MS) {
+                continue;
+              }
 
               // Skip own tweets
               if (tweet.author_username.toLowerCase() === account.username.toLowerCase()) continue;
