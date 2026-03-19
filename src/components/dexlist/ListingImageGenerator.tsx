@@ -86,6 +86,47 @@ async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
   }
 }
 
+function generateTweetText(ticker: string, maxLeverage?: number, mintAddress?: string) {
+  return `🪐 Saturn New Leverage Trading Listing $${ticker.toUpperCase()}
+
+📊 Leverage Up to ${maxLeverage || 10}x
+
+✅ Deposit open Now
+✅ Full trading enabled
+
+Start Trading 👉 https://saturn.trade/trade/${mintAddress || ""}
+
+#Solana #Binance #okx #trading $sol`;
+}
+
+function TweetTextPreview({ ticker, maxLeverage, mintAddress }: { ticker: string; maxLeverage?: number; mintAddress?: string }) {
+  const [copied, setCopied] = useState(false);
+  const text = useMemo(() => generateTweetText(ticker, maxLeverage, mintAddress), [ticker, maxLeverage, mintAddress]);
+
+  const handleCopy = useCallback(async () => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [text]);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Post Text</p>
+        <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-1.5 h-7 text-xs">
+          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <pre className="text-xs text-muted-foreground bg-muted/50 border border-border rounded-lg p-3 whitespace-pre-wrap font-mono leading-relaxed select-all">
+        {text}
+      </pre>
+    </div>
+  );
+}
+
 export function ListingImageGenerator({
   tokenImageUrl,
   ticker,
