@@ -211,7 +211,31 @@ export default function DexListPage() {
             mintAddress={mintInput.trim()}
             onConfirm={handleConfirm}
             isSubmitting={submitting}
+            onImageGenerated={setGeneratedImageBase64}
           />
+        )}
+
+        {/* Post to X status */}
+        {postXStatus === "posting" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 rounded-lg bg-secondary/50">
+            <Loader2 className="w-4 h-4 animate-spin" /> Posting to X...
+          </div>
+        )}
+        {postXStatus === "success" && (
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+            <span className="text-sm text-primary">✅ Posted to X!</span>
+            {tweetUrl && (
+              <a href={tweetUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-mono">
+                View Tweet →
+              </a>
+            )}
+          </div>
+        )}
+        {postXStatus === "error" && (
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+            <span className="text-sm text-destructive flex-1">❌ {postXError}</span>
+            <Button variant="outline" size="sm" onClick={() => setPostXStatus("idle")}>Dismiss</Button>
+          </div>
         )}
 
         {/* Listed tokens */}
