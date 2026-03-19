@@ -58,6 +58,7 @@ const TAB_CONFIG = [
   { value: "x-restyler", label: "Restyler", icon: Wand2 },
   { value: "brand-assets", label: "Assets", icon: Wand2 },
   { value: "assisted-swaps", label: "Swaps", icon: Repeat },
+  { value: "brand-dust", label: "Dust", icon: Radio },
 ] as const;
 
 export default function AdminPanelPage() {
