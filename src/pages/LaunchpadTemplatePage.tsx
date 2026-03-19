@@ -169,6 +169,7 @@ export default function LaunchpadTemplatePage() {
   // Notifications state
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     // Check for embedded design config (deployed version)

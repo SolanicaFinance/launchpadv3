@@ -35,6 +35,7 @@ export default function PanelPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [adminTab, setAdminTab] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("matrix-hidden");

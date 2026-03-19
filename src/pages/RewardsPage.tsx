@@ -53,6 +53,7 @@ export default function RewardsPage() {
   const [joining, setJoining] = useState(false);
   const [linking, setLinking] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
   const [cooldownText, setCooldownText] = useState("");
 
