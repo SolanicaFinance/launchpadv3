@@ -296,6 +296,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           )}
         </div>
       )}
+      <NotLoggedInModal open={showLaunchAppModal} onOpenChange={setShowLaunchAppModal} />
     </>
   );
 }
