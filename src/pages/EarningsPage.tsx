@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { Link } from "react-router-dom";
 import { useLaunchpad, formatSolAmount } from "@/hooks/useLaunchpad";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +59,8 @@ export default function EarningsPage() {
     }
   };
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
@@ -67,7 +70,8 @@ export default function EarningsPage() {
           <p className="text-muted-foreground text-center mb-6">
             Connect your wallet to view your token earnings
           </p>
-          <Button onClick={() => login()}>Connect Wallet</Button>
+          <Button onClick={() => setShowLoginModal(true)}>Connect Wallet</Button>
+          <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
         </div>
       </div>
     );

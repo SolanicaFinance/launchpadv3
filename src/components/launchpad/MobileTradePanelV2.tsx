@@ -12,6 +12,7 @@ import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { Token, calculateBuyQuote, calculateSellQuote, formatTokenAmount, formatSolAmount } from "@/hooks/useLaunchpad";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY}` : "https://mainnet.helius-rpc.com");
 const SOL_LOGO = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png";
@@ -95,6 +96,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [profitCardData, setProfitCardData] = useState<ProfitCardData | null>(null);
   const [showProfitCard, setShowProfitCard] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isBuy = tradeType === "buy";
   const numericAmount = parseFloat(amount) || 0;
@@ -446,7 +448,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
           <button
-            onClick={() => login()}
+            onClick={() => setShowLoginModal(true)}
             className="w-full h-13 rounded-xl font-mono text-[14px] font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <Wallet className="h-4 w-4" />
@@ -478,6 +480,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
       </div>
 
       <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </>
   );
 }

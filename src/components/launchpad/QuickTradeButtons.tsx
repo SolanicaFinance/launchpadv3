@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useRealSwap } from "@/hooks/useRealSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface QuickTradeButtonsProps {
   token: Token;
@@ -26,6 +27,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [onChainTokenBalance, setOnChainTokenBalance] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isGraduated = token.status === 'graduated';
 
@@ -42,7 +44,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
 
   const handleQuickBuy = async (solAmount: number, index: number) => {
     if (!isAuthenticated) {
-      login();
+      setShowLoginModal(true);
       return;
     }
 
@@ -105,7 +107,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
 
   const handleQuickSell = async (percentage: number, index: number) => {
     if (!isAuthenticated) {
-      login();
+      setShowLoginModal(true);
       return;
     }
 
@@ -266,6 +268,7 @@ export function QuickTradeButtons({ token, userBalance = 0, onTradeComplete }: Q
           Balance: {formatTokenAmount(displayBalance)} {token.ticker}
         </p>
       )}
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }

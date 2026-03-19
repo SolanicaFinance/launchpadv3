@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +53,7 @@ export default function RewardsPage() {
   const [joining, setJoining] = useState(false);
   const [linking, setLinking] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
   const [cooldownText, setCooldownText] = useState("");
 
@@ -291,11 +293,12 @@ export default function RewardsPage() {
               <span className="text-primary font-bold">@saturnterminal</span> in your posts on X.
             </p>
             <button
-              onClick={() => login()}
+              onClick={() => setShowLoginModal(true)}
               className="w-full py-3.5 rounded-xl font-mono text-sm font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm"
             >
               Login to get started
             </button>
+            <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
           </div>
         </div>
       </LaunchpadLayout>

@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense, useEffect } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useChain } from "@/contexts/ChainContext";
@@ -34,6 +35,7 @@ export default function PanelPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [adminTab, setAdminTab] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("matrix-hidden");
@@ -101,7 +103,7 @@ export default function PanelPage() {
                 Connect wallet to access your portfolio, earnings & trading tools.
               </p>
               <Button
-                onClick={() => login()}
+                onClick={() => setShowLoginModal(true)}
                 className="w-full gap-2 h-11 rounded-xl text-sm font-bold font-mono uppercase tracking-wider"
                 style={{
                   background: "linear-gradient(135deg, #84cc16, #22c55e)",
@@ -111,6 +113,7 @@ export default function PanelPage() {
                 <Wallet className="h-4 w-4" />
                 Connect Wallet
               </Button>
+              <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
             </div>
           </div>
         </div>

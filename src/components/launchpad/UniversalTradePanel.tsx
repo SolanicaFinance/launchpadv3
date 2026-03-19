@@ -14,6 +14,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { ProfitCardModal, ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 import type { Token } from "@/hooks/useLaunchpad";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TokenInfo {
   mint_address: string;
@@ -95,6 +96,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
   const [showLatency, setShowLatency] = useState(false);
   const [profitCardData, setProfitCardData] = useState<ProfitCardData | null>(null);
   const [showProfitCard, setShowProfitCard] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isBuy = tradeType === 'buy';
   const numericAmount = parseFloat(amount) || 0;
@@ -390,7 +392,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
-          <Button className="w-full h-13 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => login()}>
+          <Button className="w-full h-13 font-mono text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={() => setShowLoginModal(true)}>
             <Wallet className="h-4 w-4 mr-2" /> Connect Wallet
           </Button>
         ) : (
@@ -470,6 +472,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       </div>
     </div>
     <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </>
   );
 }

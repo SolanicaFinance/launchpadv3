@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface LaunchpadTokenCreatorProps {
   launchpadId: string;
@@ -44,6 +45,7 @@ export function LaunchpadTokenCreator({
   const { launchToken, isLaunching } = useTokenLaunch();
   
   const [open, setOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [description, setDescription] = useState("");
@@ -136,16 +138,19 @@ export function LaunchpadTokenCreator({
 
   if (!isAuthenticated) {
     return (
-      <Button
-        onClick={() => login()}
-        style={{
-          backgroundColor: colors.primary,
-          color: "#fff",
-          borderRadius: radius,
-        }}
-      >
-        Connect to Launch
-      </Button>
+      <>
+        <Button
+          onClick={() => setShowLoginModal(true)}
+          style={{
+            backgroundColor: colors.primary,
+            color: "#fff",
+            borderRadius: radius,
+          }}
+        >
+          Connect to Launch
+        </Button>
+        <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+      </>
     );
   }
 

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ArrowDown, Loader2, Wallet, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TradePanelProps {
   token: Token;
@@ -26,6 +27,7 @@ export function TradePanel({ token, userBalance = 0, userSolBalance = 0, onTrade
   const [isLoading, setIsLoading] = useState(false);
   const [slippage, setSlippage] = useState(5);
   const [onChainTokenBalance, setOnChainTokenBalance] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isBuy = tradeType === 'buy';
   const numericAmount = parseFloat(amount) || 0;
@@ -247,7 +249,7 @@ export function TradePanel({ token, userBalance = 0, userSolBalance = 0, onTrade
 
           {/* Action Button */}
           {!isAuthenticated ? (
-            <Button className="w-full h-12 bg-green-500 hover:bg-green-600 text-white" onClick={() => login()}>
+            <Button className="w-full h-12 bg-green-500 hover:bg-green-600 text-white" onClick={() => setShowLoginModal(true)}>
               <Wallet className="h-4 w-4 mr-2" />
               Connect Wallet
             </Button>
@@ -266,6 +268,7 @@ export function TradePanel({ token, userBalance = 0, userSolBalance = 0, onTrade
           )}
         </div>
       </Tabs>
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </Card>
   );
 }

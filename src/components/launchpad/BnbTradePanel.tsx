@@ -5,6 +5,7 @@ import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowDownToLine } from "lucide-react";
 import { recordAlphaTradeInBackground } from "@/lib/recordAlphaTrade";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 
 const BNB_PRESETS = [0.01, 0.05, 0.1, 0.25, 0.5, 1];
@@ -22,11 +23,12 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
   const { executeBnbSwap, isLoading } = useBnbSwap();
   const [isBuy, setIsBuy] = useState(true);
   const [amount, setAmount] = useState("0.05");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const userWallet = evmAddress || "unknown";
 
   const handleSwap = useCallback(async () => {
     if (!isAuthenticated) {
-      login();
+      setShowLoginModal(true);
       return;
     }
 
@@ -165,6 +167,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
       <p className="text-[9px] font-mono text-muted-foreground/40 text-center">
         Swaps via PancakeSwap V2 · Best route auto-selected
       </p>
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }

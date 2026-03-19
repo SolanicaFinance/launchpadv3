@@ -26,6 +26,7 @@ import {
   Wallet
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface TrackedWallet {
   id: string;
@@ -57,6 +58,7 @@ interface WalletTrade {
 export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(function CopyTrading(_props, ref) {
   const { profileId, isAuthenticated, login } = useAuth();
   const { toast } = useToast();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newWalletAddress, setNewWalletAddress] = useState('');
@@ -228,10 +230,11 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
         <p className="text-muted-foreground text-sm mb-4">
           Track wallets and copy their trades automatically
         </p>
-        <Button onClick={() => login()}>
+        <Button onClick={() => setShowLoginModal(true)}>
           <Wallet className="h-4 w-4 mr-2" />
           Connect Wallet
         </Button>
+        <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
       </Card>
     );
   }

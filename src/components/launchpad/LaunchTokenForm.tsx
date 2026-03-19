@@ -16,6 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { isBlockedName } from "@/lib/hiddenTokens";
 import { MathCaptcha } from "./MathCaptcha";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 
 interface LaunchTokenFormProps {
   onSuccess?: (mintAddress: string) => void;
@@ -37,6 +38,7 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
   const { allowed: rateLimitAllowed, formattedCountdown, countdown, refresh: refreshRateLimit } = useLaunchRateLimit();
 
   const [wallets, setWallets] = useState<any[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [signingWalletAddress, setSigningWalletAddress] = useState<string | null>(null);
   const [privySignTransaction, setPrivySignTransaction] = useState<
     ((tx: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>) | null
@@ -476,13 +478,14 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
       ) : (
         <button
           type="button"
-          onClick={() => login()}
+          onClick={() => setShowLoginModal(true)}
           className="w-full h-14 bg-[#e84040] hover:bg-[#c73333] text-white font-mono uppercase tracking-widest text-sm rounded transition-all flex items-center justify-center gap-2"
         >
           <Rocket className="h-4 w-4" />
           Log In To Launch
         </button>
       )}
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </form>
   );
 }

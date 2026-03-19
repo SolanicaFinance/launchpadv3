@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { BRAND } from "@/config/branding";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -168,6 +169,7 @@ export default function LaunchpadTemplatePage() {
   // Notifications state
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     // Check for embedded design config (deployed version)
@@ -300,6 +302,7 @@ export default function LaunchpadTemplatePage() {
   }
 
   return (
+    <>
     <div 
       className="min-h-screen"
       style={{ 
@@ -373,7 +376,7 @@ export default function LaunchpadTemplatePage() {
               </div>
             ) : (
               <Button
-                onClick={() => login()}
+                onClick={() => setShowLoginModal(true)}
                 style={{ 
                   backgroundColor: design.colors.primary,
                   color: "#fff",
@@ -729,7 +732,7 @@ export default function LaunchpadTemplatePage() {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => login()}
+                onClick={() => setShowLoginModal(true)}
                 style={{
                   backgroundColor: design.colors.primary,
                   color: "#fff",
@@ -784,5 +787,7 @@ export default function LaunchpadTemplatePage() {
         </div>
       </footer>
     </div>
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+    </>
   );
 }
