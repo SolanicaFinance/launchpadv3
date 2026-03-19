@@ -50,12 +50,14 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         "flex items-center justify-center border-b border-border/30",
         isMobile ? "px-3 pt-5 pb-4" : "py-3"
       )}>
-        <Link to="/" onClick={onLinkClick} className="group transition-all duration-300">
+        <Link to="/" onClick={onLinkClick} className="group transition-all duration-300 relative">
+          <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-60 group-hover:opacity-100 group-hover:blur-lg transition-all duration-500 animate-pulse" style={{ animationDuration: '3s' }} />
           <img
             src={LOGO_SRC}
             alt={BRAND.name}
             className={cn(
-              "object-contain rounded-sm flex-shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(72_100%_50%/0.5)]",
+              "object-contain rounded-sm flex-shrink-0 transition-all duration-300 relative z-10",
+              "drop-shadow-[0_0_6px_hsl(var(--primary)/0.4)] group-hover:drop-shadow-[0_0_12px_hsl(var(--primary)/0.7)]",
               isMobile ? "h-8 w-8" : "h-7 w-7"
             )}
           />
