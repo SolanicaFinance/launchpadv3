@@ -431,5 +431,7 @@ export default function SaturnCommunityPage() {
         </ForumLayout>
       </LaunchpadLayout>
     </div>
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+    </>
   );
 }
