@@ -16,12 +16,10 @@ interface ListingImageGeneratorProps {
 }
 
 const TEMPLATE_SIZE = 1024;
-const CIRCLE_CX = 517;
-const CIRCLE_CY = 399;
-const CIRCLE_RADIUS = 155;
-const TICKER_Y = 660;
-const TICKER_X = TEMPLATE_SIZE / 2;
-const LEVERAGE_Y = 763;
+const CIRCLE_CX = 497;
+const CIRCLE_CY = 400;
+const CIRCLE_RADIUS = 125;
+const LEVERAGE_Y = 710;
 const LEVERAGE_X = TEMPLATE_SIZE / 2;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
