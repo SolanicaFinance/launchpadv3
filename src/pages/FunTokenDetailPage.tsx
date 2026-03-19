@@ -819,6 +819,7 @@ export default function FunTokenDetailPage() {
               ) : (
                 <TradeSection />
               )}
+              <LeverageTradingBanner />
               {!isPunchToken && <EmbeddedWalletCard />}
               {(token as any).launchpad_type === 'phantom' && (token as any).trading_fee_bps && (
                 <div className="trade-glass-panel p-4 space-y-2">
