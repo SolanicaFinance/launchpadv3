@@ -115,6 +115,18 @@ Deno.serve(async (req) => {
       rulesMap.set(r.account_id, r);
     }
 
+    // ── Purge stale backlog: delete pending items older than 15 minutes ──
+    const staleCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { count: purgedCount } = await supabase
+      .from("x_bot_account_queue")
+      .delete({ count: "exact" })
+      .eq("status", "pending")
+      .lt("created_at", staleCutoff);
+
+    if (purgedCount && purgedCount > 0) {
+      console.log(`[x-bot-scan] 🗑️ Purged ${purgedCount} stale pending queue items`);
+    }
+
     let totalQueued = 0;
     const errors: string[] = [];
 
