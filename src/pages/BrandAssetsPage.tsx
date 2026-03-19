@@ -51,8 +51,17 @@ export default function BrandAssetsPage() {
     canvas.height = 200;
     const ctx = canvas.getContext("2d")!;
 
-    // Modern dark background (matches muted token)
+    // Modern dark background
     ctx.fillStyle = "#212124";
+    ctx.fillRect(0, 0, 200, 200);
+
+    // Neon glow behind logo (primary yellow-green)
+    const cx = 100, cy = 100, glowR = 80;
+    const glow = ctx.createRadialGradient(cx, cy, glowR * 0.3, cx, cy, glowR);
+    glow.addColorStop(0, "rgba(200, 255, 0, 0.35)");
+    glow.addColorStop(0.5, "rgba(200, 255, 0, 0.12)");
+    glow.addColorStop(1, "rgba(200, 255, 0, 0)");
+    ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 200, 200);
 
     // Center logo
@@ -115,15 +124,27 @@ export default function BrandAssetsPage() {
     canvas.height = 200;
     const ctx = canvas.getContext("2d")!;
 
-    // Modern dark background (matches muted token)
+    // Modern dark background
     ctx.fillStyle = "#212124";
     ctx.fillRect(0, 0, 600, 200);
 
-
-    // Logo on the left
+    // Logo positioning
     const logoSize = 100;
     const logoX = 40;
     const logoY = (200 - logoSize) / 2;
+
+    // Neon glow behind logo
+    const logoCx = logoX + logoSize / 2;
+    const logoCy = logoY + logoSize / 2;
+    const glowR = 70;
+    const glow = ctx.createRadialGradient(logoCx, logoCy, glowR * 0.3, logoCx, logoCy, glowR);
+    glow.addColorStop(0, "rgba(200, 255, 0, 0.3)");
+    glow.addColorStop(0.5, "rgba(200, 255, 0, 0.1)");
+    glow.addColorStop(1, "rgba(200, 255, 0, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 600, 200);
+
+    // Logo
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
 
     // Title text
@@ -185,8 +206,9 @@ export default function BrandAssetsPage() {
         {/* Preview of current logo */}
         <Card className="p-4 flex items-center justify-between border-border bg-card">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden border border-border">
-              <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain" />
+            <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden border border-border relative">
+              <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-60" />
+              <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain relative z-10 drop-shadow-[0_0_6px_hsl(72_100%_50%/0.4)]" />
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">Current Logo</p>
