@@ -29,6 +29,7 @@ import {
   TrendingDown, Shield, Lock, Activity, BarChart3, ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { LeverageTradingBanner } from "@/components/launchpad/LeverageTradingBanner";
 import { useToast } from "@/hooks/use-toast";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 import { BagsBadge } from "@/components/forum/BagsBadge";
@@ -194,7 +195,12 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             ))}
           </div>
 
-          {/* Graduation progress */}
+          {/* Leverage Trading Banner - Mobile */}
+          <div className="md:hidden">
+            <LeverageTradingBanner />
+          </div>
+
+
           {token.graduationPercent !== null && !token.completed && !token.migrated && (
             <div className="trade-glass-panel flex items-center gap-4 px-5 py-3">
               <Zap className="h-4 w-4 text-primary/70 shrink-0" />
@@ -273,6 +279,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                     ? <BnbTradePanel tokenAddress={mintAddress} ticker={token.symbol} name={token.name} imageUrl={token.imageUrl} />
                     : <UniversalTradePanel token={{ mint_address: mintAddress, ticker: token.symbol, name: token.name, decimals: token.decimals, graduated: token.completed || token.migrated, price_sol: solPrice > 0 ? token.priceUsd / solPrice : 0, imageUrl: token.imageUrl }} userTokenBalance={0} />
                 )}
+                <LeverageTradingBanner />
                 <EmbeddedWalletCard />
               </div>
             </div>
@@ -292,6 +299,7 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
                   ? <BnbTradePanel tokenAddress={mintAddress} ticker={token.symbol} name={token.name} imageUrl={token.imageUrl} />
                   : <UniversalTradePanel token={{ mint_address: mintAddress, ticker: token.symbol, name: token.name, decimals: token.decimals, graduated: token.completed || token.migrated, price_sol: solPrice > 0 ? token.priceUsd / solPrice : 0, imageUrl: token.imageUrl }} userTokenBalance={0} />
               )}
+              <LeverageTradingBanner />
               <EmbeddedWalletCard />
             </div>
           </div>
@@ -682,7 +690,12 @@ export default function FunTokenDetailPage() {
             ))}
           </div>
 
-          {/* ── PHONE PRICE CHANGE ── */}
+          {/* Leverage Trading Banner - Mobile */}
+          <div className="md:hidden">
+            <LeverageTradingBanner />
+          </div>
+
+
           {priceChange !== 0 && (
             <div className="md:hidden flex items-center justify-between px-5 py-3 trade-glass-panel">
               <span className="text-[13px] font-mono text-muted-foreground/50">24h Change</span>
@@ -785,6 +798,7 @@ export default function FunTokenDetailPage() {
               <div className="col-span-5 flex flex-col gap-4">
                 <div className="sticky top-4 flex flex-col gap-4">
                   <TradeSection />
+                  <LeverageTradingBanner />
                   <EmbeddedWalletCard />
                 </div>
               </div>
@@ -806,6 +820,7 @@ export default function FunTokenDetailPage() {
               ) : (
                 <TradeSection />
               )}
+              <LeverageTradingBanner />
               {!isPunchToken && <EmbeddedWalletCard />}
               {(token as any).launchpad_type === 'phantom' && (token as any).trading_fee_bps && (
                 <div className="trade-glass-panel p-4 space-y-2">
