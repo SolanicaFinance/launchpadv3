@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Footer } from "@/components/layout/Footer";
 import { DelegationPrompt } from "@/components/DelegationPrompt";
+import { LeverageTradingPopup } from "@/components/LeverageTradingPopup";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useLiveTradeToasts } from "@/hooks/useLiveTradeToasts";
 
