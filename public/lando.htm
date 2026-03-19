@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturn Trade — Connect to Trade</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+  }
+
+  /* Background layer */
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+  .bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+  }
+
+  /* Modal container */
+  .modal-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  /* Card */
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #121212;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(200, 255, 0, 0.2);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  }
+
+  .accent-line {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(to right, transparent, #C8FF00, transparent);
+  }
+
+  .card-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(200, 255, 0, 0.1);
+    border: 1px solid rgba(200, 255, 0, 0.2);
+  }
+  .icon-box svg {
+    width: 20px;
+    height: 20px;
+    stroke: #C8FF00;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .header h3 {
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+    color: #f0f0f0;
+    outline: none;
+  }
+  .header p {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #888;
+    max-width: 280px;
+    outline: none;
+  }
+
+  /* Feature rows */
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: hsl(0 0% 10%);
+  }
+  .feature-row svg {
+    width: 14px;
+    height: 14px;
+    stroke: #C8FF00;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .feature-row span {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(240,240,240,0.7);
+    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+    outline: none;
+  }
+
+  /* CTA */
+  .cta-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+    background: #C8FF00;
+    color: #0a0a0a;
+    box-shadow: 0 4px 20px rgba(200, 255, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    transition: filter 0.15s, transform 0.1s;
+    outline: none;
+  }
+  .cta-btn:hover { filter: brightness(1.1); }
+  .cta-btn:active { transform: scale(0.98); }
+
+  /* Terms */
+  .terms {
+    font-size: 9px;
+    text-align: center;
+    color: rgba(136,136,136,0.4);
+    line-height: 1.6;
+    font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+    outline: none;
+  }
+
+  /* Editable hint */
+  [contenteditable="true"]:hover {
+    outline: 1px dashed rgba(200, 255, 0, 0.3);
+    outline-offset: 2px;
+  }
+  [contenteditable="true"]:focus {
+    outline: 1px solid rgba(200, 255, 0, 0.5);
+    outline-offset: 2px;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .card { max-width: calc(100vw - 2rem); }
+    .card-body { padding: 20px; gap: 16px; }
+    .header h3 { font-size: 13px; }
+    .header p { font-size: 10px; }
+    .feature-row span { font-size: 9px; }
+    .cta-btn { font-size: 11px; padding: 11px; }
+    .icon-box { width: 40px; height: 40px; border-radius: 10px; }
+    .icon-box svg { width: 18px; height: 18px; }
+  }
+
+  @media (min-width: 481px) and (max-width: 768px) {
+    .card { max-width: 360px; }
+    .card-body { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background: trade page screenshot -->
+<div class="bg">
+  <img src="images/trade-bg.jpg" alt="Trade page background">
+  <div class="bg-overlay"></div>
+</div>
+
+<!-- Modal popup -->
+<div class="modal-wrap">
+  <div class="card">
+    <div class="accent-line"></div>
+    <div class="card-body">
+
+      <!-- Icon + Header -->
+      <div class="header">
+        <div class="icon-box">
+          <!-- Link2 icon -->
+          <svg viewBox="0 0 24 24"><path d="M15 7h3a5 5 0 0 1 0 10h-3m-6 0H6A5 5 0 0 1 6 7h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <h3 contenteditable="true">Connect to Trade</h3>
+        <p contenteditable="true">Log in to start trading tokens instantly with one-click quick buy</p>
+      </div>
+
+      <!-- Features -->
+      <div class="features">
+        <div class="feature-row">
+          <!-- Zap icon -->
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span contenteditable="true">One-click quick buy with preset amounts</span>
+        </div>
+        <div class="feature-row">
+          <!-- Shield icon -->
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span contenteditable="true">Secure embedded wallet — no extensions needed</span>
+        </div>
+      </div>
+
+      <!-- CTA Button -->
+      <button class="cta-btn" contenteditable="true">Connect Wallet</button>
+
+      <!-- Terms -->
+      <p class="terms" contenteditable="true">By connecting, you agree to the Terms of Service and acknowledge the risks of trading digital assets.</p>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
