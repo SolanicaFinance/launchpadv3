@@ -689,7 +689,12 @@ export default function FunTokenDetailPage() {
             ))}
           </div>
 
-          {/* ── PHONE PRICE CHANGE ── */}
+          {/* Leverage Trading Banner - Mobile */}
+          <div className="md:hidden">
+            <LeverageTradingBanner />
+          </div>
+
+
           {priceChange !== 0 && (
             <div className="md:hidden flex items-center justify-between px-5 py-3 trade-glass-panel">
               <span className="text-[13px] font-mono text-muted-foreground/50">24h Change</span>
