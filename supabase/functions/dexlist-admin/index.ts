@@ -327,7 +327,14 @@ async function handleProxyImage(body: any) {
   if (!res.ok) return jsonResp({ error: `Image fetch failed: ${res.status}` }, res.status);
 
   const arrayBuf = await res.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+  const bytes = new Uint8Array(arrayBuf);
+  // Chunk to avoid stack overflow with btoa
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const base64 = btoa(binary);
   const contentType = res.headers.get("content-type") || "image/png";
   return jsonResp({ dataUrl: `data:${contentType};base64,${base64}` });
 }
