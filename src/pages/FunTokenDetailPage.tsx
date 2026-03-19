@@ -688,10 +688,8 @@ export default function FunTokenDetailPage() {
             ))}
           </div>
 
-          {/* Leverage Trading Banner - Mobile */}
-          <div className="md:hidden">
-            <LeverageTradingBanner />
-          </div>
+          {/* Leverage Trading Banner - full width */}
+          <LeverageTradingBanner />
 
 
           {priceChange !== 0 && (
