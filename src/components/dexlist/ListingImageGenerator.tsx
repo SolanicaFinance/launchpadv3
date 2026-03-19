@@ -18,7 +18,7 @@ interface ListingImageGeneratorProps {
 const TEMPLATE_SIZE = 1024;
 const CIRCLE_CX = 504;
 const CIRCLE_CY = 397;
-const CIRCLE_RADIUS = 140;
+const CIRCLE_RADIUS = 152;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
