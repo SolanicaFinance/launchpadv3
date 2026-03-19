@@ -564,6 +564,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         onClose={() => setShowProfitCard(false)}
         data={profitCardData}
       />
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </>
   );
 }

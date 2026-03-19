@@ -485,6 +485,7 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
           Log In To Launch
         </button>
       )}
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </form>
   );
 }

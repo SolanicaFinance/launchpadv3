@@ -167,6 +167,7 @@ export function BnbTradePanel({ tokenAddress, ticker, name, imageUrl }: BnbTrade
       <p className="text-[9px] font-mono text-muted-foreground/40 text-center">
         Swaps via PancakeSwap V2 · Best route auto-selected
       </p>
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }

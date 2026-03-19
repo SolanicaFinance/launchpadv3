@@ -268,6 +268,7 @@ export function TradePanel({ token, userBalance = 0, userSolBalance = 0, onTrade
           )}
         </div>
       </Tabs>
+      <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </Card>
   );
 }

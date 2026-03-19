@@ -138,16 +138,19 @@ export function LaunchpadTokenCreator({
 
   if (!isAuthenticated) {
     return (
-      <Button
-        onClick={() => setShowLoginModal(true)}
-        style={{
-          backgroundColor: colors.primary,
-          color: "#fff",
-          borderRadius: radius,
-        }}
-      >
-        Connect to Launch
-      </Button>
+      <>
+        <Button
+          onClick={() => setShowLoginModal(true)}
+          style={{
+            backgroundColor: colors.primary,
+            color: "#fff",
+            borderRadius: radius,
+          }}
+        >
+          Connect to Launch
+        </Button>
+        <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+      </>
     );
   }
 

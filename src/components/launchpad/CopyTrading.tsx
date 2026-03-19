@@ -234,6 +234,7 @@ export const CopyTrading = forwardRef<HTMLDivElement, Record<string, never>>(fun
           <Wallet className="h-4 w-4 mr-2" />
           Connect Wallet
         </Button>
+        <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
       </Card>
     );
   }

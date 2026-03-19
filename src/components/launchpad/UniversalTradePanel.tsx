@@ -472,6 +472,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       </div>
     </div>
     <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </>
   );
 }
