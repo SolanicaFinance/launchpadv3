@@ -206,8 +206,9 @@ export default function BrandAssetsPage() {
         {/* Preview of current logo */}
         <Card className="p-4 flex items-center justify-between border-border bg-card">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden border border-border">
-              <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain" />
+            <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden border border-border relative">
+              <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-60" />
+              <img src={saturnLogo} alt={`${BRAND.name} Logo`} className="w-10 h-10 object-contain relative z-10 drop-shadow-[0_0_6px_hsl(72_100%_50%/0.4)]" />
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">Current Logo</p>
