@@ -16,12 +16,10 @@ interface ListingImageGeneratorProps {
 }
 
 const TEMPLATE_SIZE = 1024;
-const CIRCLE_CX = 517;
-const CIRCLE_CY = 399;
-const CIRCLE_RADIUS = 155;
-const TICKER_Y = 660;
-const TICKER_X = TEMPLATE_SIZE / 2;
-const LEVERAGE_Y = 763;
+const CIRCLE_CX = 497;
+const CIRCLE_CY = 400;
+const CIRCLE_RADIUS = 125;
+const LEVERAGE_Y = 710;
 const LEVERAGE_X = TEMPLATE_SIZE / 2;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -87,50 +85,17 @@ export function ListingImageGenerator({
       ctx.drawImage(tokenImg, CIRCLE_CX - CIRCLE_RADIUS, CIRCLE_CY - CIRCLE_RADIUS, CIRCLE_RADIUS * 2, CIRCLE_RADIUS * 2);
       ctx.restore();
 
-      // Cover the template's "New Listing $TICKER just added." text area and redraw with actual ticker
-      ctx.fillStyle = "rgba(12, 16, 24, 0.92)";
-      ctx.fillRect(60, TICKER_Y - 30, 904, 58);
-
-      const prefix = "New Listing ";
-      const suffix = " just added.";
-      const tickerStr = `$${ticker.toUpperCase()}`;
-
-      ctx.textBaseline = "middle";
-
-      ctx.font = "italic 36px 'Georgia', serif";
-      const prefixWidth = ctx.measureText(prefix).width;
-      ctx.font = "bold italic 36px 'Georgia', serif";
-      const tickerWidth = ctx.measureText(tickerStr).width;
-      ctx.font = "italic 36px 'Georgia', serif";
-      const suffixWidth = ctx.measureText(suffix).width;
-
-      const totalWidth = prefixWidth + tickerWidth + suffixWidth;
-      const startX = TICKER_X - totalWidth / 2;
-
-      ctx.textAlign = "left";
-      ctx.font = "italic 36px 'Georgia', serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(prefix, startX, TICKER_Y);
-
-      ctx.font = "bold italic 36px 'Georgia', serif";
-      ctx.fillStyle = "#e8a838";
-      ctx.fillText(tickerStr, startX + prefixWidth, TICKER_Y);
-
-      ctx.font = "italic 36px 'Georgia', serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(suffix, startX + prefixWidth + tickerWidth, TICKER_Y);
-
-      // Cover the template's leverage text and redraw with actual leverage
+      // Draw leverage text over the white pill button
       if (maxLeverage) {
-        ctx.fillStyle = "rgba(12, 16, 24, 0.0)";
-        // The template has a frosted glass bar - just overlay the text
-        ctx.fillRect(170, LEVERAGE_Y - 22, 684, 44);
+        // Cover the existing "80x" text in the white pill and redraw
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(220, LEVERAGE_Y - 22, 584, 44);
 
         const leverageText = `Start Trading up to ${maxLeverage}x Leverage`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "bold 30px 'Georgia', serif";
-        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold italic 30px 'Georgia', serif";
+        ctx.fillStyle = "#1a1a2e";
         ctx.fillText(leverageText, LEVERAGE_X, LEVERAGE_Y);
       }
 
