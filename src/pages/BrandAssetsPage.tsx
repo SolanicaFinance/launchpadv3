@@ -55,12 +55,13 @@ export default function BrandAssetsPage() {
     ctx.fillStyle = "#212124";
     ctx.fillRect(0, 0, 200, 200);
 
-    // Neon glow behind logo (primary yellow-green)
-    const cx = 100, cy = 100, glowR = 80;
-    const glow = ctx.createRadialGradient(cx, cy, glowR * 0.3, cx, cy, glowR);
-    glow.addColorStop(0, "rgba(200, 255, 0, 0.35)");
-    glow.addColorStop(0.5, "rgba(200, 255, 0, 0.12)");
-    glow.addColorStop(1, "rgba(200, 255, 0, 0)");
+    // Full-canvas neon glow
+    const cx = 100, cy = 100;
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120);
+    glow.addColorStop(0, "rgba(200, 255, 0, 0.45)");
+    glow.addColorStop(0.4, "rgba(200, 255, 0, 0.25)");
+    glow.addColorStop(0.7, "rgba(200, 255, 0, 0.1)");
+    glow.addColorStop(1, "rgba(200, 255, 0, 0.04)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 200, 200);
 
