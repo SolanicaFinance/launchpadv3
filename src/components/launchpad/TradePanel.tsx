@@ -27,6 +27,7 @@ export function TradePanel({ token, userBalance = 0, userSolBalance = 0, onTrade
   const [isLoading, setIsLoading] = useState(false);
   const [slippage, setSlippage] = useState(5);
   const [onChainTokenBalance, setOnChainTokenBalance] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isBuy = tradeType === 'buy';
   const numericAmount = parseFloat(amount) || 0;
