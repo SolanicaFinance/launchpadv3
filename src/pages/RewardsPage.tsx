@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 import { supabase } from "@/integrations/supabase/client";
