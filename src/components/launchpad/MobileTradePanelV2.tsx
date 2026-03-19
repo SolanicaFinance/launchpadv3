@@ -6,7 +6,7 @@ import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2 } from "lucide-react";
+import { Loader2, Wallet, AlertTriangle, ExternalLink, Settings2, CreditCard } from "lucide-react";
 import { AdvancedSettingsSheet } from "./AdvancedSettingsSheet";
 import { ProfitCardModal, type ProfitCardData } from "./ProfitCardModal";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -444,6 +444,15 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
             />
           </div>
         </div>
+
+        {/* ── Buy with Credit Card ── */}
+        <button
+          onClick={() => setShowLoginModal(true)}
+          className="w-full h-12 rounded-xl font-mono text-[13px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black"
+        >
+          <CreditCard className="h-4 w-4" />
+          Buy ${tokenInfo.ticker} With Credit Card
+        </button>
 
         {/* ── Action Button ── */}
         {!isAuthenticated ? (

@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
-import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { Loader2, Wallet, AlertTriangle, ExternalLink, ChevronDown, CheckCircle2, XCircle, HelpCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRugCheck } from "@/hooks/useRugCheck";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -389,6 +389,15 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
             <span>High price impact: {priceImpact.toFixed(2)}%</span>
           </div>
         )}
+
+        {/* ── Buy with Credit Card ── */}
+        <button
+          onClick={() => setShowLoginModal(true)}
+          className="w-full h-12 rounded-xl font-mono text-[13px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black"
+        >
+          <CreditCard className="h-4 w-4" />
+          Buy ${token.ticker} With Credit Card
+        </button>
 
         {/* ── Action Button ── */}
         {!isAuthenticated ? (
