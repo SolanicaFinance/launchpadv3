@@ -44,6 +44,7 @@ export default function WalletTrackerPage() {
   const [trades, setTrades] = useState<WalletTrade[]>([]);
   const [tradesLoading, setTradesLoading] = useState(false);
   const [showCopyTradeInfo, setShowCopyTradeInfo] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { playBuy, playSell } = useTradeSounds();
 

@@ -399,7 +399,7 @@ export default function SaturnPostPage() {
                     onClick={() => {
                       if (!isAuthenticated) {
                         toast.error("Please login to report", {
-                          action: { label: "Login", onClick: login },
+                          action: { label: "Login", onClick: () => setShowLoginModal(true) },
                         });
                         return;
                       }
