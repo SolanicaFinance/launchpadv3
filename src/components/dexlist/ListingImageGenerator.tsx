@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Send, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Download, Loader2, Send, CheckCircle, XCircle, RotateCcw, Copy, Check } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import templateSrc from "@/assets/listing-template.jpg";
@@ -83,6 +84,47 @@ async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
     if (error || data?.error) throw new Error(data?.error || "Image proxy failed");
     return loadImage(data.dataUrl);
   }
+}
+
+function generateTweetText(ticker: string, maxLeverage?: number, mintAddress?: string) {
+  return `🪐 Saturn New Leverage Trading Listing $${ticker.toUpperCase()}
+
+📊 Leverage Up to ${maxLeverage || 10}x
+
+✅ Deposit open Now
+✅ Full trading enabled
+
+Start Trading 👉 https://saturn.trade/trade/${mintAddress || ""}
+
+#Solana #Binance #okx #trading $sol`;
+}
+
+function TweetTextPreview({ ticker, maxLeverage, mintAddress }: { ticker: string; maxLeverage?: number; mintAddress?: string }) {
+  const [copied, setCopied] = useState(false);
+  const text = useMemo(() => generateTweetText(ticker, maxLeverage, mintAddress), [ticker, maxLeverage, mintAddress]);
+
+  const handleCopy = useCallback(async () => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [text]);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Post Text</p>
+        <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-1.5 h-7 text-xs">
+          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <pre className="text-xs text-muted-foreground bg-muted/50 border border-border rounded-lg p-3 whitespace-pre-wrap font-mono leading-relaxed select-all">
+        {text}
+      </pre>
+    </div>
+  );
 }
 
 export function ListingImageGenerator({
@@ -231,6 +273,9 @@ export function ListingImageGenerator({
         <div className="space-y-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Listing Announcement Preview</p>
           <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-[300px] h-[300px] rounded-lg border border-border object-cover" />
+          
+          <TweetTextPreview ticker={ticker} maxLeverage={maxLeverage} mintAddress={mintAddress} />
+
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={download} className="gap-2">
               <Download className="w-3.5 h-3.5" /> Download
