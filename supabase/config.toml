@@ -471,3 +471,6 @@ verify_jwt = false
 
 [functions.admin-wallet-balance]
 verify_jwt = false
+
+[functions.dexlist-admin]
+verify_jwt = false

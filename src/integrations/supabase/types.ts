@@ -3391,6 +3391,72 @@ export type Database = {
         }
         Relationships: []
       }
+      dex_listed_tokens: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          dex_source: string | null
+          discord_url: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          liquidity_usd: number | null
+          listed_by: string | null
+          market_cap: number | null
+          max_leverage: number
+          mint_address: string
+          pool_address: string
+          telegram_url: string | null
+          token_name: string | null
+          token_ticker: string | null
+          twitter_url: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          dex_source?: string | null
+          discord_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          liquidity_usd?: number | null
+          listed_by?: string | null
+          market_cap?: number | null
+          max_leverage?: number
+          mint_address: string
+          pool_address: string
+          telegram_url?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          dex_source?: string | null
+          discord_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          liquidity_usd?: number | null
+          listed_by?: string | null
+          market_cap?: number | null
+          max_leverage?: number
+          mint_address?: string
+          pool_address?: string
+          telegram_url?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       fee_claims: {
         Row: {
           amount_sol: number

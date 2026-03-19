@@ -66,6 +66,7 @@ const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const PanelPage = lazyWithRetry(() => import("./pages/PanelPage"));
 const MerchStorePage = lazyWithRetry(() => import("./pages/MerchStorePage"));
 const LeveragePage = lazyWithRetry(() => import("./pages/LeveragePage"));
+const DexListPage = lazyWithRetry(() => import("./pages/DexListPage"));
 const ReferralRedirectPage = lazyWithRetry(() => import("./pages/ReferralRedirectPage"));
 const WalletTrackerPage = lazyWithRetry(() => import("./pages/WalletTrackerPage"));
 const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
@@ -191,6 +192,7 @@ const App = () => (
                      <Route path="/panel" element={<PanelPage />} />
                      <Route path="/merch" element={<MerchStorePage />} />
                      <Route path="/leverage" element={<LeveragePage />} />
+                     <Route path="/dexlist" element={<DexListPage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
                      <Route path="/portfolio" element={<PortfolioPage />} />
                      <Route path="/earnings" element={<Navigate to="/panel?tab=earnings" replace />} />
