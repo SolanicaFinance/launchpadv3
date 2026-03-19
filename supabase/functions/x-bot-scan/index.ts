@@ -215,8 +215,17 @@ Deno.serve(async (req) => {
         for (const query of queries) {
           try {
             const tweets = await searchTweets(query, twitterApiIoKey);
-            console.log(`[x-bot-scan] Query "${query}" returned ${tweets.length} tweets`);
+            
+            // Log first tweet date for debugging freshness filter
+            if (tweets.length > 0) {
+              const oldest = tweets[tweets.length - 1];
+              const newest = tweets[0];
+              console.log(`[x-bot-scan] Query "${query}" returned ${tweets.length} tweets (newest: ${newest.created_at}, oldest: ${oldest.created_at})`);
+            } else {
+              console.log(`[x-bot-scan] Query "${query}" returned 0 tweets`);
+            }
 
+            let skippedStale = 0;
             for (const tweet of tweets) {
               // Skip already processed
               if (existingIds.has(tweet.id)) continue;
@@ -226,6 +235,7 @@ Deno.serve(async (req) => {
               const tweetAge = Date.now() - tweetTs;
               const MAX_TWEET_AGE_MS = 15 * 60 * 1000; // 15 minutes
               if (tweetAge > MAX_TWEET_AGE_MS || tweetTs === 0) {
+                skippedStale++;
                 continue;
               }
 
