@@ -20,6 +20,10 @@ export default function DexListPage() {
   const [mintInput, setMintInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [generatedImageBase64, setGeneratedImageBase64] = useState<string | null>(null);
+  const [postXStatus, setPostXStatus] = useState<"idle" | "posting" | "success" | "error">("idle");
+  const [tweetUrl, setTweetUrl] = useState<string | null>(null);
+  const [postXError, setPostXError] = useState<string | null>(null);
 
   const [lookupResult, setLookupResult] = useState<{ tokenInfo: any; pools: any[] } | null>(null);
   const [listedTokens, setListedTokens] = useState<any[]>([]);
