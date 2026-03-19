@@ -120,8 +120,7 @@ export default function SaturnCommunityPage() {
   const handleJoinLeave = useCallback(() => {
     if (!isAuthenticated) {
       toast.error("Please login to join communities", {
-        action: { label: "Login", onClick: login },
-      });
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       return;
     }
     if (isMember) {
