@@ -151,7 +151,7 @@ export default function SaturnPostPage() {
   const handleReply = useCallback((parentCommentId: string, content: string) => {
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to reply", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
