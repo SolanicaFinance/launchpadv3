@@ -125,7 +125,7 @@ export default function SaturnPostPage() {
     if (!newComment.trim()) return;
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to comment", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
