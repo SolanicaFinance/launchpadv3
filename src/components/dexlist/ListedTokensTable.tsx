@@ -50,7 +50,8 @@ export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTa
         </TableHeader>
         <TableBody>
           {tokens.map((t) => (
-            <TableRow key={t.id} className={!t.is_active ? "opacity-50" : ""}>
+            <React.Fragment key={t.id}>
+            <TableRow className={!t.is_active ? "opacity-50" : ""}>
               <TableCell>
                 {t.image_url ? (
                   <img src={t.image_url} className="w-7 h-7 rounded-full object-cover" alt="" />
@@ -146,6 +147,7 @@ export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTa
                 </TableCell>
               </TableRow>
             )}
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
