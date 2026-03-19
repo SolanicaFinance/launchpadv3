@@ -794,7 +794,7 @@ export default function FunTokenDetailPage() {
               <div className="col-span-5 flex flex-col gap-4">
                 <div className="sticky top-4 flex flex-col gap-4">
                   <TradeSection />
-                  <LeverageTradingBanner />
+                  
                   <EmbeddedWalletCard />
                 </div>
               </div>
