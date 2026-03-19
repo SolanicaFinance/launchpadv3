@@ -296,7 +296,7 @@ Start Trading 👉 https://saturn.trade/trade/${mintAddress}
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": Deno.env.get("TWITTERAPI_KEY") || "",
+        "X-API-Key": Deno.env.get("TWITTERAPI_IO_KEY") || "",
       },
       body: JSON.stringify(tweetBody),
     });
