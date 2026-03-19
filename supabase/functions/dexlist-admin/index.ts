@@ -341,6 +341,7 @@ serve(async (req) => {
       case "get-x-config": return handleGetXConfig();
       case "save-x-config": return handleSaveXConfig(body);
       case "post-to-x": return handlePostToX(body);
+      case "proxy-image": return handleProxyImage(body);
       default: return jsonResp({ error: "Unknown action" }, 400);
     }
   } catch (error) {
