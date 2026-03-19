@@ -67,7 +67,7 @@ export function ListingImageGenerator({ tokenImageUrl, ticker, tokenName }: List
       // Draw ticker text over "$TICKER" area
       // First draw a subtle dark backdrop to cover old text
       ctx.fillStyle = "rgba(10, 14, 20, 0.85)";
-      ctx.fillRect(200, TICKER_Y - 35, 680, 55);
+      ctx.fillRect(180, TICKER_Y - 32, 664, 50);
 
       // Draw new text
       ctx.textAlign = "center";
