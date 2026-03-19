@@ -20,6 +20,7 @@ import heroTerminalMockup from "@/assets/hero-terminal-mockup.png";
 import heroLaunchMockup from "@/assets/hero-launch-mockup.png";
 import { BRAND } from "@/config/branding";
 import { useChain } from "@/contexts/ChainContext";
+import { LeverageTradingPopup } from "@/components/LeverageTradingPopup";
 
 // Lazy load heavy below-fold section components
 const AlphaSection = lazy(() => import("@/components/home/AlphaSection"));
@@ -310,6 +311,7 @@ export default function HomePage() {
   }, [codexNewPairs, codexCompleting, codexGraduated]);
 
   return (
+    <>
     <LaunchpadLayout hideFooter noPadding>
       <div className="relative z-10">
         {/* ═══ Hero Section — Maximum Premium ═══ */}
@@ -598,5 +600,7 @@ Saturn Terminal
         </LazySection>
       </div>
     </LaunchpadLayout>
+    <LeverageTradingPopup />
+    </>
   );
 }
