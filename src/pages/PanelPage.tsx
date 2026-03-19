@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense, useEffect } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useChain } from "@/contexts/ChainContext";
