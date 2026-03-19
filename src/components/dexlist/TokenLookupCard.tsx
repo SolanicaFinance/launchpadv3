@@ -1,8 +1,9 @@
-import { Globe, Twitter, MessageCircle, ExternalLink } from "lucide-react";
+import { Globe, Twitter, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
+import { ListingImageGenerator } from "./ListingImageGenerator";
 
 interface PoolInfo {
   pairAddress: string;
@@ -28,11 +29,13 @@ interface TokenInfo {
 interface TokenLookupCardProps {
   tokenInfo: TokenInfo;
   pools: PoolInfo[];
+  mintAddress: string;
   onConfirm: (poolAddress: string, maxLeverage: number) => void;
   isSubmitting: boolean;
+  onImageGenerated?: (dataUrl: string) => void;
 }
 
-export function TokenLookupCard({ tokenInfo, pools, onConfirm, isSubmitting }: TokenLookupCardProps) {
+export function TokenLookupCard({ tokenInfo, pools, mintAddress, onConfirm, isSubmitting, onImageGenerated }: TokenLookupCardProps) {
   const [selectedPool, setSelectedPool] = useState(pools[0]?.pairAddress || "");
   const [manualPool, setManualPool] = useState("");
   const [useManual, setUseManual] = useState(false);
@@ -61,7 +64,6 @@ export function TokenLookupCard({ tokenInfo, pools, onConfirm, isSubmitting }: T
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{tokenInfo.description}</p>
           )}
         </div>
-        {/* Socials */}
         <div className="flex gap-2 shrink-0">
           {tokenInfo.website_url && (
             <a href={tokenInfo.website_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
@@ -80,6 +82,19 @@ export function TokenLookupCard({ tokenInfo, pools, onConfirm, isSubmitting }: T
           )}
         </div>
       </div>
+
+      {/* Auto-generated listing image preview */}
+      {tokenInfo.image_url && tokenInfo.ticker && (
+        <ListingImageGenerator
+          tokenImageUrl={tokenInfo.image_url}
+          ticker={tokenInfo.ticker}
+          tokenName={tokenInfo.name}
+          mintAddress={mintAddress}
+          maxLeverage={maxLeverage}
+          autoGenerate
+          onImageGenerated={onImageGenerated}
+        />
+      )}
 
       {/* Pool selector */}
       <div className="space-y-2">

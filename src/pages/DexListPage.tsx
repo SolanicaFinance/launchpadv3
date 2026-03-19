@@ -20,6 +20,10 @@ export default function DexListPage() {
   const [mintInput, setMintInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [generatedImageBase64, setGeneratedImageBase64] = useState<string | null>(null);
+  const [postXStatus, setPostXStatus] = useState<"idle" | "posting" | "success" | "error">("idle");
+  const [tweetUrl, setTweetUrl] = useState<string | null>(null);
+  const [postXError, setPostXError] = useState<string | null>(null);
 
   const [lookupResult, setLookupResult] = useState<{ tokenInfo: any; pools: any[] } | null>(null);
   const [listedTokens, setListedTokens] = useState<any[]>([]);
@@ -90,9 +94,35 @@ export default function DexListPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Token listed successfully!");
+      fetchListedTokens();
+
+      // Auto-post to X
+      if (generatedImageBase64) {
+        setPostXStatus("posting");
+        try {
+          const { data: xData, error: xError } = await callDexlistAdmin({
+            action: "post-to-x",
+            modPassword: "mod135@",
+            imageBase64: generatedImageBase64,
+            ticker: lookupResult.tokenInfo.ticker,
+            maxLeverage,
+            mintAddress: mintInput.trim(),
+          });
+          if (xError) throw xError;
+          if (xData?.error) throw new Error(xData.error);
+          setPostXStatus("success");
+          setTweetUrl(xData?.tweetUrl || null);
+          toast.success("Posted to X!");
+        } catch (xErr: any) {
+          setPostXStatus("error");
+          setPostXError(xErr.message || "Failed to post to X");
+          toast.error(xErr.message || "Failed to post to X");
+        }
+      }
+
       setLookupResult(null);
       setMintInput("");
-      fetchListedTokens();
+      setGeneratedImageBase64(null);
     } catch (e: any) {
       toast.error(e.message || "Failed to list");
     } finally {
@@ -178,9 +208,34 @@ export default function DexListPage() {
           <TokenLookupCard
             tokenInfo={lookupResult.tokenInfo}
             pools={lookupResult.pools}
+            mintAddress={mintInput.trim()}
             onConfirm={handleConfirm}
             isSubmitting={submitting}
+            onImageGenerated={setGeneratedImageBase64}
           />
+        )}
+
+        {/* Post to X status */}
+        {postXStatus === "posting" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 rounded-lg bg-secondary/50">
+            <Loader2 className="w-4 h-4 animate-spin" /> Posting to X...
+          </div>
+        )}
+        {postXStatus === "success" && (
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+            <span className="text-sm text-primary">✅ Posted to X!</span>
+            {tweetUrl && (
+              <a href={tweetUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-mono">
+                View Tweet →
+              </a>
+            )}
+          </div>
+        )}
+        {postXStatus === "error" && (
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+            <span className="text-sm text-destructive flex-1">❌ {postXError}</span>
+            <Button variant="outline" size="sm" onClick={() => setPostXStatus("idle")}>Dismiss</Button>
+          </div>
         )}
 
         {/* Listed tokens */}
