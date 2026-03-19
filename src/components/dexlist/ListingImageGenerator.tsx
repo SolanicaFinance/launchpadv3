@@ -32,6 +32,22 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+async function loadImageWithProxy(src: string): Promise<HTMLImageElement> {
+  try {
+    return await loadImage(src);
+  } catch {
+    // CORS fallback: fetch blob and convert to data URL
+    const res = await fetch(src);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+    return loadImage(dataUrl);
+  }
+}
+
 export function ListingImageGenerator({
   tokenImageUrl,
   ticker,
