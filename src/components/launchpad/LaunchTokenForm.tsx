@@ -38,6 +38,7 @@ export function LaunchTokenForm({ onSuccess }: LaunchTokenFormProps) {
   const { allowed: rateLimitAllowed, formattedCountdown, countdown, refresh: refreshRateLimit } = useLaunchRateLimit();
 
   const [wallets, setWallets] = useState<any[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [signingWalletAddress, setSigningWalletAddress] = useState<string | null>(null);
   const [privySignTransaction, setPrivySignTransaction] = useState<
     ((tx: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>) | null
