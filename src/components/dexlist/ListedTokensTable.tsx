@@ -28,6 +28,7 @@ interface ListedTokensTableProps {
 export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
+  const [imageGenId, setImageGenId] = useState<string | null>(null);
 
   if (!tokens.length) {
     return <p className="text-sm text-muted-foreground text-center py-8">No tokens listed yet.</p>;
