@@ -15,7 +15,7 @@ import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
-
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
   showBack?: boolean;
@@ -34,6 +34,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const [search, setSearch] = useState(() => isOnTrade ? (searchParams.get("q") || "") : "");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLaunchAppModal, setShowLaunchAppModal] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -95,6 +96,13 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const closeDropdown = useCallback(() => setShowDropdown(false), []);
 
   const { goToPanel } = usePanelNav();
+  const handleLaunchAppClick = useCallback(() => {
+    if (isAuthenticated) {
+      goToPanel();
+      return;
+    }
+    setShowLaunchAppModal(true);
+  }, [goToPanel, isAuthenticated]);
 
   return (
     <>
@@ -214,7 +222,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             )}
 
             <button
-              onClick={goToPanel}
+              onClick={handleLaunchAppClick}
               className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold
                          transition-all duration-200
                          border border-primary/30 text-primary
@@ -288,6 +296,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           )}
         </div>
       )}
+      <NotLoggedInModal open={showLaunchAppModal} onOpenChange={setShowLaunchAppModal} />
     </>
   );
 }
