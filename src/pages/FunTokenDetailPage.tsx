@@ -195,7 +195,12 @@ function ExternalTokenView({ token, mintAddress, solPrice, isBsc = false }: { to
             ))}
           </div>
 
-          {/* Graduation progress */}
+          {/* Leverage Trading Banner - Mobile */}
+          <div className="md:hidden">
+            <LeverageTradingBanner />
+          </div>
+
+
           {token.graduationPercent !== null && !token.completed && !token.migrated && (
             <div className="trade-glass-panel flex items-center gap-4 px-5 py-3">
               <Zap className="h-4 w-4 text-primary/70 shrink-0" />
