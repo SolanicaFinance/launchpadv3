@@ -120,12 +120,32 @@ export function ListedTokensTable({ tokens, onUpdate, onRemove }: ListedTokensTa
                   />
                 </button>
               </TableCell>
-              <TableCell>
+              <TableCell className="flex gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={() => setImageGenId(imageGenId === t.id ? null : t.id)}
+                  title="Generate listing image"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                </Button>
                 <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => onRemove(t.id)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </TableCell>
             </TableRow>
+            {imageGenId === t.id && t.image_url && t.token_ticker && (
+              <TableRow>
+                <TableCell colSpan={7} className="p-4">
+                  <ListingImageGenerator
+                    tokenImageUrl={t.image_url}
+                    ticker={t.token_ticker}
+                    tokenName={t.token_name || undefined}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
           ))}
         </TableBody>
       </Table>
