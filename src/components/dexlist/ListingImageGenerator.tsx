@@ -232,6 +232,9 @@ export function ListingImageGenerator({
         <div className="space-y-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Listing Announcement Preview</p>
           <img src={previewUrl} alt={`Listing image for ${ticker}`} className="w-[300px] h-[300px] rounded-lg border border-border object-cover" />
+          
+          <TweetTextPreview ticker={ticker} maxLeverage={maxLeverage} mintAddress={mintAddress} />
+
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={download} className="gap-2">
               <Download className="w-3.5 h-3.5" /> Download
