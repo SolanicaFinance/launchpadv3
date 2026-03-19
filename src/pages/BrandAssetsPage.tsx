@@ -124,15 +124,27 @@ export default function BrandAssetsPage() {
     canvas.height = 200;
     const ctx = canvas.getContext("2d")!;
 
-    // Modern dark background (matches muted token)
+    // Modern dark background
     ctx.fillStyle = "#212124";
     ctx.fillRect(0, 0, 600, 200);
 
-
-    // Logo on the left
+    // Logo positioning
     const logoSize = 100;
     const logoX = 40;
     const logoY = (200 - logoSize) / 2;
+
+    // Neon glow behind logo
+    const logoCx = logoX + logoSize / 2;
+    const logoCy = logoY + logoSize / 2;
+    const glowR = 70;
+    const glow = ctx.createRadialGradient(logoCx, logoCy, glowR * 0.3, logoCx, logoCy, glowR);
+    glow.addColorStop(0, "rgba(200, 255, 0, 0.3)");
+    glow.addColorStop(0.5, "rgba(200, 255, 0, 0.1)");
+    glow.addColorStop(1, "rgba(200, 255, 0, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 600, 200);
+
+    // Logo
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
 
     // Title text
