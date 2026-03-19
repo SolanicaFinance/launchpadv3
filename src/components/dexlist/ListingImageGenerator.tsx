@@ -9,14 +9,14 @@ interface ListingImageGeneratorProps {
   tokenName?: string;
 }
 
-// Circle position on the 1080x1080 template (measured from the uploaded image)
-const TEMPLATE_SIZE = 1080;
-const CIRCLE_CX = 430;
-const CIRCLE_CY = 405;
-const CIRCLE_RADIUS = 148;
+// Circle position on the 1024x1024 template
+const TEMPLATE_SIZE = 1024;
+const CIRCLE_CX = 407;
+const CIRCLE_CY = 383;
+const CIRCLE_RADIUS = 140;
 
 // Ticker text position
-const TICKER_Y = 698;
+const TICKER_Y = 662;
 const TICKER_X = TEMPLATE_SIZE / 2;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
