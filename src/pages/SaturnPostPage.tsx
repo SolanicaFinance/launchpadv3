@@ -101,7 +101,7 @@ export default function SaturnPostPage() {
     }
     setUserVote((prev) => (prev === voteType ? null : voteType));
     voteOnPost({ postId: postId!, voteType, userId: profileId });
-  }, [isAuthenticated, profileId, login, voteOnPost, postId]);
+  }, [isAuthenticated, profileId, voteOnPost, postId]);
 
   const handleCommentVote = useCallback((commentId: string, voteType: 1 | -1) => {
     if (!isAuthenticated || !profileId) {
