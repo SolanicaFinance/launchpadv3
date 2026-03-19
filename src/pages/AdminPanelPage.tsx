@@ -60,6 +60,7 @@ const TAB_CONFIG = [
   { value: "brand-assets", label: "Assets", icon: Wand2 },
   { value: "assisted-swaps", label: "Swaps", icon: Repeat },
   { value: "brand-dust", label: "Dust", icon: Radio },
+  { value: "dex-listing", label: "Dex List", icon: Layers },
 ] as const;
 
 export default function AdminPanelPage() {
