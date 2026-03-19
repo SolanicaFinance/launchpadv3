@@ -302,6 +302,7 @@ export default function LaunchpadTemplatePage() {
   }
 
   return (
+    <>
     <div 
       className="min-h-screen"
       style={{ 
