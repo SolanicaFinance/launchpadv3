@@ -195,6 +195,13 @@ Deno.serve(async (req) => {
               // Skip already processed
               if (existingIds.has(tweet.id)) continue;
 
+              // ── Freshness gate: only reply to tweets from the last 15 minutes ──
+              const tweetAge = Date.now() - new Date(tweet.created_at).getTime();
+              const MAX_TWEET_AGE_MS = 15 * 60 * 1000; // 15 minutes
+              if (tweetAge > MAX_TWEET_AGE_MS) {
+                continue;
+              }
+
               // Skip own tweets
               if (tweet.author_username.toLowerCase() === account.username.toLowerCase()) continue;
 
