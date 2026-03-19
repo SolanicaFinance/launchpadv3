@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { RefreshCw, Plus, Download, Upload, Trash2, Search, Wallet, Loader2, Maximize2, TrendingUp, TrendingDown, Eye, Activity, Bell, BellOff, Info } from "lucide-react";
 import { useWalletTracker, TRACKER_TABS, type TrackerTab, shortAddr } from "@/hooks/useWalletTracker";
 import { useTradeSounds } from "@/hooks/useTradeSounds";
