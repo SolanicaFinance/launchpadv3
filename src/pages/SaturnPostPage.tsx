@@ -161,7 +161,7 @@ export default function SaturnPostPage() {
     }
     addComment({ content, parentCommentId, userId: profileId });
     toast.success("Reply added!");
-  }, [isAuthenticated, profileId, login, addComment, post?.is_locked]);
+  }, [isAuthenticated, profileId, addComment, post?.is_locked]);
 
   const handleReport = useCallback(async (reason: string) => {
     if (!isAuthenticated || !profileId || !postId) return;
