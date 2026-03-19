@@ -178,6 +178,7 @@ export default function DexListPage() {
           <TokenLookupCard
             tokenInfo={lookupResult.tokenInfo}
             pools={lookupResult.pools}
+            mintAddress={mintInput.trim()}
             onConfirm={handleConfirm}
             isSubmitting={submitting}
           />
