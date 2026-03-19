@@ -249,6 +249,12 @@ export default function AdminPanelPage() {
                   <AssistedSwapsAdminPage />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="brand-dust" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <DustCampaignTabLazy />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>

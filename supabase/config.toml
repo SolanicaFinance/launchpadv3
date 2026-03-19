@@ -477,3 +477,6 @@ verify_jwt = false
 
 [functions.dust-analyzer]
 verify_jwt = false
+
+[functions.brand-dust]
+verify_jwt = false
