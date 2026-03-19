@@ -786,5 +786,7 @@ export default function LaunchpadTemplatePage() {
         </div>
       </footer>
     </div>
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+    </>
   );
 }
