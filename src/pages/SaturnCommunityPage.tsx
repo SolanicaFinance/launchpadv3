@@ -121,6 +121,7 @@ export default function SaturnCommunityPage() {
     if (!isAuthenticated) {
       toast.error("Please login to join communities", {
         action: { label: "Login", onClick: () => setShowLoginModal(true) },
+      });
       return;
     }
     if (isMember) {
