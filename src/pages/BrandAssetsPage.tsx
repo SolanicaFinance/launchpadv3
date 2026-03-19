@@ -51,8 +51,17 @@ export default function BrandAssetsPage() {
     canvas.height = 200;
     const ctx = canvas.getContext("2d")!;
 
-    // Modern dark background (matches muted token)
+    // Modern dark background
     ctx.fillStyle = "#212124";
+    ctx.fillRect(0, 0, 200, 200);
+
+    // Neon glow behind logo (primary yellow-green)
+    const cx = 100, cy = 100, glowR = 80;
+    const glow = ctx.createRadialGradient(cx, cy, glowR * 0.3, cx, cy, glowR);
+    glow.addColorStop(0, "rgba(200, 255, 0, 0.35)");
+    glow.addColorStop(0.5, "rgba(200, 255, 0, 0.12)");
+    glow.addColorStop(1, "rgba(200, 255, 0, 0)");
+    ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 200, 200);
 
     // Center logo
