@@ -96,6 +96,13 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const closeDropdown = useCallback(() => setShowDropdown(false), []);
 
   const { goToPanel } = usePanelNav();
+  const handleLaunchAppClick = useCallback(() => {
+    if (isAuthenticated) {
+      goToPanel();
+      return;
+    }
+    setShowLaunchAppModal(true);
+  }, [goToPanel, isAuthenticated]);
 
   return (
     <>
