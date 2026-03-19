@@ -310,6 +310,7 @@ export default function SaturnCommunityPage() {
   );
 
   return (
+    <>
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
         <ForumLayout
