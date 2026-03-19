@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useWalletTracker, TRACKER_TABS, type TrackerTab, shortAddr } from "@/hooks/useWalletTracker";
@@ -43,6 +44,7 @@ export default function WalletTrackerPage() {
   const [trades, setTrades] = useState<WalletTrade[]>([]);
   const [tradesLoading, setTradesLoading] = useState(false);
   const [showCopyTradeInfo, setShowCopyTradeInfo] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { playBuy, playSell } = useTradeSounds();
 
@@ -515,9 +517,12 @@ export default function WalletTrackerPage() {
             <div className="flex flex-col items-center justify-center py-20">
               <Wallet className="w-12 h-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">Connect to track wallets</p>
-              <button onClick={login} className="px-6 py-2.5 rounded-lg font-semibold text-sm" style={{ background: g, color: "#000" }}>
+              <>
+              <button onClick={() => setShowLoginModal(true)} className="px-6 py-2.5 rounded-lg font-semibold text-sm" style={{ background: g, color: "#000" }}>
                 Connect Wallet
               </button>
+              <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+              </>
             </div>
           ) : (
             <>

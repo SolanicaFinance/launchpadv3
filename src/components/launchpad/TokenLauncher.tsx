@@ -24,6 +24,7 @@ import bs58 from "bs58";
 import { debugLog } from "@/lib/debugLogger";
 import { getRpcUrl } from "@/hooks/useSolanaWallet";
 import { TokenLaunchForm } from "./TokenLaunchForm";
+import { NotLoggedInModal } from "./NotLoggedInModal";
 
 import {
   Shuffle,
@@ -107,7 +108,8 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
   const { toast } = useToast();
   const phantomWallet = usePhantomWallet();
   const { solPrice } = useSolPrice();
-  const { user, isAuthenticated, login: privyLogin } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { walletAddress: privyWalletAddress, isWalletReady: privyWalletReady, getBalance: getPrivyBalance, signAndSendTransaction: privySignAndSend, getConnection: getPrivyConnection, signTransaction: privySignTransaction } = useSolanaWalletWithPrivy();
   const { activeAddress: activePrivyWalletAddress, activeWallet: activePrivyWallet, refreshBalances: refreshManagedWalletBalances } = useMultiWallet();
   const launchpadPrivyWalletAddress = activePrivyWalletAddress || privyWalletAddress;
@@ -2221,12 +2223,15 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
             {launchWalletMode === "privy" && (
               <>
                 {!isAuthenticated ? (
+                  <>
                   <button
-                    onClick={privyLogin}
+                    onClick={() => setShowLoginModal(true)}
                     className="w-full h-12 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer phantom-connect-btn"
                   >
                     <Wallet className="h-4 w-4" /> Connect Wallet
                   </button>
+                  <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+                  </>
                 ) : !privyWalletReady ? (
                   <div className="p-4 rounded-xl border border-border bg-muted/30 text-center">
                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary mb-2" />

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { formatChange24h } from "@/lib/formatters";
 import { useParams, Link } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
@@ -31,7 +32,8 @@ export default function SaturnCommunityPage() {
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
   
 
-  const { user, isAuthenticated, profileId, login } = useAuth();
+  const { user, isAuthenticated, profileId } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { data: subtuna, isLoading: isLoadingSubtuna } = useSaturnCommunity(ticker);
   const { posts, isLoading: isLoadingPosts, vote, guestVote } = useSaturnPosts({
     subtunaId: subtuna?.id,
@@ -118,7 +120,7 @@ export default function SaturnCommunityPage() {
   const handleJoinLeave = useCallback(() => {
     if (!isAuthenticated) {
       toast.error("Please login to join communities", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
@@ -129,7 +131,7 @@ export default function SaturnCommunityPage() {
       join();
       toast.success("Joined community!");
     }
-  }, [isAuthenticated, isMember, join, leave, login]);
+  }, [isAuthenticated, isMember, join, leave]);
 
 
   if (isLoadingSubtuna) {
@@ -308,6 +310,7 @@ export default function SaturnCommunityPage() {
   );
 
   return (
+    <>
     <div className="forum-theme">
       <LaunchpadLayout showKingOfTheHill={false}>
         <ForumLayout
@@ -429,5 +432,7 @@ export default function SaturnCommunityPage() {
         </ForumLayout>
       </LaunchpadLayout>
     </div>
+    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+    </>
   );
 }

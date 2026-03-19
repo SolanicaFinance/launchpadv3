@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { RefreshCw, Plus, Download, Upload, Trash2, Search, Wallet, Loader2, Maximize2, TrendingUp, TrendingDown, Eye, Activity, Bell, BellOff, Info } from "lucide-react";
 import { useWalletTracker, TRACKER_TABS, type TrackerTab, shortAddr } from "@/hooks/useWalletTracker";
 import { useTradeSounds } from "@/hooks/useTradeSounds";
@@ -47,6 +48,7 @@ export function WalletTrackerPanel({
   const [newAddr, setNewAddr] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [showCopyTradeInfo, setShowCopyTradeInfo] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const f = "'Inter','SF Pro Display',-apple-system,sans-serif";
 
@@ -164,7 +166,7 @@ export function WalletTrackerPanel({
           <Wallet style={{ width: "32px", height: "32px", color: dim, margin: "0 auto 8px" }} />
           <div style={{ fontSize: sz.fs.val, color: muted, marginBottom: "12px" }}>Connect to track wallets</div>
           <button
-            onClick={login}
+            onClick={() => setShowLoginModal(true)}
             style={{
               background: g,
               color: "#000",
@@ -179,6 +181,7 @@ export function WalletTrackerPanel({
           >
             Connect Wallet
           </button>
+          <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
         </div>
       ) : (
         <>

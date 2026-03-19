@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { useParams, Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
@@ -32,7 +33,8 @@ export default function SaturnPostPage() {
   const [newComment, setNewComment] = useState("");
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const { user, isAuthenticated, profileId, login } = useAuth();
+  const { user, isAuthenticated, profileId } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { data: recentCommunities } = useRecentCommunities();
   const { vote: voteOnPost } = useSaturnPosts({});
   const { createReport, isCreating: isReporting } = useCreateSaturnReport();
@@ -93,18 +95,18 @@ export default function SaturnPostPage() {
   const handleVote = useCallback((voteType: 1 | -1) => {
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to vote", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
     setUserVote((prev) => (prev === voteType ? null : voteType));
     voteOnPost({ postId: postId!, voteType, userId: profileId });
-  }, [isAuthenticated, profileId, login, voteOnPost, postId]);
+  }, [isAuthenticated, profileId, voteOnPost, postId]);
 
   const handleCommentVote = useCallback((commentId: string, voteType: 1 | -1) => {
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to vote", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
@@ -117,13 +119,13 @@ export default function SaturnPostPage() {
       return { ...prev, [commentId]: voteType };
     });
     voteComment({ commentId, voteType, userId: profileId });
-  }, [isAuthenticated, profileId, login, voteComment]);
+  }, [isAuthenticated, profileId, voteComment]);
 
   const handleSubmitComment = useCallback(() => {
     if (!newComment.trim()) return;
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to comment", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
@@ -144,12 +146,12 @@ export default function SaturnPostPage() {
         },
       }
     );
-  }, [newComment, isAuthenticated, profileId, login, addComment, post?.is_locked]);
+  }, [newComment, isAuthenticated, profileId, addComment, post?.is_locked]);
 
   const handleReply = useCallback((parentCommentId: string, content: string) => {
     if (!isAuthenticated || !profileId) {
       toast.error("Please login to reply", {
-        action: { label: "Login", onClick: login },
+        action: { label: "Login", onClick: () => setShowLoginModal(true) },
       });
       return;
     }
@@ -159,7 +161,7 @@ export default function SaturnPostPage() {
     }
     addComment({ content, parentCommentId, userId: profileId });
     toast.success("Reply added!");
-  }, [isAuthenticated, profileId, login, addComment, post?.is_locked]);
+  }, [isAuthenticated, profileId, addComment, post?.is_locked]);
 
   const handleReport = useCallback(async (reason: string) => {
     if (!isAuthenticated || !profileId || !postId) return;
@@ -397,7 +399,7 @@ export default function SaturnPostPage() {
                     onClick={() => {
                       if (!isAuthenticated) {
                         toast.error("Please login to report", {
-                          action: { label: "Login", onClick: login },
+                          action: { label: "Login", onClick: () => setShowLoginModal(true) },
                         });
                         return;
                       }
@@ -429,9 +431,12 @@ export default function SaturnPostPage() {
                       {user?.displayName || "User"}
                     </span>
                   ) : (
-                    <button onClick={login} className="text-[hsl(var(--forum-primary))] hover:underline">
+                    <>
+                    <button onClick={() => setShowLoginModal(true)} className="text-[hsl(var(--forum-primary))] hover:underline">
                       Login to comment
                     </button>
+                    <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+                    </>
                   )}
                 </p>
                 <Textarea
