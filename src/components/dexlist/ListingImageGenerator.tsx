@@ -16,11 +16,9 @@ interface ListingImageGeneratorProps {
 }
 
 const TEMPLATE_SIZE = 1024;
-const CIRCLE_CX = 497;
-const CIRCLE_CY = 400;
-const CIRCLE_RADIUS = 125;
-const LEVERAGE_Y = 710;
-const LEVERAGE_X = TEMPLATE_SIZE / 2;
+const CIRCLE_CX = 504;
+const CIRCLE_CY = 397;
+const CIRCLE_RADIUS = 140;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -85,21 +83,7 @@ export function ListingImageGenerator({
       ctx.drawImage(tokenImg, CIRCLE_CX - CIRCLE_RADIUS, CIRCLE_CY - CIRCLE_RADIUS, CIRCLE_RADIUS * 2, CIRCLE_RADIUS * 2);
       ctx.restore();
 
-      // Draw leverage text over the white pill button
-      if (maxLeverage) {
-        // Cover the existing "80x" text in the white pill and redraw
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(220, LEVERAGE_Y - 22, 584, 44);
-
-        const leverageText = `Start Trading up to ${maxLeverage}x Leverage`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "bold italic 30px 'Georgia', serif";
-        ctx.fillStyle = "#1a1a2e";
-        ctx.fillText(leverageText, LEVERAGE_X, LEVERAGE_Y);
-      }
-
-      const url = canvas.toDataURL("image/png");
+      const url = canvas.toDataURL("image/jpeg", 1.0);
       setPreviewUrl(url);
       onImageGenerated?.(url);
     } catch (err) {
