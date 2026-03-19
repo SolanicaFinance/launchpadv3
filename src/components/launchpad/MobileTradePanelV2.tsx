@@ -96,6 +96,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [profitCardData, setProfitCardData] = useState<ProfitCardData | null>(null);
   const [showProfitCard, setShowProfitCard] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isBuy = tradeType === "buy";
   const numericAmount = parseFloat(amount) || 0;
