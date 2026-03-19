@@ -36,7 +36,7 @@ export function LaunchpadLayout({ children, hideFooter, noPadding }: LaunchpadLa
         {!hideFooter && <Footer />}
       </div>
       <DelegationPrompt />
-      <LeverageTradingPopup />
+      
     </div>
   );
 }
