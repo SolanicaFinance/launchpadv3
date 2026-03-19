@@ -45,6 +45,7 @@ export function LaunchpadTokenCreator({
   const { launchToken, isLaunching } = useTokenLaunch();
   
   const [open, setOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
   const [description, setDescription] = useState("");
