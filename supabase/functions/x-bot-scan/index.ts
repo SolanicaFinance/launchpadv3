@@ -306,6 +306,10 @@ Deno.serve(async (req) => {
               }
             }
 
+            if (skippedStale > 0) {
+              console.log(`[x-bot-scan] ⏭️ Skipped ${skippedStale} stale tweets (>15min old) for query "${query}"`);
+            }
+
             // Small delay between queries to avoid rate limiting
             await sleep(300);
           } catch (queryErr) {
