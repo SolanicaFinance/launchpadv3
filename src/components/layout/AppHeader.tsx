@@ -15,7 +15,7 @@ import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
-
+import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
   showBack?: boolean;
