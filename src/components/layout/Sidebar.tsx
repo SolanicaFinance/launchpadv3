@@ -22,6 +22,7 @@ const NAV_LINKS: { to: string; label: string; icon: any; exact?: boolean; neonGr
   { to: "/x-tracker", label: "X Tracker", icon: Radar },
   { to: "/agents", label: "Staking", icon: Bot },
   { to: "/leverage", label: "Leverage", icon: CandlestickChart },
+  { to: "/meteorite", label: "Meteorite", icon: Flame, neonGreen: true },
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
   

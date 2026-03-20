@@ -265,6 +265,12 @@ export default function AdminPanelPage() {
                   <DexListingAdminTab />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="meteorite" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <MeteoriteAdminTab />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>

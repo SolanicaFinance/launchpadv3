@@ -432,6 +432,6 @@ export default function MeteoritePage() {
           </motion.div>
         </section>
       </div>
-    </AppLayout>
+    </LaunchpadLayout>
   );
 }
