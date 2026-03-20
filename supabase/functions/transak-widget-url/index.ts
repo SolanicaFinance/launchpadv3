@@ -22,14 +22,19 @@ async function getAccessToken(): Promise<string> {
     return cachedAccessToken;
   }
 
-  const apiKey = Deno.env.get("VITE_TRANSAK_API_KEY") || Deno.env.get("TRANSAK_API_KEY") || "";
+  const apiKey = Deno.env.get("TRANSAK_API_KEY") || Deno.env.get("VITE_TRANSAK_API_KEY") || "";
   const apiSecret = Deno.env.get("TRANSAK_API_SECRET") || "";
 
   if (!apiKey || !apiSecret) {
-    throw new Error("Transak API key or secret not configured");
+    throw new Error(`Transak credentials missing: apiKey=${!!apiKey}, apiSecret=${!!apiSecret}`);
   }
 
-  const res = await fetch(`${API_BASE}/partners/api/v2/refresh-token`, {
+  console.log("[transak-widget-url] Refreshing access token with apiKey prefix:", apiKey.substring(0, 8));
+
+  const refreshUrl = `${API_BASE}/partners/api/v2/refresh-token`;
+  console.log("[transak-widget-url] Refresh URL:", refreshUrl);
+
+  const res = await fetch(refreshUrl, {
     method: "POST",
     headers: {
       "accept": "application/json",
@@ -39,20 +44,28 @@ async function getAccessToken(): Promise<string> {
     body: JSON.stringify({ apiKey }),
   });
 
+  const responseText = await res.text();
+  console.log("[transak-widget-url] refresh-token response:", res.status, responseText);
+
   if (!res.ok) {
-    const text = await res.text();
-    console.error("[transak-widget-url] refresh-token failed:", res.status, text);
-    throw new Error(`Failed to refresh Transak access token: ${res.status}`);
+    throw new Error(`Failed to refresh Transak access token: ${res.status} ${responseText}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = JSON.parse(responseText);
+  } catch {
+    throw new Error(`Invalid JSON from refresh-token: ${responseText.substring(0, 200)}`);
+  }
+
   const accessToken = json?.data?.accessToken;
   if (!accessToken) {
-    throw new Error("No accessToken in refresh-token response");
+    throw new Error(`No accessToken in refresh-token response: ${JSON.stringify(json).substring(0, 200)}`);
   }
 
+  console.log("[transak-widget-url] Got access token, length:", accessToken.length);
+
   cachedAccessToken = accessToken;
-  // Token expires in 7 days, refresh at 6 days
   tokenExpiresAt = Date.now() + 6 * 24 * 60 * 60 * 1000;
 
   return accessToken;
