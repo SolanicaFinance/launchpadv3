@@ -1,64 +1,42 @@
 
 
-## Plan: Dex Listing X Account Config in Admin + Auto-Generate Image on Lookup
+# Fix: X Bot Rules Enforcement and Footer
 
-### What Changes
+## Problems Found
 
-**1. Admin Panel — New "Dex Listing" tab**
-Add a new tab in the Admin Panel (`/admin?tab=dex-listing`) for managing the X account used for dex listing announcements. Same pattern as X Bot accounts — fields for full cookie string and SOCKS5 proxies. Stored in a new `dex_listing_x_config` table (single row, service_role-only RLS).
+1. **Footer not appearing**: The reply text stored in the database has no footer appended. The `buildReplyWithFooter` function exists in code but the **deployed edge function** appears to be a stale version without it. Need to ensure the footer logic is correctly wired and redeploy.
 
-**2. DexListPage — Auto-show listing image on CA lookup**
-When a CA is entered and looked up, immediately auto-generate and display the listing announcement image (using the existing `ListingImageGenerator` canvas logic) right in the `TokenLookupCard`, before the moderator confirms. The moderator sees the preview image as part of the lookup result.
+2. **Non-blue-check accounts getting replies**: The scan function (`x-bot-scan`) correctly checks `require_blue_verified`, but the reply function (`x-bot-reply`) does NOT re-validate queued items. Tweets queued before rule changes still get processed.
 
-**3. Post-to-X flow on confirm**
-After the moderator clicks confirm (list token), the system:
-- Uploads the generated image to temporary storage
-- Posts the formatted tweet using `twitterapi.io` with cookies/socks5 from the `dex_listing_x_config` table
-- Shows the tweet link or error with retry button
+3. **Queue backlog with sub-1000 follower accounts**: Some queued items have follower counts below the 1000 minimum (e.g., `enjoywithouthey` at 2252 is fine, but `covfefe_is` at 1149 and `mork1e` at 1478 are below acceptable thresholds if you raise the minimum).
 
-### Database
+## Plan
 
-New table `dex_listing_x_config`:
-- `id` (uuid, PK)
-- `full_cookie_encrypted` (text) — full X cookie string
-- `socks5_urls` (text[]) — SOCKS5 proxy list
-- `updated_at` (timestamptz)
-- RLS: deny all public access (service_role only)
+### Step 1: Add re-validation in `x-bot-reply` (the critical fix)
 
-### New/Modified Files
+In `supabase/functions/x-bot-reply/index.ts`, add a **pre-reply validation block** after fetching account rules (around line 360). Before generating or posting any reply, re-check:
+- `is_verified` field on the queue item against `rules.require_blue_verified`
+- `follower_count` on the queue item against `rules.min_follower_count`
+- If either fails, mark item as `skipped` and continue
 
-| File | Action |
-|------|--------|
-| `src/pages/DexListingAdminTab.tsx` | **Create** — Admin tab with cookie + SOCKS5 form, same UI pattern as XBotAccountForm |
-| `src/pages/AdminPanelPage.tsx` | **Edit** — Add "Dex List" tab to TAB_CONFIG and TabsContent |
-| `src/components/dexlist/TokenLookupCard.tsx` | **Edit** — Embed `ListingImageGenerator` inline, auto-generate on mount |
-| `src/components/dexlist/ListingImageGenerator.tsx` | **Edit** — Add auto-generate on mount option, add "Post to X" button with status feedback |
-| `supabase/functions/dexlist-admin/index.ts` | **Edit** — Add actions: `get-x-config`, `save-x-config`, `post-to-x` (upload image via twitterapi.io, post tweet with formatted text) |
+This ensures that even if a tweet was queued before rules were tightened, it gets filtered out at reply time.
 
-### Tweet Template
-```
-🪐 Saturn New Leverage Trading Listing $TICKER
+### Step 2: Verify footer is correctly applied
 
-📊 Leverage Up to {maxLeverage}x
+The code at line 453 calls `buildReplyWithFooter(replyText)` and stores `finalReplyText` — this looks correct. But the DB shows replies without footers. The fix is to:
+- Confirm the footer constant is correct (it is: line 10)
+- Ensure the stored `reply_text` in the insert at line 478 uses `finalReplyText` (it does)
+- **Redeploy** the edge function to ensure the live version matches the code
 
-✅ Deposit open Now
-✅ Full trading enabled
+### Step 3: Fix the `x-bot-scan` missing `for` loop
 
-Start Trading 👉 https://saturn.trade/trade/{mintAddress}
+There's a syntax issue in the scan function — lines 146-148 jump from variable declarations into `rulesMap.get(account.id)` without the `for (const account of accounts)` loop. This needs to be added back to prevent the scan from crashing or only processing one account.
 
-#Solana #Binance #okx #trading $sol
-```
+### Step 4: Purge non-compliant queue items
 
-### Flow Summary
-```text
-Admin Panel → Dex Listing tab → Enter X cookies + SOCKS5 → Save to DB
+Add a cleanup step at the start of `x-bot-reply` that purges any pending queue items where `is_verified = false` (when the account's rules require blue verification) or `follower_count < min_follower_count`.
 
-DexListPage → Enter CA → Lookup → Image auto-generated + shown
-  → Moderator selects pool, leverage → Clicks "List Token"
-  → Token saved to DB + tweet posted automatically
-  → Tweet link shown (or error + retry)
-```
-
-### Zero AI Credits
-All image generation remains client-side Canvas compositing. The tweet posting uses `twitterapi.io` REST API only.
+### Files Changed
+- `supabase/functions/x-bot-reply/index.ts` — Add re-validation, ensure footer, add rule-based purge
+- `supabase/functions/x-bot-scan/index.ts` — Fix missing `for` loop
 
