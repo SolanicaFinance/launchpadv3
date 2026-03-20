@@ -279,6 +279,41 @@ Deno.serve(async (req) => {
       .eq("status", "processing")
       .lt("created_at", stuckCutoff);
 
+    // ═══════════════════════════════════════════════════════════
+    // RULE-BASED PURGE: Remove pending items that violate current rules
+    // ═══════════════════════════════════════════════════════════
+    const { data: allRules } = await supabase
+      .from("x_bot_account_rules")
+      .select("account_id, require_blue_verified, min_follower_count")
+      .eq("enabled", true);
+
+    for (const rule of (allRules || [])) {
+      if (rule.require_blue_verified) {
+        const { data: unverified } = await supabase
+          .from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("account_id", rule.account_id)
+          .eq("status", "pending")
+          .eq("is_verified", false)
+          .select("id");
+        if (unverified && unverified.length > 0) {
+          console.log(`[x-bot-reply] 🧹 Purged ${unverified.length} non-verified queue items for account ${rule.account_id}`);
+        }
+      }
+      if (rule.min_follower_count && rule.min_follower_count > 0) {
+        const { data: lowFollowers } = await supabase
+          .from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("account_id", rule.account_id)
+          .eq("status", "pending")
+          .lt("follower_count", rule.min_follower_count)
+          .select("id");
+        if (lowFollowers && lowFollowers.length > 0) {
+          console.log(`[x-bot-reply] 🧹 Purged ${lowFollowers.length} low-follower queue items for account ${rule.account_id}`);
+        }
+      }
+    }
+
     // Get ONLY 3 freshest pending items — no backlog, ever
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")

@@ -145,6 +145,8 @@ Deno.serve(async (req) => {
 
     let totalQueued = 0;
     const errors: string[] = [];
+
+    for (const account of accounts) {
       const rules = rulesMap.get(account.id);
       if (!rules) {
         console.log(`[x-bot-scan] Skipping ${account.username} - no enabled rules`);
