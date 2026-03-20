@@ -32,6 +32,7 @@ const BatchLaunchAdminPage = lazy(() => import("./BatchLaunchAdminPage"));
 const AssistedSwapsAdminPage = lazy(() => import("./AssistedSwapsAdminPage"));
 const DustCampaignTabLazy = lazy(() => import("@/components/admin/DustCampaignTab").then(m => ({ default: m.DustCampaignTab })));
 const DexListingAdminTab = lazy(() => import("./DexListingAdminTab"));
+const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTab").then(m => ({ default: m.MeteoriteAdminTab })));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
