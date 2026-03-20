@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useTransakOnramp } from "@/hooks/useTransakOnramp";
+import { TransakModal } from "@/components/transak/TransakModal";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
