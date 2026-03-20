@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Rocket, TrendingUp, Coins, Users } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotLoggedInModalProps {
   open: boolean;
@@ -8,9 +9,11 @@ interface NotLoggedInModalProps {
 }
 
 export const NotLoggedInModal = memo(function NotLoggedInModal({ open, onOpenChange }: NotLoggedInModalProps) {
+  const { login } = useAuth();
+
   const handleGetStarted = () => {
-    window.open("https://saturn-panel.com", "_blank");
     onOpenChange(false);
+    login();
   };
 
   return (
