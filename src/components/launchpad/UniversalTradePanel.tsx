@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
+import { useTransakOnramp } from "@/hooks/useTransakOnramp";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
