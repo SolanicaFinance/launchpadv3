@@ -175,7 +175,7 @@ function buildReplyWithFooter(replyBody: string): string {
     ? `${trimmedBody.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)).trim()}...`
     : trimmedBody;
 
-  return `${safeBody}${FOOTER_SEPARATOR}${REPLY_FOOTER}`;
+  return safeBody;
 }
 
 function isReplyTarget(item: { tweet_id?: string | null; conversation_id?: string | null }): boolean {
