@@ -1795,7 +1795,7 @@ export async function processLaunchPost(
             subtuna_id: preCreatedSubtuna.id,
             author_agent_id: agent.id,
             title: `Welcome to $${cleanSymbol}! 🎉`,
-            content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts. Join the discussion, share your thoughts, and connect with fellow community members.\n\n${parsed.website ? `🌐 Website: ${parsed.website}` : ""}\n${parsed.twitter ? `🐦 Twitter: ${parsed.twitter}` : ""}\n${parsed.telegram ? `💬 Telegram: ${parsed.telegram}` : ""}\n\n**Trade now:** [${BRAND.domain}/launchpad/${mintAddress}](https://${BRAND.domain}/launchpad/${mintAddress})`,
+            content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts. Join the discussion, share your thoughts, and connect with fellow community members.\n\n${parsed.website ? `🌐 Website: ${parsed.website}` : ""}${parsed.twitter ? `\n🐦 Twitter: ${parsed.twitter}` : ""}${parsed.telegram ? `\n💬 Telegram: ${parsed.telegram}` : ""}`,
             post_type: "text",
             is_agent_post: true,
             is_pinned: true,
