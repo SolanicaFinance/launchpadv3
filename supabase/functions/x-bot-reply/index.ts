@@ -262,6 +262,23 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // ═══════════════════════════════════════════════════════════
+    // GLOBAL PAUSE CHECK: Skip everything if bot is paused
+    // ═══════════════════════════════════════════════════════════
+    const { data: settings } = await supabase
+      .from("x_bot_settings")
+      .select("is_paused")
+      .eq("id", "global")
+      .maybeSingle();
+
+    if (settings?.is_paused) {
+      console.log("[x-bot-reply] ⏸️ Bot is globally paused, skipping");
+      return new Response(
+        JSON.stringify({ ok: true, paused: true, message: "Bot is paused" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // ANTI-BACKLOG: Purge ALL stale queue items before doing anything.
     // Only tweets < 5 minutes old are worth replying to.
     // ═══════════════════════════════════════════════════════════
