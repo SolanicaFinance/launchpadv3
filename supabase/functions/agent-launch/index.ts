@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
           subtuna_id: preCreatedSubtuna.id,
           author_agent_id: agent.id,
           title: `Welcome to t/${tickerUpper}! 🎉`,
-          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}\n${twitter ? `🐦 Twitter: ${twitter}` : ""}\n${telegram ? `💬 Telegram: ${telegram}` : ""}\n\n**Trade now:** [${BRAND.domain}/launchpad/${mintAddress}](https://${BRAND.domain}/launchpad/${mintAddress})`,
+          content: `**${name}** has officially launched!\n\nThis is the official community for $${tickerUpper} holders and enthusiasts.\n\n${website ? `🌐 Website: ${website}` : ""}${twitter ? `\n🐦 Twitter: ${twitter}` : ""}${telegram ? `\n💬 Telegram: ${telegram}` : ""}`,
           post_type: "text",
           is_agent_post: true,
           is_pinned: true,
