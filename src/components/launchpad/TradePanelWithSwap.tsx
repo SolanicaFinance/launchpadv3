@@ -13,6 +13,7 @@ import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { ProfitCardModal, type ProfitCardData } from "@/components/launchpad/ProfitCardModal";
 import { recordAlphaTrade } from "@/lib/recordAlphaTrade";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 
 interface TradePanelWithSwapProps {
   token: Token;
@@ -198,6 +199,17 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         signature: result.signature,
       });
       setShowProfitCard(true);
+
+      // Show global trade success notification (same as Pulse / UniversalTradePanel)
+      showTradeSuccess({
+        type: isBuy ? 'buy' : 'sell',
+        ticker: token.ticker,
+        tokenName: token.name,
+        mintAddress: token.mint_address,
+        amount: isBuy ? `${parseFloat(amount).toFixed(4)} SOL` : `100%`,
+        signature: result.signature || undefined,
+        tokenImageUrl: token.image_url || undefined,
+      });
 
       toast({
         title: `✅ ${isBuy ? 'Buy' : 'Sell'} successful!`,
