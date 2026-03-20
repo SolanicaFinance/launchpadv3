@@ -480,3 +480,6 @@ verify_jwt = false
 
 [functions.brand-dust]
 verify_jwt = false
+
+[functions.transak-widget-url]
+verify_jwt = false

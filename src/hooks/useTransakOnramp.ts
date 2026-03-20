@@ -2,17 +2,11 @@ import { useCallback, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useToast } from "@/hooks/use-toast";
-
-const TRANSAK_API_KEY = import.meta.env.VITE_TRANSAK_API_KEY || "";
-const TRANSAK_ENV = "PRODUCTION";
-const TRANSAK_BASE_URL = "https://global.transak.com";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TransakOptions {
-  /** Fiat amount to prefill */
   fiatAmount?: number;
-  /** Fiat currency code (default: USD) */
   fiatCurrency?: string;
-  /** Crypto to buy (default: SOL) */
   cryptoCurrency?: string;
 }
 
@@ -22,42 +16,45 @@ export function useTransakOnramp() {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const walletAddress = privyWalletAddress || solanaAddress;
 
-  const openTransak = useCallback((options?: TransakOptions) => {
-    if (!TRANSAK_API_KEY) {
-      toast({ title: "Configuration error", description: "Transak API key not configured", variant: "destructive" });
-      return;
-    }
-
+  const openTransak = useCallback(async (options?: TransakOptions) => {
     if (!walletAddress) {
       toast({ title: "No wallet", description: "Please connect your wallet first", variant: "destructive" });
       return;
     }
 
-    const params = new URLSearchParams({
-      apiKey: TRANSAK_API_KEY,
-      environment: TRANSAK_ENV,
-      cryptoCurrencyCode: options?.cryptoCurrency || "SOL",
-      network: "solana",
-      walletAddress: walletAddress,
-      defaultPaymentMethod: "credit_debit_card",
-      disableWalletAddressForm: "true",
-      themeColor: "7c3aed",
-      hideMenu: "true",
-    });
+    setIsLoading(true);
 
-    if (options?.fiatAmount) {
-      params.set("defaultFiatAmount", String(options.fiatAmount));
-    }
-    if (options?.fiatCurrency) {
-      params.set("defaultFiatCurrency", options.fiatCurrency);
-    }
+    try {
+      const { data, error } = await supabase.functions.invoke("transak-widget-url", {
+        body: {
+          walletAddress,
+          fiatAmount: options?.fiatAmount,
+          fiatCurrency: options?.fiatCurrency,
+          cryptoCurrency: options?.cryptoCurrency,
+        },
+      });
 
-    const url = `${TRANSAK_BASE_URL}?${params.toString()}`;
-    setWidgetUrl(url);
-    setIsOpen(true);
+      if (error) throw error;
+
+      const url = data?.widgetUrl;
+      if (!url) throw new Error("No widget URL returned");
+
+      setWidgetUrl(url);
+      setIsOpen(true);
+    } catch (err: any) {
+      console.error("[Transak] Failed to create widget URL:", err);
+      toast({
+        title: "Failed to open buy widget",
+        description: err?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [walletAddress, toast]);
 
   const closeTransak = useCallback(() => {
@@ -70,7 +67,8 @@ export function useTransakOnramp() {
     closeTransak,
     isOpen,
     widgetUrl,
-    isReady: !!TRANSAK_API_KEY && !!walletAddress,
+    isLoading,
+    isReady: !!walletAddress,
     walletAddress,
   };
 }
