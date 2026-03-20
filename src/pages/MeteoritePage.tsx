@@ -101,7 +101,7 @@ export default function MeteoritePage() {
   const [tweetUrl, setTweetUrl] = useState("");
 
   return (
-    <AppLayout>
+    <LaunchpadLayout>
       <div className="min-h-screen pb-24">
         {/* Hero */}
         <section className="relative overflow-hidden pt-16 pb-20 px-4">
