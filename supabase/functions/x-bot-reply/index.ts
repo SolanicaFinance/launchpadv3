@@ -7,10 +7,8 @@ const corsHeaders = {
 };
 
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
-const REPLY_FOOTER = "Trading terminal SATURN on $SOL just launched\n37CrXSvQN85Skj3AsLZqJM3xf9eKNTiJLpiJmLN8BAGS";
 const MAX_REPLIES_PER_MINUTE = 2;
-const FOOTER_SEPARATOR = "\n\n";
-const MAX_REPLY_BODY_LENGTH = 280 - REPLY_FOOTER.length - FOOTER_SEPARATOR.length;
+const MAX_REPLY_BODY_LENGTH = 280;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -177,7 +175,7 @@ function buildReplyWithFooter(replyBody: string): string {
     ? `${trimmedBody.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)).trim()}...`
     : trimmedBody;
 
-  return `${safeBody}${FOOTER_SEPARATOR}${REPLY_FOOTER}`;
+  return safeBody;
 }
 
 function isReplyTarget(item: { tweet_id?: string | null; conversation_id?: string | null }): boolean {
