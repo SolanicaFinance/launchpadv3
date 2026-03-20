@@ -493,6 +493,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
       <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
       <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+      <TransakModal isOpen={isTransakOpen} onClose={closeTransak} widgetUrl={transakUrl} />
     </>
   );
 }
