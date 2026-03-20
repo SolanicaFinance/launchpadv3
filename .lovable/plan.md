@@ -1,122 +1,103 @@
 
 
-# Bonding Curve Lab — Full Implementation Plan
+# MEV Analysis Admin Tab
 
 ## Overview
 
-Build an isolated `/lab/bonding-curve` page with the full custom bonding curve testing environment, plus a comprehensive deployment guide document so you can launch the Anchor program when ready.
+Build a new "MEV" tab in the Admin Panel that analyzes sandwich attacks on your transactions using the Helius Enhanced Transactions API. It will parse the two provided MEV bot transactions alongside your victim transaction, extract profit/loss/fee data, and provide a foundation for MEV detection and replication research.
 
 ## What Gets Built
 
-### 1. Deployment Guide (`SATURN_CURVE_DEPLOY_GUIDE.md`)
+### 1. Edge Function: `mev-analyze` 
 
-Step-by-step instructions covering:
+Accepts one or more transaction signatures and uses the Helius Enhanced Transactions API (`POST https://api.helius.xyz/v0/transactions`) to parse them. For each signature it returns:
 
-- **Prerequisites**: Install Rust, Solana CLI, Anchor CLI
-- **Program structure**: Full Anchor program source for `saturn-curve` with 5 instructions: `initialize`, `create_pool`, `swap`, `graduate`, `update_config`
-- **Local build**: `anchor build`, get program ID, update `declare_id!`
-- **Devnet deploy**: `anchor deploy --provider.cluster devnet`
-- **Mainnet deploy**: `anchor deploy --provider.cluster mainnet-beta` (costs ~3-5 SOL)
-- **Post-deploy**: Copy program ID into `lib/config.ts` / edge function env vars
-- **Testing checklist**: Create pool → buy to graduation → verify DAMM V2 migration → verify LP lock
+- Full enhanced transaction data (token transfers, native transfers, fee payer, accounts involved)
+- Computed fields: SOL spent on fees, tokens moved, counterparty wallets, timing (slot/blocktime)
+- Sandwich detection logic: given a set of 3 signatures (front-run, victim, back-run), compute:
+  - Bot's buy price vs your buy price vs bot's sell price
+  - Bot profit (SOL gained minus fees/tips)
+  - Your loss (price impact caused by the front-run)
+  - Jito tip paid by the bot (if any, from Jito tip program accounts)
+  - Slot timing (all 3 in same slot = confirmed sandwich)
 
-### 2. Anchor Program Source (`programs/saturn-curve/`)
+### 2. Edge Function: `mev-monitor`
 
-Full Rust source code ready to build locally:
+A broader scanner that, given a wallet address, fetches recent transactions and flags any that were sandwiched by checking for the pattern: same-slot transactions from known MEV bot programs (e.g., `vpeNALD...oax38b` / other known bot addresses) that bracket your swaps.
 
-**State accounts:**
-- `GlobalConfig` — admin, platform fee wallet, graduation threshold (1 SOL test / 85 SOL prod)
-- `Pool` — mint, creator, virtual/real reserves, fees, status (active/graduated), holder count
+### 3. Admin Page: `MevAdminPage.tsx`
 
-**Instructions:**
-- `initialize` — set global config (admin-only)
-- `create_pool` — mint token, create pool PDA + vaults, set virtual reserves (30 SOL / 1B tokens)
-- `swap` — constant product AMM math with fee deduction, emit `SwapEvent`
-- `graduate` — check threshold met, mark graduated, unlock vaults for server-side Meteora migration
-- `update_config` — admin changes threshold/fees
+New tab in Admin Panel with sections:
 
-**Events emitted** (for DexScreener/Birdeye indexing):
-- `PoolCreated`, `SwapExecuted`, `PoolGraduated`
+**Transaction Analyzer** — Paste 1-3 transaction signatures, click "Analyze". Displays:
+- Transaction timeline (slot, timestamp, block position)
+- Token flow diagram: who sent what to whom
+- Fee breakdown (base fee, priority fee, Jito tip)
+- For sandwich sets: bot profit, your slippage loss, price impact
 
-### 3. Lab Page (`src/pages/BondingCurveLabPage.tsx`)
+**Sandwich Breakdown Card** — When 3 related txs are provided:
+- Front-run TX: Bot buys token X for Y SOL
+- Victim TX (yours): You buy token X at inflated price
+- Back-run TX: Bot sells token X for Z SOL
+- Net bot profit: Z - Y - fees
+- Your excess cost: difference vs fair price
 
-Password-protected page with 5 tabs:
+**Wallet MEV History** — Enter a wallet, scan recent transactions for sandwich attacks. Table showing date, token, bot address, your loss, bot profit.
 
-**Create Pool tab** — Name, ticker, image, graduation threshold slider (default 1 SOL), fee config, virtual reserves display
+**MEV Replication Research** — Static reference section with:
+- How sandwich bots work (mempool monitoring, Jito bundles, priority fees)
+- Key infrastructure needed (Geyser plugin / LaserStream for sub-ms tx visibility, dedicated validator, Jito bundle submission)
+- Estimated costs (validator node, RPC, Jito tips)
+- Links to relevant tools (sandwiched.me, Jito explorer)
 
-**Trade tab** — Pool selector, buy/sell with live price from `x*y=k`, price impact, slippage, trade history
+### 4. Database Table: `mev_analyses`
 
-**Pool State tab** — Real-time reserves, current price, market cap, bonding progress bar, holder count, dev holdings %, volume, King of the Hill badge (>50%)
+Stores analyzed sandwich attacks for reference:
+- `id`, `victim_signature`, `frontrun_signature`, `backrun_signature`
+- `victim_wallet`, `bot_wallet`, `token_mint`, `token_name`
+- `bot_profit_sol`, `victim_loss_sol`, `bot_fees_sol`, `jito_tip_sol`
+- `slot`, `block_time`, `created_at`
 
-**Graduation Monitor tab** — Status badge, progress to threshold, manual "Graduate" button, migration steps checklist (create metadata → create locker → migrate to DAMM V2 → lock LP 100%), post-graduation pool address and LP lock proof
+### 5. Admin Panel Integration
 
-**Config tab** — Toggle test/prod threshold, fee bps, platform wallet, deploy status
+- Add "MEV" tab with `Zap` icon to `TAB_CONFIG` in `AdminPanelPage.tsx`
+- Lazy-load `MevAdminPage`
 
-### 4. Database Tables
+## Technical Details
 
-**`lab_pools`** — id, name, ticker, mint_address, pool_address, virtual_sol_reserves, virtual_token_reserves, real_sol_reserves, real_token_reserves, graduation_threshold_sol, bonding_progress, price_sol, market_cap_sol, volume_total_sol, holder_count, status (active/graduated), graduated_at, damm_pool_address, lp_locked, lp_lock_tx, created_at
+**Helius API calls** (edge function, using existing `HELIUS_API_KEY`):
+```
+POST https://api.helius.xyz/v0/transactions?api-key=KEY
+Body: { "transactions": ["sig1", "sig2", "sig3"] }
+```
 
-**`lab_trades`** — id, pool_id (FK), wallet_address, is_buy, sol_amount, token_amount, price_at_trade, created_at
+Returns enhanced data with `nativeTransfers`, `tokenTransfers`, `fee`, `feePayer`, `timestamp`, `slot`, `type`.
 
-### 5. Edge Functions
+**Sandwich detection algorithm:**
+1. Parse all 3 txs
+2. Verify same slot (or adjacent slots)
+3. Identify the common token mint across all 3
+4. Calculate: bot buys at price P1, you buy at P2 > P1, bot sells at P3 > P2
+5. Bot profit = (P3 - P1) * token_amount - total_fees
+6. Your loss = (P2 - fair_price_estimate) * your_token_amount
 
-- `saturn-curve-create` — Creates pool record, mints token (or simulates), initializes virtual reserves
-- `saturn-curve-swap` — Calculates swap output via constant product math, updates reserves, records trade
-- `saturn-curve-graduate` — Triggers Meteora DAMM V2 migration using existing `migratePool()` logic, locks 100% LP
-
-### 6. TypeScript SDK (`src/lib/saturn-curve.ts`)
-
-Client-side helpers:
-- `getQuote(pool, solAmount, isBuy)` — price calculation from reserves
-- `getProgress(pool)` — bonding progress percentage
-- `formatPoolMetrics(pool)` — market cap, price, holder stats
-
-### 7. Route & Navigation
-
-- Add `/lab/bonding-curve` route to `App.tsx`
-- Add "Lab" link with Flask icon to Sidebar (below Meteorite)
-
-## Key Professional Features (bags.fm / pump.fun parity)
-
-| Feature | Implementation |
-|---|---|
-| Bonding progress bar | `real_sol / graduation_threshold * 100` |
-| Market cap | `price_sol × total_supply × SOL_USD` |
-| King of the Hill | Badge when progress > 50% |
-| Holder count | Count distinct wallets in lab_trades |
-| Dev holdings % | Creator balance / total supply |
-| LP Lock after graduation | 100% LP locked forever via Meteora locker |
-| LP Lock proof | On-chain tx signature displayed |
-| Token age | Human-readable time since creation |
+**Jito tip detection:** Check if any transfer goes to known Jito tip accounts (8 known addresses).
 
 ## Files Created/Modified
 
 | File | Action |
 |---|---|
-| `programs/saturn-curve/src/lib.rs` | Create — full Anchor program source |
-| `programs/saturn-curve/Anchor.toml` | Create — Anchor config |
-| `programs/saturn-curve/Cargo.toml` | Create — Rust dependencies |
-| `SATURN_CURVE_DEPLOY_GUIDE.md` | Create — A-Z deployment instructions |
-| `src/pages/BondingCurveLabPage.tsx` | Create — lab page |
-| `src/components/lab/*.tsx` | Create — 5 tab components |
-| `src/lib/saturn-curve.ts` | Create — client SDK |
-| `src/App.tsx` | Modify — add route |
-| `src/components/layout/Sidebar.tsx` | Modify — add Lab link |
-| DB migration | Create `lab_pools` and `lab_trades` tables |
-| 3 edge functions | Create saturn-curve-create/swap/graduate |
-
-## Zero Production Impact
-
-- No changes to `/launchpad`, `/launch`, `/trade` routes
-- No changes to `useTokenLaunch`, `useMeteoraApi`, `useRealSwap`
-- No changes to `api/pool/create.ts` or `api/swap/execute.ts`
-- Lab uses its own tables, edge functions, and components
+| `supabase/functions/mev-analyze/index.ts` | Create |
+| `supabase/functions/mev-monitor/index.ts` | Create |
+| `src/pages/MevAdminPage.tsx` | Create |
+| `src/pages/AdminPanelPage.tsx` | Modify — add MEV tab |
+| DB migration | Create `mev_analyses` table |
 
 ## Implementation Order
 
-1. Database migration (lab_pools, lab_trades)
-2. Anchor program source + deploy guide
-3. Edge functions (create, swap, graduate)
-4. Client SDK + lab page with all 5 tabs
-5. Route and sidebar integration
+1. Database migration (`mev_analyses`)
+2. `mev-analyze` edge function
+3. `mev-monitor` edge function  
+4. `MevAdminPage.tsx` with all sections
+5. Wire into Admin Panel tabs
 
