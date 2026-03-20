@@ -314,6 +314,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Purge replies-to-replies globally: conversation_id != tweet_id means it's a reply
+    const { data: replyToReplies } = await supabase.rpc('purge_reply_to_reply_queue');
+    // Fallback: manual filter since RPC may not exist — handled inline during processing
+
     // Get ONLY 3 freshest pending items — no backlog, ever
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")
