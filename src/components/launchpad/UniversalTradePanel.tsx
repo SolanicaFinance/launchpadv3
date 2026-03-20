@@ -37,6 +37,7 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
+  const { openTransak } = useTransakOnramp();
   const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { executeTurboSwap, isLoading: turboLoading } = useTurboSwap();
   const { isWalletReady, getBalance } = useSolanaWalletWithPrivy();
