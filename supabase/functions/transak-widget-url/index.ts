@@ -4,70 +4,76 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Cache the partner access token in memory
+let cachedAccessToken: string | null = null;
+let tokenExpiresAt = 0;
+
 const TRANSAK_ENV = Deno.env.get("TRANSAK_ENV") || "PRODUCTION";
 const isProduction = TRANSAK_ENV === "PRODUCTION";
-const WIDGET_BASE = isProduction
-  ? "https://global.transak.com"
-  : "https://global-stg.transak.com";
+const API_BASE = isProduction
+  ? "https://api.transak.com"
+  : "https://api-stg.transak.com";
+const GATEWAY_BASE = isProduction
+  ? "https://api-gateway.transak.com"
+  : "https://api-gateway-stg.transak.com";
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+async function getAccessToken(apiKey: string, apiSecret: string): Promise<string> {
+  if (cachedAccessToken && Date.now() < tokenExpiresAt) {
+    return cachedAccessToken;
   }
 
-  try {
-    if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method not allowed" }), {
-        status: 405,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  console.log("[transak] Refreshing token via:", `${API_BASE}/partners/api/v2/refresh-token`);
 
-    const body = await req.json();
-    const { walletAddress, fiatAmount, fiatCurrency, cryptoCurrency, referrerDomain } = body;
+  const res = await fetch(`${API_BASE}/partners/api/v2/refresh-token`, {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "content-type": "application/json",
+      "api-secret": apiSecret,
+    },
+    body: JSON.stringify({ apiKey }),
+  });
 
-    if (!walletAddress) {
-      return new Response(JSON.stringify({ error: "walletAddress is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const apiKey = Deno.env.get("TRANSAK_API_KEY") || Deno.env.get("VITE_TRANSAK_API_KEY") || "";
-
-    if (!apiKey) {
-      throw new Error("Transak API key not configured");
-    }
-
-    // Build widget URL with query parameters directly
-    const params = new URLSearchParams();
-    params.set("apiKey", apiKey);
-    params.set("referrerDomain", referrerDomain || "saturn.trade");
-    params.set("cryptoCurrencyCode", cryptoCurrency || "SOL");
-    params.set("network", "solana");
-    params.set("walletAddress", walletAddress);
-    params.set("defaultPaymentMethod", "credit_debit_card");
-    params.set("disableWalletAddressForm", "true");
-    params.set("themeColor", "7c3aed");
-    params.set("hideMenu", "true");
-    params.set("productsAvailed", "BUY");
-
-    if (fiatAmount) params.set("defaultFiatAmount", String(fiatAmount));
-    if (fiatCurrency) params.set("defaultFiatCurrency", fiatCurrency);
-
-    const widgetUrl = `${WIDGET_BASE}?${params.toString()}`;
-
-    console.log("[transak-widget-url] Built widget URL for wallet:", walletAddress);
-
-    return new Response(JSON.stringify({ widgetUrl }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[transak-widget-url] Error:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`refresh-token failed: ${res.status} ${text}`);
   }
-});
+
+  const json = JSON.parse(text);
+  const accessToken = json?.data?.accessToken;
+  if (!accessToken) {
+    throw new Error(`No accessToken in response: ${text.substring(0, 200)}`);
+  }
+
+  cachedAccessToken = accessToken;
+  tokenExpiresAt = Date.now() + 6 * 24 * 60 * 60 * 1000;
+  return accessToken;
+}
+
+async function createSession(accessToken: string, widgetParams: Record<string, unknown>): Promise<string> {
+  console.log("[transak] Creating session via:", `${GATEWAY_BASE}/api/v2/auth/session`);
+
+  const res = await fetch(`${GATEWAY_BASE}/api/v2/auth/session`, {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "content-type": "application/json",
+      "access-token": accessToken,
+    },
+    body: JSON.stringify({ widgetParams }),
+  });
+
+  const text = await res.text();
+  console.log("[transak] Session response:", res.status, text.substring(0, 500));
+
+  if (!res.ok) {
+    throw new Error(`session failed: ${res.status} ${text}`);
+  }
+
+  const json = JSON.parse(text);
+  const widgetUrl = json?.data?.widgetUrl || json?.widgetUrl;
+  if (!widgetUrl) {
+    throw new Error(`No widgetUrl in response: ${text.substring(0, 200)}`);
+  }
+  return widgetUrl;
+}
