@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
+import { useTransakOnramp } from "@/hooks/useTransakOnramp";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
@@ -36,6 +37,7 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
+  const { openTransak } = useTransakOnramp();
   const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { executeTurboSwap, isLoading: turboLoading } = useTurboSwap();
   const { isWalletReady, getBalance } = useSolanaWalletWithPrivy();
@@ -392,7 +394,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Buy with Credit Card ── */}
         <button
-          onClick={() => setShowLoginModal(true)}
+          onClick={() => isAuthenticated ? openTransak() : setShowLoginModal(true)}
           className="w-full h-11 rounded-xl text-[12px] font-semibold tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 hover:border-green-500/50"
         >
           <CreditCard className="h-3.5 w-3.5" />
