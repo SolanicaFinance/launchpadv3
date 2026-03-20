@@ -35,7 +35,7 @@ interface MobileTradePanelV2Props {
 
 export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalance: externalBalance = 0 }: MobileTradePanelV2Props) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { openTransak } = useTransakOnramp();
+  const { openTransak, closeTransak, isOpen: isTransakOpen, widgetUrl: transakUrl } = useTransakOnramp();
   const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { executeTurboSwap, isLoading: turboLoading, walletAddress: turboWallet } = useTurboSwap();
   const { isWalletReady, walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy, getBalance } = useSolanaWalletWithPrivy();
