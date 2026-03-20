@@ -9945,6 +9945,27 @@ export type Database = {
         }
         Relationships: []
       }
+      x_bot_settings: {
+        Row: {
+          id: string
+          is_paused: boolean
+          paused_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_paused?: boolean
+          paused_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_paused?: boolean
+          paused_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       x_bot_user_topics: {
         Row: {
           account_id: string
