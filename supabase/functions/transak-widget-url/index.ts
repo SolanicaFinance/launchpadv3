@@ -4,72 +4,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Cache the partner access token in memory (7-day expiry, we refresh at 6 days)
-let cachedAccessToken: string | null = null;
-let tokenExpiresAt = 0;
-
 const TRANSAK_ENV = Deno.env.get("TRANSAK_ENV") || "PRODUCTION";
 const isProduction = TRANSAK_ENV === "PRODUCTION";
-const API_BASE = isProduction
-  ? "https://api.transak.com"
-  : "https://api-stg.transak.com";
-const GATEWAY_BASE = isProduction
-  ? "https://api-gateway.transak.com"
-  : "https://api-gateway-stg.transak.com";
-
-async function getAccessToken(): Promise<string> {
-  if (cachedAccessToken && Date.now() < tokenExpiresAt) {
-    return cachedAccessToken;
-  }
-
-  const apiKey = Deno.env.get("TRANSAK_API_KEY") || Deno.env.get("VITE_TRANSAK_API_KEY") || "";
-  const apiSecret = Deno.env.get("TRANSAK_API_SECRET") || "";
-
-  if (!apiKey || !apiSecret) {
-    throw new Error(`Transak credentials missing: apiKey=${!!apiKey}, apiSecret=${!!apiSecret}`);
-  }
-
-  console.log("[transak-widget-url] Refreshing access token with apiKey prefix:", apiKey.substring(0, 8));
-
-  const refreshUrl = `${API_BASE}/partners/api/v2/refresh-token`;
-  console.log("[transak-widget-url] Refresh URL:", refreshUrl);
-
-  const res = await fetch(refreshUrl, {
-    method: "POST",
-    headers: {
-      "accept": "application/json",
-      "content-type": "application/json",
-      "api-secret": apiSecret,
-    },
-    body: JSON.stringify({ apiKey }),
-  });
-
-  const responseText = await res.text();
-  console.log("[transak-widget-url] refresh-token response:", res.status, responseText);
-
-  if (!res.ok) {
-    throw new Error(`Failed to refresh Transak access token: ${res.status} ${responseText}`);
-  }
-
-  let json;
-  try {
-    json = JSON.parse(responseText);
-  } catch {
-    throw new Error(`Invalid JSON from refresh-token: ${responseText.substring(0, 200)}`);
-  }
-
-  const accessToken = json?.data?.accessToken;
-  if (!accessToken) {
-    throw new Error(`No accessToken in refresh-token response: ${JSON.stringify(json).substring(0, 200)}`);
-  }
-
-  console.log("[transak-widget-url] Got access token, length:", accessToken.length);
-
-  cachedAccessToken = accessToken;
-  tokenExpiresAt = Date.now() + 6 * 24 * 60 * 60 * 1000;
-
-  return accessToken;
-}
+const WIDGET_BASE = isProduction
+  ? "https://global.transak.com"
+  : "https://global-stg.transak.com";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -95,75 +34,30 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = Deno.env.get("TRANSAK_API_KEY") || Deno.env.get("VITE_TRANSAK_API_KEY") || "";
-    const accessToken = await getAccessToken();
 
-    const widgetParams: Record<string, unknown> = {
-      apiKey,
-      referrerDomain: referrerDomain || "saturntrade.lovable.app",
-      cryptoCurrencyCode: cryptoCurrency || "SOL",
-      network: "solana",
-      walletAddress,
-      defaultPaymentMethod: "credit_debit_card",
-      disableWalletAddressForm: true,
-      themeColor: "7c3aed",
-      hideMenu: true,
-    };
-
-    if (fiatAmount) widgetParams.defaultFiatAmount = fiatAmount;
-    if (fiatCurrency) widgetParams.defaultFiatCurrency = fiatCurrency;
-
-    console.log("[transak-widget-url] Creating widget URL for wallet:", walletAddress);
-
-    const sessionRes = await fetch(`${GATEWAY_BASE}/api/v2/auth/session`, {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "access-token": accessToken,
-      },
-      body: JSON.stringify({ widgetParams }),
-    });
-
-    if (!sessionRes.ok) {
-      const errText = await sessionRes.text();
-      console.error("[transak-widget-url] create session failed:", sessionRes.status, errText);
-
-      // If access token expired, clear cache and retry once
-      if (sessionRes.status === 401) {
-        cachedAccessToken = null;
-        tokenExpiresAt = 0;
-        const freshToken = await getAccessToken();
-        const retryRes = await fetch(`${GATEWAY_BASE}/api/v2/auth/session`, {
-          method: "POST",
-          headers: {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "access-token": freshToken,
-          },
-          body: JSON.stringify({ widgetParams }),
-        });
-
-        if (!retryRes.ok) {
-          const retryErr = await retryRes.text();
-          throw new Error(`Transak session creation failed after retry: ${retryRes.status} ${retryErr}`);
-        }
-
-        const retryJson = await retryRes.json();
-        return new Response(JSON.stringify({ widgetUrl: retryJson?.data?.widgetUrl || retryJson?.widgetUrl }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      throw new Error(`Transak session creation failed: ${sessionRes.status} ${errText}`);
+    if (!apiKey) {
+      throw new Error("Transak API key not configured");
     }
 
-    const sessionJson = await sessionRes.json();
-    const widgetUrl = sessionJson?.data?.widgetUrl || sessionJson?.widgetUrl;
+    // Build widget URL with query parameters directly
+    const params = new URLSearchParams();
+    params.set("apiKey", apiKey);
+    params.set("referrerDomain", referrerDomain || "saturn.trade");
+    params.set("cryptoCurrencyCode", cryptoCurrency || "SOL");
+    params.set("network", "solana");
+    params.set("walletAddress", walletAddress);
+    params.set("defaultPaymentMethod", "credit_debit_card");
+    params.set("disableWalletAddressForm", "true");
+    params.set("themeColor", "7c3aed");
+    params.set("hideMenu", "true");
+    params.set("productsAvailed", "BUY");
 
-    if (!widgetUrl) {
-      console.error("[transak-widget-url] No widgetUrl in response:", JSON.stringify(sessionJson));
-      throw new Error("No widgetUrl returned from Transak");
-    }
+    if (fiatAmount) params.set("defaultFiatAmount", String(fiatAmount));
+    if (fiatCurrency) params.set("defaultFiatCurrency", fiatCurrency);
+
+    const widgetUrl = `${WIDGET_BASE}?${params.toString()}`;
+
+    console.log("[transak-widget-url] Built widget URL for wallet:", walletAddress);
 
     return new Response(JSON.stringify({ widgetUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
