@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Zap, Bot, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag, CandlestickChart, Radar, Rocket, Coins, Crown, Flame } from "lucide-react";
+import { Home, Zap, Bot, TrendingUp, Plus, FileText, Monitor, Crosshair, LayoutDashboard, ShoppingBag, CandlestickChart, Radar, Rocket, Coins, Crown, Flame, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -25,6 +25,7 @@ const NAV_LINKS: { to: string; label: string; icon: any; exact?: boolean; neonGr
   { to: "/meteorite", label: "Meteorite", icon: Flame, neonGreen: true },
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
+  { to: "/lab/bonding-curve", label: "Lab", icon: FlaskConical, neonGreen: true },
   
   { to: "/panel", label: "Panel", icon: LayoutDashboard },
 ];

@@ -4844,6 +4844,128 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_pools: {
+        Row: {
+          bonding_progress: number
+          created_at: string
+          creator_wallet: string
+          damm_pool_address: string | null
+          fee_bps: number
+          graduated_at: string | null
+          graduation_threshold_sol: number
+          holder_count: number
+          id: string
+          image_url: string | null
+          lp_lock_tx: string | null
+          lp_locked: boolean | null
+          market_cap_sol: number
+          mint_address: string | null
+          name: string
+          pool_address: string | null
+          price_sol: number
+          real_sol_reserves: number
+          real_token_reserves: number
+          status: string
+          ticker: string
+          virtual_sol_reserves: number
+          virtual_token_reserves: number
+          volume_total_sol: number
+        }
+        Insert: {
+          bonding_progress?: number
+          created_at?: string
+          creator_wallet: string
+          damm_pool_address?: string | null
+          fee_bps?: number
+          graduated_at?: string | null
+          graduation_threshold_sol?: number
+          holder_count?: number
+          id?: string
+          image_url?: string | null
+          lp_lock_tx?: string | null
+          lp_locked?: boolean | null
+          market_cap_sol?: number
+          mint_address?: string | null
+          name: string
+          pool_address?: string | null
+          price_sol?: number
+          real_sol_reserves?: number
+          real_token_reserves?: number
+          status?: string
+          ticker: string
+          virtual_sol_reserves?: number
+          virtual_token_reserves?: number
+          volume_total_sol?: number
+        }
+        Update: {
+          bonding_progress?: number
+          created_at?: string
+          creator_wallet?: string
+          damm_pool_address?: string | null
+          fee_bps?: number
+          graduated_at?: string | null
+          graduation_threshold_sol?: number
+          holder_count?: number
+          id?: string
+          image_url?: string | null
+          lp_lock_tx?: string | null
+          lp_locked?: boolean | null
+          market_cap_sol?: number
+          mint_address?: string | null
+          name?: string
+          pool_address?: string | null
+          price_sol?: number
+          real_sol_reserves?: number
+          real_token_reserves?: number
+          status?: string
+          ticker?: string
+          virtual_sol_reserves?: number
+          virtual_token_reserves?: number
+          volume_total_sol?: number
+        }
+        Relationships: []
+      }
+      lab_trades: {
+        Row: {
+          created_at: string
+          id: string
+          is_buy: boolean
+          pool_id: string
+          price_at_trade: number
+          sol_amount: number
+          token_amount: number
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_buy: boolean
+          pool_id: string
+          price_at_trade: number
+          sol_amount: number
+          token_amount: number
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_buy?: boolean
+          pool_id?: string
+          price_at_trade?: number
+          sol_amount?: number
+          token_amount?: number
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_trades_pool_id_fkey"
+            columns: ["pool_id"]
+            isOneToOne: false
+            referencedRelation: "lab_pools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       launch_idempotency_locks: {
         Row: {
           completed_at: string | null
