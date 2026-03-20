@@ -7,6 +7,10 @@ const corsHeaders = {
 };
 
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
+const REPLY_FOOTER = "Trading terminal on $SOL just launched 37CrXSvQN85Skj3AsLZqJM3xf9eKNTiJLpiJmLN8BAGS";
+const MAX_REPLIES_PER_MINUTE = 2;
+const FOOTER_SEPARATOR = "\n\n";
+const MAX_REPLY_BODY_LENGTH = 280 - REPLY_FOOTER.length - FOOTER_SEPARATOR.length;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -96,7 +100,7 @@ async function generateReply(
     `- Ask a sharp question ("so what happens when...")\n` +
     `- Agree with nuance ("yeah but the part nobody talks about...")\n` +
     `- Short conviction ("this is the play")\n\n` +
-    `LENGTH: Under 200 characters. Shorter hits harder.\n` +
+    `LENGTH: Under ${MAX_REPLY_BODY_LENGTH} characters. Shorter hits harder.\n` +
     `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.`;
 
   const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nWrite a unique reply. Do NOT start with "ngl". No emojis. No generic openers. Sound human:`;
@@ -153,9 +157,9 @@ async function generateReply(
     // Clean up double spaces left behind
     reply = reply.replace(/\s{2,}/g, " ").trim();
 
-    // Truncate to 280 chars
-    if (reply.length > 280) {
-      reply = reply.substring(0, 277) + "...";
+    // Truncate to leave room for required footer
+    if (reply.length > MAX_REPLY_BODY_LENGTH) {
+      reply = reply.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)) + "...";
     }
 
     return reply;
@@ -163,6 +167,17 @@ async function generateReply(
     console.error("[x-bot-reply] AI generation failed:", err);
     return "";
   }
+}
+
+function buildReplyWithFooter(replyBody: string): string {
+  const trimmedBody = replyBody.trim();
+  if (!trimmedBody) return "";
+
+  const safeBody = trimmedBody.length > MAX_REPLY_BODY_LENGTH
+    ? `${trimmedBody.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)).trim()}...`
+    : trimmedBody;
+
+  return `${safeBody}${FOOTER_SEPARATOR}${REPLY_FOOTER}`;
 }
 
 // Post reply via twitterapi.io
@@ -240,13 +255,13 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get pending queue items (oldest first, limit to 5 per invocation)
+    // Get pending queue items (oldest first, enough headroom for 2 posts/min/account)
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")
       .select("*")
       .eq("status", "pending")
       .order("created_at", { ascending: true })
-      .limit(5);
+      .limit(10);
 
     if (queueError) throw queueError;
     if (!queueItems || queueItems.length === 0) {
@@ -279,7 +294,7 @@ Deno.serve(async (req) => {
 
     let repliesSent = 0;
     let repliesFailed = 0;
-    const postedThisRun = new Set<string>();
+    const postedThisRun = new Map<string, number>();
 
     for (const item of queueItems) {
       const account = accountMap.get(item.account_id);
@@ -290,35 +305,32 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Hard cap: never allow more than one successful post per account in a single run
-      if (postedThisRun.has(account.id)) {
-        console.log(`[x-bot-reply] ⏭️ Already posted once this run for ${account.username}, deferring`);
+      const postsThisRun = postedThisRun.get(account.id) || 0;
+
+      // Hard cap: max 2 successful posts per account in a single run
+      if (postsThisRun >= MAX_REPLIES_PER_MINUTE) {
+        console.log(`[x-bot-reply] ⏭️ Already posted ${postsThisRun} times this run for ${account.username}, deferring`);
         continue; // Keep pending
       }
 
-      // ── Rate limit: max 1 successful reply per minute per account ──
-      const { data: latestSent, error: latestSentError } = await supabase
+      // ── Rate limit: max 2 successful replies per rolling minute per account ──
+      const rollingMinuteCutoff = new Date(Date.now() - 60_000).toISOString();
+      const { count: sentLastMinute, error: latestSentError } = await supabase
         .from("x_bot_account_replies")
-        .select("created_at")
+        .select("id", { count: "exact", head: true })
         .eq("account_id", account.id)
         .eq("status", "sent")
-        .not("created_at", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .gte("created_at", rollingMinuteCutoff);
 
       if (latestSentError) {
         console.error(`[x-bot-reply] Rate-limit lookup failed for ${account.username}:`, latestSentError.message);
         continue; // fail-safe: skip posting if we can't verify rate limit
       }
 
-      if (latestSent?.created_at) {
-        const msSinceLastSent = Date.now() - new Date(latestSent.created_at).getTime();
-        if (msSinceLastSent < 60_000) {
-          const waitMs = 60_000 - msSinceLastSent;
-          console.log(`[x-bot-reply] ⏳ Rate limited ${account.username} — wait ${Math.ceil(waitMs / 1000)}s`);
-          continue; // Keep pending so next invocation can process
-        }
+      const totalRecentReplies = (sentLastMinute || 0) + postsThisRun;
+      if (totalRecentReplies >= MAX_REPLIES_PER_MINUTE) {
+        console.log(`[x-bot-reply] ⏳ Rate limited ${account.username} — already at ${totalRecentReplies}/${MAX_REPLIES_PER_MINUTE} replies in the last minute`);
+        continue; // Keep pending so next invocation can process
       }
 
       const accountRules = rulesMap.get(item.account_id);
@@ -414,9 +426,11 @@ Deno.serve(async (req) => {
       }
 
       // Post the reply
+      const finalReplyText = buildReplyWithFooter(replyText);
+
       const result = await postReply(
         item.tweet_id,
-        replyText,
+        finalReplyText,
         loginCookiesB64,
         twitterApiIoKey,
         proxy
@@ -437,7 +451,7 @@ Deno.serve(async (req) => {
           tweet_text: item.tweet_text,
           conversation_id: item.conversation_id,
           reply_id: result.replyId,
-          reply_text: replyText,
+          reply_text: finalReplyText,
           reply_type: item.match_type || "keyword",
           status: "sent",
         });
@@ -446,11 +460,11 @@ Deno.serve(async (req) => {
           account_id: account.id,
           log_type: "reply",
           level: "info",
-          message: `Replied to @${item.tweet_author}: "${replyText.substring(0, 80)}..."`,
+          message: `Replied to @${item.tweet_author}: "${finalReplyText.substring(0, 80)}..."`,
           details: { tweet_id: item.tweet_id, reply_id: result.replyId },
         });
 
-        postedThisRun.add(account.id);
+        postedThisRun.set(account.id, postsThisRun + 1);
         repliesSent++;
         console.log(`[x-bot-reply] ✅ ${account.username} replied to @${item.tweet_author}`);
       } else {
@@ -465,7 +479,7 @@ Deno.serve(async (req) => {
           tweet_author_id: item.tweet_author_id,
           tweet_text: item.tweet_text,
           conversation_id: item.conversation_id,
-          reply_text: replyText,
+          reply_text: finalReplyText,
           reply_type: item.match_type || "keyword",
           status: "failed",
           error_message: result.error?.substring(0, 500),
