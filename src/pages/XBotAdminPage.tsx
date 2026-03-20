@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useXBotAccounts, type XBotAccountWithRules, type XBotAccountRules } from "@/hooks/useXBotAccounts";
@@ -6,9 +6,9 @@ import { XBotAccountsPanel } from "@/components/admin/XBotAccountsPanel";
 import { XBotAccountForm } from "@/components/admin/XBotAccountForm";
 import { XBotRulesForm } from "@/components/admin/XBotRulesForm";
 import { XBotActivityPanel } from "@/components/admin/XBotActivityPanel";
-import { Play, RefreshCw, Shield, Brain } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Play, Pause, RefreshCw, Brain, CircleDot } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function XBotAdminPage() {
 
@@ -18,6 +18,8 @@ export default function XBotAdminPage() {
   const [viewingAccount, setViewingAccount] = useState<XBotAccountWithRules | null>(null);
   const [learningVoice, setLearningVoice] = useState(false);
   const [voiceResult, setVoiceResult] = useState<Record<string, unknown> | null>(null);
+  const [isPaused, setIsPaused] = useState<boolean | null>(null);
+  const [togglingPause, setTogglingPause] = useState(false);
 
   const {
     accounts,
@@ -36,6 +38,61 @@ export default function XBotAdminPage() {
     runScan,
     runReply,
   } = useXBotAccounts();
+
+  const fetchPauseState = async () => {
+    try {
+      const adminPassword = localStorage.getItem("admin_panel_auth_v2");
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/x-bot-admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "get_settings", adminPassword }),
+        }
+      );
+      const data = await response.json();
+      setIsPaused(data.settings?.is_paused ?? false);
+    } catch {
+      setIsPaused(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPauseState();
+  }, []);
+
+  const handleTogglePause = async () => {
+    setTogglingPause(true);
+    try {
+      const adminPassword = localStorage.getItem("admin_panel_auth_v2");
+      const newPaused = !isPaused;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/x-bot-admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "set_paused", adminPassword, is_paused: newPaused }),
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setIsPaused(newPaused);
+        toast.success(newPaused ? "Bot paused ⏸️" : "Bot resumed ▶️");
+      } else {
+        toast.error("Failed to update pause state");
+      }
+    } catch {
+      toast.error("Failed to toggle pause");
+    } finally {
+      setTogglingPause(false);
+    }
+  };
 
   const handleAddAccount = () => {
     setSelectedAccount(null);
@@ -71,7 +128,7 @@ export default function XBotAdminPage() {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([fetchAccounts(), fetchReplies(), fetchQueue()]);
+    await Promise.all([fetchAccounts(), fetchReplies(), fetchQueue(), fetchPauseState()]);
   };
 
   const handleLearnVoice = async () => {
@@ -112,26 +169,55 @@ export default function XBotAdminPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">X Bot Admin</h1>
-            <p className="text-muted-foreground">
-              Manage multiple X reply bot accounts
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">X Bot Admin</h1>
+              <p className="text-muted-foreground">
+                Manage multiple X reply bot accounts
+              </p>
+            </div>
+            {isPaused !== null && (
+              <Badge
+                variant={isPaused ? "destructive" : "default"}
+                className={`text-xs px-2.5 py-1 ${!isPaused ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+              >
+                <CircleDot className="w-3 h-3 mr-1" />
+                {isPaused ? "Paused" : "Running"}
+              </Badge>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <Button
+              variant={isPaused ? "default" : "destructive"}
+              onClick={handleTogglePause}
+              disabled={togglingPause || isPaused === null}
+              size="sm"
+            >
+              {isPaused ? (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Resume Bot
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4 mr-2" />
+                  Pause Bot
+                </>
+              )}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <Button variant="outline" onClick={runScan}>
+            <Button variant="outline" size="sm" onClick={runScan}>
               <Play className="w-4 h-4 mr-2" />
               Run Scan
             </Button>
-            <Button variant="outline" onClick={handleLearnVoice} disabled={learningVoice}>
+            <Button variant="outline" size="sm" onClick={handleLearnVoice} disabled={learningVoice}>
               <Brain className={`w-4 h-4 mr-2 ${learningVoice ? "animate-pulse" : ""}`} />
               {learningVoice ? "Learning..." : "Learn Voice"}
             </Button>
-            <Button onClick={runReply}>
+            <Button size="sm" onClick={runReply}>
               <Play className="w-4 h-4 mr-2" />
               Run Reply
             </Button>
