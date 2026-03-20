@@ -246,6 +246,31 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "get_settings": {
+        const { data, error } = await supabase
+          .from("x_bot_settings")
+          .select("*")
+          .eq("id", "global")
+          .maybeSingle();
+        if (error) throw error;
+        result = { settings: data || { is_paused: false } };
+        break;
+      }
+
+      case "set_paused": {
+        const { error } = await supabase
+          .from("x_bot_settings")
+          .upsert({
+            id: "global",
+            is_paused: params.is_paused,
+            paused_at: params.is_paused ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString(),
+          });
+        if (error) throw error;
+        result = { success: true, is_paused: params.is_paused };
+        break;
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: `Unknown action: ${action}` }),

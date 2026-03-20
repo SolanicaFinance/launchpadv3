@@ -98,6 +98,21 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Global pause check
+    const { data: settings } = await supabase
+      .from("x_bot_settings")
+      .select("is_paused")
+      .eq("id", "global")
+      .maybeSingle();
+
+    if (settings?.is_paused) {
+      console.log("[x-bot-scan] ⏸️ Bot is globally paused, skipping");
+      return new Response(
+        JSON.stringify({ ok: true, paused: true, message: "Bot is paused" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get active accounts with enabled rules
     const { data: accounts, error: accError } = await supabase
       .from("x_bot_accounts")
