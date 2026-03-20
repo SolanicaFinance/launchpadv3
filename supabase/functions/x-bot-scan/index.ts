@@ -31,17 +31,6 @@ interface TweetResult {
   created_at: string;
 }
 
-function startsLikeReply(text: string): boolean {
-  const trimmed = text.trimStart();
-  return trimmed.startsWith("@") || trimmed.startsWith(".@");
-}
-
-function isTopLevelTweet(tweet: TweetResult): boolean {
-  if (!tweet.id) return false;
-  if (tweet.conversation_id && tweet.conversation_id !== tweet.id) return false;
-  if (startsLikeReply(tweet.text || "")) return false;
-  return true;
-}
 
 async function searchTweets(
   query: string,
@@ -245,7 +234,7 @@ Deno.serve(async (req) => {
               if (existingIds.has(tweet.id)) continue;
 
               // ── Skip replies/comments: only engage with top-level tweets ──
-              if (!isTopLevelTweet(tweet)) {
+              if (tweet.conversation_id && tweet.id && tweet.conversation_id !== tweet.id) {
                 continue;
               }
 
