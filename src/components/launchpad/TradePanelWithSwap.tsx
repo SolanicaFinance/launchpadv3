@@ -200,6 +200,17 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
       });
       setShowProfitCard(true);
 
+      // Show global trade success notification (same as Pulse / UniversalTradePanel)
+      showTradeSuccess({
+        type: isBuy ? 'buy' : 'sell',
+        ticker: token.ticker,
+        tokenName: token.name,
+        mintAddress: token.mint_address,
+        amount: isBuy ? `${parseFloat(amount).toFixed(4)} SOL` : `100%`,
+        signature: result.signature || undefined,
+        tokenImageUrl: token.image_url || undefined,
+      });
+
       toast({
         title: `✅ ${isBuy ? 'Buy' : 'Sell'} successful!`,
         description: (
