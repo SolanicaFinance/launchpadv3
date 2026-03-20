@@ -1,42 +1,122 @@
 
 
-# Fix: X Bot Rules Enforcement and Footer
+# Bonding Curve Lab — Full Implementation Plan
 
-## Problems Found
+## Overview
 
-1. **Footer not appearing**: The reply text stored in the database has no footer appended. The `buildReplyWithFooter` function exists in code but the **deployed edge function** appears to be a stale version without it. Need to ensure the footer logic is correctly wired and redeploy.
+Build an isolated `/lab/bonding-curve` page with the full custom bonding curve testing environment, plus a comprehensive deployment guide document so you can launch the Anchor program when ready.
 
-2. **Non-blue-check accounts getting replies**: The scan function (`x-bot-scan`) correctly checks `require_blue_verified`, but the reply function (`x-bot-reply`) does NOT re-validate queued items. Tweets queued before rule changes still get processed.
+## What Gets Built
 
-3. **Queue backlog with sub-1000 follower accounts**: Some queued items have follower counts below the 1000 minimum (e.g., `enjoywithouthey` at 2252 is fine, but `covfefe_is` at 1149 and `mork1e` at 1478 are below acceptable thresholds if you raise the minimum).
+### 1. Deployment Guide (`SATURN_CURVE_DEPLOY_GUIDE.md`)
 
-## Plan
+Step-by-step instructions covering:
 
-### Step 1: Add re-validation in `x-bot-reply` (the critical fix)
+- **Prerequisites**: Install Rust, Solana CLI, Anchor CLI
+- **Program structure**: Full Anchor program source for `saturn-curve` with 5 instructions: `initialize`, `create_pool`, `swap`, `graduate`, `update_config`
+- **Local build**: `anchor build`, get program ID, update `declare_id!`
+- **Devnet deploy**: `anchor deploy --provider.cluster devnet`
+- **Mainnet deploy**: `anchor deploy --provider.cluster mainnet-beta` (costs ~3-5 SOL)
+- **Post-deploy**: Copy program ID into `lib/config.ts` / edge function env vars
+- **Testing checklist**: Create pool → buy to graduation → verify DAMM V2 migration → verify LP lock
 
-In `supabase/functions/x-bot-reply/index.ts`, add a **pre-reply validation block** after fetching account rules (around line 360). Before generating or posting any reply, re-check:
-- `is_verified` field on the queue item against `rules.require_blue_verified`
-- `follower_count` on the queue item against `rules.min_follower_count`
-- If either fails, mark item as `skipped` and continue
+### 2. Anchor Program Source (`programs/saturn-curve/`)
 
-This ensures that even if a tweet was queued before rules were tightened, it gets filtered out at reply time.
+Full Rust source code ready to build locally:
 
-### Step 2: Verify footer is correctly applied
+**State accounts:**
+- `GlobalConfig` — admin, platform fee wallet, graduation threshold (1 SOL test / 85 SOL prod)
+- `Pool` — mint, creator, virtual/real reserves, fees, status (active/graduated), holder count
 
-The code at line 453 calls `buildReplyWithFooter(replyText)` and stores `finalReplyText` — this looks correct. But the DB shows replies without footers. The fix is to:
-- Confirm the footer constant is correct (it is: line 10)
-- Ensure the stored `reply_text` in the insert at line 478 uses `finalReplyText` (it does)
-- **Redeploy** the edge function to ensure the live version matches the code
+**Instructions:**
+- `initialize` — set global config (admin-only)
+- `create_pool` — mint token, create pool PDA + vaults, set virtual reserves (30 SOL / 1B tokens)
+- `swap` — constant product AMM math with fee deduction, emit `SwapEvent`
+- `graduate` — check threshold met, mark graduated, unlock vaults for server-side Meteora migration
+- `update_config` — admin changes threshold/fees
 
-### Step 3: Fix the `x-bot-scan` missing `for` loop
+**Events emitted** (for DexScreener/Birdeye indexing):
+- `PoolCreated`, `SwapExecuted`, `PoolGraduated`
 
-There's a syntax issue in the scan function — lines 146-148 jump from variable declarations into `rulesMap.get(account.id)` without the `for (const account of accounts)` loop. This needs to be added back to prevent the scan from crashing or only processing one account.
+### 3. Lab Page (`src/pages/BondingCurveLabPage.tsx`)
 
-### Step 4: Purge non-compliant queue items
+Password-protected page with 5 tabs:
 
-Add a cleanup step at the start of `x-bot-reply` that purges any pending queue items where `is_verified = false` (when the account's rules require blue verification) or `follower_count < min_follower_count`.
+**Create Pool tab** — Name, ticker, image, graduation threshold slider (default 1 SOL), fee config, virtual reserves display
 
-### Files Changed
-- `supabase/functions/x-bot-reply/index.ts` — Add re-validation, ensure footer, add rule-based purge
-- `supabase/functions/x-bot-scan/index.ts` — Fix missing `for` loop
+**Trade tab** — Pool selector, buy/sell with live price from `x*y=k`, price impact, slippage, trade history
+
+**Pool State tab** — Real-time reserves, current price, market cap, bonding progress bar, holder count, dev holdings %, volume, King of the Hill badge (>50%)
+
+**Graduation Monitor tab** — Status badge, progress to threshold, manual "Graduate" button, migration steps checklist (create metadata → create locker → migrate to DAMM V2 → lock LP 100%), post-graduation pool address and LP lock proof
+
+**Config tab** — Toggle test/prod threshold, fee bps, platform wallet, deploy status
+
+### 4. Database Tables
+
+**`lab_pools`** — id, name, ticker, mint_address, pool_address, virtual_sol_reserves, virtual_token_reserves, real_sol_reserves, real_token_reserves, graduation_threshold_sol, bonding_progress, price_sol, market_cap_sol, volume_total_sol, holder_count, status (active/graduated), graduated_at, damm_pool_address, lp_locked, lp_lock_tx, created_at
+
+**`lab_trades`** — id, pool_id (FK), wallet_address, is_buy, sol_amount, token_amount, price_at_trade, created_at
+
+### 5. Edge Functions
+
+- `saturn-curve-create` — Creates pool record, mints token (or simulates), initializes virtual reserves
+- `saturn-curve-swap` — Calculates swap output via constant product math, updates reserves, records trade
+- `saturn-curve-graduate` — Triggers Meteora DAMM V2 migration using existing `migratePool()` logic, locks 100% LP
+
+### 6. TypeScript SDK (`src/lib/saturn-curve.ts`)
+
+Client-side helpers:
+- `getQuote(pool, solAmount, isBuy)` — price calculation from reserves
+- `getProgress(pool)` — bonding progress percentage
+- `formatPoolMetrics(pool)` — market cap, price, holder stats
+
+### 7. Route & Navigation
+
+- Add `/lab/bonding-curve` route to `App.tsx`
+- Add "Lab" link with Flask icon to Sidebar (below Meteorite)
+
+## Key Professional Features (bags.fm / pump.fun parity)
+
+| Feature | Implementation |
+|---|---|
+| Bonding progress bar | `real_sol / graduation_threshold * 100` |
+| Market cap | `price_sol × total_supply × SOL_USD` |
+| King of the Hill | Badge when progress > 50% |
+| Holder count | Count distinct wallets in lab_trades |
+| Dev holdings % | Creator balance / total supply |
+| LP Lock after graduation | 100% LP locked forever via Meteora locker |
+| LP Lock proof | On-chain tx signature displayed |
+| Token age | Human-readable time since creation |
+
+## Files Created/Modified
+
+| File | Action |
+|---|---|
+| `programs/saturn-curve/src/lib.rs` | Create — full Anchor program source |
+| `programs/saturn-curve/Anchor.toml` | Create — Anchor config |
+| `programs/saturn-curve/Cargo.toml` | Create — Rust dependencies |
+| `SATURN_CURVE_DEPLOY_GUIDE.md` | Create — A-Z deployment instructions |
+| `src/pages/BondingCurveLabPage.tsx` | Create — lab page |
+| `src/components/lab/*.tsx` | Create — 5 tab components |
+| `src/lib/saturn-curve.ts` | Create — client SDK |
+| `src/App.tsx` | Modify — add route |
+| `src/components/layout/Sidebar.tsx` | Modify — add Lab link |
+| DB migration | Create `lab_pools` and `lab_trades` tables |
+| 3 edge functions | Create saturn-curve-create/swap/graduate |
+
+## Zero Production Impact
+
+- No changes to `/launchpad`, `/launch`, `/trade` routes
+- No changes to `useTokenLaunch`, `useMeteoraApi`, `useRealSwap`
+- No changes to `api/pool/create.ts` or `api/swap/execute.ts`
+- Lab uses its own tables, edge functions, and components
+
+## Implementation Order
+
+1. Database migration (lab_pools, lab_trades)
+2. Anchor program source + deploy guide
+3. Edge functions (create, swap, graduate)
+4. Client SDK + lab page with all 5 tabs
+5. Route and sidebar integration
 
