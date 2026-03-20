@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTransakOnramp } from "@/hooks/useTransakOnramp";
+import { TransakModal } from "@/components/transak/TransakModal";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
