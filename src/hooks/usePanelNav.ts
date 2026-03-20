@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 const PENDING_NAV_KEY = "claw_pending_panel_nav";
 
 export function usePanelNav(defaultPath = "/panel") {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,10 +23,10 @@ export function usePanelNav(defaultPath = "/panel") {
     if (isAuthenticated) {
       navigate(target);
     } else {
-      // Redirect to saturn-panel.com for unauthenticated users
-      window.open("https://saturn-panel.com", "_blank");
+      sessionStorage.setItem(PENDING_NAV_KEY, target);
+      login();
     }
-  }, [isAuthenticated, navigate, defaultPath]);
+  }, [isAuthenticated, navigate, defaultPath, login]);
 
   return { goToPanel };
 }

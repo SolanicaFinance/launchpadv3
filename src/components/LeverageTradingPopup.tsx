@@ -1,11 +1,13 @@
 import { useState, useEffect, memo } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TrendingUp, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const STORAGE_KEY = "saturn_leverage_popup_seen_v1";
 
 export const LeverageTradingPopup = memo(function LeverageTradingPopup() {
   const [open, setOpen] = useState(false);
+  const { login } = useAuth();
 
   useEffect(() => {
     try {
@@ -22,7 +24,7 @@ export const LeverageTradingPopup = memo(function LeverageTradingPopup() {
 
   const handleStartNow = () => {
     handleClose();
-    window.open("https://saturn-panel.com", "_blank");
+    login();
   };
 
   return (
