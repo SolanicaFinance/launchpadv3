@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get("VITE_TRANSAK_API_KEY") || Deno.env.get("TRANSAK_API_KEY") || "";
+    const apiKey = Deno.env.get("TRANSAK_API_KEY") || Deno.env.get("VITE_TRANSAK_API_KEY") || "";
     const accessToken = await getAccessToken();
 
     const widgetParams: Record<string, unknown> = {
