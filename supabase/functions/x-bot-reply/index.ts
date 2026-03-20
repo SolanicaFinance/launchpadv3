@@ -124,7 +124,7 @@ async function generateReply(
           { role: "user", content: userPrompt },
         ],
         max_tokens: 100,
-        temperature: 0.8,
+        temperature: 0.9,
       }),
     });
 
