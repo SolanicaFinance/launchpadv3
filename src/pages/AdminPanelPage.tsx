@@ -272,6 +272,12 @@ export default function AdminPanelPage() {
                   <MeteoriteAdminTab />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="mev" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <MevAdminPage />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
