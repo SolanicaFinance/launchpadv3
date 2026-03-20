@@ -63,6 +63,7 @@ const TAB_CONFIG = [
   { value: "brand-dust", label: "Dust", icon: Radio },
   { value: "dex-listing", label: "Dex List", icon: Layers },
   { value: "meteorite", label: "Meteorite", icon: Rocket },
+  { value: "mev", label: "MEV", icon: Zap },
 ] as const;
 
 export default function AdminPanelPage() {
