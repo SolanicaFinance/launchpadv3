@@ -8,23 +8,15 @@ const corsHeaders = {
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt = 0;
 
-const TRANSAK_ENV = Deno.env.get("TRANSAK_ENV") || "PRODUCTION";
-const isProduction = TRANSAK_ENV === "PRODUCTION";
-const API_BASE = isProduction
-  ? "https://api.transak.com"
-  : "https://api-stg.transak.com";
-const GATEWAY_BASE = isProduction
-  ? "https://api-gateway.transak.com"
-  : "https://api-gateway-stg.transak.com";
+// Try BOTH environments — some keys only work in one
+async function getAccessToken(apiKey: string, apiSecret: string, env: "prod" | "stg"): Promise<string> {
+  const base = env === "prod"
+    ? "https://api.transak.com"
+    : "https://api-stg.transak.com";
 
-async function getAccessToken(apiKey: string, apiSecret: string): Promise<string> {
-  if (cachedAccessToken && Date.now() < tokenExpiresAt) {
-    return cachedAccessToken;
-  }
+  console.log(`[transak] Trying refresh-token on ${env}:`, `${base}/partners/api/v2/refresh-token`);
 
-  console.log("[transak] Refreshing token via:", `${API_BASE}/partners/api/v2/refresh-token`);
-
-  const res = await fetch(`${API_BASE}/partners/api/v2/refresh-token`, {
+  const res = await fetch(`${base}/partners/api/v2/refresh-token`, {
     method: "POST",
     headers: {
       "accept": "application/json",
@@ -35,31 +27,33 @@ async function getAccessToken(apiKey: string, apiSecret: string): Promise<string
   });
 
   const text = await res.text();
+  console.log(`[transak] refresh-token ${env} response:`, res.status);
+
   if (!res.ok) {
-    throw new Error(`refresh-token failed: ${res.status} ${text}`);
+    throw new Error(`refresh-token ${env} failed: ${res.status} ${text}`);
   }
 
   const json = JSON.parse(text);
   const accessToken = json?.data?.accessToken;
   if (!accessToken) {
-    throw new Error(`No accessToken in response: ${text.substring(0, 200)}`);
+    throw new Error(`No accessToken in ${env} response`);
   }
 
-  cachedAccessToken = accessToken;
-  tokenExpiresAt = Date.now() + 6 * 24 * 60 * 60 * 1000;
   return accessToken;
 }
 
 async function createSession(
   accessToken: string,
   widgetParams: Record<string, unknown>,
-  retried = false,
-  apiKey = "",
-  apiSecret = ""
+  env: "prod" | "stg"
 ): Promise<string> {
-  console.log("[transak] Creating session via:", `${GATEWAY_BASE}/api/v2/auth/session`);
+  const base = env === "prod"
+    ? "https://api-gateway.transak.com"
+    : "https://api-gateway-stg.transak.com";
 
-  const res = await fetch(`${GATEWAY_BASE}/api/v2/auth/session`, {
+  console.log(`[transak] Creating session on ${env}:`, `${base}/api/v2/auth/session`);
+
+  const res = await fetch(`${base}/api/v2/auth/session`, {
     method: "POST",
     headers: {
       "accept": "application/json",
@@ -70,24 +64,16 @@ async function createSession(
   });
 
   const text = await res.text();
-  console.log("[transak] Session response:", res.status, text.substring(0, 500));
-
-  if (res.status === 401 && !retried && apiKey && apiSecret) {
-    console.log("[transak] Token rejected, clearing cache and retrying...");
-    cachedAccessToken = null;
-    tokenExpiresAt = 0;
-    const freshToken = await getAccessToken(apiKey, apiSecret);
-    return createSession(freshToken, widgetParams, true);
-  }
+  console.log(`[transak] session ${env} response:`, res.status, text.substring(0, 500));
 
   if (!res.ok) {
-    throw new Error(`session failed: ${res.status} ${text}`);
+    throw new Error(`session ${env} failed: ${res.status} ${text}`);
   }
 
   const json = JSON.parse(text);
   const widgetUrl = json?.data?.widgetUrl || json?.widgetUrl;
   if (!widgetUrl) {
-    throw new Error(`No widgetUrl in response: ${text.substring(0, 200)}`);
+    throw new Error(`No widgetUrl in ${env} response`);
   }
   return widgetUrl;
 }
@@ -122,8 +108,6 @@ Deno.serve(async (req) => {
       throw new Error(`Transak credentials missing: apiKey=${!!apiKey}, apiSecret=${!!apiSecret}`);
     }
 
-    const accessToken = await getAccessToken(apiKey, apiSecret);
-
     const widgetParams: Record<string, unknown> = {
       apiKey,
       referrerDomain: referrerDomain || "saturn.trade",
@@ -142,7 +126,19 @@ Deno.serve(async (req) => {
 
     console.log("[transak] Creating widget URL for wallet:", walletAddress);
 
-    const widgetUrl = await createSession(accessToken, widgetParams, false, apiKey, apiSecret);
+    // Try production first, fall back to staging
+    const envToTry = Deno.env.get("TRANSAK_ENV") === "STAGING" ? "stg" : "prod";
+    let widgetUrl: string;
+
+    try {
+      const accessToken = await getAccessToken(apiKey, apiSecret, envToTry);
+      widgetUrl = await createSession(accessToken, widgetParams, envToTry);
+    } catch (primaryErr) {
+      console.log(`[transak] ${envToTry} failed, trying other env...`, (primaryErr as Error).message);
+      const fallbackEnv = envToTry === "prod" ? "stg" : "prod";
+      const accessToken = await getAccessToken(apiKey, apiSecret, fallbackEnv);
+      widgetUrl = await createSession(accessToken, widgetParams, fallbackEnv);
+    }
 
     return new Response(JSON.stringify({ widgetUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
