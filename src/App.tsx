@@ -73,6 +73,7 @@ const CreateTokenPage = lazyWithRetry(() => import("./pages/CreateTokenPage"));
 const SixtyNineListPage = lazyWithRetry(() => import("./pages/SixtyNineListPage"));
 const AllTokensPage = lazyWithRetry(() => import("./pages/AllTokensPage"));
 const RewardsPage = lazyWithRetry(() => import("./pages/RewardsPage"));
+const MeteoritePage = lazyWithRetry(() => import("./pages/MeteoritePage"));
 const PortfolioPage = lazyWithRetry(() => import("./pages/PortfolioPage"));
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
@@ -192,6 +193,7 @@ const App = () => (
                      <Route path="/panel" element={<PanelPage />} />
                      <Route path="/merch" element={<MerchStorePage />} />
                      <Route path="/leverage" element={<LeveragePage />} />
+                     <Route path="/meteorite" element={<MeteoritePage />} />
                      <Route path="/dexlist" element={<DexListPage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
                      <Route path="/portfolio" element={<PortfolioPage />} />

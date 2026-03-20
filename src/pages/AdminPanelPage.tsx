@@ -32,6 +32,7 @@ const BatchLaunchAdminPage = lazy(() => import("./BatchLaunchAdminPage"));
 const AssistedSwapsAdminPage = lazy(() => import("./AssistedSwapsAdminPage"));
 const DustCampaignTabLazy = lazy(() => import("@/components/admin/DustCampaignTab").then(m => ({ default: m.DustCampaignTab })));
 const DexListingAdminTab = lazy(() => import("./DexListingAdminTab"));
+const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTab").then(m => ({ default: m.MeteoriteAdminTab })));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -61,6 +62,7 @@ const TAB_CONFIG = [
   { value: "assisted-swaps", label: "Swaps", icon: Repeat },
   { value: "brand-dust", label: "Dust", icon: Radio },
   { value: "dex-listing", label: "Dex List", icon: Layers },
+  { value: "meteorite", label: "Meteorite", icon: Rocket },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -261,6 +263,12 @@ export default function AdminPanelPage() {
               <TabsContent value="dex-listing" className="mt-6">
                 <Suspense fallback={<TabLoader />}>
                   <DexListingAdminTab />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="meteorite" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <MeteoriteAdminTab />
                 </Suspense>
               </TabsContent>
             </Tabs>
