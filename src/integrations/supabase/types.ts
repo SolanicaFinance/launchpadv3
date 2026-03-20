@@ -5286,6 +5286,63 @@ export type Database = {
           },
         ]
       }
+      mev_analyses: {
+        Row: {
+          backrun_signature: string | null
+          block_time: string | null
+          bot_fees_sol: number | null
+          bot_profit_sol: number | null
+          bot_wallet: string | null
+          created_at: string | null
+          frontrun_signature: string | null
+          id: string
+          jito_tip_sol: number | null
+          raw_data: Json | null
+          slot: number | null
+          token_mint: string | null
+          token_name: string | null
+          victim_loss_sol: number | null
+          victim_signature: string
+          victim_wallet: string | null
+        }
+        Insert: {
+          backrun_signature?: string | null
+          block_time?: string | null
+          bot_fees_sol?: number | null
+          bot_profit_sol?: number | null
+          bot_wallet?: string | null
+          created_at?: string | null
+          frontrun_signature?: string | null
+          id?: string
+          jito_tip_sol?: number | null
+          raw_data?: Json | null
+          slot?: number | null
+          token_mint?: string | null
+          token_name?: string | null
+          victim_loss_sol?: number | null
+          victim_signature: string
+          victim_wallet?: string | null
+        }
+        Update: {
+          backrun_signature?: string | null
+          block_time?: string | null
+          bot_fees_sol?: number | null
+          bot_profit_sol?: number | null
+          bot_wallet?: string | null
+          created_at?: string | null
+          frontrun_signature?: string | null
+          id?: string
+          jito_tip_sol?: number | null
+          raw_data?: Json | null
+          slot?: number | null
+          token_mint?: string | null
+          token_name?: string | null
+          victim_loss_sol?: number | null
+          victim_signature?: string
+          victim_wallet?: string | null
+        }
+        Relationships: []
+      }
       narrative_history: {
         Row: {
           created_at: string
