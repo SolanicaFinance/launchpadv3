@@ -61,7 +61,8 @@ async function generateReply(
   tweetText: string,
   tweetAuthor: string,
   personaPrompt: string | null,
-  accountName: string
+  accountName: string,
+  recentReplies: string[] = []
 ): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
@@ -101,7 +102,13 @@ async function generateReply(
     `LENGTH: Under ${MAX_REPLY_BODY_LENGTH} characters. Shorter hits harder.\n` +
     `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.`;
 
-  const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nWrite a unique reply. Do NOT start with "ngl". No emojis. No generic openers. Sound human:`;
+  // Build dedup context so the AI avoids repeating recent replies
+  let dedupContext = "";
+  if (recentReplies.length > 0) {
+    dedupContext = `\n\nIMPORTANT — Your recent replies (DO NOT repeat these or use similar phrasing/openers):\n${recentReplies.map((r, i) => `${i + 1}. "${r}"`).join("\n")}\n\nWrite something COMPLETELY DIFFERENT from the above.`;
+  }
+
+  const userPrompt = `Tweet by @${tweetAuthor}:\n"${tweetText}"\n\nWrite a unique reply. Do NOT start with "ngl". No emojis. No generic openers. Sound human:${dedupContext}`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
