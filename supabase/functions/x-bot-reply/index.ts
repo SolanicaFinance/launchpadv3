@@ -180,15 +180,9 @@ function buildReplyWithFooter(replyBody: string): string {
   return `${safeBody}${FOOTER_SEPARATOR}${REPLY_FOOTER}`;
 }
 
-function startsLikeReply(text: string): boolean {
-  const trimmed = text.trimStart();
-  return trimmed.startsWith("@") || trimmed.startsWith(".@");
-}
-
-function isReplyTarget(item: { tweet_id?: string | null; conversation_id?: string | null; tweet_text?: string | null }): boolean {
+function isReplyTarget(item: { tweet_id?: string | null; conversation_id?: string | null }): boolean {
   if (!item.tweet_id) return true;
   if (item.conversation_id && item.conversation_id !== item.tweet_id) return true;
-  if (startsLikeReply(item.tweet_text || "")) return true;
   return false;
 }
 
@@ -296,7 +290,7 @@ Deno.serve(async (req) => {
     // ═══════════════════════════════════════════════════════════
     const { data: pendingQueueItems } = await supabase
       .from("x_bot_account_queue")
-      .select("id, tweet_id, conversation_id, tweet_text")
+      .select("id, tweet_id, conversation_id")
       .eq("status", "pending")
       .limit(1000);
 
@@ -618,18 +612,7 @@ Deno.serve(async (req) => {
         repliesFailed++;
         console.error(`[x-bot-reply] ❌ ${account.username} failed: ${result.error}`);
 
-        // ── HARD STOP: On any failure, purge remaining queue and halt ──
-        // System pauses until "Run Reply" is clicked again manually.
-        console.log(`[x-bot-reply] 🛑 HALTING — failure detected. Purging remaining pending queue items.`);
-        const { data: remaining } = await supabase
-          .from("x_bot_account_queue")
-          .update({ status: "skipped", processed_at: new Date().toISOString() })
-          .eq("status", "pending")
-          .select("id");
-        if (remaining && remaining.length > 0) {
-          console.log(`[x-bot-reply] 🧹 Purged ${remaining.length} remaining queue items after failure`);
-        }
-        break; // Stop processing entirely
+        // Continue processing remaining items — one failure shouldn't block others
       }
 
       // Delay between replies to avoid rate limiting
