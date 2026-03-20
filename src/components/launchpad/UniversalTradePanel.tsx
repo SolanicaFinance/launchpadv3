@@ -394,7 +394,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
 
         {/* ── Buy with Credit Card ── */}
         <button
-          onClick={() => setShowLoginModal(true)}
+          onClick={() => isAuthenticated ? openTransak() : setShowLoginModal(true)}
           className="w-full h-11 rounded-xl text-[12px] font-semibold tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 hover:border-green-500/50"
         >
           <CreditCard className="h-3.5 w-3.5" />
