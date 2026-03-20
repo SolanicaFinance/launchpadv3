@@ -358,6 +358,25 @@ Deno.serve(async (req) => {
       }
 
       const accountRules = rulesMap.get(item.account_id);
+
+      // ── PRE-REPLY RULE VALIDATION: re-check rules even if queued before rule changes ──
+      if (accountRules) {
+        if (accountRules.require_blue_verified && !item.is_verified) {
+          console.log(`[x-bot-reply] 🚫 Skipping @${item.tweet_author} — not blue verified (rule enforced)`);
+          await supabase.from("x_bot_account_queue")
+            .update({ status: "skipped", processed_at: new Date().toISOString() })
+            .eq("id", item.id);
+          continue;
+        }
+        if (accountRules.min_follower_count && (item.follower_count || 0) < accountRules.min_follower_count) {
+          console.log(`[x-bot-reply] 🚫 Skipping @${item.tweet_author} — ${item.follower_count} followers < ${accountRules.min_follower_count} min (rule enforced)`);
+          await supabase.from("x_bot_account_queue")
+            .update({ status: "skipped", processed_at: new Date().toISOString() })
+            .eq("id", item.id);
+          continue;
+        }
+      }
+
       const loginCookiesB64 = buildLoginCookiesBase64(account);
 
       if (!loginCookiesB64) {
