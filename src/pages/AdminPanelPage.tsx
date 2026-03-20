@@ -62,6 +62,7 @@ const TAB_CONFIG = [
   { value: "assisted-swaps", label: "Swaps", icon: Repeat },
   { value: "brand-dust", label: "Dust", icon: Radio },
   { value: "dex-listing", label: "Dex List", icon: Layers },
+  { value: "meteorite", label: "Meteorite", icon: Rocket },
 ] as const;
 
 export default function AdminPanelPage() {
