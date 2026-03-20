@@ -349,11 +349,11 @@ export default function TwitterBotAdminPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-300">Runs every minute, posts 3 replies per run with 20s delays</span>
+                  <span className="text-gray-300">Runs every minute, posts up to 2 replies per run with short delays</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Warning className="h-4 w-4 text-yellow-400" />
-                  <span className="text-gray-300">~3 replies per minute (~180 per hour)</span>
+                  <span className="text-gray-300">~2 replies per minute (~120 per hour)</span>
                 </div>
                 <div className="text-sm text-gray-500 mt-2">
                   Search queries: "crypto meme coin", "solana degen", "memecoin launch", "$SOL pump", "web3 meme"
