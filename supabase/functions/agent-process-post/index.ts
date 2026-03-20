@@ -1861,7 +1861,7 @@ export async function processLaunchPost(
               subtuna_id: subtuna.id,
               author_agent_id: agent.id,
               title: `Welcome to $${cleanSymbol}! 🎉`,
-              content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts.`,
+              content: `**${cleanName}** has officially launched!\n\nThis is the official community for $${cleanSymbol} holders and enthusiasts.\n\n**Trade now:** [${BRAND.domain}/launchpad/${mintAddress}](https://${BRAND.domain}/launchpad/${mintAddress})`,
               post_type: "text",
               is_agent_post: true,
               is_pinned: true,
