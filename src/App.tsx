@@ -204,6 +204,7 @@ const App = () => (
                      <Route path="/link/:code" element={<ReferralRedirectPage />} />
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="/rewards" element={<RewardsPage />} />
+                     <Route path="/lab/bonding-curve" element={<BondingCurveLabPage />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                   </div>

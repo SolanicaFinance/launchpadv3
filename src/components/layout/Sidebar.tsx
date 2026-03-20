@@ -25,6 +25,7 @@ const NAV_LINKS: { to: string; label: string; icon: any; exact?: boolean; neonGr
   { to: "/meteorite", label: "Meteorite", icon: Flame, neonGreen: true },
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
+  { to: "/lab/bonding-curve", label: "Lab", icon: FlaskConical, neonGreen: true },
   
   { to: "/panel", label: "Panel", icon: LayoutDashboard },
 ];
