@@ -18,10 +18,10 @@ interface TransakOptions {
 
 export function useTransakOnramp() {
   const { isAuthenticated, solanaAddress } = useAuth();
-  const { embeddedWallet } = useSolanaWalletWithPrivy();
+  const { getEmbeddedWallet, walletAddress: privyWalletAddress } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
 
-  const walletAddress = embeddedWallet?.address || solanaAddress;
+  const walletAddress = privyWalletAddress || solanaAddress;
 
   const openTransak = useCallback((options?: TransakOptions) => {
     if (!TRANSAK_API_KEY) {
