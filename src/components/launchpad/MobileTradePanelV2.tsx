@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTransakOnramp } from "@/hooks/useTransakOnramp";
+import { TransakModal } from "@/components/transak/TransakModal";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
@@ -34,7 +35,7 @@ interface MobileTradePanelV2Props {
 
 export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalance: externalBalance = 0 }: MobileTradePanelV2Props) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { openTransak } = useTransakOnramp();
+  const { openTransak, closeTransak, isOpen: isTransakOpen, widgetUrl: transakUrl } = useTransakOnramp();
   const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { executeTurboSwap, isLoading: turboLoading, walletAddress: turboWallet } = useTurboSwap();
   const { isWalletReady, walletAddress: embeddedWallet, getTokenBalance: getTokenBalancePrivy, getBalance } = useSolanaWalletWithPrivy();
@@ -492,6 +493,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
       <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
       <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+      <TransakModal isOpen={isTransakOpen} onClose={closeTransak} widgetUrl={transakUrl} />
     </>
   );
 }

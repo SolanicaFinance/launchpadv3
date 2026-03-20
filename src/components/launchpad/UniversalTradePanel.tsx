@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useTransakOnramp } from "@/hooks/useTransakOnramp";
+import { TransakModal } from "@/components/transak/TransakModal";
 import { useJupiterSwap } from "@/hooks/useJupiterSwap";
 import { useTurboSwap } from "@/hooks/useTurboSwap";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
@@ -37,7 +38,7 @@ const HELIUS_RPC = import.meta.env.VITE_HELIUS_RPC_URL || (import.meta.env.VITE_
 
 export function UniversalTradePanel({ token, userTokenBalance: externalTokenBalance }: UniversalTradePanelProps) {
   const { isAuthenticated, login, solanaAddress, profileId } = useAuth();
-  const { openTransak } = useTransakOnramp();
+  const { openTransak, closeTransak, isOpen: isTransakOpen, widgetUrl: transakUrl } = useTransakOnramp();
   const { getBuyQuote, getSellQuote } = useJupiterSwap();
   const { executeTurboSwap, isLoading: turboLoading } = useTurboSwap();
   const { isWalletReady, getBalance } = useSolanaWalletWithPrivy();
@@ -484,6 +485,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
     </div>
     <ProfitCardModal open={showProfitCard} onClose={() => setShowProfitCard(false)} data={profitCardData} />
     <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
+    <TransakModal isOpen={isTransakOpen} onClose={closeTransak} widgetUrl={transakUrl} />
     </>
   );
 }
