@@ -180,6 +180,18 @@ function buildReplyWithFooter(replyBody: string): string {
   return `${safeBody}${FOOTER_SEPARATOR}${REPLY_FOOTER}`;
 }
 
+function startsLikeReply(text: string): boolean {
+  const trimmed = text.trimStart();
+  return trimmed.startsWith("@") || trimmed.startsWith(".@");
+}
+
+function isReplyTarget(item: { tweet_id?: string | null; conversation_id?: string | null; tweet_text?: string | null }): boolean {
+  if (!item.tweet_id) return true;
+  if (item.conversation_id && item.conversation_id !== item.tweet_id) return true;
+  if (startsLikeReply(item.tweet_text || "")) return true;
+  return false;
+}
+
 // Post reply via twitterapi.io
 async function postReply(
   tweetId: string,
@@ -278,6 +290,29 @@ Deno.serve(async (req) => {
       .update({ status: "skipped", processed_at: new Date().toISOString() })
       .eq("status", "processing")
       .lt("created_at", stuckCutoff);
+
+    // ═══════════════════════════════════════════════════════════
+    // COMMENT/REPLY PURGE: remove queued replies under posts before processing
+    // ═══════════════════════════════════════════════════════════
+    const { data: pendingQueueItems } = await supabase
+      .from("x_bot_account_queue")
+      .select("id, tweet_id, conversation_id, tweet_text")
+      .eq("status", "pending")
+      .limit(1000);
+
+    const replyLikeQueueIds = (pendingQueueItems || [])
+      .filter((queueItem: any) => isReplyTarget(queueItem))
+      .map((queueItem: any) => queueItem.id);
+
+    if (replyLikeQueueIds.length > 0) {
+      const { data: purgedReplyTargets } = await supabase
+        .from("x_bot_account_queue")
+        .update({ status: "skipped", processed_at: new Date().toISOString() })
+        .in("id", replyLikeQueueIds)
+        .select("id");
+
+      console.log(`[x-bot-reply] 🧹 Purged ${purgedReplyTargets?.length || replyLikeQueueIds.length} queued comment/reply targets`);
+    }
 
     // ═══════════════════════════════════════════════════════════
     // RULE-BASED PURGE: Remove pending items that violate current rules
@@ -454,9 +489,9 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // ── Skip replies-to-replies: only engage with top-level tweets ──
-      if (item.conversation_id && item.tweet_id && item.conversation_id !== item.tweet_id) {
-        console.log(`[x-bot-reply] 🚫 Skipping @${item.tweet_author} — is a reply, not a top-level tweet`);
+      // ── Skip replies/comments: only engage with top-level tweets ──
+      if (isReplyTarget(item)) {
+        console.log(`[x-bot-reply] 🚫 Skipping @${item.tweet_author} — reply/comment under another post`);
         await supabase.from("x_bot_account_queue")
           .update({ status: "skipped", processed_at: new Date().toISOString() })
           .eq("id", item.id);
