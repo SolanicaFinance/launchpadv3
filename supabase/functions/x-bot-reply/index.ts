@@ -255,18 +255,42 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get pending queue items (oldest first, enough headroom for 2 posts/min/account)
+    // ═══════════════════════════════════════════════════════════
+    // ANTI-BACKLOG: Purge ALL stale queue items before doing anything.
+    // Only tweets < 5 minutes old are worth replying to.
+    // ═══════════════════════════════════════════════════════════
+    const staleCutoff = new Date(Date.now() - 5 * 60_000).toISOString();
+    const { data: purged, error: purgeError } = await supabase
+      .from("x_bot_account_queue")
+      .update({ status: "skipped", processed_at: new Date().toISOString() })
+      .eq("status", "pending")
+      .lt("created_at", staleCutoff)
+      .select("id");
+
+    if (!purgeError && purged && purged.length > 0) {
+      console.log(`[x-bot-reply] 🧹 Purged ${purged.length} stale queue items (> 5min old)`);
+    }
+
+    // Also purge stuck "processing" items (> 3 min)
+    const stuckCutoff = new Date(Date.now() - 3 * 60_000).toISOString();
+    await supabase
+      .from("x_bot_account_queue")
+      .update({ status: "skipped", processed_at: new Date().toISOString() })
+      .eq("status", "processing")
+      .lt("created_at", stuckCutoff);
+
+    // Get ONLY 3 freshest pending items — no backlog, ever
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")
       .select("*")
       .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(10);
+      .order("created_at", { ascending: false })  // freshest first
+      .limit(3);
 
     if (queueError) throw queueError;
     if (!queueItems || queueItems.length === 0) {
       return new Response(
-        JSON.stringify({ ok: true, message: "No pending items", debug: { repliesSent: 0 } }),
+        JSON.stringify({ ok: true, message: "No pending items", debug: { repliesSent: 0, purged: purged?.length || 0 } }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -495,6 +519,19 @@ Deno.serve(async (req) => {
 
         repliesFailed++;
         console.error(`[x-bot-reply] ❌ ${account.username} failed: ${result.error}`);
+
+        // ── HARD STOP: On any failure, purge remaining queue and halt ──
+        // System pauses until "Run Reply" is clicked again manually.
+        console.log(`[x-bot-reply] 🛑 HALTING — failure detected. Purging remaining pending queue items.`);
+        const { data: remaining } = await supabase
+          .from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("status", "pending")
+          .select("id");
+        if (remaining && remaining.length > 0) {
+          console.log(`[x-bot-reply] 🧹 Purged ${remaining.length} remaining queue items after failure`);
+        }
+        break; // Stop processing entirely
       }
 
       // Delay between replies to avoid rate limiting
