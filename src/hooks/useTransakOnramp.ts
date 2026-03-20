@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,8 @@ export function useTransakOnramp() {
   const { isAuthenticated, solanaAddress } = useAuth();
   const { getEmbeddedWallet, walletAddress: privyWalletAddress } = useSolanaWalletWithPrivy();
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
 
   const walletAddress = privyWalletAddress || solanaAddress;
 
@@ -54,22 +56,20 @@ export function useTransakOnramp() {
     }
 
     const url = `${TRANSAK_BASE_URL}?${params.toString()}`;
-
-    // Open in a centered popup
-    const width = 450;
-    const height = 700;
-    const left = Math.round(window.screenX + (window.outerWidth - width) / 2);
-    const top = Math.round(window.screenY + (window.outerHeight - height) / 2);
-
-    window.open(
-      url,
-      "transak_onramp",
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
-    );
+    setWidgetUrl(url);
+    setIsOpen(true);
   }, [walletAddress, toast]);
+
+  const closeTransak = useCallback(() => {
+    setIsOpen(false);
+    setWidgetUrl(null);
+  }, []);
 
   return {
     openTransak,
+    closeTransak,
+    isOpen,
+    widgetUrl,
     isReady: !!TRANSAK_API_KEY && !!walletAddress,
     walletAddress,
   };
