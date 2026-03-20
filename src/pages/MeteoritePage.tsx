@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Flame, Shield, DollarSign, Users, CheckCircle2, XCircle, ArrowRight, Zap, TrendingUp, Lock, MessageSquare, BadgeCheck, Search, ExternalLink } from "lucide-react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BRAND } from "@/config/branding";
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 // Mock data for demo
 const MOCK_TOKENIZED_TWEETS = [
