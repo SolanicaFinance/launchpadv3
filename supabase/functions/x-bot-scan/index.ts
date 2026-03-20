@@ -232,6 +232,12 @@ Deno.serve(async (req) => {
               // Skip already processed
               if (existingIds.has(tweet.id)) continue;
 
+              // ── Skip replies: only engage with top-level tweets ──
+              // If conversation_id !== tweet.id, it's a reply to another tweet
+              if (tweet.conversation_id && tweet.id && tweet.conversation_id !== tweet.id) {
+                continue;
+              }
+
               // ── Freshness gate: only reply to tweets from the last 15 minutes ──
               const tweetTs = parseTwitterDate(tweet.created_at);
               const tweetAge = Date.now() - tweetTs;

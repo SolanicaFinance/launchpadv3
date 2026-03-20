@@ -454,6 +454,15 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // ── Skip replies-to-replies: only engage with top-level tweets ──
+      if (item.conversation_id && item.tweet_id && item.conversation_id !== item.tweet_id) {
+        console.log(`[x-bot-reply] 🚫 Skipping @${item.tweet_author} — is a reply, not a top-level tweet`);
+        await supabase.from("x_bot_account_queue")
+          .update({ status: "skipped", processed_at: new Date().toISOString() })
+          .eq("id", item.id);
+        continue;
+      }
+
       // Skip tweets containing banned/toxic words — don't engage with negativity
       if (containsBannedWords(item.tweet_text || "")) {
         console.log(`[x-bot-reply] 🚫 Skipping toxic tweet from @${item.tweet_author}`);
