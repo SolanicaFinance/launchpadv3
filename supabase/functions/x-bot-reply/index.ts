@@ -101,8 +101,10 @@ async function generateReply(
     `- Ask a sharp question ("so what happens when...")\n` +
     `- Agree with nuance ("yeah but the part nobody talks about...")\n` +
     `- Short conviction ("this is the play")\n\n` +
-    `LENGTH: Under ${MAX_REPLY_BODY_LENGTH} characters. Shorter hits harder.\n` +
-    `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.`;
+    `LENGTH: Aim for 71-100 characters — this is the algorithmic sweet spot for maximum engagement. ` +
+    `Shorter hits harder. Never exceed 100 characters. Under ${MAX_REPLY_BODY_LENGTH} chars max.\n` +
+    `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.\n` +
+    `GOAL: Get the original author to reply back to you. Ask sharp questions, challenge takes, add missing context.`;
 
   // Build dedup context so the AI avoids repeating recent replies
   let dedupContext = "";
