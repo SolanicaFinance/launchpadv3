@@ -58,7 +58,9 @@ async function generateConvoReply(
   const userPrompt = `Your original context was about a crypto topic. @${theirUsername} replied to you:
 "${theirReplyText}"
 
-Write a short, natural reply back (50-90 characters). Be conversational, keep the debate going. Ask a follow-up question or double down on your point. No emojis, no hashtags, no slang.`;
+Write a short, natural reply back (50-90 characters). Be conversational, keep the debate going. Ask a follow-up question or double down on your point. No emojis, no hashtags, no slang.
+
+IMPORTANT: If their reply doesn't make sense, is gibberish, is just emojis, is completely off-topic, or the conversation has nowhere productive to go, respond with exactly "SKIP" and nothing else. Only continue conversations that are meaningful.`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
