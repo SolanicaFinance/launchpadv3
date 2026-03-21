@@ -221,6 +221,20 @@ export default function XBotAdminPage() {
               <Play className="w-4 h-4 mr-2" />
               Run Reply
             </Button>
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                const response = await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/x-bot-convo-monitor`,
+                  { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
+                );
+                const data = await response.json();
+                toast.success(`Convo monitor: ${data.repliedBack || 0} reply-backs sent`);
+                await Promise.all([fetchReplies(), fetchLogs()]);
+              } catch { toast.error("Convo monitor failed"); }
+            }}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Check Convos
+            </Button>
           </div>
         </div>
 

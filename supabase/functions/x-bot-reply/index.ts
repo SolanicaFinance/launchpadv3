@@ -9,6 +9,8 @@ const corsHeaders = {
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
 const MAX_REPLIES_PER_MINUTE = 2;
 const MAX_REPLY_BODY_LENGTH = 280;
+const OPTIMAL_MIN_LENGTH = 71;
+const OPTIMAL_MAX_LENGTH = 100;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -99,8 +101,10 @@ async function generateReply(
     `- Ask a sharp question ("so what happens when...")\n` +
     `- Agree with nuance ("yeah but the part nobody talks about...")\n` +
     `- Short conviction ("this is the play")\n\n` +
-    `LENGTH: Under ${MAX_REPLY_BODY_LENGTH} characters. Shorter hits harder.\n` +
-    `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.`;
+    `LENGTH: Aim for 71-100 characters — this is the algorithmic sweet spot for maximum engagement. ` +
+    `Shorter hits harder. Never exceed 100 characters. Under ${MAX_REPLY_BODY_LENGTH} chars max.\n` +
+    `TONE: Confident, sharp, never mean. Positive or neutral about projects — no FUD.\n` +
+    `GOAL: Get the original author to reply back to you. Ask sharp questions, challenge takes, add missing context.`;
 
   // Build dedup context so the AI avoids repeating recent replies
   let dedupContext = "";
@@ -162,7 +166,21 @@ async function generateReply(
     // Clean up double spaces left behind
     reply = reply.replace(/\s{2,}/g, " ").trim();
 
-    // Truncate to leave room for required footer
+    // Optimal length targeting: if reply is too long, try to truncate at sentence boundary
+    // Sweet spot is 71-100 characters for maximum algorithmic engagement
+    if (reply.length > OPTIMAL_MAX_LENGTH) {
+      // Try to cut at a sentence boundary within optimal range
+      const cutPoints = [". ", "? ", "! ", ", "];
+      for (const cp of cutPoints) {
+        const idx = reply.lastIndexOf(cp, OPTIMAL_MAX_LENGTH);
+        if (idx >= OPTIMAL_MIN_LENGTH) {
+          reply = reply.substring(0, idx + 1).trim();
+          break;
+        }
+      }
+    }
+
+    // Hard max truncation
     if (reply.length > MAX_REPLY_BODY_LENGTH) {
       reply = reply.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)) + "...";
     }
@@ -365,12 +383,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get ONLY 3 freshest pending items — no backlog, ever
+    // Get ONLY 3 freshest pending items — prioritize high-engagement tweets
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")
       .select("*")
       .eq("status", "pending")
-      .order("created_at", { ascending: false })  // freshest first
+      .order("follower_count", { ascending: false, nullsFirst: false })  // high-engagement first
+      .order("created_at", { ascending: false })  // then freshest
       .limit(3);
 
     if (queueError) throw queueError;
