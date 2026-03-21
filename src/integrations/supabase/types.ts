@@ -5399,6 +5399,7 @@ export type Database = {
       }
       meteorite_tokens: {
         Row: {
+          announcement_tweet_id: string | null
           created_at: string | null
           creator_wallet: string | null
           dev_wallet_address: string
@@ -5427,6 +5428,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          announcement_tweet_id?: string | null
           created_at?: string | null
           creator_wallet?: string | null
           dev_wallet_address: string
@@ -5455,6 +5457,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          announcement_tweet_id?: string | null
           created_at?: string | null
           creator_wallet?: string | null
           dev_wallet_address?: string

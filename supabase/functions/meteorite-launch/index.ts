@@ -233,6 +233,21 @@ Make it look like a viral internet meme mascot for a token called "${concept.nam
 
     console.log(`[meteorite-launch] ✅ Token launched: ${concept.name} ($${concept.ticker}) - ${mintAddress}`);
 
+    // Fire-and-forget: announce on the original tweet
+    try {
+      const announceUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/meteorite-tweet-announce`;
+      fetch(announceUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ tokenId }),
+      }).catch(e => console.error("[meteorite-launch] Announce fire-and-forget error:", e));
+    } catch (e) {
+      console.error("[meteorite-launch] Failed to trigger announcement:", e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
