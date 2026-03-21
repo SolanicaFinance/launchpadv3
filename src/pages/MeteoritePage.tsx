@@ -459,7 +459,7 @@ export default function MeteoritePage() {
               <div className="space-y-3">
                 {liveTokens.map((token, i) => (
                   <motion.div key={token.id} initial={{ opacity: 0, y: 12, filter: "blur(4px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, ease, delay: i * 0.08 }}>
-                    <Card className="bg-card/40 border-border/30 hover:border-border/50 transition-colors duration-300">
+                    <Card className="bg-card/40 border-border/30 hover:border-border/50 transition-colors duration-300 cursor-pointer" onClick={() => { setSelectedToken(token); setDetailOpen(true); }}>
                       <CardContent className="p-5">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-2">
