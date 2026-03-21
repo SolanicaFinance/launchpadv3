@@ -369,12 +369,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get ONLY 3 freshest pending items — no backlog, ever
+    // Get ONLY 3 freshest pending items — prioritize high-engagement tweets
     const { data: queueItems, error: queueError } = await supabase
       .from("x_bot_account_queue")
       .select("*")
       .eq("status", "pending")
-      .order("created_at", { ascending: false })  // freshest first
+      .order("follower_count", { ascending: false, nullsFirst: false })  // high-engagement first
+      .order("created_at", { ascending: false })  // then freshest
       .limit(3);
 
     if (queueError) throw queueError;
