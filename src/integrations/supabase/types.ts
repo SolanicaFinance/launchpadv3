@@ -5344,7 +5344,9 @@ export type Database = {
         Row: {
           claim_amount_sol: number
           claim_signature: string | null
+          claim_tx_signature: string | null
           claim_wallet: string | null
+          claim_wallet_address: string | null
           claimed_at: string | null
           created_at: string
           id: string
@@ -5355,7 +5357,9 @@ export type Database = {
         Insert: {
           claim_amount_sol?: number
           claim_signature?: string | null
+          claim_tx_signature?: string | null
           claim_wallet?: string | null
+          claim_wallet_address?: string | null
           claimed_at?: string | null
           created_at?: string
           id?: string
@@ -5366,7 +5370,9 @@ export type Database = {
         Update: {
           claim_amount_sol?: number
           claim_signature?: string | null
+          claim_tx_signature?: string | null
           claim_wallet?: string | null
+          claim_wallet_address?: string | null
           claimed_at?: string | null
           created_at?: string
           id?: string
@@ -5402,6 +5408,10 @@ export type Database = {
           id: string
           image_url: string | null
           mint_address: string | null
+          owner_claim_signature: string | null
+          owner_claim_wallet: string | null
+          owner_claimed_at: string | null
+          owner_claimed_sol: number | null
           payment_tx_signature: string | null
           pumpfun_url: string | null
           replies_last_refreshed_at: string | null
@@ -5426,6 +5436,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           mint_address?: string | null
+          owner_claim_signature?: string | null
+          owner_claim_wallet?: string | null
+          owner_claimed_at?: string | null
+          owner_claimed_sol?: number | null
           payment_tx_signature?: string | null
           pumpfun_url?: string | null
           replies_last_refreshed_at?: string | null
@@ -5450,6 +5464,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           mint_address?: string | null
+          owner_claim_signature?: string | null
+          owner_claim_wallet?: string | null
+          owner_claimed_at?: string | null
+          owner_claimed_sol?: number | null
           payment_tx_signature?: string | null
           pumpfun_url?: string | null
           replies_last_refreshed_at?: string | null
@@ -10793,13 +10811,15 @@ export type Database = {
         Row: {
           created_at: string | null
           creator_wallet: string | null
-          dev_wallet_address: string | null
+          eligible_replies_count: number | null
           error_message: string | null
           id: string | null
           image_url: string | null
           mint_address: string | null
-          payment_tx_signature: string | null
+          owner_claimed_at: string | null
+          owner_claimed_sol: number | null
           pumpfun_url: string | null
+          replies_last_refreshed_at: string | null
           status: string | null
           token_description: string | null
           token_name: string | null
@@ -10814,13 +10834,15 @@ export type Database = {
         Insert: {
           created_at?: string | null
           creator_wallet?: string | null
-          dev_wallet_address?: string | null
+          eligible_replies_count?: number | null
           error_message?: string | null
           id?: string | null
           image_url?: string | null
           mint_address?: string | null
-          payment_tx_signature?: string | null
+          owner_claimed_at?: string | null
+          owner_claimed_sol?: number | null
           pumpfun_url?: string | null
+          replies_last_refreshed_at?: string | null
           status?: string | null
           token_description?: string | null
           token_name?: string | null
@@ -10835,13 +10857,15 @@ export type Database = {
         Update: {
           created_at?: string | null
           creator_wallet?: string | null
-          dev_wallet_address?: string | null
+          eligible_replies_count?: number | null
           error_message?: string | null
           id?: string | null
           image_url?: string | null
           mint_address?: string | null
-          payment_tx_signature?: string | null
+          owner_claimed_at?: string | null
+          owner_claimed_sol?: number | null
           pumpfun_url?: string | null
+          replies_last_refreshed_at?: string | null
           status?: string | null
           token_description?: string | null
           token_name?: string | null
