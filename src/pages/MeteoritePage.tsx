@@ -168,8 +168,9 @@ export default function MeteoritePage() {
       if (data) {
         const tokens = data as unknown as MeteoriteToken[];
         setLiveTokens(tokens);
+        const launchedTokens = tokens.filter(t => t.status === "live" || t.status === "launching");
         setStats({
-          totalTokens: tokens.length,
+          totalTokens: launchedTokens.length,
           totalLive: tokens.filter(t => t.status === "live").length,
           totalFees: tokens.reduce((sum, t) => sum + (Number(t.total_fees_earned) || 0), 0),
         });
