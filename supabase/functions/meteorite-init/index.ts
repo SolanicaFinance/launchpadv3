@@ -71,6 +71,14 @@ Deno.serve(async (req) => {
     }
 
     if (existing) {
+      // Update tweet data in DB if we fetched fresh data and it was missing
+      if (tweetData && !existing.tweet_author) {
+        await supabase
+          .from("meteorite_tokens")
+          .update({ tweet_author: tweetData.author, tweet_content: tweetData.content })
+          .eq("id", existing.id);
+      }
+
       return new Response(
         JSON.stringify({
           alreadyExists: true,
@@ -80,7 +88,15 @@ Deno.serve(async (req) => {
           paymentAmount: 0.1,
           tweetData: tweetData || (existing.tweet_author ? {
             author: existing.tweet_author,
-            content: existing.tweet_content,
+            authorName: "",
+            authorAvatar: "",
+            content: existing.tweet_content || "",
+            createdAt: "",
+            likes: 0,
+            retweets: 0,
+            replies: 0,
+            isVerified: false,
+            verifiedType: "",
           } : null),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
