@@ -222,8 +222,12 @@ Deno.serve(async (req) => {
 
       for (const ourReply of ourReplies) {
         if (!ourReply.reply_id) continue;
-        // Skip if we already did a convo reply in this thread
-        if (alreadyRepliedConvos.has(ourReply.conversation_id)) continue;
+        // Skip if we've hit the max convo replies for this thread (3-5 cap)
+        const convoCount = convoReplyCounts.get(ourReply.conversation_id) || 0;
+        if (convoCount >= MAX_CONVO_REPLIES) {
+          console.log(`[convo-monitor] ⏭️ Thread ${ourReply.conversation_id} capped at ${convoCount} replies`);
+          continue;
+        }
 
         try {
           // Fetch replies to our reply tweet
