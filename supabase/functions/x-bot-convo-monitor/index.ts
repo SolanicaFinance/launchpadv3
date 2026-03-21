@@ -325,6 +325,87 @@ Deno.serve(async (req) => {
 
         await sleep(500);
       }
+
+      // === Meteorite earnings query detection ===
+      // Scan recent mentions for earnings questions about tokenized tweets
+      if (account.username.toLowerCase() === "saturnterminal") {
+        try {
+          const mentionUrl = new URL(`${TWITTERAPI_BASE}/twitter/tweet/advanced_search`);
+          mentionUrl.searchParams.set("query", `@${account.username} (earned OR earnings OR fees OR "how much" OR "swap fees")`);
+          mentionUrl.searchParams.set("queryType", "Latest");
+          mentionUrl.searchParams.set("count", "5");
+
+          const mentionResp = await fetch(mentionUrl.toString(), {
+            headers: { "X-API-Key": twitterApiIoKey },
+          });
+
+          if (mentionResp.ok) {
+            const mentionData = await mentionResp.json();
+            const mentions = mentionData?.tweets || [];
+
+            for (const mention of mentions) {
+              if (mention.author?.userName?.toLowerCase() === account.username.toLowerCase()) continue;
+
+              // Check if we already replied to this
+              const { data: alreadyReplied } = await supabase
+                .from("x_bot_account_replies")
+                .select("id")
+                .eq("account_id", account.id)
+                .eq("tweet_id", mention.id)
+                .maybeSingle();
+
+              if (alreadyReplied) continue;
+
+              // Get the conversation/parent tweet to find the tokenized tweet
+              const conversationId = mention.conversationId || mention.conversation_id;
+              
+              console.log(`[convo-monitor] 🔥 Meteorite earnings query from @${mention.author?.userName}: "${(mention.text || "").slice(0, 80)}"`);
+
+              // Fire the meteorite-earnings-reply function
+              try {
+                const earningsUrl = `${supabaseUrl}/functions/v1/meteorite-earnings-reply`;
+                const earningsResp = await fetch(earningsUrl, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${supabaseKey}`,
+                  },
+                  body: JSON.stringify({
+                    mentionTweetId: mention.id,
+                    mentionText: mention.text || "",
+                    mentionAuthor: mention.author?.userName || "",
+                    conversationTweetId: conversationId,
+                  }),
+                });
+
+                const earningsResult = await earningsResp.json();
+                if (earningsResult.success) {
+                  // Record it
+                  await supabase.from("x_bot_account_replies").insert({
+                    account_id: account.id,
+                    tweet_id: mention.id,
+                    tweet_author: mention.author?.userName || "",
+                    tweet_author_id: mention.author?.id || "",
+                    tweet_text: (mention.text || "").substring(0, 1000),
+                    conversation_id: conversationId,
+                    reply_id: earningsResult.replyTweetId,
+                    reply_text: earningsResult.replyText || "",
+                    reply_type: "meteorite_earnings",
+                    status: "sent",
+                  });
+                  console.log(`[convo-monitor] ✅ Answered meteorite earnings query for @${mention.author?.userName}`);
+                  repliedBack++;
+                  break; // Max 1 earnings reply per run
+                }
+              } catch (e) {
+                console.error("[convo-monitor] Meteorite earnings reply error:", e);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[convo-monitor] Meteorite mention scan error:", e);
+        }
+      }
     }
 
     return new Response(
