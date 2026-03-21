@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { BadgeCheck, Loader2, RefreshCw, DollarSign, CheckCircle2, Clock, ExternalLink, Wallet, Crown } from "lucide-react";
+import { BadgeCheck, Loader2, RefreshCw, DollarSign, CheckCircle2, Clock, ExternalLink, Wallet, Crown, LogIn } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
+import { useSolanaWalletWithPrivy } from "@/hooks/useSolanaWalletPrivy";
 
 interface MeteoriteToken {
   id: string;
@@ -56,16 +58,21 @@ interface Props {
 }
 
 export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
+  const { isAuthenticated, login, linkTwitter, linkedAccounts, isLoading: authLoading, ready } = useAuth();
+  const { walletAddress } = useSolanaWalletWithPrivy();
+
+  const twitterAccount = linkedAccounts.find((a: any) => a.type === "twitter_oauth") as any;
+  const twitterLinked = !!twitterAccount;
+  const myUsername = twitterAccount?.username?.toLowerCase() || null;
+
   const [replies, setReplies] = useState<EligibleReply[]>([]);
   const [claims, setClaims] = useState<ReplyClaim[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string | null>(null);
   const [cached, setCached] = useState(false);
-  const [claimingUser, setClaimingUser] = useState<string | null>(null);
-  const [claimWallet, setClaimWallet] = useState("");
+  const [claiming, setClaiming] = useState(false);
   const [claimingOwner, setClaimingOwner] = useState(false);
-  const [ownerWallet, setOwnerWallet] = useState("");
-  const [showOwnerClaim, setShowOwnerClaim] = useState(false);
+  const [linking, setLinking] = useState(false);
 
   const fetchReplies = useCallback(async () => {
     if (!token?.id) return;
@@ -82,12 +89,10 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
       );
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-
       setReplies(data.replies || []);
       setClaims(data.claims || []);
       setLastRefreshed(data.lastRefreshedAt);
       setCached(data.cached);
-
       if (!data.cached) {
         toast.success(`Found ${data.replies?.length || 0} eligible verified commenters`);
       }
@@ -99,24 +104,24 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
   }, [token?.id]);
 
   useEffect(() => {
-    if (open && token?.id) {
-      fetchReplies();
-    }
+    if (open && token?.id) fetchReplies();
   }, [open, token?.id, fetchReplies]);
 
   const getClaimForUser = (username: string) =>
     claims.find((c) => c.twitter_username === username);
 
-  const handleClaim = async (twitterUsername: string) => {
-    if (!claimWallet || !claimWallet.trim()) {
-      toast.error("Enter your Solana wallet address");
-      return;
-    }
-    if (claimWallet.length < 32 || claimWallet.length > 44) {
-      toast.error("Invalid Solana wallet address");
-      return;
-    }
-    setClaimingUser(twitterUsername);
+  // Check if current user is eligible
+  const myEligibility = myUsername ? replies.find(r => r.twitter_username === myUsername) : null;
+  const myClaim = myUsername ? getClaimForUser(myUsername) : null;
+  const myIsClaimed = myClaim?.status === "claimed";
+
+  // Check if current user is the tweet owner
+  const isOwner = myUsername && token?.tweet_author && myUsername === token.tweet_author.toLowerCase().replace("@", "");
+
+  const handleClaimReply = async () => {
+    if (!walletAddress) { toast.error("No wallet connected"); return; }
+    if (!myUsername) return;
+    setClaiming(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
@@ -126,28 +131,25 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             meteoriteTokenId: token!.id,
-            twitterUsername,
-            walletAddress: claimWallet.trim(),
+            twitterUsername: myUsername,
+            walletAddress,
           }),
         }
       );
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       toast.success(`Claimed ${data.amountSol} SOL! TX: ${data.signature?.slice(0, 12)}...`);
-      setClaimWallet("");
       fetchReplies();
     } catch (e: any) {
       toast.error(e.message || "Claim failed");
     } finally {
-      setClaimingUser(null);
+      setClaiming(false);
     }
   };
 
-  const handleOwnerClaim = async () => {
-    if (!ownerWallet || ownerWallet.length < 32) {
-      toast.error("Enter a valid Solana wallet address");
-      return;
-    }
+  const handleClaimOwner = async () => {
+    if (!walletAddress) { toast.error("No wallet connected"); return; }
+    if (!myUsername || !token) return;
     setClaimingOwner(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -157,21 +159,30 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            meteoriteTokenId: token!.id,
-            twitterUsername: token!.tweet_author,
-            walletAddress: ownerWallet.trim(),
+            meteoriteTokenId: token.id,
+            twitterUsername: myUsername,
+            walletAddress,
           }),
         }
       );
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       toast.success(`Owner share claimed: ${data.amountSol?.toFixed(4)} SOL!`);
-      setOwnerWallet("");
-      setShowOwnerClaim(false);
     } catch (e: any) {
       toast.error(e.message || "Owner claim failed");
     } finally {
       setClaimingOwner(false);
+    }
+  };
+
+  const handleLinkTwitter = async () => {
+    setLinking(true);
+    try {
+      await linkTwitter();
+    } catch {
+      // user cancelled
+    } finally {
+      setLinking(false);
     }
   };
 
@@ -181,6 +192,8 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
   const ownerShare = totalFees * 0.25;
   const commenterPool = totalFees * 0.25;
   const ownerAlreadyClaimed = !!token.owner_claimed_at;
+  const totalEligible = replies.length;
+  const totalClaimedCount = claims.filter(c => c.status === "claimed").length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -202,7 +215,6 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           {token.tweet_content && (
             <p className="text-sm text-foreground/80 leading-relaxed">{token.tweet_content}</p>
           )}
-
           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <a href={token.tweet_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors">
               <ExternalLink className="w-3 h-3" /> Original Tweet
@@ -236,39 +248,150 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* Tweet Owner Claim */}
-          {token.tweet_author && (
+        <Separator className="bg-border/30" />
+
+        {/* YOUR CLAIM STATUS — Auth-gated section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-primary" /> Your Claim Status
+          </h3>
+
+          {/* Not logged in */}
+          {!isAuthenticated && ready && (
+            <Card className="bg-card/40 border-primary/20">
+              <CardContent className="p-4 text-center space-y-3">
+                <LogIn className="w-6 h-6 text-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">Sign in to check if you're eligible to claim</p>
+                <Button onClick={login} className="btn-gradient-green font-bold">
+                  <LogIn className="w-4 h-4 mr-2" /> Sign In
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Logged in but X not linked */}
+          {isAuthenticated && !twitterLinked && (
             <Card className="bg-card/40 border-orange-500/20">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-orange-400" />
-                    <span className="text-xs font-semibold text-foreground">Tweet Owner: @{token.tweet_author}</span>
-                  </div>
-                  {ownerAlreadyClaimed ? (
-                    <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/5 text-[10px] gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Claimed {Number(token.owner_claimed_sol || 0).toFixed(4)} SOL
-                    </Badge>
-                  ) : (
-                    <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => setShowOwnerClaim(!showOwnerClaim)}>
-                      <Wallet className="w-3 h-3" /> Claim {ownerShare.toFixed(4)} SOL
-                    </Button>
+              <CardContent className="p-4 text-center space-y-3">
+                <XIcon className="w-6 h-6 text-foreground mx-auto" />
+                <p className="text-sm text-muted-foreground">
+                  Link your X account to check your eligibility for commenter rewards
+                </p>
+                <Button
+                  onClick={handleLinkTwitter}
+                  disabled={linking}
+                  className="bg-foreground text-background hover:opacity-90 font-bold"
+                >
+                  {linking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XIcon className="w-4 h-4 mr-2" />}
+                  {linking ? "Authorizing..." : "Authorize X Account"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* X linked — show personal claim panel */}
+          {isAuthenticated && twitterLinked && (
+            <Card className="bg-card/40 border-border/30">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  {twitterAccount?.profilePictureUrl && (
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={twitterAccount.profilePictureUrl} />
+                      <AvatarFallback className="text-xs bg-muted">
+                        {twitterAccount.name?.slice(0, 2) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {twitterAccount?.name || myUsername}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">@{myUsername}</span>
+                  </div>
                 </div>
-                {showOwnerClaim && !ownerAlreadyClaimed && (
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      value={ownerWallet}
-                      onChange={(e) => setOwnerWallet(e.target.value)}
-                      placeholder="Your Solana wallet address..."
-                      className="text-xs h-8 bg-background/50"
-                    />
-                    <Button size="sm" className="h-8 text-xs shrink-0 btn-gradient-green" onClick={handleOwnerClaim} disabled={claimingOwner}>
-                      {claimingOwner ? <Loader2 className="w-3 h-3 animate-spin" /> : "Claim"}
-                    </Button>
+
+                {walletAddress && (
+                  <div className="text-[10px] text-muted-foreground">
+                    Claims go to: <span className="font-mono text-foreground">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
                   </div>
                 )}
+
+                <Separator className="bg-border/30" />
+
+                {/* Owner status */}
+                {isOwner && (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-orange-500/5 border border-orange-500/15">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-orange-400" />
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">Tweet Owner Share</div>
+                        <div className="text-[10px] text-muted-foreground">{ownerShare.toFixed(4)} SOL (25% of fees)</div>
+                      </div>
+                    </div>
+                    {ownerAlreadyClaimed ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/5 text-[10px] gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Claimed
+                      </Badge>
+                    ) : (
+                      <Button size="sm" className="h-7 text-xs btn-gradient-green" onClick={handleClaimOwner} disabled={claimingOwner || ownerShare < 0.001}>
+                        {claimingOwner ? <Loader2 className="w-3 h-3 animate-spin" /> : "Claim"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Commenter status */}
+                {myEligibility ? (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/5 border border-green-500/15">
+                    <div className="flex items-center gap-2">
+                      <BadgeCheck className={`w-4 h-4 fill-current ${myEligibility.verified_type === "gold" ? "text-badge-gold" : "text-badge-blue"}`} />
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">Eligible Commenter</div>
+                        <div className="text-[10px] text-muted-foreground">You replied with a verified account</div>
+                      </div>
+                    </div>
+                    {myIsClaimed ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/5 text-[10px] gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> $1 Claimed
+                      </Badge>
+                    ) : (
+                      <Button size="sm" className="h-7 text-xs btn-gradient-green" onClick={handleClaimReply} disabled={claiming}>
+                        {claiming ? <Loader2 className="w-3 h-3 animate-spin" /> : "Claim $1"}
+                      </Button>
+                    )}
+                  </div>
+                ) : !loading && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border/30">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-xs font-semibold text-foreground">Not Eligible</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {!isOwner ? "You haven't replied to this tweet with a verified account" : "No commenter claim — you're the tweet owner"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary */}
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-muted/20">
+                    <div className="text-sm font-bold text-foreground tabular-nums">
+                      {isOwner && !ownerAlreadyClaimed ? ownerShare.toFixed(4) : "0"} +{" "}
+                      {myEligibility && !myIsClaimed ? "~$1" : "$0"}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Available to Claim</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted/20">
+                    <div className="text-sm font-bold text-green-400 tabular-nums">
+                      {(Number(token.owner_claimed_sol || 0) + (myIsClaimed ? (myClaim?.claim_amount_sol || 0) : 0)).toFixed(4)} SOL
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Already Claimed</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -276,12 +399,12 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
 
         <Separator className="bg-border/30" />
 
-        {/* Eligible replies header */}
+        {/* All eligible replies */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Eligible Commenters</h3>
+            <h3 className="text-sm font-semibold text-foreground">All Eligible Commenters</h3>
             <p className="text-xs text-muted-foreground">
-              {loading ? "Updating eligible comments..." : `${replies.length} verified, non-shadowbanned repliers`}
+              {loading ? "Updating eligible comments..." : `${totalEligible} eligible • ${totalClaimedCount} claimed`}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchReplies} disabled={loading} className="text-xs gap-1.5">
@@ -298,7 +421,6 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           </p>
         )}
 
-        {/* Loading state */}
         {loading && replies.length === 0 && (
           <Card className="bg-card/40 border-border/30">
             <CardContent className="p-6 text-center space-y-2">
@@ -309,7 +431,6 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           </Card>
         )}
 
-        {/* Empty state */}
         {!loading && replies.length === 0 && (
           <Card className="bg-card/40 border-border/30">
             <CardContent className="p-6 text-center">
@@ -319,15 +440,14 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           </Card>
         )}
 
-        {/* Reply list */}
         <div className="space-y-2">
           {replies.map((reply) => {
             const claim = getClaimForUser(reply.twitter_username);
             const isClaimed = claim?.status === "claimed";
-            const isClaimingThis = claimingUser === reply.twitter_username;
+            const isMe = myUsername === reply.twitter_username;
 
             return (
-              <Card key={reply.twitter_username} className="bg-card/40 border-border/30">
+              <Card key={reply.twitter_username} className={`bg-card/40 border-border/30 ${isMe ? "ring-1 ring-primary/30" : ""}`}>
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 shrink-0">
@@ -347,6 +467,9 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
                             reply.verified_type === "gold" ? "text-badge-gold" : "text-badge-blue"
                           }`}
                         />
+                        {isMe && (
+                          <Badge variant="outline" className="text-[9px] border-primary/30 text-primary bg-primary/5 ml-1">YOU</Badge>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground">@{reply.twitter_username}</span>
                     </div>
@@ -357,48 +480,12 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
                           <CheckCircle2 className="w-3 h-3" /> Claimed
                         </Badge>
                       ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-[10px] h-7 gap-1 border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
-                          onClick={() => setClaimingUser(claimingUser === reply.twitter_username ? null : reply.twitter_username)}
-                          disabled={isClaimingThis}
-                        >
-                          <Wallet className="w-3 h-3" />
-                          Claim $1
-                        </Button>
+                        <Badge variant="outline" className="border-yellow-500/30 text-yellow-400 bg-yellow-500/5 text-[10px] gap-1">
+                          <Clock className="w-3 h-3" /> Unclaimed
+                        </Badge>
                       )}
                     </div>
                   </div>
-
-                  {/* Claim input - shows when user clicks Claim */}
-                  {claimingUser === reply.twitter_username && !isClaimed && (
-                    <div className="flex gap-2 mt-2 pl-12">
-                      <Input
-                        value={claimWallet}
-                        onChange={(e) => setClaimWallet(e.target.value)}
-                        placeholder="Your Solana wallet address..."
-                        className="text-xs h-8 bg-background/50"
-                      />
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs shrink-0 btn-gradient-green"
-                        onClick={() => handleClaim(reply.twitter_username)}
-                        disabled={isClaimingThis && !!claimingUser}
-                      >
-                        {isClaimingThis ? <Loader2 className="w-3 h-3 animate-spin" /> : "Send"}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Claim tx info */}
-                  {isClaimed && claim?.claim_tx_signature && (
-                    <div className="mt-1.5 pl-12">
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        TX: {claim.claim_tx_signature.slice(0, 16)}...
-                      </span>
-                    </div>
-                  )}
 
                   {reply.reply_text && (
                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed line-clamp-2 pl-12">
@@ -411,17 +498,14 @@ export function MeteoriteTokenDetail({ token, open, onOpenChange }: Props) {
           })}
         </div>
 
-        {/* Fee info footer */}
+        {/* Footer */}
         {replies.length > 0 && (
           <>
             <Separator className="bg-border/30" />
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>
-                <strong className="text-foreground">How it works:</strong> 2% swap fee on every trade.
-                1% goes to the platform, 1% goes to the dev wallet.
-              </p>
-              <p>From the dev wallet: 25% → tweet owner, 25% → commenter claims, 50% → operations.</p>
-              <p>Each verified replier can claim once per tokenized tweet. Claims paid from accumulated fees.</p>
+              <p><strong className="text-foreground">How it works:</strong> 2% swap fee on every trade. 1% → platform, 1% → dev wallet.</p>
+              <p>From dev wallet: 25% → tweet owner, 25% → commenter claims, 50% → operations.</p>
+              <p>Each verified replier can claim once per tokenized tweet. Claims sent to your connected wallet.</p>
             </div>
           </>
         )}
