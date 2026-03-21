@@ -540,6 +540,11 @@ export default function MeteoritePage() {
             </Card>
           </motion.div>
         </section>
+        <MeteoriteTokenDetail
+          token={selectedToken}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+        />
       </div>
     </LaunchpadLayout>
   );
