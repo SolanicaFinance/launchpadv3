@@ -5286,6 +5286,75 @@ export type Database = {
           },
         ]
       }
+      meteorite_tokens: {
+        Row: {
+          created_at: string | null
+          creator_wallet: string | null
+          dev_wallet_address: string
+          dev_wallet_private_key: string
+          error_message: string | null
+          id: string
+          image_url: string | null
+          mint_address: string | null
+          payment_tx_signature: string | null
+          pumpfun_url: string | null
+          status: string
+          token_description: string | null
+          token_name: string | null
+          token_ticker: string | null
+          total_fees_earned: number | null
+          tweet_author: string | null
+          tweet_content: string | null
+          tweet_id: string | null
+          tweet_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_wallet?: string | null
+          dev_wallet_address: string
+          dev_wallet_private_key: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          mint_address?: string | null
+          payment_tx_signature?: string | null
+          pumpfun_url?: string | null
+          status?: string
+          token_description?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          total_fees_earned?: number | null
+          tweet_author?: string | null
+          tweet_content?: string | null
+          tweet_id?: string | null
+          tweet_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_wallet?: string | null
+          dev_wallet_address?: string
+          dev_wallet_private_key?: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          mint_address?: string | null
+          payment_tx_signature?: string | null
+          pumpfun_url?: string | null
+          status?: string
+          token_description?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          total_fees_earned?: number | null
+          tweet_author?: string | null
+          tweet_content?: string | null
+          tweet_id?: string | null
+          tweet_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       mev_analyses: {
         Row: {
           backrun_signature: string | null
@@ -10608,6 +10677,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      meteorite_tokens_safe: {
+        Row: {
+          created_at: string | null
+          creator_wallet: string | null
+          dev_wallet_address: string | null
+          error_message: string | null
+          id: string | null
+          image_url: string | null
+          mint_address: string | null
+          payment_tx_signature: string | null
+          pumpfun_url: string | null
+          status: string | null
+          token_description: string | null
+          token_name: string | null
+          token_ticker: string | null
+          total_fees_earned: number | null
+          tweet_author: string | null
+          tweet_content: string | null
+          tweet_id: string | null
+          tweet_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_wallet?: string | null
+          dev_wallet_address?: string | null
+          error_message?: string | null
+          id?: string | null
+          image_url?: string | null
+          mint_address?: string | null
+          payment_tx_signature?: string | null
+          pumpfun_url?: string | null
+          status?: string | null
+          token_description?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          total_fees_earned?: number | null
+          tweet_author?: string | null
+          tweet_content?: string | null
+          tweet_id?: string | null
+          tweet_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_wallet?: string | null
+          dev_wallet_address?: string | null
+          error_message?: string | null
+          id?: string | null
+          image_url?: string | null
+          mint_address?: string | null
+          payment_tx_signature?: string | null
+          pumpfun_url?: string | null
+          status?: string | null
+          token_description?: string | null
+          token_name?: string | null
+          token_ticker?: string | null
+          total_fees_earned?: number | null
+          tweet_author?: string | null
+          tweet_content?: string | null
+          tweet_id?: string | null
+          tweet_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       token_promotions_safe: {
         Row: {
