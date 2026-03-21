@@ -58,7 +58,9 @@ async function generateConvoReply(
   const userPrompt = `Your original context was about a crypto topic. @${theirUsername} replied to you:
 "${theirReplyText}"
 
-Write a short, natural reply back (50-90 characters). Be conversational, keep the debate going. Ask a follow-up question or double down on your point. No emojis, no hashtags, no slang.`;
+Write a short, natural reply back (50-90 characters). Be conversational, keep the debate going. Ask a follow-up question or double down on your point. No emojis, no hashtags, no slang.
+
+IMPORTANT: If their reply doesn't make sense, is gibberish, is just emojis, is completely off-topic, or the conversation has nowhere productive to go, respond with exactly "SKIP" and nothing else. Only continue conversations that are meaningful.`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -85,6 +87,9 @@ Write a short, natural reply back (50-90 characters). Be conversational, keep th
 
     // Clean quotes
     if (reply.startsWith('"') && reply.endsWith('"')) reply = reply.slice(1, -1);
+
+    // AI decided conversation isn't worth continuing
+    if (reply.trim().toUpperCase() === "SKIP") return "";
 
     // Strip emojis and hashtags
     reply = reply.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "").trim();
@@ -206,21 +211,28 @@ Deno.serve(async (req) => {
 
       if (!ourReplies || ourReplies.length === 0) continue;
 
-      // Check which replies we've already responded to in conversation
+      // Count how many convo replies we've made per conversation (cap at 3-5)
+      const MAX_CONVO_REPLIES = 4; // stop after ~4 reply-backs per thread
       const { data: existingConvoReplies } = await supabase
         .from("x_bot_account_replies")
         .select("conversation_id")
         .eq("account_id", account.id)
         .eq("reply_type", "convo_reply");
 
-      const alreadyRepliedConvos = new Set(
-        (existingConvoReplies || []).map((r: any) => r.conversation_id)
-      );
+      // Count per conversation
+      const convoReplyCounts = new Map<string, number>();
+      for (const r of (existingConvoReplies || [])) {
+        convoReplyCounts.set(r.conversation_id, (convoReplyCounts.get(r.conversation_id) || 0) + 1);
+      }
 
       for (const ourReply of ourReplies) {
         if (!ourReply.reply_id) continue;
-        // Skip if we already did a convo reply in this thread
-        if (alreadyRepliedConvos.has(ourReply.conversation_id)) continue;
+        // Skip if we've hit the max convo replies for this thread (3-5 cap)
+        const convoCount = convoReplyCounts.get(ourReply.conversation_id) || 0;
+        if (convoCount >= MAX_CONVO_REPLIES) {
+          console.log(`[convo-monitor] ⏭️ Thread ${ourReply.conversation_id} capped at ${convoCount} replies`);
+          continue;
+        }
 
         try {
           // Fetch replies to our reply tweet
