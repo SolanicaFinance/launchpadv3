@@ -206,16 +206,19 @@ Deno.serve(async (req) => {
 
       if (!ourReplies || ourReplies.length === 0) continue;
 
-      // Check which replies we've already responded to in conversation
+      // Count how many convo replies we've made per conversation (cap at 3-5)
+      const MAX_CONVO_REPLIES = 4; // stop after ~4 reply-backs per thread
       const { data: existingConvoReplies } = await supabase
         .from("x_bot_account_replies")
         .select("conversation_id")
         .eq("account_id", account.id)
         .eq("reply_type", "convo_reply");
 
-      const alreadyRepliedConvos = new Set(
-        (existingConvoReplies || []).map((r: any) => r.conversation_id)
-      );
+      // Count per conversation
+      const convoReplyCounts = new Map<string, number>();
+      for (const r of (existingConvoReplies || [])) {
+        convoReplyCounts.set(r.conversation_id, (convoReplyCounts.get(r.conversation_id) || 0) + 1);
+      }
 
       for (const ourReply of ourReplies) {
         if (!ourReply.reply_id) continue;
