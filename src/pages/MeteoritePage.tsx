@@ -68,6 +68,8 @@ export default function MeteoritePage() {
   // Live tokens from DB
   const [liveTokens, setLiveTokens] = useState<MeteoriteToken[]>([]);
   const [stats, setStats] = useState({ totalTokens: 0, totalLive: 0, totalFees: 0 });
+  const [selectedToken, setSelectedToken] = useState<MeteoriteToken | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // Fetch live tokens
   useEffect(() => {
