@@ -166,7 +166,21 @@ async function generateReply(
     // Clean up double spaces left behind
     reply = reply.replace(/\s{2,}/g, " ").trim();
 
-    // Truncate to leave room for required footer
+    // Optimal length targeting: if reply is too long, try to truncate at sentence boundary
+    // Sweet spot is 71-100 characters for maximum algorithmic engagement
+    if (reply.length > OPTIMAL_MAX_LENGTH) {
+      // Try to cut at a sentence boundary within optimal range
+      const cutPoints = [". ", "? ", "! ", ", "];
+      for (const cp of cutPoints) {
+        const idx = reply.lastIndexOf(cp, OPTIMAL_MAX_LENGTH);
+        if (idx >= OPTIMAL_MIN_LENGTH) {
+          reply = reply.substring(0, idx + 1).trim();
+          break;
+        }
+      }
+    }
+
+    // Hard max truncation
     if (reply.length > MAX_REPLY_BODY_LENGTH) {
       reply = reply.substring(0, Math.max(0, MAX_REPLY_BODY_LENGTH - 3)) + "...";
     }
