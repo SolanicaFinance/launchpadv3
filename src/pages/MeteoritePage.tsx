@@ -198,25 +198,9 @@ export default function MeteoritePage() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Store tweet preview if returned, or create fallback from URL
+      // Store tweet preview — require valid data
       if (data.tweetData) {
         setTweetPreview(data.tweetData as TweetPreview);
-      } else {
-        // Fallback: extract username from URL
-        const urlMatch = tweetUrl.match(/(?:x\.com|twitter\.com)\/([^/]+)\/status/);
-        const username = urlMatch ? urlMatch[1] : "unknown";
-        setTweetPreview({
-          author: username,
-          authorName: `@${username}`,
-          authorAvatar: "",
-          content: "Tweet content could not be loaded. The token will still be created from this tweet.",
-          createdAt: "",
-          likes: 0,
-          retweets: 0,
-          replies: 0,
-          isVerified: false,
-          verifiedType: "",
-        });
       }
 
       if (data.alreadyExists && data.status !== "failed") {

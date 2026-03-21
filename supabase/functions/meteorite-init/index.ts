@@ -73,6 +73,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    // For new tokens, require tweet data to be valid
+    if (!existing && !tweetData) {
+      return new Response(
+        JSON.stringify({ error: "Could not find this tweet. Please check the URL and try again." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (existing) {
       // Update tweet data in DB if we fetched fresh data and it was missing
       if (tweetData && !existing.tweet_author) {
