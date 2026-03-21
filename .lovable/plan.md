@@ -1,103 +1,89 @@
 
 
-# MEV Analysis Admin Tab
+# Meteorite Mode — Full Implementation Plan
 
-## Overview
+## Current State
+- **MeteoritePage.tsx**: Landing page with mock data, non-functional "Tokenize Tweet" button
+- **MeteoriteAdminTab.tsx**: Admin tab with mock data, no real backend
+- **No database tables**: No `meteorite_tokens` table exists
+- **No edge functions**: No meteorite-specific backend functions exist
+- **Existing patterns**: PumpPortal API for token creation (pump-batch-launch), AI image generation (fun-generate), Keypair generation for wallets
 
-Build a new "MEV" tab in the Admin Panel that analyzes sandwich attacks on your transactions using the Helius Enhanced Transactions API. It will parse the two provided MEV bot transactions alongside your victim transaction, extract profit/loss/fee data, and provide a foundation for MEV detection and replication research.
+## What Needs to Be Built
 
-## What Gets Built
+### 1. Database: `meteorite_tokens` table
+Store each tokenized tweet with its associated dev wallet (private key included for permanent access).
 
-### 1. Edge Function: `mev-analyze` 
+```
+meteorite_tokens:
+  id, tweet_url, tweet_author, tweet_content, tweet_id,
+  token_name, token_ticker, token_description,
+  mint_address, pumpfun_url,
+  dev_wallet_address, dev_wallet_private_key (encrypted/plain),
+  image_url, status (pending_payment | generating_image | launching | live | failed),
+  creator_wallet (who submitted), payment_tx_signature,
+  total_fees_earned, created_at
+```
 
-Accepts one or more transaction signatures and uses the Helius Enhanced Transactions API (`POST https://api.helius.xyz/v0/transactions`) to parse them. For each signature it returns:
+RLS: Public SELECT (no private key column exposed), writes via service role only. Create a `meteorite_tokens_safe` view excluding `dev_wallet_private_key`.
 
-- Full enhanced transaction data (token transfers, native transfers, fee payer, accounts involved)
-- Computed fields: SOL spent on fees, tokens moved, counterparty wallets, timing (slot/blocktime)
-- Sandwich detection logic: given a set of 3 signatures (front-run, victim, back-run), compute:
-  - Bot's buy price vs your buy price vs bot's sell price
-  - Bot profit (SOL gained minus fees/tips)
-  - Your loss (price impact caused by the front-run)
-  - Jito tip paid by the bot (if any, from Jito tip program accounts)
-  - Slot timing (all 3 in same slot = confirmed sandwich)
+### 2. Edge Function: `meteorite-init`
+When user submits a tweet URL to tokenize:
+1. Generate a fresh Solana Keypair (dev wallet for this token)
+2. Save the private key to `meteorite_tokens` table (status: `pending_payment`)
+3. Return the dev wallet address and 0.1 SOL payment requirement
+4. Parse tweet ID from URL for later use
 
-### 2. Edge Function: `mev-monitor`
+### 3. Edge Function: `meteorite-confirm`
+Polls or is called after user sends 0.1 SOL:
+1. Check the dev wallet balance on-chain (via Solana RPC)
+2. Once 0.1 SOL confirmed, update status to `generating_image`
+3. Trigger image generation (next step)
 
-A broader scanner that, given a wallet address, fetches recent transactions and flags any that were sandwiched by checking for the pattern: same-slot transactions from known MEV bot programs (e.g., `vpeNALD...oax38b` / other known bot addresses) that bracket your swaps.
+### 4. Edge Function: `meteorite-launch`
+After payment confirmation:
+1. **Fetch tweet content** from the tweet URL (extract text context)
+2. **AI generates meme image**: Use Lovable AI gateway (same pattern as `fun-generate`) — the character/meme is based on the tweet's context/content, background uses random meme metrics
+3. **AI generates token name/ticker**: Based on tweet context
+4. **Upload image to pump.fun IPFS** (same pattern as `pump-batch-launch`)
+5. **Set X (Twitter) link** to the original monetized tweet URL in token metadata
+6. **Create token via PumpPortal API** using the dev wallet's private key as the deployer, with the 0.1 SOL as the initial dev buy
+7. **Save mint address, pumpfun URL** to `meteorite_tokens`, set status to `live`
+8. Return success with token details
 
-### 3. Admin Page: `MevAdminPage.tsx`
+### 5. Frontend: MeteoritePage.tsx — Tokenization Flow
+Replace mock "Tokenize Tweet" button with a real multi-step flow:
+1. **URL Input** → Validate tweet URL format
+2. **Payment Prompt** → Show generated dev wallet address, "Send 0.1 SOL to launch" with copy button and QR-like display
+3. **Waiting for Payment** → Poll `meteorite-confirm` until 0.1 SOL arrives
+4. **Generating Meme** → Show spinner/animation while AI creates the image based on tweet context
+5. **Launching** → Show progress while token deploys to pump.fun
+6. **Success Screen** → Show mint address, pump.fun link, copy CA button
 
-New tab in Admin Panel with sections:
+### 6. Frontend: Live Data Section
+Replace `MOCK_TOKENIZED_TWEETS` with real data from `meteorite_tokens` table:
+- Query `meteorite_tokens_safe` view (excludes private keys)
+- Show real token names, CAs, tweet links, status
+- Stats bar pulls aggregated data from the table
 
-**Transaction Analyzer** — Paste 1-3 transaction signatures, click "Analyze". Displays:
-- Transaction timeline (slot, timestamp, block position)
-- Token flow diagram: who sent what to whom
-- Fee breakdown (base fee, priority fee, Jito tip)
-- For sandwich sets: bot profit, your slippage loss, price impact
-
-**Sandwich Breakdown Card** — When 3 related txs are provided:
-- Front-run TX: Bot buys token X for Y SOL
-- Victim TX (yours): You buy token X at inflated price
-- Back-run TX: Bot sells token X for Z SOL
-- Net bot profit: Z - Y - fees
-- Your excess cost: difference vs fair price
-
-**Wallet MEV History** — Enter a wallet, scan recent transactions for sandwich attacks. Table showing date, token, bot address, your loss, bot profit.
-
-**MEV Replication Research** — Static reference section with:
-- How sandwich bots work (mempool monitoring, Jito bundles, priority fees)
-- Key infrastructure needed (Geyser plugin / LaserStream for sub-ms tx visibility, dedicated validator, Jito bundle submission)
-- Estimated costs (validator node, RPC, Jito tips)
-- Links to relevant tools (sandwiched.me, Jito explorer)
-
-### 4. Database Table: `mev_analyses`
-
-Stores analyzed sandwich attacks for reference:
-- `id`, `victim_signature`, `frontrun_signature`, `backrun_signature`
-- `victim_wallet`, `bot_wallet`, `token_mint`, `token_name`
-- `bot_profit_sol`, `victim_loss_sol`, `bot_fees_sol`, `jito_tip_sol`
-- `slot`, `block_time`, `created_at`
-
-### 5. Admin Panel Integration
-
-- Add "MEV" tab with `Zap` icon to `TAB_CONFIG` in `AdminPanelPage.tsx`
-- Lazy-load `MevAdminPage`
+### 7. Admin Tab: Real Data
+Update `MeteoriteAdminTab.tsx` to query `meteorite_tokens` table instead of mock data. Admin can see all tokens, statuses, and dev wallet addresses.
 
 ## Technical Details
 
-**Helius API calls** (edge function, using existing `HELIUS_API_KEY`):
-```
-POST https://api.helius.xyz/v0/transactions?api-key=KEY
-Body: { "transactions": ["sig1", "sig2", "sig3"] }
-```
+- **Dev wallet security**: Private keys stored in `meteorite_tokens` with service-role-only access. Frontend never sees them. A `_safe` view is used for public queries.
+- **PumpPortal integration**: Reuses the proven pattern from `pump-batch-launch` — IPFS upload → mint keypair → PumpPortal create with dev wallet as deployer.
+- **AI image generation**: Reuses `fun-generate` pattern with Lovable AI gateway, but prompt is contextualized to the tweet content.
+- **Tweet X link**: The monetized tweet URL is passed as the `twitter` field in pump.fun metadata, so it shows on the token's pump.fun page.
+- **No admin password needed for dev wallets**: Keys are stored permanently in the database, accessible via service role edge functions.
 
-Returns enhanced data with `nativeTransfers`, `tokenTransfers`, `fee`, `feePayer`, `timestamp`, `slot`, `type`.
-
-**Sandwich detection algorithm:**
-1. Parse all 3 txs
-2. Verify same slot (or adjacent slots)
-3. Identify the common token mint across all 3
-4. Calculate: bot buys at price P1, you buy at P2 > P1, bot sells at P3 > P2
-5. Bot profit = (P3 - P1) * token_amount - total_fees
-6. Your loss = (P2 - fair_price_estimate) * your_token_amount
-
-**Jito tip detection:** Check if any transfer goes to known Jito tip accounts (8 known addresses).
-
-## Files Created/Modified
-
-| File | Action |
-|---|---|
-| `supabase/functions/mev-analyze/index.ts` | Create |
-| `supabase/functions/mev-monitor/index.ts` | Create |
-| `src/pages/MevAdminPage.tsx` | Create |
-| `src/pages/AdminPanelPage.tsx` | Modify — add MEV tab |
-| DB migration | Create `mev_analyses` table |
-
-## Implementation Order
-
-1. Database migration (`mev_analyses`)
-2. `mev-analyze` edge function
-3. `mev-monitor` edge function  
-4. `MevAdminPage.tsx` with all sections
-5. Wire into Admin Panel tabs
+## File Changes Summary
+| Action | File |
+|--------|------|
+| Create | `supabase/migrations/meteorite_tokens.sql` (table + view + RLS) |
+| Create | `supabase/functions/meteorite-init/index.ts` |
+| Create | `supabase/functions/meteorite-confirm/index.ts` |
+| Create | `supabase/functions/meteorite-launch/index.ts` |
+| Rewrite | `src/pages/MeteoritePage.tsx` (real flow + live data) |
+| Rewrite | `src/components/admin/MeteoriteAdminTab.tsx` (real data) |
 
