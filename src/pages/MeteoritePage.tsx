@@ -162,6 +162,7 @@ export default function MeteoritePage() {
       const { data } = await supabase
         .from("meteorite_tokens" as any)
         .select("id, tweet_url, tweet_author, tweet_content, token_name, token_ticker, mint_address, pumpfun_url, image_url, status, total_fees_earned, created_at")
+        .in("status", ["live", "launching", "generating_image"])
         .order("created_at", { ascending: false })
         .limit(20);
 
