@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Flame, Shield, DollarSign, Users, CheckCircle2, XCircle, Zap, TrendingUp, MessageSquare, BadgeCheck, Search, ExternalLink, Copy, Loader2 } from "lucide-react";
+import { MeteoriteTokenDetail } from "@/components/meteorite/MeteoriteTokenDetail";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
