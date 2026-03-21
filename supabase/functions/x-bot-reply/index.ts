@@ -9,6 +9,8 @@ const corsHeaders = {
 const TWITTERAPI_BASE = "https://api.twitterapi.io";
 const MAX_REPLIES_PER_MINUTE = 2;
 const MAX_REPLY_BODY_LENGTH = 280;
+const OPTIMAL_MIN_LENGTH = 71;
+const OPTIMAL_MAX_LENGTH = 100;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
