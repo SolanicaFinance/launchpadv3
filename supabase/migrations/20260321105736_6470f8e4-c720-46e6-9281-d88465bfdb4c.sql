@@ -1,0 +1,1 @@
+ALTER TABLE public.meteorite_tokens ADD COLUMN IF NOT EXISTS announcement_tweet_id text;
