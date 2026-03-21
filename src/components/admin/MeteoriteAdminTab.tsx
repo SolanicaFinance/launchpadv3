@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Flame, Search, CheckCircle2, XCircle, ExternalLink, DollarSign, Copy, RefreshCw, Loader2 } from "lucide-react";
+import { Flame, Search, CheckCircle2, XCircle, ExternalLink, DollarSign, Copy, RefreshCw, Loader2, Users, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,9 @@ interface MeteoriteToken {
   total_fees_earned: number;
   error_message: string | null;
   created_at: string;
+  owner_claimed_at: string | null;
+  owner_claimed_sol: number | null;
+  eligible_replies_count: number | null;
 }
 
 export function MeteoriteAdminTab() {
@@ -37,7 +40,7 @@ export function MeteoriteAdminTab() {
     setLoading(true);
     const { data, error } = await supabase
       .from("meteorite_tokens" as any)
-      .select("id, tweet_url, tweet_id, tweet_author, tweet_content, token_name, token_ticker, mint_address, pumpfun_url, dev_wallet_address, image_url, status, creator_wallet, total_fees_earned, error_message, created_at")
+      .select("id, tweet_url, tweet_id, tweet_author, tweet_content, token_name, token_ticker, mint_address, pumpfun_url, dev_wallet_address, image_url, status, creator_wallet, total_fees_earned, error_message, created_at, owner_claimed_at, owner_claimed_sol, eligible_replies_count")
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -51,6 +54,8 @@ export function MeteoriteAdminTab() {
   const filteredTokens = filter === "all" ? tokens : tokens.filter(t => t.status === filter);
   const totalLive = tokens.filter(t => t.status === "live").length;
   const totalFees = tokens.reduce((sum, t) => sum + (Number(t.total_fees_earned) || 0), 0);
+  const totalClaimed = tokens.reduce((sum, t) => sum + (Number(t.owner_claimed_sol) || 0), 0);
+  const totalRepliers = tokens.reduce((sum, t) => sum + (Number(t.eligible_replies_count) || 0), 0);
 
   const handleAddTweet = async () => {
     if (!newTweetUrl.includes("x.com") && !newTweetUrl.includes("twitter.com")) {
@@ -103,12 +108,13 @@ export function MeteoriteAdminTab() {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
           { label: "Total Tweets", value: tokens.length, color: "text-foreground" },
           { label: "Live Tokens", value: totalLive, color: "text-green-400" },
           { label: "Pending", value: tokens.filter(t => t.status === "pending_payment").length, color: "text-yellow-400" },
           { label: "Total Fees", value: `${totalFees.toFixed(2)} SOL`, color: "text-orange-400" },
+          { label: "Owner Claimed", value: `${totalClaimed.toFixed(2)} SOL`, color: "text-green-400" },
         ].map((stat, i) => (
           <Card key={i} className="bg-card/40 border-border/30">
             <CardContent className="p-4">
@@ -189,6 +195,19 @@ export function MeteoriteAdminTab() {
                   <span className="font-mono text-[10px] truncate max-w-[140px]" title={token.dev_wallet_address}>
                     Dev: {token.dev_wallet_address.slice(0, 6)}...{token.dev_wallet_address.slice(-4)}
                   </span>
+                  {token.tweet_author && (
+                    <span className="flex items-center gap-1">
+                      <Crown className="w-3 h-3 text-orange-400" />
+                      @{token.tweet_author}
+                      {token.owner_claimed_at && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+                    </span>
+                  )}
+                  {(token.eligible_replies_count ?? 0) > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3 text-blue-400" />
+                      {token.eligible_replies_count} repliers
+                    </span>
+                  )}
                   {Number(token.total_fees_earned) > 0 && (
                     <span className="flex items-center gap-1">
                       <DollarSign className="w-3 h-3 text-orange-400" />
