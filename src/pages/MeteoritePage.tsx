@@ -1,16 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Flame, Shield, DollarSign, Users, CheckCircle2, XCircle, Zap, TrendingUp, MessageSquare, BadgeCheck, Search, ExternalLink, Copy, Loader2 } from "lucide-react";
+import { Flame, Shield, DollarSign, Users, CheckCircle2, XCircle, Zap, TrendingUp, MessageSquare, BadgeCheck, Search, ExternalLink, Copy, Loader2, Heart, Repeat2, MessageCircle } from "lucide-react";
 import { MeteoriteTokenDetail } from "@/components/meteorite/MeteoriteTokenDetail";
+import { XIcon } from "@/components/icons/XIcon";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BRAND } from "@/config/branding";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+interface TweetPreview {
+  author: string;
+  authorName: string;
+  authorAvatar: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+  retweets: number;
+  replies: number;
+  isVerified: boolean;
+  verifiedType: string;
+}
 
 const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
@@ -57,11 +72,81 @@ const RULES = [
   { icon: XCircle, text: "No bot accounts or automated replies", ok: false },
 ];
 
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+  return String(n);
+}
+
+function TweetCard({ tweet, tweetUrl }: { tweet: TweetPreview; tweetUrl: string }) {
+  const tweetDate = tweet.createdAt ? new Date(tweet.createdAt) : null;
+  const formattedDate = tweetDate
+    ? tweetDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null;
+
+  return (
+    <div className="max-w-md mx-auto rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+      <div className="p-4">
+        {/* Author row */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-11 w-11">
+              <AvatarImage src={tweet.authorAvatar} />
+              <AvatarFallback className="text-sm bg-muted font-bold">
+                {tweet.authorName?.slice(0, 2) || "?"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-foreground text-[15px] truncate">{tweet.authorName}</span>
+                {tweet.isVerified && (
+                  <BadgeCheck className={`w-[18px] h-[18px] shrink-0 fill-current ${
+                    tweet.verifiedType === "gold" ? "text-badge-gold" : "text-badge-blue"
+                  }`} />
+                )}
+              </div>
+              <span className="text-[13px] text-muted-foreground">@{tweet.author}</span>
+            </div>
+          </div>
+          <XIcon className="w-5 h-5 text-foreground/60 shrink-0 mt-1" />
+        </div>
+
+        {/* Content */}
+        <p className="text-[15px] text-foreground leading-[1.4] whitespace-pre-wrap mb-3">
+          {tweet.content}
+        </p>
+
+        {/* Date */}
+        {formattedDate && (
+          <p className="text-[13px] text-muted-foreground mb-3">{formattedDate}</p>
+        )}
+
+        {/* Engagement stats */}
+        <div className="flex items-center gap-6 pt-3 border-t border-border/30">
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <MessageCircle className="w-4 h-4" />
+            {formatCount(tweet.replies)}
+          </span>
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Repeat2 className="w-4 h-4" />
+            {formatCount(tweet.retweets)}
+          </span>
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Heart className="w-4 h-4" />
+            {formatCount(tweet.likes)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MeteoritePage() {
   const [tweetUrl, setTweetUrl] = useState("");
   const [step, setStep] = useState<TokenizationStep>("idle");
   const [currentTokenId, setCurrentTokenId] = useState<string | null>(null);
   const [devWalletAddress, setDevWalletAddress] = useState<string | null>(null);
+  const [tweetPreview, setTweetPreview] = useState<TweetPreview | null>(null);
   const [launchResult, setLaunchResult] = useState<{ tokenName: string; tokenTicker: string; mintAddress: string; pumpfunUrl: string } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -101,6 +186,7 @@ export default function MeteoritePage() {
     }
     setStep("submitting");
     setErrorMsg("");
+    setTweetPreview(null);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/meteorite-init`, {
@@ -110,6 +196,11 @@ export default function MeteoritePage() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+
+      // Store tweet preview if returned
+      if (data.tweetData) {
+        setTweetPreview(data.tweetData as TweetPreview);
+      }
 
       if (data.alreadyExists && data.status !== "failed") {
         setCurrentTokenId(data.id);
@@ -126,7 +217,7 @@ export default function MeteoritePage() {
       setCurrentTokenId(data.id);
       setDevWalletAddress(data.devWalletAddress);
       setStep("pending_payment");
-      toast.success("Tweet registered! Send 0.1 SOL to launch.");
+      toast.success("Tweet loaded! Send 0.1 SOL to launch.");
     } catch (e: any) {
       setErrorMsg(e.message);
       setStep("error");
@@ -200,6 +291,7 @@ export default function MeteoritePage() {
     setCurrentTokenId(null);
     setDevWalletAddress(null);
     setLaunchResult(null);
+    setTweetPreview(null);
     setErrorMsg("");
   };
 
@@ -248,42 +340,60 @@ export default function MeteoritePage() {
               )}
 
               {step === "submitting" && (
-                <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Initializing...</span>
+                  <span>Loading tweet...</span>
                 </div>
               )}
 
+              {/* Payment step with tweet preview */}
               {(step === "pending_payment" || step === "checking_payment") && devWalletAddress && (
-                <Card className="max-w-md mx-auto bg-card/60 border-orange-500/30">
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="text-sm font-semibold text-foreground">Send 0.1 SOL to launch this token</div>
-                    <div className="bg-background/60 rounded-lg p-4 border border-border/50">
-                      <div className="text-xs text-muted-foreground mb-1">Dev Wallet Address</div>
-                      <div className="font-mono text-xs text-foreground break-all">{devWalletAddress}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => copyToClipboard(devWalletAddress)} className="text-xs">
-                      <Copy className="w-3 h-3 mr-1.5" /> Copy Address
-                    </Button>
-                    <Separator className="bg-border/30" />
-                    <Button onClick={checkPayment} disabled={step === "checking_payment"} className="w-full btn-gradient-green">
-                      {step === "checking_payment" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> I've Sent 0.1 SOL</>}
-                    </Button>
-                    <button onClick={resetFlow} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                  </CardContent>
-                </Card>
+                <div className="space-y-4">
+                  {/* Tweet preview */}
+                  {tweetPreview && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease }}>
+                      <TweetCard tweet={tweetPreview} tweetUrl={tweetUrl} />
+                    </motion.div>
+                  )}
+
+                  <Card className="max-w-md mx-auto bg-card/60 border-orange-500/30">
+                    <CardContent className="p-6 text-center space-y-4">
+                      <div className="text-sm font-semibold text-foreground">Send 0.1 SOL to launch this token</div>
+                      <div className="bg-background/60 rounded-lg p-4 border border-border/50">
+                        <div className="text-xs text-muted-foreground mb-1">Dev Wallet Address</div>
+                        <div className="font-mono text-xs text-foreground break-all">{devWalletAddress}</div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => copyToClipboard(devWalletAddress)} className="text-xs">
+                        <Copy className="w-3 h-3 mr-1.5" /> Copy Address
+                      </Button>
+                      <Separator className="bg-border/30" />
+                      <Button onClick={checkPayment} disabled={step === "checking_payment"} className="w-full btn-gradient-green">
+                        {step === "checking_payment" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> I've Sent 0.1 SOL</>}
+                      </Button>
+                      <button onClick={resetFlow} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
 
+              {/* Generating / Launching with tweet preview */}
               {(step === "generating" || step === "launching") && (
-                <Card className="max-w-md mx-auto bg-card/60 border-orange-500/30">
-                  <CardContent className="p-8 text-center space-y-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-orange-400 mx-auto" />
-                    <div className="text-sm font-semibold text-foreground">
-                      {step === "generating" ? "AI is generating your meme..." : "Launching token on pump.fun..."}
+                <div className="space-y-4">
+                  {tweetPreview && (
+                    <div className="opacity-60">
+                      <TweetCard tweet={tweetPreview} tweetUrl={tweetUrl} />
                     </div>
-                    <p className="text-xs text-muted-foreground">This may take 30-60 seconds</p>
-                  </CardContent>
-                </Card>
+                  )}
+                  <Card className="max-w-md mx-auto bg-card/60 border-orange-500/30">
+                    <CardContent className="p-8 text-center space-y-4">
+                      <Loader2 className="w-8 h-8 animate-spin text-orange-400 mx-auto" />
+                      <div className="text-sm font-semibold text-foreground">
+                        {step === "generating" ? "AI is generating your meme..." : "Launching token on pump.fun..."}
+                      </div>
+                      <p className="text-xs text-muted-foreground">This may take 30-60 seconds</p>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
 
               {step === "success" && launchResult && (
@@ -498,16 +608,16 @@ export default function MeteoritePage() {
                               {Number(token.total_fees_earned).toFixed(2)} SOL
                             </span>
                           )}
-                          <a href={token.tweet_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          <a href={token.tweet_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={(e) => e.stopPropagation()}>
                             <ExternalLink className="w-3 h-3" /> Tweet
                           </a>
                           {token.pumpfun_url && (
-                            <a href={token.pumpfun_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors">
+                            <a href={token.pumpfun_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={(e) => e.stopPropagation()}>
                               <ExternalLink className="w-3 h-3" /> Pump.fun
                             </a>
                           )}
                           {token.mint_address && (
-                            <button onClick={() => copyToClipboard(token.mint_address!)} className="ml-auto flex items-center gap-1 hover:text-foreground transition-colors">
+                            <button onClick={(e) => { e.stopPropagation(); copyToClipboard(token.mint_address!); }} className="ml-auto flex items-center gap-1 hover:text-foreground transition-colors">
                               <Copy className="w-3 h-3" />
                               <span className="font-mono text-[10px] truncate max-w-[100px]">{token.mint_address}</span>
                             </button>
