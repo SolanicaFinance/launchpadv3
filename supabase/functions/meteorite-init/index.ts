@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       console.log(`[meteorite-init] tweetId=${tweetId}, apiKey=${apiKey ? "set" : "NOT SET"}`);
       if (apiKey) {
         try {
-          const tweetApiUrl = `https://api.twitterapi.io/twitter/tweet?tweetId=${tweetId}`;
+          const tweetApiUrl = `https://api.twitterapi.io/twitter/tweets?tweet_ids=${tweetId}`;
           console.log(`[meteorite-init] Fetching: ${tweetApiUrl}`);
           const res = await fetch(tweetApiUrl, { headers: { "X-API-Key": apiKey } });
           console.log(`[meteorite-init] API response status: ${res.status}`);
@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
           console.log(`[meteorite-init] API response body (first 500): ${rawText.slice(0, 500)}`);
           if (res.ok) {
             const data = JSON.parse(rawText);
-            const tweet = data?.tweet || data;
+            const tweets = data?.tweets || data?.data || [];
+            const tweet = Array.isArray(tweets) ? tweets[0] : (data?.tweet || data);
             const author = tweet?.author || tweet?.user || {};
             tweetData = {
               author: author?.userName || author?.username || author?.screen_name || "",
