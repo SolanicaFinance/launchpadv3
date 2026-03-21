@@ -5286,18 +5286,125 @@ export type Database = {
           },
         ]
       }
+      meteorite_eligible_replies: {
+        Row: {
+          created_at: string
+          id: string
+          is_shadowbanned: boolean
+          meteorite_token_id: string
+          reply_id: string | null
+          reply_text: string | null
+          twitter_avatar_url: string | null
+          twitter_display_name: string | null
+          twitter_username: string
+          verified_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_shadowbanned?: boolean
+          meteorite_token_id: string
+          reply_id?: string | null
+          reply_text?: string | null
+          twitter_avatar_url?: string | null
+          twitter_display_name?: string | null
+          twitter_username: string
+          verified_type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_shadowbanned?: boolean
+          meteorite_token_id?: string
+          reply_id?: string | null
+          reply_text?: string | null
+          twitter_avatar_url?: string | null
+          twitter_display_name?: string | null
+          twitter_username?: string
+          verified_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meteorite_eligible_replies_meteorite_token_id_fkey"
+            columns: ["meteorite_token_id"]
+            isOneToOne: false
+            referencedRelation: "meteorite_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meteorite_eligible_replies_meteorite_token_id_fkey"
+            columns: ["meteorite_token_id"]
+            isOneToOne: false
+            referencedRelation: "meteorite_tokens_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meteorite_reply_claims: {
+        Row: {
+          claim_amount_sol: number
+          claim_signature: string | null
+          claim_wallet: string | null
+          claimed_at: string | null
+          created_at: string
+          id: string
+          meteorite_token_id: string
+          status: string
+          twitter_username: string
+        }
+        Insert: {
+          claim_amount_sol?: number
+          claim_signature?: string | null
+          claim_wallet?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          meteorite_token_id: string
+          status?: string
+          twitter_username: string
+        }
+        Update: {
+          claim_amount_sol?: number
+          claim_signature?: string | null
+          claim_wallet?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          meteorite_token_id?: string
+          status?: string
+          twitter_username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meteorite_reply_claims_meteorite_token_id_fkey"
+            columns: ["meteorite_token_id"]
+            isOneToOne: false
+            referencedRelation: "meteorite_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meteorite_reply_claims_meteorite_token_id_fkey"
+            columns: ["meteorite_token_id"]
+            isOneToOne: false
+            referencedRelation: "meteorite_tokens_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meteorite_tokens: {
         Row: {
           created_at: string | null
           creator_wallet: string | null
           dev_wallet_address: string
           dev_wallet_private_key: string
+          eligible_replies_count: number | null
           error_message: string | null
           id: string
           image_url: string | null
           mint_address: string | null
           payment_tx_signature: string | null
           pumpfun_url: string | null
+          replies_last_refreshed_at: string | null
           status: string
           token_description: string | null
           token_name: string | null
@@ -5314,12 +5421,14 @@ export type Database = {
           creator_wallet?: string | null
           dev_wallet_address: string
           dev_wallet_private_key: string
+          eligible_replies_count?: number | null
           error_message?: string | null
           id?: string
           image_url?: string | null
           mint_address?: string | null
           payment_tx_signature?: string | null
           pumpfun_url?: string | null
+          replies_last_refreshed_at?: string | null
           status?: string
           token_description?: string | null
           token_name?: string | null
@@ -5336,12 +5445,14 @@ export type Database = {
           creator_wallet?: string | null
           dev_wallet_address?: string
           dev_wallet_private_key?: string
+          eligible_replies_count?: number | null
           error_message?: string | null
           id?: string
           image_url?: string | null
           mint_address?: string | null
           payment_tx_signature?: string | null
           pumpfun_url?: string | null
+          replies_last_refreshed_at?: string | null
           status?: string
           token_description?: string | null
           token_name?: string | null

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Flame, Shield, DollarSign, Users, CheckCircle2, XCircle, Zap, TrendingUp, MessageSquare, BadgeCheck, Search, ExternalLink, Copy, Loader2 } from "lucide-react";
+import { MeteoriteTokenDetail } from "@/components/meteorite/MeteoriteTokenDetail";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,8 @@ export default function MeteoritePage() {
   // Live tokens from DB
   const [liveTokens, setLiveTokens] = useState<MeteoriteToken[]>([]);
   const [stats, setStats] = useState({ totalTokens: 0, totalLive: 0, totalFees: 0 });
+  const [selectedToken, setSelectedToken] = useState<MeteoriteToken | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // Fetch live tokens
   useEffect(() => {
@@ -456,7 +459,7 @@ export default function MeteoritePage() {
               <div className="space-y-3">
                 {liveTokens.map((token, i) => (
                   <motion.div key={token.id} initial={{ opacity: 0, y: 12, filter: "blur(4px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, ease, delay: i * 0.08 }}>
-                    <Card className="bg-card/40 border-border/30 hover:border-border/50 transition-colors duration-300">
+                    <Card className="bg-card/40 border-border/30 hover:border-border/50 transition-colors duration-300 cursor-pointer" onClick={() => { setSelectedToken(token); setDetailOpen(true); }}>
                       <CardContent className="p-5">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-2">
@@ -537,6 +540,11 @@ export default function MeteoritePage() {
             </Card>
           </motion.div>
         </section>
+        <MeteoriteTokenDetail
+          token={selectedToken}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+        />
       </div>
     </LaunchpadLayout>
   );
