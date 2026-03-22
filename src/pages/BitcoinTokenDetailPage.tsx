@@ -356,10 +356,57 @@ export default function BitcoinTokenDetailPage() {
                   <Button
                     variant="destructive"
                     className="w-full"
-                    disabled={!token?.rune_id || !sellAmount || !sellPrice}
-                    onClick={() => toast.info('Sell listing will be created via Magic Eden PSBT')}
+                    disabled={!token?.rune_id || !sellAmount || !sellPrice || trading}
+                    onClick={async () => {
+                      if (!token?.rune_id || !address) return;
+                      setTrading(true);
+                      try {
+                        const res = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'create-listing',
+                            runeId: token.rune_id,
+                            sellerAddress: address,
+                            sellerPublicKey: address,
+                            amount: parseInt(sellAmount),
+                            unitPrice: parseInt(sellPrice),
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+                        if (!data.psbt) throw new Error('No PSBT returned');
+
+                        const signed = await signPsbt(data.psbt);
+                        if (!signed) throw new Error('PSBT signing cancelled');
+
+                        const submitRes = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'submit-tx',
+                            signedPsbt: signed,
+                            btcTokenId: id,
+                            traderWallet: address,
+                            side: 'sell',
+                            amount: parseInt(sellAmount),
+                            btcAmount: (parseInt(sellAmount) * parseInt(sellPrice)) / 1e8,
+                          }),
+                        });
+                        const submitData = await submitRes.json();
+                        if (submitData.error) throw new Error(submitData.error);
+
+                        toast.success(`Sell listing broadcast! ${submitData.txHash?.slice(0, 12)}...`);
+                        setSellAmount('');
+                        setSellPrice('');
+                      } catch (e: any) {
+                        toast.error(e.message || 'Sell failed');
+                      } finally {
+                        setTrading(false);
+                      }
+                    }}
                   >
-                    {token?.rune_id ? 'Create Sell Listing' : 'Awaiting On-Chain Confirmation'}
+                    {trading ? 'Signing PSBT...' : token?.rune_id ? 'Create Sell Listing' : 'Awaiting On-Chain Confirmation'}
                   </Button>
                 </div>
               )}
