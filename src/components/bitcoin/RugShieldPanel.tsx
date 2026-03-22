@@ -37,7 +37,11 @@ const RISK_BADGE: Record<string, string> = {
   critical: '🚨 Critical Risk',
 };
 
-export function RugShieldPanel() {
+interface RugShieldPanelProps {
+  onScoreChange?: (score: number) => void;
+}
+
+export function RugShieldPanel({ onScoreChange }: RugShieldPanelProps) {
   const { address, isConnected } = useBtcWallet();
   const [analysis, setAnalysis] = useState<RiskAnalysis | null>(null);
   const [loading, setLoading] = useState(false);

@@ -14,6 +14,9 @@ interface FeeEstimates {
   economyFee: number;
 }
 
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno';
+const BASE_URL = `https://${PROJECT_ID}.supabase.co/functions/v1`;
+
 export default function BitcoinLaunchPage() {
   const { isConnected, address, signPsbt } = useBtcWallet();
   const navigate = useNavigate();
@@ -27,33 +30,62 @@ export default function BitcoinLaunchPage() {
   const [lockDays, setLockDays] = useState('0');
   const [fees, setFees] = useState<FeeEstimates | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [rugshieldScore, setRugshieldScore] = useState<number | null>(null);
 
-  // Fetch fee estimates
   useEffect(() => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno';
-    fetch(`https://${projectId}.supabase.co/functions/v1/btc-market-data?action=fees`)
+    fetch(`${BASE_URL}/btc-market-data?action=fees`)
       .then(r => r.json())
       .then(setFees)
       .catch(() => {});
   }, []);
 
-  const isFormValid = runeName.trim() && symbol.trim() && supply && parseInt(supply) > 0;
+  const isFormValid = runeName.trim().length >= 2 && symbol.trim() && supply && parseInt(supply) > 0;
 
   const handleLaunch = async () => {
     if (!isFormValid || !address) return;
     setSubmitting(true);
     try {
-      // For now, show that the PSBT flow would happen here
-      toast.info('Rune etching PSBT generation requires Hiro API integration. Coming soon!');
+      const res = await fetch(`${BASE_URL}/btc-rune-launch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'prepare-etch',
+          runeName,
+          runeSymbol: symbol,
+          supply,
+          divisibility,
+          preminePercent: parseFloat(preminePercent) || 0,
+          description,
+          lockDays,
+          creatorWallet: address,
+          rugshieldScore,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success(`Rune "${runeName}" registered! Token ID: ${data.tokenId?.slice(0, 8)}...`);
+      
+      if (data.message) {
+        toast.info(data.message, { duration: 6000 });
+      }
+
+      // Navigate to the token page
+      if (data.tokenId) {
+        navigate(`/btc/token/${data.tokenId}`);
+      }
     } catch (e) {
-      toast.error('Launch failed');
+      toast.error('Launch failed — check connection');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Estimate tx cost in sats
-  const estimatedVsize = 250; // Average etch tx vsize
+  const estimatedVsize = 250;
   const selectedFeeRate = fees?.halfHourFee || 10;
   const estimatedFeeSats = estimatedVsize * selectedFeeRate;
   const estimatedFeeBtc = estimatedFeeSats / 1e8;
@@ -159,9 +191,7 @@ export default function BitcoinLaunchPage() {
 
             {/* Anti-rug timelock */}
             <div>
-              <label className="text-sm font-medium text-foreground block mb-1.5">
-                Dev Lock Period
-              </label>
+              <label className="text-sm font-medium text-foreground block mb-1.5">Dev Lock Period</label>
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { value: '0', label: 'None' },
@@ -220,12 +250,12 @@ export default function BitcoinLaunchPage() {
               className="w-full bg-[hsl(30,100%,50%)] hover:bg-[hsl(30,100%,45%)] text-white"
               size="lg"
             >
-              {submitting ? 'Preparing PSBT...' : 'Etch Rune'}
+              {submitting ? 'Preparing Etch...' : 'Etch Rune'}
             </Button>
           </div>
 
           {/* RugShield Panel */}
-          <RugShieldPanel />
+          <RugShieldPanel onScoreChange={setRugshieldScore} />
         </div>
       </div>
     </div>
