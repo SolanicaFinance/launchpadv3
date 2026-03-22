@@ -139,6 +139,9 @@ export default function BitcoinModePage() {
             </div>
           )}
 
+          {/* Trending Runes from the network */}
+          <TrendingRunes />
+
           {/* Recent launches */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <h3 className="text-sm font-bold text-foreground mb-3">Recent Rune Launches</h3>
