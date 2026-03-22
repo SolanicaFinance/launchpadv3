@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBtcWallet } from '@/hooks/useBtcWallet';
+import { BtcTokenComments } from '@/components/bitcoin/BtcTokenComments';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { BtcWalletConnect } from '@/components/bitcoin/BtcWalletConnect';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ interface RuneOrder {
 
 export default function BitcoinTokenDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { isConnected, address } = useBtcWallet();
+  const { isConnected, address, signPsbt } = useBtcWallet();
   const navigate = useNavigate();
 
   const [token, setToken] = useState<any>(null);
@@ -32,6 +33,7 @@ export default function BitcoinTokenDetailPage() {
   const [sellAmount, setSellAmount] = useState('');
   const [sellPrice, setSellPrice] = useState('');
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
+  const [trading, setTrading] = useState(false);
 
   // Fetch token from DB
   useEffect(() => {
@@ -226,6 +228,9 @@ export default function BitcoinTokenDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Comments */}
+            {id && <BtcTokenComments tokenId={id} />}
           </div>
 
           {/* Trade panel */}
@@ -271,10 +276,61 @@ export default function BitcoinTokenDetailPage() {
                   </div>
                   <Button
                     className="w-full bg-[hsl(var(--success))] hover:bg-[hsl(160,84%,34%)] text-white"
-                    disabled={!token?.rune_id || !buyAmount}
-                    onClick={() => toast.info('Buy order will match lowest listing via Magic Eden PSBT')}
+                    disabled={!token?.rune_id || !buyAmount || trading}
+                    onClick={async () => {
+                      if (!token?.rune_id || !address || !listings.length) {
+                        toast.info('No listings available to buy');
+                        return;
+                      }
+                      setTrading(true);
+                      try {
+                        // Get the best listing
+                        const bestListing = listings[0];
+                        const res = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'prepare-buy',
+                            orderId: bestListing.id,
+                            buyerAddress: address,
+                            buyerPublicKey: address, // UniSat uses address as pubkey for taproot
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+                        if (!data.psbt) throw new Error('No PSBT returned');
+
+                        // Sign via UniSat
+                        const signed = await signPsbt(data.psbt);
+                        if (!signed) throw new Error('PSBT signing cancelled');
+
+                        // Broadcast
+                        const submitRes = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'submit-tx',
+                            signedPsbt: signed,
+                            btcTokenId: id,
+                            traderWallet: address,
+                            side: 'buy',
+                            amount: parseInt(buyAmount),
+                            btcAmount: bestListing.totalPrice / 1e8,
+                          }),
+                        });
+                        const submitData = await submitRes.json();
+                        if (submitData.error) throw new Error(submitData.error);
+
+                        toast.success(`Buy tx broadcast! ${submitData.txHash?.slice(0, 12)}...`);
+                        setBuyAmount('');
+                      } catch (e: any) {
+                        toast.error(e.message || 'Buy failed');
+                      } finally {
+                        setTrading(false);
+                      }
+                    }}
                   >
-                    {token?.rune_id ? 'Buy Runes' : 'Awaiting On-Chain Confirmation'}
+                    {trading ? 'Signing PSBT...' : token?.rune_id ? 'Buy Runes' : 'Awaiting On-Chain Confirmation'}
                   </Button>
                 </div>
               ) : (
@@ -302,10 +358,57 @@ export default function BitcoinTokenDetailPage() {
                   <Button
                     variant="destructive"
                     className="w-full"
-                    disabled={!token?.rune_id || !sellAmount || !sellPrice}
-                    onClick={() => toast.info('Sell listing will be created via Magic Eden PSBT')}
+                    disabled={!token?.rune_id || !sellAmount || !sellPrice || trading}
+                    onClick={async () => {
+                      if (!token?.rune_id || !address) return;
+                      setTrading(true);
+                      try {
+                        const res = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'create-listing',
+                            runeId: token.rune_id,
+                            sellerAddress: address,
+                            sellerPublicKey: address,
+                            amount: parseInt(sellAmount),
+                            unitPrice: parseInt(sellPrice),
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+                        if (!data.psbt) throw new Error('No PSBT returned');
+
+                        const signed = await signPsbt(data.psbt);
+                        if (!signed) throw new Error('PSBT signing cancelled');
+
+                        const submitRes = await fetch(`${BASE_URL}/btc-trade`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            action: 'submit-tx',
+                            signedPsbt: signed,
+                            btcTokenId: id,
+                            traderWallet: address,
+                            side: 'sell',
+                            amount: parseInt(sellAmount),
+                            btcAmount: (parseInt(sellAmount) * parseInt(sellPrice)) / 1e8,
+                          }),
+                        });
+                        const submitData = await submitRes.json();
+                        if (submitData.error) throw new Error(submitData.error);
+
+                        toast.success(`Sell listing broadcast! ${submitData.txHash?.slice(0, 12)}...`);
+                        setSellAmount('');
+                        setSellPrice('');
+                      } catch (e: any) {
+                        toast.error(e.message || 'Sell failed');
+                      } finally {
+                        setTrading(false);
+                      }
+                    }}
                   >
-                    {token?.rune_id ? 'Create Sell Listing' : 'Awaiting On-Chain Confirmation'}
+                    {trading ? 'Signing PSBT...' : token?.rune_id ? 'Create Sell Listing' : 'Awaiting On-Chain Confirmation'}
                   </Button>
                 </div>
               )}
