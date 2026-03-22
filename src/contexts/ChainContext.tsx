@@ -73,6 +73,7 @@ interface ChainContextValue {
   chainConfig: ChainConfig;
   allChains: ChainConfig[];
   isEvmChain: boolean;
+  isBtcChain: boolean;
 }
 
 const ChainContext = createContext<ChainContextValue | undefined>(undefined);
