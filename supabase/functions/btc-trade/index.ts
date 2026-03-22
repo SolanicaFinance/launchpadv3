@@ -14,18 +14,17 @@ serve(async (req) => {
   }
 
   try {
-    const MAGIC_EDEN_API_KEY = Deno.env.get('MAGIC_EDEN_API_KEY');
-    if (!MAGIC_EDEN_API_KEY) {
-      throw new Error('MAGIC_EDEN_API_KEY is not configured');
-    }
-
     const body = await req.json();
     const { action } = body;
 
-    const meHeaders = {
-      'Authorization': `Bearer ${MAGIC_EDEN_API_KEY}`,
+    // Magic Eden Ordinals API is free (30 QPM without key, higher with key)
+    const MAGIC_EDEN_API_KEY = Deno.env.get('MAGIC_EDEN_API_KEY');
+    const meHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+    if (MAGIC_EDEN_API_KEY) {
+      meHeaders['Authorization'] = `Bearer ${MAGIC_EDEN_API_KEY}`;
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
