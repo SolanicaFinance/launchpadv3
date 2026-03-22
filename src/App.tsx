@@ -76,6 +76,9 @@ const RewardsPage = lazyWithRetry(() => import("./pages/RewardsPage"));
 const MeteoritePage = lazyWithRetry(() => import("./pages/MeteoritePage"));
 const PortfolioPage = lazyWithRetry(() => import("./pages/PortfolioPage"));
 const BondingCurveLabPage = lazyWithRetry(() => import("./pages/BondingCurveLabPage"));
+const BitcoinModePage = lazyWithRetry(() => import("./pages/BitcoinModePage"));
+const BitcoinLaunchPage = lazyWithRetry(() => import("./pages/BitcoinLaunchPage"));
+const BitcoinTokenDetailPage = lazyWithRetry(() => import("./pages/BitcoinTokenDetailPage"));
 
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
