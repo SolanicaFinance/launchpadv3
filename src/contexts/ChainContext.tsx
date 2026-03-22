@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type SupportedChain = 'solana' | 'base' | 'ethereum' | 'bnb';
+export type SupportedChain = 'solana' | 'base' | 'ethereum' | 'bnb' | 'bitcoin';
 
 export interface ChainConfig {
   id: SupportedChain;
