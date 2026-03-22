@@ -34,7 +34,6 @@ export default function BitcoinTokenDetailPage() {
   const [sellPrice, setSellPrice] = useState('');
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
   const [trading, setTrading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
 
   // Fetch token from DB
   useEffect(() => {
