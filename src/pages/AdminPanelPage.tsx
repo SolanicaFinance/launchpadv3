@@ -281,6 +281,12 @@ export default function AdminPanelPage() {
                   <MevAdminPage />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="ai-collab" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <AICollabPage />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
