@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type SupportedChain = 'solana' | 'base' | 'ethereum' | 'bnb';
+export type SupportedChain = 'solana' | 'base' | 'ethereum' | 'bnb' | 'bitcoin';
 
 export interface ChainConfig {
   id: SupportedChain;
@@ -56,6 +56,15 @@ export const CHAIN_CONFIGS: Record<SupportedChain, ChainConfig> = {
     isEnabled: true,
     rpcUrl: `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`,
   },
+  bitcoin: {
+    id: 'bitcoin',
+    name: 'Bitcoin',
+    shortName: 'BTC',
+    icon: '₿',
+    nativeCurrency: { symbol: 'BTC', decimals: 8 },
+    explorerUrl: 'https://mempool.space',
+    isEnabled: true,
+  },
 };
 
 interface ChainContextValue {
@@ -64,6 +73,7 @@ interface ChainContextValue {
   chainConfig: ChainConfig;
   allChains: ChainConfig[];
   isEvmChain: boolean;
+  isBtcChain: boolean;
 }
 
 const ChainContext = createContext<ChainContextValue | undefined>(undefined);
@@ -92,10 +102,11 @@ export function ChainProvider({ children }: ChainProviderProps) {
 
   const chainConfig = CHAIN_CONFIGS[chain];
   const allChains = Object.values(CHAIN_CONFIGS);
-  const isEvmChain = chain !== 'solana';
+  const isEvmChain = chain !== 'solana' && chain !== 'bitcoin';
+  const isBtcChain = chain === 'bitcoin';
 
   return (
-    <ChainContext.Provider value={{ chain, setChain, chainConfig, allChains, isEvmChain }}>
+    <ChainContext.Provider value={{ chain, setChain, chainConfig, allChains, isEvmChain, isBtcChain }}>
       {children}
     </ChainContext.Provider>
   );
