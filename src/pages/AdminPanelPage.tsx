@@ -34,6 +34,7 @@ const DustCampaignTabLazy = lazy(() => import("@/components/admin/DustCampaignTa
 const DexListingAdminTab = lazy(() => import("./DexListingAdminTab"));
 const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTab").then(m => ({ default: m.MeteoriteAdminTab })));
 const MevAdminPage = lazy(() => import("./MevAdminPage"));
+const AICollabPage = lazy(() => import("./AICollabPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
