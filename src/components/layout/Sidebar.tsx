@@ -26,6 +26,7 @@ const NAV_LINKS: { to: string; label: string; icon: any; exact?: boolean; neonGr
   
   { to: "/whitepaper", label: "Docs", icon: FileText },
   { to: "/lab/bonding-curve", label: "Lab", icon: FlaskConical, neonGreen: true },
+  { to: "/btc", label: "Bitcoin", icon: Bitcoin, neonGreen: true },
   
   { to: "/panel", label: "Panel", icon: LayoutDashboard },
 ];
