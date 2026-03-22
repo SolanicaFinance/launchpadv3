@@ -206,6 +206,7 @@ const App = () => (
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="/rewards" element={<RewardsPage />} />
                      <Route path="/lab/bonding-curve" element={<BondingCurveLabPage />} />
+                     <Route path="/ai-collab" element={<AICollabPage />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                   </div>
