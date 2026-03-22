@@ -3,6 +3,7 @@ import { useBtcWallet } from '@/hooks/useBtcWallet';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { BtcWalletConnect } from '@/components/bitcoin/BtcWalletConnect';
 import { Button } from '@/components/ui/button';
+import { TrendingRunes } from '@/components/bitcoin/TrendingRunes';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
