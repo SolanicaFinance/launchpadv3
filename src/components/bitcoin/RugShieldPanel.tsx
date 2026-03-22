@@ -37,7 +37,11 @@ const RISK_BADGE: Record<string, string> = {
   critical: '🚨 Critical Risk',
 };
 
-export function RugShieldPanel() {
+interface RugShieldPanelProps {
+  onScoreChange?: (score: number) => void;
+}
+
+export function RugShieldPanel({ onScoreChange }: RugShieldPanelProps) {
   const { address, isConnected } = useBtcWallet();
   const [analysis, setAnalysis] = useState<RiskAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +64,7 @@ export function RugShieldPanel() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAnalysis(data);
+      onScoreChange?.(data.riskScore);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Scan failed');
     } finally {
