@@ -64,6 +64,7 @@ export function RugShieldPanel({ onScoreChange }: RugShieldPanelProps) {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAnalysis(data);
+      onScoreChange?.(data.riskScore);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Scan failed');
     } finally {
