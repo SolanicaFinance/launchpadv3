@@ -1335,6 +1335,139 @@ export type Database = {
         }
         Relationships: []
       }
+      btc_token_comments: {
+        Row: {
+          btc_token_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          wallet_address: string
+        }
+        Insert: {
+          btc_token_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          wallet_address: string
+        }
+        Update: {
+          btc_token_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "btc_token_comments_btc_token_id_fkey"
+            columns: ["btc_token_id"]
+            isOneToOne: false
+            referencedRelation: "btc_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      btc_tokens: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          creator_wallet: string
+          description: string | null
+          divisibility: number | null
+          etch_tx_hash: string | null
+          id: string
+          lock_days: number | null
+          platform_fee_bps: number | null
+          premine_pct: number | null
+          rugshield_score: number | null
+          rune_id: string | null
+          rune_name: string
+          rune_symbol: string
+          status: string | null
+          supply: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_wallet: string
+          description?: string | null
+          divisibility?: number | null
+          etch_tx_hash?: string | null
+          id?: string
+          lock_days?: number | null
+          platform_fee_bps?: number | null
+          premine_pct?: number | null
+          rugshield_score?: number | null
+          rune_id?: string | null
+          rune_name: string
+          rune_symbol: string
+          status?: string | null
+          supply: number
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_wallet?: string
+          description?: string | null
+          divisibility?: number | null
+          etch_tx_hash?: string | null
+          id?: string
+          lock_days?: number | null
+          platform_fee_bps?: number | null
+          premine_pct?: number | null
+          rugshield_score?: number | null
+          rune_id?: string | null
+          rune_name?: string
+          rune_symbol?: string
+          status?: string | null
+          supply?: number
+        }
+        Relationships: []
+      }
+      btc_trades: {
+        Row: {
+          amount: number
+          btc_amount: number
+          btc_token_id: string | null
+          created_at: string | null
+          id: string
+          side: string
+          status: string | null
+          trader_wallet: string
+          tx_hash: string | null
+        }
+        Insert: {
+          amount: number
+          btc_amount: number
+          btc_token_id?: string | null
+          created_at?: string | null
+          id?: string
+          side: string
+          status?: string | null
+          trader_wallet: string
+          tx_hash?: string | null
+        }
+        Update: {
+          amount?: number
+          btc_amount?: number
+          btc_token_id?: string | null
+          created_at?: string | null
+          id?: string
+          side?: string
+          status?: string | null
+          trader_wallet?: string
+          tx_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "btc_trades_btc_token_id_fkey"
+            columns: ["btc_token_id"]
+            isOneToOne: false
+            referencedRelation: "btc_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claw_agent_bids: {
         Row: {
           bid_amount_sol: number
