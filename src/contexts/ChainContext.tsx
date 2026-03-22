@@ -102,10 +102,11 @@ export function ChainProvider({ children }: ChainProviderProps) {
 
   const chainConfig = CHAIN_CONFIGS[chain];
   const allChains = Object.values(CHAIN_CONFIGS);
-  const isEvmChain = chain !== 'solana';
+  const isEvmChain = chain !== 'solana' && chain !== 'bitcoin';
+  const isBtcChain = chain === 'bitcoin';
 
   return (
-    <ChainContext.Provider value={{ chain, setChain, chainConfig, allChains, isEvmChain }}>
+    <ChainContext.Provider value={{ chain, setChain, chainConfig, allChains, isEvmChain, isBtcChain }}>
       {children}
     </ChainContext.Provider>
   );
