@@ -474,6 +474,80 @@ export type Database = {
           },
         ]
       }
+      ai_collab_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          role: string
+          round_number: number
+          session_id: string
+          target_role: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          role: string
+          round_number?: number
+          session_id: string
+          target_role?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          role?: string
+          round_number?: number
+          session_id?: string
+          target_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_collab_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_collab_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_collab_sessions: {
+        Row: {
+          created_at: string
+          current_round: number
+          id: string
+          initial_task: string
+          max_rounds: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_round?: number
+          id?: string
+          initial_task: string
+          max_rounds?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_round?: number
+          id?: string
+          initial_task?: string
+          max_rounds?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_request_log: {
         Row: {
           agent_id: string | null
