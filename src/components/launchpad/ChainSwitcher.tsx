@@ -80,11 +80,16 @@ function BnbLogo({ className }: { className?: string }) {
   );
 }
 
+function BitcoinLogo({ className }: { className?: string }) {
+  return <span className={className}>₿</span>;
+}
+
 const CHAIN_LOGOS: Record<SupportedChain, React.FC<{ className?: string }>> = {
   solana: SolanaLogo,
   base: BaseLogo,
   ethereum: EthereumLogo,
   bnb: BnbLogo,
+  bitcoin: BitcoinLogo,
 };
 
 interface ChainSwitcherProps {
