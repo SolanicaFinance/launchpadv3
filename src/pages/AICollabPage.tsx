@@ -163,33 +163,31 @@ export default function AICollabPage() {
   }, {} as Record<number, CollabMessage[]>);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="text-white">
       {/* Header */}
-      <div className="border-b border-white/10 bg-[#0d0d15]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                AI Collab Arena
-              </h1>
-              <p className="text-xs text-white/40">3 AIs compete & collaborate on your ideas</p>
-            </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+              AI Collab Arena
+            </h2>
+            <p className="text-xs text-muted-foreground">3 AIs compete & collaborate on your ideas</p>
           </div>
-          <div className="flex items-center gap-2">
-            {activeSession && (
-              <button
-                onClick={() => { setShowSessions(true); setActiveSession(null); }}
-                className="px-3 py-1.5 text-xs border border-white/10 rounded-lg hover:bg-white/5 transition"
-              >
-                ← Sessions
-              </button>
-            )}
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {activeSession && (
+            <button
+              onClick={() => { setShowSessions(true); setActiveSession(null); }}
+              className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition"
+            >
+              ← Sessions
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="space-y-6">
         {/* Sessions List */}
         {showSessions && !activeSession && (
           <div className="space-y-6">
