@@ -56,6 +56,15 @@ export const CHAIN_CONFIGS: Record<SupportedChain, ChainConfig> = {
     isEnabled: true,
     rpcUrl: `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno'}.supabase.co/functions/v1/bsc-rpc`,
   },
+  bitcoin: {
+    id: 'bitcoin',
+    name: 'Bitcoin',
+    shortName: 'BTC',
+    icon: '₿',
+    nativeCurrency: { symbol: 'BTC', decimals: 8 },
+    explorerUrl: 'https://mempool.space',
+    isEnabled: true,
+  },
 };
 
 interface ChainContextValue {
