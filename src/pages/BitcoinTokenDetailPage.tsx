@@ -21,7 +21,7 @@ interface RuneOrder {
 
 export default function BitcoinTokenDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { isConnected, address } = useBtcWallet();
+  const { isConnected, address, signPsbt } = useBtcWallet();
   const navigate = useNavigate();
 
   const [token, setToken] = useState<any>(null);
