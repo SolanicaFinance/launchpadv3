@@ -228,6 +228,9 @@ export default function BitcoinTokenDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Comments */}
+            {id && <BtcTokenComments tokenId={id} />}
           </div>
 
           {/* Trade panel */}
