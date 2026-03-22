@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2, Wand2, Layers, Repeat, Radio, Zap
+  Users, Shield, Loader2, Wand2, Layers, Repeat, Radio, Zap, Brain
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -34,6 +34,7 @@ const DustCampaignTabLazy = lazy(() => import("@/components/admin/DustCampaignTa
 const DexListingAdminTab = lazy(() => import("./DexListingAdminTab"));
 const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTab").then(m => ({ default: m.MeteoriteAdminTab })));
 const MevAdminPage = lazy(() => import("./MevAdminPage"));
+const AICollabPage = lazy(() => import("./AICollabPage"));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -65,6 +66,7 @@ const TAB_CONFIG = [
   { value: "dex-listing", label: "Dex List", icon: Layers },
   { value: "meteorite", label: "Meteorite", icon: Rocket },
   { value: "mev", label: "MEV", icon: Zap },
+  { value: "ai-collab", label: "AI Collab", icon: Brain },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -277,6 +279,12 @@ export default function AdminPanelPage() {
               <TabsContent value="mev" className="mt-6">
                 <Suspense fallback={<TabLoader />}>
                   <MevAdminPage />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="ai-collab" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <AICollabPage />
                 </Suspense>
               </TabsContent>
             </Tabs>

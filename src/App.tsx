@@ -76,7 +76,7 @@ const RewardsPage = lazyWithRetry(() => import("./pages/RewardsPage"));
 const MeteoritePage = lazyWithRetry(() => import("./pages/MeteoritePage"));
 const PortfolioPage = lazyWithRetry(() => import("./pages/PortfolioPage"));
 const BondingCurveLabPage = lazyWithRetry(() => import("./pages/BondingCurveLabPage"));
-const AICollabPage = lazyWithRetry(() => import("./pages/AICollabPage"));
+
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
@@ -206,7 +206,7 @@ const App = () => (
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="/rewards" element={<RewardsPage />} />
                      <Route path="/lab/bonding-curve" element={<BondingCurveLabPage />} />
-                     <Route path="/ai-collab" element={<AICollabPage />} />
+                     <Route path="/ai-collab" element={<Navigate to="/admin?tab=ai-collab" replace />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                   </div>
