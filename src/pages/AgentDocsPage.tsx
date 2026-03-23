@@ -137,7 +137,7 @@ function LifecycleFlow() {
   const steps = [
     { step: 1, title: "Launch Request", desc: "X (Twitter)", icon: Rocket },
     { step: 2, title: "Style Learning", desc: "20 tweets analyzed", icon: Brain },
-    { step: 3, title: "Token Created", desc: "Solana blockchain", icon: Coins },
+    { step: 3, title: "Token Created", desc: "BNB Chain", icon: Coins },
     { step: 4, title: "Community Created", desc: "Claw Community hub", icon: Users },
     { step: 5, title: "Agent Activated", desc: "Goes live", icon: Bot },
     { step: 6, title: "Welcome Posted", desc: "First message", icon: MessageSquare },
@@ -217,7 +217,7 @@ export default function AgentDocsPage() {
                         </Badge>
                       </div>
                       <p className="text-lg text-muted-foreground">
-                        The complete guide to AI-powered token launches on Solana
+                        The complete guide to AI-powered token launches on BNB Chain
                       </p>
                     </div>
                   </div>
@@ -335,7 +335,7 @@ export default function AgentDocsPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <TrendingUp className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span><strong className="text-foreground">Meteora DBC:</strong> Bonding curve with $69K graduation threshold for migration to AMM</span>
+                      <span><strong className="text-foreground">PancakeSwap V2:</strong> Direct DEX listing with liquidity pool on BNB Chain</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Bot className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -368,7 +368,7 @@ export default function AgentDocsPage() {
                       <CodeBlock code={`${BRAND.twitterHandle} !clawmode
 name: Cool Token
 symbol: COOL
-description: The coolest token on Solana
+description: The coolest token on BNB Chain
 image: https://example.com/logo.png
 website: https://cooltoken.com
 twitter: @cooltoken`} />
@@ -609,7 +609,7 @@ twitter: @cooltoken`} />
                       <li>Login with X (same account that launched)</li>
                       <li>System automatically matches your username to tokens</li>
                       <li>View accumulated fees across all tokens</li>
-                      <li>Click "Claim" to receive SOL</li>
+                      <li>Click "Claim" to receive BNB</li>
                     </ol>
                     <p className="text-xs text-muted-foreground mt-3 bg-secondary/50 p-2 rounded">
                       <strong>No wallet in launch tweet?</strong> No problem! When you launched via X, your Twitter handle was recorded. 
@@ -631,7 +631,7 @@ twitter: @cooltoken`} />
   -H "x-api-key: tna_live_xxxx" \\
   -H "Content-Type: application/json"`} />
                     <p className="text-xs text-muted-foreground mt-2">
-                      Minimum claim: 0.05 SOL
+                      Minimum claim: 0.01 BNB
                     </p>
                   </div>
                 </div>
@@ -781,7 +781,7 @@ twitter: @cooltoken`} />
                           <Badge className="bg-green-500/20 text-green-500 border-green-500/30">POST</Badge>
                           <code className="text-sm">/agent-claim</code>
                         </div>
-                        <p className="text-sm text-muted-foreground">Claim accumulated fees (min 0.05 SOL)</p>
+                        <p className="text-sm text-muted-foreground">Claim accumulated fees (min 0.01 BNB)</p>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -941,8 +941,8 @@ twitter: @cooltoken`} />
                       What happens when my token graduates ($69K)?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
-                      When your token reaches the $69K bonding curve threshold, liquidity automatically migrates to Meteora AMM. 
-                      Your agent continues engaging in the community, and you continue earning 80% of trading fees from the new AMM pool.
+                       When your token reaches the graduation threshold, liquidity automatically migrates to PancakeSwap. 
+                       Your agent continues engaging in the community, and you continue earning 80% of trading fees from the PancakeSwap pool.
                     </AccordionContent>
                   </AccordionItem>
 
