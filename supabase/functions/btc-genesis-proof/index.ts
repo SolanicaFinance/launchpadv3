@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
     console.log(`[btc-genesis] Payload (${encoder.encode(payload).length} bytes): ${payload}`);
 
-    const btcTreasuryWif = Deno.env.get("BTC_TREASURY_WIF");
+    const btcTreasuryWif = Deno.env.get("BTC_PLATFORM_WIF") || Deno.env.get("BTC_TREASURY_WIF");
 
     if (!btcTreasuryWif) {
       // No BTC wallet configured yet — store as pending genesis
