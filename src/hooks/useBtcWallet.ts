@@ -306,26 +306,60 @@ async function connectUniSat(): Promise<string | null> {
   
   if (!provider) {
     // In iframe or extension not installed — open published URL in new tab
-    const publishedUrl = 'https://saturntrade.lovable.app';
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
-    const targetUrl = publishedUrl + currentPath;
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
-    throw new Error('UniSat cannot connect here. We\'ve opened the app in a new tab where UniSat can connect. If UniSat is not installed, get it at unisat.io');
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      const targetUrl = publishedUrl + currentPath;
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab — please connect your wallet there.');
+    }
+    throw new Error('UniSat wallet not detected. Please install it from unisat.io and refresh the page.');
   }
 
+  // Try requestAccounts first (standard UniSat API)
   if (typeof provider.requestAccounts === 'function') {
-    return extractAddress(await provider.requestAccounts());
+    try {
+      const result = await provider.requestAccounts();
+      const addr = extractAddress(result);
+      if (addr) return addr;
+    } catch (e: any) {
+      console.warn('[UniSat] requestAccounts failed, trying request():', e?.message);
+    }
   }
 
-  return extractAddress(await requestProviderMethod(provider, 'getAccounts', {
-    purposes: ['payment'],
-    message: 'Connect to Saturn Terminal',
-  }));
+  // Fallback: use request({ method: 'requestAccounts' })
+  try {
+    const result = await requestProviderMethod(provider, 'requestAccounts');
+    const addr = extractAddress(result);
+    if (addr) return addr;
+  } catch (e: any) {
+    console.warn('[UniSat] request(requestAccounts) failed:', e?.message);
+  }
+
+  // Final fallback: getAccounts (only works if already connected)
+  try {
+    const result = await requestProviderMethod(provider, 'getAccounts', {
+      purposes: ['payment'],
+      message: 'Connect to Saturn Terminal',
+    });
+    const addr = extractAddress(result);
+    if (addr) return addr;
+  } catch {}
+
+  throw new Error('UniSat did not return an address. Make sure your wallet is unlocked and try again.');
 }
 
 async function connectXverse(): Promise<string | null> {
   const provider = getInjectedProvider('xverse');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Xverse wallet not detected. Install it from xverse.app');
+  }
 
   const response = await requestProviderMethod(provider, 'getAccounts', {
     purposes: ['payment'],
@@ -337,7 +371,15 @@ async function connectXverse(): Promise<string | null> {
 
 async function connectLeather(): Promise<string | null> {
   const provider = getInjectedProvider('leather');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Leather wallet not detected. Install it from leather.io');
+  }
 
   const response = await requestProviderMethod(provider, 'getAddresses');
   const address = extractAddress(response);
@@ -351,7 +393,15 @@ async function connectLeather(): Promise<string | null> {
 
 async function connectOKX(): Promise<string | null> {
   const provider = getInjectedProvider('okx');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('OKX wallet not detected. Install it from okx.com/web3');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
@@ -365,7 +415,15 @@ async function connectOKX(): Promise<string | null> {
 
 async function connectPhantom(): Promise<string | null> {
   const provider = getInjectedProvider('phantom');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Phantom wallet not detected. Install it from phantom.app');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
@@ -601,26 +659,7 @@ export function useBtcWallet(): UseBtcWalletReturn {
     }
   }, [activeProvider, address]);
 
-  useEffect(() => {
-    if (!localStorage.getItem(BTC_WALLET_KEY)) return;
-    const savedProvider = localStorage.getItem(BTC_PROVIDER_KEY) as BtcWalletProvider | null;
-    if (!savedProvider) return;
-
-    const tryReconnect = async () => {
-      try {
-        const addr = await getExistingAddress(savedProvider);
-        if (addr) {
-          setAddress(addr);
-          setActiveProvider(savedProvider);
-        }
-      } catch {
-        // Silent reconnect failure; user can reconnect manually.
-      }
-    };
-
-    const timer = setTimeout(tryReconnect, 900);
-    return () => clearTimeout(timer);
-  }, []);
+  // NOTE: removed duplicate auto-reconnect effect — handled by the effect at line ~447
 
   useEffect(() => {
     if (address) refreshBalance();

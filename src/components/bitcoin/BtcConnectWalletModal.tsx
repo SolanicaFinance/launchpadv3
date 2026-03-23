@@ -93,7 +93,7 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
         {inIframe && (
           <div className="mx-4 mt-3 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
             <p className="text-[11px] text-primary">
-              ⚡ Preview mode detected. UniSat will open in a new tab for connection.
+              ⚡ Preview mode — wallet extensions can't connect inside iframes. Click a wallet below and we'll open the app in a new tab where you can connect.
             </p>
           </div>
         )}
