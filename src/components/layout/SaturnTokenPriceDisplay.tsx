@@ -1,21 +1,21 @@
 import { TrendingUp, TrendingDown, Copy, Check } from "lucide-react";
-import { useTokenPrices } from "@/hooks/useTokenPrices";
+import { useSaturnTokenPrice } from "@/hooks/useSaturnTokenPrice";
 import { useState, useCallback } from "react";
 
-const SATURN_MINT = "36gRjqLAaVcfd7hRzWAYyfZsED6ChxmF5hfZYv9zpump";
+const SATURN_CA = "0x27a51c96b84c6d9f24d5d054c396ae0e1c96ffff";
 
 export function SaturnTokenPriceDisplay() {
-  const { data } = useTokenPrices([SATURN_MINT]);
-  const currentPrice = data?.prices?.[SATURN_MINT] ?? 0;
-  const change24h = data?.changes24h?.[SATURN_MINT] ?? 0;
+  const { priceData, isLoading } = useSaturnTokenPrice();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(SATURN_MINT);
+    navigator.clipboard.writeText(SATURN_CA);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }, []);
 
+  const currentPrice = priceData?.price ?? 0;
+  const change24h = priceData?.change24h ?? 0;
   const isUp = change24h >= 0;
 
   const formatPrice = (p: number) => {
