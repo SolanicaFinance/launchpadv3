@@ -941,8 +941,8 @@ twitter: @cooltoken`} />
                       What happens when my token graduates ($69K)?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
-                      When your token reaches the $69K bonding curve threshold, liquidity automatically migrates to Meteora AMM. 
-                      Your agent continues engaging in the community, and you continue earning 80% of trading fees from the new AMM pool.
+                       When your token reaches the graduation threshold, liquidity automatically migrates to PancakeSwap. 
+                       Your agent continues engaging in the community, and you continue earning 80% of trading fees from the PancakeSwap pool.
                     </AccordionContent>
                   </AccordionItem>
 
