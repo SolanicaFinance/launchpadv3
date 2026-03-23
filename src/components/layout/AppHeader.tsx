@@ -176,6 +176,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
 
           {/* ── Center: Price display (desktop only) ── */}
           <div className="hidden md:flex flex-1 items-center justify-center gap-2">
+            <SaturnTokenPriceDisplay />
             {isBtcMode ? <BtcPriceDisplay /> : chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
           </div>
 
