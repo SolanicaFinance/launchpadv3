@@ -168,10 +168,10 @@ export default function SixtyNineListPage() {
                   <span className="text-2xl sm:text-3xl font-black text-foreground tabular-nums">
                     {balanceLoading ? "—" : treasuryBalance.toFixed(4)}
                   </span>
-                  <span className="text-sm text-muted-foreground ml-1.5">SOL</span>
+                  <span className="text-sm text-muted-foreground ml-1.5">BNB</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  / {DISTRIBUTION_THRESHOLD_SOL} SOL threshold
+                  / {DISTRIBUTION_THRESHOLD_BNB} BNB threshold
                 </span>
               </div>
 
