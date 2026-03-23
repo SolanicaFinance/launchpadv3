@@ -10,12 +10,7 @@ import {
 import { ExternalLink, Loader2, ChevronRight, Shield } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import unisatLogo from '@/assets/wallets/unisat.png';
-import xverseLogo from '@/assets/wallets/xverse.png';
-import leatherLogo from '@/assets/wallets/leather.png';
-import okxLogo from '@/assets/wallets/okx.png';
-import phantomLogo from '@/assets/wallets/phantom.png';
+import { BtcWalletBrandIcon } from './BtcWalletBrandIcon';
 
 interface BtcConnectWalletModalProps {
   onConnect?: () => void;
@@ -24,20 +19,12 @@ interface BtcConnectWalletModalProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-const WALLET_IMAGES: Record<string, string> = {
-  unisat: unisatLogo,
-  xverse: xverseLogo,
-  leather: leatherLogo,
-  okx: okxLogo,
-  phantom: phantomLogo,
-};
-
 const WALLET_DESCRIPTIONS: Record<string, string> = {
   unisat: 'Most popular BTC wallet for Ordinals & Runes',
   xverse: 'Full-featured Bitcoin & Stacks wallet',
   leather: 'Secure Bitcoin wallet by Trust Machines',
   okx: 'Multi-chain wallet with BTC support',
-  phantom: 'Multi-chain wallet — SOL, ETH & BTC',
+  phantom: 'Multi-chain wallet with Bitcoin support',
 };
 
 export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen, onOpenChange }: BtcConnectWalletModalProps) {
@@ -55,7 +42,11 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
     const t1 = setTimeout(() => setTick(t => t + 1), 500);
     const t2 = setTimeout(() => setTick(t => t + 1), 1500);
     const t3 = setTimeout(() => setTick(t => t + 1), 3000);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [isOpen]);
 
   const installedWallets = availableWallets.filter(w => w.installed);
@@ -115,13 +106,13 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
                       disabled={isConnecting}
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-all duration-150 disabled:opacity-50 group relative"
                     >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-secondary/50 flex items-center justify-center flex-shrink-0 border border-border group-hover:border-primary/30 transition-colors">
-                        <img src={WALLET_IMAGES[w.id]} alt={w.name} className="w-7 h-7 object-contain" />
+                      <div className="flex-shrink-0">
+                        <BtcWalletBrandIcon walletId={w.id} name={w.name} size="md" />
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm text-foreground">{w.name}</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                         </div>
                         <p className="text-[11px] text-muted-foreground truncate">
                           {WALLET_DESCRIPTIONS[w.id] || 'Bitcoin wallet'}
@@ -154,16 +145,16 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
                   rel="noopener noreferrer"
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/40 transition-all duration-150 group"
                 >
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-secondary/30 flex items-center justify-center flex-shrink-0 border border-border/50 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <img src={WALLET_IMAGES[w.id]} alt={w.name} className="w-7 h-7 object-contain grayscale group-hover:grayscale-0 transition-all" />
+                  <div className="flex-shrink-0">
+                    <BtcWalletBrandIcon walletId={w.id} name={w.name} size="md" muted />
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <span className="font-medium text-sm text-foreground/60 group-hover:text-foreground transition-colors">{w.name}</span>
+                    <span className="font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">{w.name}</span>
                     <p className="text-[11px] text-muted-foreground truncate">
                       {WALLET_DESCRIPTIONS[w.id] || 'Bitcoin wallet'}
                     </p>
                   </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground flex-shrink-0" />
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/70 group-hover:text-foreground flex-shrink-0" />
                 </a>
               ))}
             </>

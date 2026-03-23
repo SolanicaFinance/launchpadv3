@@ -1,53 +1,57 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 /**
- * Multi-wallet BTC hook supporting UniSat, Xverse, Leather, OKX, and others.
- * Each wallet provider injects a global object (window.unisat, window.XverseProviders, etc.)
+ * Multi-wallet BTC hook supporting UniSat, Xverse, Leather, OKX, and Phantom.
+ * Uses direct window injections plus WBIP004-style provider registries when available.
  */
 
 export type BtcWalletProvider = 'unisat' | 'xverse' | 'leather' | 'okx' | 'phantom' | 'unknown';
 
+type ProviderRequest = ((method: string, params?: any) => Promise<any>) | ((args: { method: string; params?: any }) => Promise<any>);
+
+interface GenericBitcoinProvider {
+  request?: ProviderRequest;
+  requestAccounts?: () => Promise<any>;
+  getAccounts?: () => Promise<any>;
+  getBalance?: () => Promise<{ confirmed: number; unconfirmed: number; total: number }>;
+  signPsbt?: (psbtHex: string, options?: any) => Promise<string>;
+  signPSBT?: (psbt: Uint8Array, options?: any) => Promise<{ psbt: Uint8Array }>;
+  signMessage?: (...args: any[]) => Promise<any>;
+  getNetwork?: () => Promise<string>;
+  switchNetwork?: (network: string) => Promise<void>;
+  on?: (event: string, handler: (...args: any[]) => void) => void;
+  removeListener?: (event: string, handler: (...args: any[]) => void) => void;
+  [key: string]: any;
+}
+
+interface InjectedProviderDescriptor {
+  id?: string;
+  name?: string;
+  providerId?: string;
+  displayName?: string;
+  provider?: GenericBitcoinProvider;
+  wallet?: GenericBitcoinProvider;
+  [key: string]: any;
+}
+
 declare global {
   interface Window {
-    unisat?: {
-      requestAccounts: () => Promise<string[]>;
-      getAccounts: () => Promise<string[]>;
-      getBalance: () => Promise<{ confirmed: number; unconfirmed: number; total: number }>;
-      signPsbt: (psbtHex: string, options?: any) => Promise<string>;
-      signMessage: (msg: string) => Promise<string>;
-      getNetwork: () => Promise<string>;
-      switchNetwork: (network: string) => Promise<void>;
-      on: (event: string, handler: (...args: any[]) => void) => void;
-      removeListener: (event: string, handler: (...args: any[]) => void) => void;
-    };
+    unisat?: GenericBitcoinProvider;
     XverseProviders?: {
-      BitcoinProvider?: {
-        request: (method: string, params?: any) => Promise<any>;
-      };
+      BitcoinProvider?: GenericBitcoinProvider;
     };
-    btc?: {
-      request: (method: string, params?: any) => Promise<any>;
-    };
-    LeatherProvider?: {
-      request: (method: string, params?: any) => Promise<any>;
-    };
+    btc?: GenericBitcoinProvider;
+    btc_providers?: InjectedProviderDescriptor[];
+    webbtc_providers?: InjectedProviderDescriptor[];
+    LeatherProvider?: GenericBitcoinProvider;
     okxwallet?: {
-      bitcoin?: {
-        requestAccounts: () => Promise<string[]>;
-        getAccounts: () => Promise<string[]>;
-        getBalance: () => Promise<{ confirmed: number; unconfirmed: number; total: number }>;
-        signPsbt: (psbtHex: string, options?: any) => Promise<string>;
-        signMessage: (msg: string) => Promise<string>;
-        on: (event: string, handler: (...args: any[]) => void) => void;
-        removeListener: (event: string, handler: (...args: any[]) => void) => void;
-      };
+      bitcoin?: GenericBitcoinProvider;
     };
     phantom?: {
-      bitcoin?: {
-        requestAccounts: () => Promise<{ address: string; addressType: string; publicKey: string }[]>;
-        signMessage: (address: string, message: Uint8Array) => Promise<{ signature: string }>;
-        signPSBT: (psbt: Uint8Array, options?: any) => Promise<{ psbt: Uint8Array }>;
+      solana?: {
+        isPhantom?: boolean;
       };
+      bitcoin?: GenericBitcoinProvider;
     };
   }
 }
@@ -83,105 +87,183 @@ export interface UseBtcWalletReturn {
 const BTC_WALLET_KEY = 'btc-wallet-connected';
 const BTC_PROVIDER_KEY = 'btc-wallet-provider';
 
-function detectWallets(): BtcWalletInfo[] {
+const WALLET_META: Array<Pick<BtcWalletInfo, 'id' | 'name' | 'icon' | 'downloadUrl'>> = [
+  { id: 'unisat', name: 'UniSat', icon: 'U', downloadUrl: 'https://unisat.io' },
+  { id: 'xverse', name: 'Xverse', icon: 'X', downloadUrl: 'https://www.xverse.app' },
+  { id: 'leather', name: 'Leather', icon: 'L', downloadUrl: 'https://leather.io' },
+  { id: 'okx', name: 'OKX Wallet', icon: 'OKX', downloadUrl: 'https://www.okx.com/web3' },
+  { id: 'phantom', name: 'Phantom', icon: 'P', downloadUrl: 'https://phantom.app' },
+];
+
+function getRegistryProviders(): InjectedProviderDescriptor[] {
   if (typeof window === 'undefined') return [];
-  
-  return [
-    {
-      id: 'unisat' as const,
-      name: 'UniSat',
-      icon: '🟧',
-      installed: !!window.unisat,
-      downloadUrl: 'https://unisat.io',
-    },
-    {
-      id: 'xverse' as const,
-      name: 'Xverse',
-      icon: '🟪',
-      installed: !!(window.XverseProviders?.BitcoinProvider || window.btc),
-      downloadUrl: 'https://www.xverse.app',
-    },
-    {
-      id: 'leather' as const,
-      name: 'Leather',
-      icon: '🟫',
-      installed: !!window.LeatherProvider,
-      downloadUrl: 'https://leather.io',
-    },
-    {
-      id: 'okx' as const,
-      name: 'OKX Wallet',
-      icon: '⬛',
-      installed: !!window.okxwallet?.bitcoin,
-      downloadUrl: 'https://www.okx.com/web3',
-    },
-    {
-      id: 'phantom' as const,
-      name: 'Phantom',
-      icon: '👻',
-      installed: !!window.phantom?.bitcoin,
-      downloadUrl: 'https://phantom.app',
-    },
-  ];
+  const fromRegistry = Array.isArray(window.btc_providers) ? window.btc_providers : [];
+  const fromLegacyRegistry = Array.isArray(window.webbtc_providers) ? window.webbtc_providers : [];
+  return [...fromRegistry, ...fromLegacyRegistry].filter(Boolean);
+}
+
+function providerMatches(entry: InjectedProviderDescriptor, searchTerms: string[]) {
+  const haystack = [entry?.id, entry?.name, entry?.providerId, entry?.displayName]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return searchTerms.some(term => haystack.includes(term));
+}
+
+function unwrapProvider(entry: InjectedProviderDescriptor | GenericBitcoinProvider | null | undefined): GenericBitcoinProvider | null {
+  if (!entry) return null;
+  if ('provider' in entry && entry.provider) return entry.provider;
+  if ('wallet' in entry && entry.wallet) return entry.wallet;
+  return entry as GenericBitcoinProvider;
+}
+
+function getInjectedProvider(walletId: BtcWalletProvider): GenericBitcoinProvider | null {
+  if (typeof window === 'undefined') return null;
+
+  if (walletId === 'unisat' && window.unisat) return window.unisat;
+  if (walletId === 'xverse' && window.XverseProviders?.BitcoinProvider) return window.XverseProviders.BitcoinProvider;
+  if (walletId === 'xverse' && window.btc) return window.btc;
+  if (walletId === 'leather' && window.LeatherProvider) return window.LeatherProvider;
+  if (walletId === 'okx' && window.okxwallet?.bitcoin) return window.okxwallet.bitcoin;
+  if (walletId === 'phantom' && window.phantom?.bitcoin) return window.phantom.bitcoin;
+
+  const registryProviders = getRegistryProviders();
+  const searchTerms: Record<BtcWalletProvider, string[]> = {
+    unisat: ['unisat'],
+    xverse: ['xverse', 'bitcoinprovider'],
+    leather: ['leather'],
+    okx: ['okx'],
+    phantom: ['phantom'],
+    unknown: ['bitcoin'],
+  };
+
+  const entry = registryProviders.find(provider => providerMatches(provider, searchTerms[walletId]));
+  return unwrapProvider(entry);
+}
+
+async function requestProviderMethod(provider: GenericBitcoinProvider, method: string, params?: any) {
+  if (typeof provider.request !== 'function') return null;
+
+  try {
+    return await (provider.request as (method: string, params?: any) => Promise<any>)(method, params);
+  } catch {
+    return await (provider.request as (args: { method: string; params?: any }) => Promise<any>)({ method, params });
+  }
+}
+
+function extractAddress(payload: any): string | null {
+  if (!payload) return null;
+  if (typeof payload === 'string') return payload;
+  if (Array.isArray(payload)) return extractAddress(payload[0]);
+  if (typeof payload === 'object') {
+    if (typeof payload.address === 'string') return payload.address;
+    if (payload.result) return extractAddress(payload.result);
+    if (payload.addresses) return extractAddress(payload.addresses);
+    if (payload.accounts) return extractAddress(payload.accounts);
+    if (payload.paymentAddress?.address) return payload.paymentAddress.address;
+  }
+  return null;
+}
+
+async function getExistingAddress(walletId: BtcWalletProvider): Promise<string | null> {
+  const provider = getInjectedProvider(walletId);
+  if (!provider) return null;
+
+  if (typeof provider.getAccounts === 'function') {
+    return extractAddress(await provider.getAccounts());
+  }
+
+  if (walletId === 'leather') {
+    const response = await requestProviderMethod(provider, 'getAddresses');
+    return extractAddress(response);
+  }
+
+  const response = await requestProviderMethod(provider, 'getAccounts', {
+    purposes: ['payment'],
+    message: 'Reconnect to Saturn Terminal',
+  });
+
+  return extractAddress(response);
+}
+
+function detectWallets(): BtcWalletInfo[] {
+  return WALLET_META.map(wallet => ({
+    ...wallet,
+    installed: !!getInjectedProvider(wallet.id),
+  }));
 }
 
 async function connectUniSat(): Promise<string | null> {
-  if (!window.unisat) return null;
-  const accounts = await window.unisat.requestAccounts();
-  return accounts[0] || null;
+  const provider = getInjectedProvider('unisat');
+  if (!provider) return null;
+
+  if (typeof provider.requestAccounts === 'function') {
+    return extractAddress(await provider.requestAccounts());
+  }
+
+  return extractAddress(await requestProviderMethod(provider, 'getAccounts', {
+    purposes: ['payment'],
+    message: 'Connect to Saturn Terminal',
+  }));
 }
 
 async function connectXverse(): Promise<string | null> {
-  const provider = window.XverseProviders?.BitcoinProvider || window.btc;
+  const provider = getInjectedProvider('xverse');
   if (!provider) return null;
-  const res = await provider.request('getAccounts', {
+
+  const response = await requestProviderMethod(provider, 'getAccounts', {
     purposes: ['payment'],
     message: 'Connect to Saturn Terminal',
   });
-  const accounts = res?.result || res;
-  if (Array.isArray(accounts) && accounts.length > 0) {
-    return accounts[0].address || accounts[0];
-  }
-  return null;
+
+  return extractAddress(response);
 }
 
 async function connectLeather(): Promise<string | null> {
-  if (!window.LeatherProvider) return null;
-  const res = await window.LeatherProvider.request('getAddresses');
-  const addresses = res?.result?.addresses;
-  if (Array.isArray(addresses)) {
-    // Prefer native segwit (p2wpkh)
-    const native = addresses.find((a: any) => a.type === 'p2wpkh');
-    return native?.address || addresses[0]?.address || null;
-  }
-  return null;
+  const provider = getInjectedProvider('leather');
+  if (!provider) return null;
+
+  const response = await requestProviderMethod(provider, 'getAddresses');
+  const address = extractAddress(response);
+  if (address) return address;
+
+  return extractAddress(await requestProviderMethod(provider, 'getAccounts', {
+    purposes: ['payment'],
+    message: 'Connect to Saturn Terminal',
+  }));
 }
 
 async function connectOKX(): Promise<string | null> {
-  if (!window.okxwallet?.bitcoin) return null;
-  const accounts = await window.okxwallet.bitcoin.requestAccounts();
-  return accounts[0] || null;
+  const provider = getInjectedProvider('okx');
+  if (!provider) return null;
+
+  if (typeof provider.requestAccounts === 'function') {
+    return extractAddress(await provider.requestAccounts());
+  }
+
+  return extractAddress(await requestProviderMethod(provider, 'getAccounts', {
+    purposes: ['payment'],
+    message: 'Connect to Saturn Terminal',
+  }));
 }
 
 async function connectPhantom(): Promise<string | null> {
-  if (!window.phantom?.bitcoin) return null;
-  const accounts = await window.phantom.bitcoin.requestAccounts();
-  if (accounts.length > 0) {
-    return accounts[0].address;
+  const provider = getInjectedProvider('phantom');
+  if (!provider) return null;
+
+  if (typeof provider.requestAccounts === 'function') {
+    return extractAddress(await provider.requestAccounts());
   }
-  return null;
+
+  return extractAddress(await requestProviderMethod(provider, 'requestAccounts'));
 }
 
 async function getBalance(provider: BtcWalletProvider): Promise<BtcBalance | null> {
   try {
-    if (provider === 'unisat' && window.unisat) {
-      return await window.unisat.getBalance();
-    }
-    if (provider === 'okx' && window.okxwallet?.bitcoin) {
-      return await window.okxwallet.bitcoin.getBalance();
-    }
-    // For wallets without direct balance API, return null (UI will handle)
-    return null;
+    const wallet = getInjectedProvider(provider);
+    if (!wallet || typeof wallet.getBalance !== 'function') return null;
+    return await wallet.getBalance();
   } catch {
     return null;
   }
@@ -196,21 +278,35 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
   const isConnected = !!address;
 
-  // Detect wallets on mount and re-detect aggressively for slow extensions
   useEffect(() => {
-    const detect = () => setAvailableWallets(detectWallets());
+    if (typeof window === 'undefined') return;
+
+    let mounted = true;
+    const detect = () => {
+      if (!mounted) return;
+      setAvailableWallets(detectWallets());
+    };
+
     detect();
-    const timers = [300, 800, 1500, 3000, 5000].map(ms => setTimeout(detect, ms));
-    // Also listen for unisat injection
-    const interval = setInterval(() => {
-      if (window.unisat) {
-        detect();
-        clearInterval(interval);
-      }
-    }, 500);
+
+    const timers = [250, 600, 1200, 2000, 3500, 5000, 8000].map(ms => setTimeout(detect, ms));
+    const interval = setInterval(detect, 700);
+    const stopPolling = setTimeout(() => clearInterval(interval), 12000);
+    const onFocus = () => detect();
+    const onVisibility = () => {
+      if (!document.hidden) detect();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
+      mounted = false;
       timers.forEach(clearTimeout);
       clearInterval(interval);
+      clearTimeout(stopPolling);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
@@ -227,11 +323,9 @@ export function useBtcWallet(): UseBtcWalletReturn {
       let usedProvider: BtcWalletProvider = provider || 'unisat';
 
       if (!provider) {
-        // Auto-detect first available wallet
         const wallets = detectWallets();
         const installed = wallets.find(w => w.installed);
         if (!installed) {
-          // No wallets installed — open a generic download page
           window.open('https://unisat.io', '_blank');
           return;
         }
@@ -239,11 +333,23 @@ export function useBtcWallet(): UseBtcWalletReturn {
       }
 
       switch (usedProvider) {
-        case 'unisat': addr = await connectUniSat(); break;
-        case 'xverse': addr = await connectXverse(); break;
-        case 'leather': addr = await connectLeather(); break;
-        case 'okx': addr = await connectOKX(); break;
-        case 'phantom': addr = await connectPhantom(); break;
+        case 'unisat':
+          addr = await connectUniSat();
+          break;
+        case 'xverse':
+          addr = await connectXverse();
+          break;
+        case 'leather':
+          addr = await connectLeather();
+          break;
+        case 'okx':
+          addr = await connectOKX();
+          break;
+        case 'phantom':
+          addr = await connectPhantom();
+          break;
+        default:
+          break;
       }
 
       if (addr) {
@@ -251,9 +357,13 @@ export function useBtcWallet(): UseBtcWalletReturn {
         setActiveProvider(usedProvider);
         localStorage.setItem(BTC_WALLET_KEY, 'true');
         localStorage.setItem(BTC_PROVIDER_KEY, usedProvider);
+        return;
       }
+
+      throw new Error(`Unable to connect to ${usedProvider}. Make sure the wallet extension is unlocked.`);
     } catch (e) {
       console.warn('BTC wallet connect failed:', e);
+      throw e;
     } finally {
       setIsConnecting(false);
     }
@@ -269,13 +379,22 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
   const signPsbt = useCallback(async (psbtHex: string, options?: any): Promise<string | null> => {
     try {
-      if (activeProvider === 'unisat' && window.unisat) {
-        return await window.unisat.signPsbt(psbtHex, options);
+      if (!activeProvider) return null;
+      const provider = getInjectedProvider(activeProvider);
+      if (!provider) return null;
+
+      if (typeof provider.signPsbt === 'function') {
+        return await provider.signPsbt(psbtHex, options);
       }
-      if (activeProvider === 'okx' && window.okxwallet?.bitcoin) {
-        return await window.okxwallet.bitcoin.signPsbt(psbtHex, options);
+
+      if (typeof provider.signPSBT === 'function') {
+        const hexBytes = Uint8Array.from(psbtHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
+        const signed = await provider.signPSBT(hexBytes, options);
+        if (signed?.psbt instanceof Uint8Array) {
+          return Array.from(signed.psbt).map(byte => byte.toString(16).padStart(2, '0')).join('');
+        }
       }
-      // Other providers have different PSBT signing APIs
+
       console.warn(`PSBT signing not implemented for ${activeProvider}`);
       return null;
     } catch (e) {
@@ -286,21 +405,24 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
   const signMessage = useCallback(async (msg: string): Promise<string | null> => {
     try {
-      if (activeProvider === 'unisat' && window.unisat) {
-        return await window.unisat.signMessage(msg);
+      if (!activeProvider) return null;
+      const provider = getInjectedProvider(activeProvider);
+      if (!provider || typeof provider.signMessage !== 'function') return null;
+
+      if (activeProvider === 'phantom' && address) {
+        const encoded = new TextEncoder().encode(msg);
+        const result = await provider.signMessage(address, encoded);
+        return result?.signature || null;
       }
-      if (activeProvider === 'okx' && window.okxwallet?.bitcoin) {
-        return await window.okxwallet.bitcoin.signMessage(msg);
-      }
-      console.warn(`Message signing not implemented for ${activeProvider}`);
-      return null;
+
+      const result = await provider.signMessage(msg);
+      return typeof result === 'string' ? result : result?.signature || null;
     } catch (e) {
       console.warn('Message signing failed:', e);
       return null;
     }
-  }, [activeProvider]);
+  }, [activeProvider, address]);
 
-  // Auto-reconnect from saved provider
   useEffect(() => {
     if (!localStorage.getItem(BTC_WALLET_KEY)) return;
     const savedProvider = localStorage.getItem(BTC_PROVIDER_KEY) as BtcWalletProvider | null;
@@ -308,60 +430,51 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
     const tryReconnect = async () => {
       try {
-        let addr: string | null = null;
-        switch (savedProvider) {
-          case 'unisat':
-            if (window.unisat) {
-              const accounts = await window.unisat.getAccounts();
-              addr = accounts[0] || null;
-            }
-            break;
-          case 'okx':
-            if (window.okxwallet?.bitcoin) {
-              const accounts = await window.okxwallet.bitcoin.getAccounts();
-              addr = accounts[0] || null;
-            }
-            break;
-          // Other providers may not support passive reconnect
-          default:
-            break;
-        }
+        const addr = await getExistingAddress(savedProvider);
         if (addr) {
           setAddress(addr);
           setActiveProvider(savedProvider);
         }
-      } catch {}
+      } catch {
+        // Silent reconnect failure; user can reconnect manually.
+      }
     };
 
-    // Delay to let extensions inject
-    const timer = setTimeout(tryReconnect, 500);
+    const timer = setTimeout(tryReconnect, 900);
     return () => clearTimeout(timer);
   }, []);
 
-  // Refresh balance on address change
   useEffect(() => {
     if (address) refreshBalance();
   }, [address, refreshBalance]);
 
-  // Listen for account changes (UniSat / OKX)
   useEffect(() => {
-    const handler = (accounts: string[]) => {
-      if (accounts[0]) setAddress(accounts[0]);
+    const handler = (accounts: any) => {
+      const nextAddress = extractAddress(accounts);
+      if (nextAddress) setAddress(nextAddress);
       else disconnect();
     };
-    if (activeProvider === 'unisat' && window.unisat) {
-      window.unisat.on('accountsChanged', handler);
-      return () => { window.unisat?.removeListener('accountsChanged', handler); };
-    }
-    if (activeProvider === 'okx' && window.okxwallet?.bitcoin) {
-      window.okxwallet.bitcoin.on('accountsChanged', handler);
-      return () => { window.okxwallet?.bitcoin?.removeListener('accountsChanged', handler); };
-    }
+
+    const provider = activeProvider ? getInjectedProvider(activeProvider) : null;
+    if (!provider || typeof provider.on !== 'function' || typeof provider.removeListener !== 'function') return;
+
+    provider.on('accountsChanged', handler);
+    return () => {
+      provider.removeListener?.('accountsChanged', handler);
+    };
   }, [activeProvider, disconnect]);
 
   return useMemo(() => ({
-    address, balance, isConnected, isConnecting,
-    activeProvider, availableWallets,
-    connect, disconnect, signPsbt, signMessage, refreshBalance,
+    address,
+    balance,
+    isConnected,
+    isConnecting,
+    activeProvider,
+    availableWallets,
+    connect,
+    disconnect,
+    signPsbt,
+    signMessage,
+    refreshBalance,
   }), [address, balance, isConnected, isConnecting, activeProvider, availableWallets, connect, disconnect, signPsbt, signMessage, refreshBalance]);
 }
