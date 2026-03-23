@@ -51,13 +51,13 @@ function getAuthorizationSignature(
     throw new Error("PRIVY_APP_ID must be configured");
   }
 
-  // Canonical payload exactly per Privy docs: only privy-* headers being signed.
+  // Canonical payload exactly per Privy docs: only these privy-* headers are signed.
+  // privy-authorization-key is an HTTP header but is NOT part of the signed payload.
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
-  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
 
   const payload = {
     version: 1,
