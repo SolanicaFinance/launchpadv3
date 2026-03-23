@@ -18,6 +18,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { BtcWalletConnect } from "@/components/bitcoin/BtcWalletConnect";
+import { SaturnTokenPriceDisplay } from "./SaturnTokenPriceDisplay";
 
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
