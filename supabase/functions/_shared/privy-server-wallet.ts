@@ -141,15 +141,19 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
   const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
   const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
 
+  // Set request expiry 5 minutes from now (prevents replay attacks)
+  const expiresAt = String(Date.now() + 5 * 60 * 1000);
+
   const requestHeaders: Record<string, string> = {
     ...getAuthHeaders(),
+    "privy-request-expiry": expiresAt,
   };
 
   if (authKeyId) {
     requestHeaders["privy-authorization-key"] = authKeyId;
   }
 
-  const authSignature = getAuthorizationSignature(url, bodyObj);
+  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt });
 
   const response = await fetch(url, {
     method: "POST",
