@@ -269,7 +269,7 @@ export default function SixtyNineListPage() {
                 <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                   Holders who haven't transferred any <span className="text-primary font-semibold">$SATURN</span> in{" "}
                   <span className="text-foreground font-semibold">7 days</span> are automatically entered into a weekly draw 
-                  for <span className="text-primary font-bold">69 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.
+                  for <span className="text-primary font-bold">6.9 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.. Your odds increase with rank — top 10 holders get 3× entries.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
