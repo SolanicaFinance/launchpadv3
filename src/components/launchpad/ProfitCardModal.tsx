@@ -103,7 +103,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   };
 
   const handleShareX = async () => {
-    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} SOL`;
+    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} ${currencyLabel}`;
     const pnlLine = hasPnl ? `\nPNL - ${isPositive ? "+" : ""}${pnl.toFixed(2)}%` : "";
     const truncSig = data.signature ? `${data.signature.slice(0, 6)}...${data.signature.slice(-6)}` : "";
     const txLine = truncSig ? `\nTX - ${truncSig}` : "";
