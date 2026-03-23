@@ -33,6 +33,7 @@ function getAuthorizationSignature(
   options: {
     idempotencyKey?: string;
     expiresAt?: string;
+    authorizationKeyId?: string | null;
   } = {},
 ): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
@@ -49,6 +50,7 @@ function getAuthorizationSignature(
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
+  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
 
@@ -153,7 +155,7 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
     requestHeaders["privy-authorization-key"] = authKeyId;
   }
 
-  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt });
+  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt, authorizationKeyId: authKeyId });
 
   const response = await fetch(url, {
     method: "POST",
