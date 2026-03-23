@@ -174,20 +174,20 @@ function FeaturedAgentCard({ strategy, agentData }: {
           <span className="text-[11px] text-muted-foreground">Total Staked</span>
         </div>
         <span className="text-sm font-bold text-primary font-mono">
-          {(agentData?.capital || 0).toFixed(2)} SOL
+          {(agentData?.capital || 0).toFixed(2)} BNB
         </span>
       </div>
 
       {/* CTA */}
       <button
-        onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $SOL coins.")}
+        onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $BNB coins.")}
         className={cn(
           "flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-xs transition-all",
           "bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
         )}
       >
         <Coins className="w-3.5 h-3.5" />
-        Stake SOL
+        Stake BNB
         <ArrowRight className="w-3 h-3" />
       </button>
     </div>
