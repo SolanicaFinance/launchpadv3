@@ -227,7 +227,7 @@ export function WalletTrackerPanel({
                   <input
                     value={newAddr}
                     onChange={(e) => setNewAddr(e.target.value)}
-                    placeholder="Wallet address"
+                    placeholder={chain === 'bnb' ? "0x... BNB address" : "Wallet address"}
                     style={{
                       width: "100%",
                       background: "#111",
