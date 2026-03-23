@@ -20,10 +20,12 @@ export function WalletTrackerPanel({
   onRefresh,
   refreshing,
   compact = false,
+  chain = 'solana',
 }: {
   onRefresh: (e: React.MouseEvent) => void;
   refreshing: boolean;
   compact?: boolean;
+  chain?: string;
 }) {
   const navigate = useNavigate();
   const {
@@ -225,7 +227,7 @@ export function WalletTrackerPanel({
                   <input
                     value={newAddr}
                     onChange={(e) => setNewAddr(e.target.value)}
-                    placeholder="Wallet address"
+                    placeholder={chain === 'bnb' ? "0x... BNB address" : "Wallet address"}
                     style={{
                       width: "100%",
                       background: "#111",

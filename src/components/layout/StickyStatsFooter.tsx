@@ -10,6 +10,7 @@ import { MarketLighthouse } from "./MarketLighthouse";
 import { WalletTrackerPanel } from "./WalletTrackerPanel";
 import { NewPairsPanel } from "./NewPairsPanel";
 import { useWalletTradeNotifications } from "@/hooks/useWalletTradeNotifications";
+import { useChain } from "@/contexts/ChainContext";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
 import meteoraIcon from "@/assets/meteora-icon.svg";
 import bonkIcon from "@/assets/bonk-icon.jpg";
@@ -64,6 +65,8 @@ function getLaunchpadIcon(type: string): string | null {
 }
 
 export function StickyStatsFooter() {
+  const { chain } = useChain();
+  const isBnb = chain === 'bnb';
   const { data: launchpadStats, refetch: refetchLaunchpads } = useLaunchpadStats();
   const isMobile = useIsMobile();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -244,7 +247,7 @@ export function StickyStatsFooter() {
                 transform: isMobile ? "translateX(-50%)" : undefined,
                 zIndex: 100000,
               }}>
-                <WalletTrackerPanel onRefresh={handleWtRefresh} refreshing={wtRefreshing} compact={isMobile} />
+                <WalletTrackerPanel onRefresh={handleWtRefresh} refreshing={wtRefreshing} compact={isMobile} chain={chain} />
               </div>
             )}
           </div>
@@ -281,7 +284,7 @@ export function StickyStatsFooter() {
                 transform: isMobile ? "translateX(-50%)" : undefined,
                 zIndex: 100000,
               }}>
-                <NewPairsPanel onRefresh={handleNpRefresh} refreshing={npRefreshing} compact={isMobile} />
+                <NewPairsPanel onRefresh={handleNpRefresh} refreshing={npRefreshing} compact={isMobile} defaultChain={isBnb ? "bnb" : "solana"} />
               </div>
             )}
           </div>
@@ -389,26 +392,53 @@ export function StickyStatsFooter() {
                 cursor: "pointer",
               }}
             >
-              {[
-                { icon: pumpfunPill, alt: "pumpfun" },
-                { icon: bonkIcon, alt: "bonk" },
-                { icon: meteoraIcon, alt: "meteora" },
-              ].map((item, i) => (
-                <img
-                  key={item.alt}
-                  src={item.icon}
-                  alt={item.alt}
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "1.5px solid #0d0d0f",
-                    marginLeft: i > 0 ? "-5px" : "0",
-                    position: "relative",
-                    zIndex: 3 - i,
-                  }}
-                />
+              {(isBnb ? [
+                { icon: null as string | null, alt: "PancakeSwap", emoji: "🥞" },
+                { icon: null as string | null, alt: "Four.meme", emoji: "4️⃣" },
+                { icon: null as string | null, alt: "Moonit", emoji: "🌙" },
+              ] : [
+                { icon: pumpfunPill as string | null, alt: "pumpfun", emoji: undefined as string | undefined },
+                { icon: bonkIcon as string | null, alt: "bonk", emoji: undefined as string | undefined },
+                { icon: meteoraIcon as string | null, alt: "meteora", emoji: undefined as string | undefined },
+              ]).map((item, i) => (
+                item.icon ? (
+                  <img
+                    key={item.alt}
+                    src={item.icon}
+                    alt={item.alt}
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1.5px solid #0d0d0f",
+                      marginLeft: i > 0 ? "-5px" : "0",
+                      position: "relative",
+                      zIndex: 3 - i,
+                    }}
+                  />
+                ) : (
+                  <span
+                    key={item.alt}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      background: "#1a1a1e",
+                      border: "1.5px solid #0d0d0f",
+                      marginLeft: i > 0 ? "-5px" : "0",
+                      position: "relative",
+                      zIndex: 3 - i,
+                      fontSize: "9px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.emoji}
+                  </span>
+                )
               ))}
             </button>
 
