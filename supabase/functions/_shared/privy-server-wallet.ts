@@ -50,6 +50,7 @@ function getAuthorizationSignature(
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
+  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
 
