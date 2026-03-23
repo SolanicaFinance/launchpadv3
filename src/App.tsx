@@ -220,6 +220,9 @@ const App = () => (
                      <Route path="/btc/token/:id" element={<LaunchpadLayout><BitcoinTokenDetailPage /></LaunchpadLayout>} />
                      <Route path="/btc/meme/launch" element={<LaunchpadLayout><BtcMemeLaunchPage /></LaunchpadLayout>} />
                      <Route path="/btc/meme/:id" element={<LaunchpadLayout><BtcMemeDetailPage /></LaunchpadLayout>} />
+                     <Route path="/v2btc" element={<LaunchpadLayout><V2BitcoinModePage /></LaunchpadLayout>} />
+                     <Route path="/v2btc/meme/launch" element={<LaunchpadLayout><V2BtcMemeLaunchPage /></LaunchpadLayout>} />
+                     <Route path="/v2btc/meme/:id" element={<LaunchpadLayout><V2BtcMemeDetailPage /></LaunchpadLayout>} />
                      <Route path="/ai-collab" element={<Navigate to="/admin?tab=ai-collab" replace />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
