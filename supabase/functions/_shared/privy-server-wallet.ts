@@ -199,60 +199,24 @@ function normalizeAuthorizationKeyId(rawValue: string): string | null {
 }
 
 async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
-  const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
-  const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
   const expiresAt = String(Date.now() + 5 * 60 * 1000);
 
-  const baseHeaders: Record<string, string> = {
+  const headers: Record<string, string> = {
     ...getAuthHeaders(),
     "privy-request-expiry": expiresAt,
+    "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
+      expiresAt,
+    }),
   };
 
-  const attempts: Array<{ name: string; headers: Record<string, string> }> = [];
-
-  if (authKeyId) {
-    attempts.push({
-      name: "with-key-id",
-      headers: {
-        ...baseHeaders,
-        "privy-authorization-key": authKeyId,
-        "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
-          expiresAt,
-          authorizationKeyId: authKeyId,
-        }),
-      },
-    });
-  }
-
-  attempts.push({
-    name: "without-key-id",
-    headers: {
-      ...baseHeaders,
-      "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
-        expiresAt,
-      }),
-    },
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(bodyObj),
   });
 
-  let lastResponse: Response | null = null;
-
-  for (const attempt of attempts) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: attempt.headers,
-      body: JSON.stringify(bodyObj),
-    });
-
-    console.log(`[privy-auth] Attempt ${attempt.name} → status ${response.status}`);
-
-    if (response.ok || response.status !== 401) {
-      return response;
-    }
-
-    lastResponse = response;
-  }
-
-  return lastResponse ?? new Response("Privy RPC request failed before any attempt was made", { status: 500 });
+  console.log(`[privy-auth] Single signed attempt → status ${response.status}`);
+  return response;
 }
 
 async function getWalletAuthDebug(walletId: string): Promise<string> {
