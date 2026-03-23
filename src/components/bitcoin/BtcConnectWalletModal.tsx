@@ -1,131 +1,210 @@
-import { useBtcWallet, BtcWalletInfo } from '@/hooks/useBtcWallet';
+import { useBtcWallet, BtcWalletProvider } from '@/hooks/useBtcWallet';
 import { Button } from '@/components/ui/button';
-import { Wallet, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ExternalLink, X, Loader2, ChevronRight, Shield } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import unisatLogo from '@/assets/wallets/unisat.png';
+import xverseLogo from '@/assets/wallets/xverse.png';
+import leatherLogo from '@/assets/wallets/leather.png';
+import okxLogo from '@/assets/wallets/okx.png';
+import phantomLogo from '@/assets/wallets/phantom.png';
 
 interface BtcConnectWalletModalProps {
   onConnect?: () => void;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const WALLET_LOGOS: Record<string, string> = {
-  unisat: '🟧',
-  xverse: '🟪',
-  leather: '🟫',
-  okx: '⬛',
-  phantom: '👻',
+const WALLET_IMAGES: Record<BtcWalletProvider, string> = {
+  unisat: unisatLogo,
+  xverse: xverseLogo,
+  leather: leatherLogo,
+  okx: okxLogo,
+  phantom: phantomLogo,
+  unknown: '',
 };
 
-export function BtcConnectWalletModal({ onConnect }: BtcConnectWalletModalProps) {
+const WALLET_DESCRIPTIONS: Record<string, string> = {
+  unisat: 'Most popular BTC wallet for Ordinals & Runes',
+  xverse: 'Full-featured Bitcoin & Stacks wallet',
+  leather: 'Secure Bitcoin wallet by Trust Machines',
+  okx: 'Multi-chain wallet with BTC support',
+  phantom: 'Multi-chain wallet — SOL, ETH & BTC',
+};
+
+export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen, onOpenChange }: BtcConnectWalletModalProps) {
   const { connect, isConnecting, availableWallets } = useBtcWallet();
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Re-trigger wallet detection periodically for slow-loading extensions
+  const isOpen = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
+  // Re-detect wallets when modal opens
+  const [, setTick] = useState(0);
   useEffect(() => {
-    if (retryCount >= 5) return;
-    const timer = setTimeout(() => setRetryCount(r => r + 1), 1000);
-    return () => clearTimeout(timer);
-  }, [retryCount]);
+    if (!isOpen) return;
+    const t1 = setTimeout(() => setTick(t => t + 1), 500);
+    const t2 = setTimeout(() => setTick(t => t + 1), 1500);
+    const t3 = setTimeout(() => setTick(t => t + 1), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [isOpen]);
 
   const installedWallets = availableWallets.filter(w => w.installed);
   const notInstalledWallets = availableWallets.filter(w => !w.installed);
 
-  const handleConnect = useCallback(async (wallet: BtcWalletInfo) => {
-    setConnectingId(wallet.id);
+  const handleConnect = useCallback(async (walletId: string) => {
+    setConnectingId(walletId);
+    setError(null);
     try {
-      await connect(wallet.id);
+      await connect(walletId as BtcWalletProvider);
+      setOpen(false);
       onConnect?.();
+    } catch (e: any) {
+      setError(e?.message || 'Connection failed. Please try again.');
     } finally {
       setConnectingId(null);
     }
-  }, [connect, onConnect]);
+  }, [connect, onConnect, setOpen]);
 
-  const handleRefresh = () => setRetryCount(0);
+  const defaultTrigger = (
+    <Button
+      className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+      size="sm"
+    >
+      Connect Wallet
+    </Button>
+  );
 
   return (
-    <div className="w-full max-w-sm mx-auto space-y-5">
-      {/* Installed wallets */}
-      {installedWallets.length > 0 ? (
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between px-1">
-            <p className="text-xs text-muted-foreground">
-              {installedWallets.length} wallet{installedWallets.length > 1 ? 's' : ''} detected
-            </p>
-            <button
-              onClick={handleRefresh}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Refresh
-            </button>
-          </div>
-
-          {installedWallets.map(w => {
-            const isThis = connectingId === w.id;
-            return (
-              <button
-                key={w.id}
-                onClick={() => handleConnect(w)}
-                disabled={isConnecting}
-                className="w-full flex items-center justify-between gap-3 h-14 px-4 rounded-xl border border-border bg-secondary/30 hover:bg-secondary/60 hover:border-primary/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{WALLET_LOGOS[w.id] || '💰'}</span>
-                  <span className="font-semibold text-foreground">{w.name}</span>
-                </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                  isThis
-                    ? 'bg-primary/20 text-primary animate-pulse'
-                    : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
-                }`}>
-                  {isThis ? 'Connecting…' : 'Detected'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-3 py-4">
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Wallet className="w-5 h-5" />
-            <span className="text-sm font-medium">No Bitcoin wallets detected</span>
-          </div>
-          <p className="text-xs text-muted-foreground text-center max-w-xs mx-auto">
-            Install a Bitcoin wallet browser extension to connect
+    <Dialog open={isOpen} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || defaultTrigger}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[420px] p-0 gap-0 bg-card border-border overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground text-center">
+              Connect a Bitcoin Wallet
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground text-center mt-1.5">
+            Choose your preferred wallet to get started
           </p>
-          <div className="flex justify-center">
-            <button
-              onClick={handleRefresh}
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Re-scan for wallets
-            </button>
-          </div>
         </div>
-      )}
 
-      {/* Get a wallet section */}
-      {notInstalledWallets.length > 0 && (
-        <div className="border-t border-border pt-4">
-          <p className="text-xs text-muted-foreground mb-3 text-center">Get a wallet:</p>
-          <div className="grid grid-cols-2 gap-2">
-            {notInstalledWallets.map(w => (
-              <a
-                key={w.id}
-                href={w.downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-foreground/70 hover:text-foreground px-3 py-2.5 bg-secondary/30 hover:bg-secondary/50 rounded-lg transition-colors border border-transparent hover:border-border"
-              >
-                <span className="text-base">{WALLET_LOGOS[w.id] || '💰'}</span>
-                <span className="font-medium">{w.name}</span>
-                <ExternalLink className="w-3 h-3 ml-auto opacity-40" />
-              </a>
-            ))}
+        {/* Wallet List */}
+        <div className="px-4 py-3 space-y-1.5 max-h-[360px] overflow-y-auto">
+          {/* Installed */}
+          {installedWallets.length > 0 && (
+            <>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-2 pt-1 pb-1">
+                Detected ({installedWallets.length})
+              </p>
+              <AnimatePresence>
+                {installedWallets.map((w, i) => {
+                  const isThis = connectingId === w.id;
+                  const hasError = error && connectingId === null && isThis;
+                  return (
+                    <motion.button
+                      key={w.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => handleConnect(w.id)}
+                      disabled={isConnecting}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-all duration-150 disabled:opacity-50 group relative"
+                    >
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-secondary/50 flex items-center justify-center flex-shrink-0 border border-border group-hover:border-primary/30 transition-colors">
+                        <img src={WALLET_IMAGES[w.id as BtcWalletProvider]} alt={w.name} className="w-7 h-7 object-contain" />
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-foreground">{w.name}</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {WALLET_DESCRIPTIONS[w.id] || 'Bitcoin wallet'}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {isThis ? (
+                          <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        )}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </AnimatePresence>
+            </>
+          )}
+
+          {/* Not Installed */}
+          {notInstalledWallets.length > 0 && (
+            <>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-2 pt-3 pb-1">
+                {installedWallets.length > 0 ? 'More wallets' : 'Install a wallet'}
+              </p>
+              {notInstalledWallets.map((w, i) => (
+                <a
+                  key={w.id}
+                  href={w.downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/40 transition-all duration-150 group"
+                >
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-secondary/30 flex items-center justify-center flex-shrink-0 border border-border/50 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <img src={WALLET_IMAGES[w.id as BtcWalletProvider]} alt={w.name} className="w-7 h-7 object-contain grayscale group-hover:grayscale-0 transition-all" />
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <span className="font-medium text-sm text-foreground/60 group-hover:text-foreground transition-colors">{w.name}</span>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {WALLET_DESCRIPTIONS[w.id] || 'Bitcoin wallet'}
+                    </p>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-muted-foreground flex-shrink-0" />
+                </a>
+              ))}
+            </>
+          )}
+
+          {/* No wallets at all */}
+          {availableWallets.length === 0 && (
+            <div className="text-center py-8 space-y-2">
+              <p className="text-sm text-muted-foreground">Loading wallet extensions…</p>
+              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin mx-auto" />
+            </div>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mx-4 mb-3 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-xs text-destructive">{error}</p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border bg-secondary/20">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+            <Shield className="w-3 h-3" />
+            <span>Wallets are non-custodial. We never access your keys.</span>
           </div>
         </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
