@@ -207,7 +207,7 @@ export default function SixtyNineListPage() {
                 {[
                   { n: "01", text: "Top 69 holders scanned every hour, 5 minutes past — LP wallets excluded" },
                   { n: "02", text: "69% of the 1% platform swap fee split evenly among all 69 listed holders" },
-                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 69 BNB lottery draw" },
+                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 6.9 BNB lottery draw" },
                   { n: "04", text: "Lifetime passive income — hold your rank and earn from every token forever" },
                 ].map(({ n, text }) => (
                   <div key={n} className="flex items-start gap-3 bg-background/40 rounded-lg p-3 border border-border/10">
@@ -264,12 +264,12 @@ export default function SixtyNineListPage() {
               <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Dice5 className="h-5 w-5 text-primary" />
-                  <h3 className="font-bold text-foreground text-sm">Weekly 69 BNB Lottery</h3>
+                  <h3 className="font-bold text-foreground text-sm"><h3 className="font-bold text-foreground text-sm">Weekly 6.9 BNB Lottery</h3></h3>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                   Holders who haven't transferred any <span className="text-primary font-semibold">$SATURN</span> in{" "}
                   <span className="text-foreground font-semibold">7 days</span> are automatically entered into a weekly draw 
-                  for <span className="text-primary font-bold">69 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.
+                  for <span className="text-primary font-bold">6.9 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.. Your odds increase with rank — top 10 holders get 3× entries.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
@@ -288,7 +288,7 @@ export default function SixtyNineListPage() {
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Trophy className="h-3 w-3" /> Prize Pool
                     </span>
-                    <span className="text-foreground font-bold">69 BNB / week</span>
+                    <span className="text-foreground font-bold"><span className="text-foreground font-bold">6.9 BNB / week</span></span>
                   </div>
                 </div>
               </div>
