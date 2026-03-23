@@ -250,8 +250,8 @@ export default function SaturnForumPage() {
 
         {/* ═══ Global Stats ═══ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <StatBox icon={Coins} label="Total Staked" value={`${totalStaked.toFixed(2)} SOL`} accent="text-primary" />
-          <StatBox icon={TrendingUp} label="Total Profit" value={`${totalProfit >= 0 ? "+" : ""}${totalProfit.toFixed(3)} SOL`} accent={totalProfit >= 0 ? "text-emerald-400" : "text-red-400"} />
+          <StatBox icon={Coins} label="Total Staked" value={`${totalStaked.toFixed(2)} BNB`} accent="text-primary" />
+          <StatBox icon={TrendingUp} label="Total Profit" value={`${totalProfit >= 0 ? "+" : ""}${totalProfit.toFixed(3)} BNB`} accent={totalProfit >= 0 ? "text-emerald-400" : "text-red-400"} />
           <StatBox icon={BarChart3} label="Total Trades" value={String(totalTrades)} />
           <StatBox icon={Percent} label="Avg Win Rate" value={`${avgWinRate.toFixed(1)}%`} />
         </div>
