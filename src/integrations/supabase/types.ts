@@ -1391,6 +1391,7 @@ export type Database = {
           graduation_threshold_btc: number
           holder_count: number
           id: string
+          image_hash: string | null
           image_url: string | null
           last_anchor_at: string | null
           last_anchor_txid: string | null
@@ -1424,6 +1425,7 @@ export type Database = {
           graduation_threshold_btc?: number
           holder_count?: number
           id?: string
+          image_hash?: string | null
           image_url?: string | null
           last_anchor_at?: string | null
           last_anchor_txid?: string | null
@@ -1457,6 +1459,7 @@ export type Database = {
           graduation_threshold_btc?: number
           holder_count?: number
           id?: string
+          image_hash?: string | null
           image_url?: string | null
           last_anchor_at?: string | null
           last_anchor_txid?: string | null
@@ -1494,6 +1497,8 @@ export type Database = {
           pool_virtual_tokens: number | null
           price_btc: number
           price_usd: number | null
+          solana_proof_memo: string | null
+          solana_proof_signature: string | null
           token_amount: number
           token_id: string
           trade_type: string
@@ -1511,6 +1516,8 @@ export type Database = {
           pool_virtual_tokens?: number | null
           price_btc: number
           price_usd?: number | null
+          solana_proof_memo?: string | null
+          solana_proof_signature?: string | null
           token_amount: number
           token_id: string
           trade_type: string
@@ -1528,6 +1535,8 @@ export type Database = {
           pool_virtual_tokens?: number | null
           price_btc?: number
           price_usd?: number | null
+          solana_proof_memo?: string | null
+          solana_proof_signature?: string | null
           token_amount?: number
           token_id?: string
           trade_type?: string
@@ -1542,6 +1551,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      btc_merkle_anchors: {
+        Row: {
+          anchor_txid: string
+          balances_snapshot: Json | null
+          block_height: number | null
+          created_at: string
+          fee_sats: number | null
+          id: string
+          merkle_root: string
+          total_accounts: number
+          total_tokens: number
+        }
+        Insert: {
+          anchor_txid: string
+          balances_snapshot?: Json | null
+          block_height?: number | null
+          created_at?: string
+          fee_sats?: number | null
+          id?: string
+          merkle_root: string
+          total_accounts?: number
+          total_tokens?: number
+        }
+        Update: {
+          anchor_txid?: string
+          balances_snapshot?: Json | null
+          block_height?: number | null
+          created_at?: string
+          fee_sats?: number | null
+          id?: string
+          merkle_root?: string
+          total_accounts?: number
+          total_tokens?: number
+        }
+        Relationships: []
       }
       btc_token_comments: {
         Row: {
