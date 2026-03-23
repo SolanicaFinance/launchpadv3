@@ -269,6 +269,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
             onQuickBuyChange={(v) => handleQbChange("new", v)}
             onOpenFilters={() => openFiltersForColumn("new")}
             hasActiveFilters={hasActiveFilters("new")}
+            chain={chain}
           />
           <div className="pulse-column-scroll-v2">
             {renderColumnContent(columns[0])}
@@ -312,6 +313,7 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
               onQuickBuyChange={(v) => handleQbChange(col.id, v)}
               onOpenFilters={() => openFiltersForColumn(col.id)}
               hasActiveFilters={hasActiveFilters(col.id)}
+              chain={chain}
             />
             <div className="pulse-column-scroll-v2">
               {renderColumnContent(col)}
