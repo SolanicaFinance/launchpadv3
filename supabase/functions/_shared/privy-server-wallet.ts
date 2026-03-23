@@ -204,14 +204,24 @@ async function postPrivyRpc(
   options: {
     expiresAt?: string;
     additionalSignatures?: string[];
+    useServerSignature?: boolean;
   } = {},
 ): Promise<Response> {
   const expiresAt = options.expiresAt ?? String(Date.now() + 5 * 60 * 1000);
   const additionalSignatures = (options.additionalSignatures ?? []).filter(Boolean);
-  const serverSignature = getAuthorizationSignature(url, bodyObj, {
-    expiresAt,
-  });
-  const authorizationSignatures = [serverSignature, ...additionalSignatures].join(",");
+  const signatures: string[] = [];
+
+  if (options.useServerSignature !== false) {
+    signatures.push(
+      getAuthorizationSignature(url, bodyObj, {
+        expiresAt,
+      }),
+    );
+  }
+
+  signatures.push(...additionalSignatures);
+
+  const authorizationSignatures = signatures.join(",");
 
   const headers: Record<string, string> = {
     ...getAuthHeaders(),
@@ -459,7 +469,7 @@ export async function evmSendTransaction(
   walletId: string,
   txParams: { to: string; data?: string; value?: string; gas_limit?: string },
   caip2 = "eip155:56",
-  authOptions: { expiresAt?: string; additionalSignatures?: string[] } = {},
+  authOptions: { expiresAt?: string; additionalSignatures?: string[]; useServerSignature?: boolean } = {},
 ): Promise<string> {
   const url = `https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
   const bodyObj = {
