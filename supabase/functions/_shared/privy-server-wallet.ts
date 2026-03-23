@@ -407,6 +407,7 @@ export async function evmSendTransaction(
   const bodyObj = {
     method: "eth_sendTransaction",
     caip2,
+    chain_type: "ethereum",
     params: {
       transaction: txParams,
     },
