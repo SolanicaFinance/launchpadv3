@@ -627,26 +627,7 @@ export function useBtcWallet(): UseBtcWalletReturn {
     }
   }, [activeProvider, address]);
 
-  useEffect(() => {
-    if (!localStorage.getItem(BTC_WALLET_KEY)) return;
-    const savedProvider = localStorage.getItem(BTC_PROVIDER_KEY) as BtcWalletProvider | null;
-    if (!savedProvider) return;
-
-    const tryReconnect = async () => {
-      try {
-        const addr = await getExistingAddress(savedProvider);
-        if (addr) {
-          setAddress(addr);
-          setActiveProvider(savedProvider);
-        }
-      } catch {
-        // Silent reconnect failure; user can reconnect manually.
-      }
-    };
-
-    const timer = setTimeout(tryReconnect, 900);
-    return () => clearTimeout(timer);
-  }, []);
+  // NOTE: removed duplicate auto-reconnect effect — handled by the effect at line ~447
 
   useEffect(() => {
     if (address) refreshBalance();
