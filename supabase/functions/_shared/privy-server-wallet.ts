@@ -7,6 +7,11 @@
 
 import canonicalize from "npm:canonicalize@2.0.0";
 import crypto from "node:crypto";
+import { Buffer } from "node:buffer";
+
+if (!(globalThis as { Buffer?: typeof Buffer }).Buffer) {
+  (globalThis as { Buffer?: typeof Buffer }).Buffer = Buffer;
+}
 
 const PRIVY_API_BASE = "https://auth.privy.io";
 
@@ -113,7 +118,7 @@ function getAuthorizationSignature(
 
   // If we got DER instead of P1363 (DER is >64 bytes, P1363 is exactly 64 for P-256)
   if (signatureBuffer.length !== 64) {
-    signatureBuffer = derToP1363(signatureBuffer, 32) as Buffer;
+    signatureBuffer = derToP1363(signatureBuffer, 32);
   }
 
   // Base64 encode without Node Buffer (Deno compatible)
