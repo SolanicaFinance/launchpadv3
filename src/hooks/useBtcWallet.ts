@@ -286,28 +286,44 @@ async function getExistingAddress(walletId: BtcWalletProvider): Promise<string |
 function detectWallets(): BtcWalletInfo[] {
   const inEmbeddedPreview = isEmbeddedPreviewContext();
 
-  return WALLET_META.map(wallet => ({
-    ...wallet,
-    installed: !!getInjectedProvider(wallet.id),
-    connectUrl: inEmbeddedPreview ? getTopLevelConnectUrl() : undefined,
-    unavailableReason:
-      inEmbeddedPreview && wallet.id === 'unisat'
-        ? 'UniSat may not inject inside the embedded preview. Open this page in a new tab to connect it.'
-        : undefined,
-  }));
+  console.log('[BTC Wallet Detection]', {
+    isIframe: inEmbeddedPreview,
+    'window.unisat': typeof window !== 'undefined' ? !!window.unisat : 'N/A',
+    'window.phantom?.bitcoin': typeof window !== 'undefined' ? !!window.phantom?.bitcoin : 'N/A',
+    'window.LeatherProvider': typeof window !== 'undefined' ? !!window.LeatherProvider : 'N/A',
+    'window.okxwallet?.bitcoin': typeof window !== 'undefined' ? !!window.okxwallet?.bitcoin : 'N/A',
+    'window.XverseProviders': typeof window !== 'undefined' ? !!window.XverseProviders?.BitcoinProvider : 'N/A',
+  });
+
+  return WALLET_META.map(wallet => {
+    const providerDetected = !!getInjectedProvider(wallet.id);
+    const isUniSat = wallet.id === 'unisat';
+
+    // UniSat is ALWAYS shown as installed/clickable — it's the recommended wallet.
+    // In iframe contexts where it can't inject, clicking it will open a new tab.
+    const installed = isUniSat ? true : providerDetected;
+
+    return {
+      ...wallet,
+      installed,
+      connectUrl: (!providerDetected && !isUniSat && inEmbeddedPreview) ? getTopLevelConnectUrl() : undefined,
+      unavailableReason: undefined,
+    };
+  });
 }
 
 async function connectUniSat(): Promise<string | null> {
-  if (isEmbeddedPreviewContext() && !getInjectedProvider('unisat')) {
-    const topLevelUrl = getTopLevelConnectUrl();
-    if (topLevelUrl) {
-      window.open(topLevelUrl, '_blank', 'noopener,noreferrer');
-    }
-    throw new Error('UniSat cannot connect from the embedded preview. Open this page in a new tab and connect there.');
-  }
-
+  // Re-check window.unisat at connect time (it may have loaded late)
   const provider = getInjectedProvider('unisat');
-  if (!provider) return null;
+  
+  if (!provider) {
+    // In iframe or extension not installed — open published URL in new tab
+    const publishedUrl = 'https://saturntrade.lovable.app';
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+    const targetUrl = publishedUrl + currentPath;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    throw new Error('UniSat cannot connect here. We\'ve opened the app in a new tab where UniSat can connect. If UniSat is not installed, get it at unisat.io');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
