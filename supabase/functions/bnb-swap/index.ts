@@ -948,6 +948,7 @@ Deno.serve(async (req) => {
         {
           expiresAt: body.preparedExecution.expiresAt,
           additionalSignatures: [body.clientAuthorizationSignature],
+          useServerSignature: false,
         }
       );
     } else if (route === "portal") {
