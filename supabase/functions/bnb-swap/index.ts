@@ -590,6 +590,11 @@ async function resolveWallet(
   let walletId: string | null = null;
   let walletAddress: string = body.userWallet;
 
+  const isServerSignableEvmWallet = (account: any) =>
+    account?.type === "wallet" &&
+    account?.chain_type === "ethereum" &&
+    (account?.wallet_client_type === "privy" || account?.connector_type === "embedded");
+
   if (body.privyUserId) {
     try {
       const user = await getPrivyUser(body.privyUserId);
@@ -597,10 +602,11 @@ async function resolveWallet(
       const allEvmWallets = user.linked_accounts.filter(
         (a: any) => a.type === "wallet" && a.chain_type === "ethereum"
       );
+      const signableEvmWallets = allEvmWallets.filter(isServerSignableEvmWallet);
       const matchingWallet = allEvmWallets.find(
         (w: any) => w.address?.toLowerCase() === frontendAddr
       );
-      if (matchingWallet && matchingWallet.id) {
+      if (matchingWallet && matchingWallet.id && isServerSignableEvmWallet(matchingWallet)) {
         walletId = matchingWallet.id;
         walletAddress = matchingWallet.address;
         console.log(`[bnb-swap] Found Privy wallet matching frontend address: ${walletAddress} (id: ${walletId})`);
@@ -612,6 +618,13 @@ async function resolveWallet(
           console.log(`[bnb-swap] Using embedded EVM wallet: ${walletAddress} (id: ${walletId})`);
         }
       }
+
+      if (!walletId && matchingWallet && matchingWallet.id && !isServerSignableEvmWallet(matchingWallet)) {
+        throw new Error(
+          `Connected wallet ${matchingWallet.address} is external and cannot be used for server-executed swaps. Please use your embedded wallet${signableEvmWallets[0]?.address ? ` (${signableEvmWallets[0].address})` : ""}.`
+        );
+      }
+
       if (walletId) {
         await supabase
           .from("profiles")
@@ -716,10 +729,11 @@ Deno.serve(async (req) => {
               const allEvmWallets = user.linked_accounts.filter(
                 (a: any) => a.type === "wallet" && a.chain_type === "ethereum"
               );
+              const signableEvmWallets = allEvmWallets.filter(isServerSignableEvmWallet);
               const matchingWallet = allEvmWallets.find(
                 (w: any) => w.address?.toLowerCase() === frontendAddr
               );
-              if (matchingWallet && matchingWallet.id) {
+              if (matchingWallet && matchingWallet.id && isServerSignableEvmWallet(matchingWallet)) {
                 walletId = matchingWallet.id;
                 walletAddress = matchingWallet.address;
                 console.log(`[bnb-swap] Re-resolved to matching Privy wallet: ${walletAddress} (id: ${walletId})`);
@@ -729,6 +743,10 @@ Deno.serve(async (req) => {
                   walletId = embeddedWallet.walletId;
                   walletAddress = embeddedWallet.address;
                 }
+              }
+
+              if (matchingWallet && matchingWallet.id && !isServerSignableEvmWallet(matchingWallet)) {
+                console.log(`[bnb-swap] Frontend wallet ${matchingWallet.address} is external; keeping embedded/server-signable wallet ${signableEvmWallets[0]?.address ?? walletAddress}`);
               }
             } catch (reResolveErr) {
               console.log(`[bnb-swap] Re-resolve failed: ${(reResolveErr as Error).message?.slice(0, 100)}`);
