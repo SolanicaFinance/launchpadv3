@@ -8,20 +8,21 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 
-const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
-const DISTRIBUTION_THRESHOLD_SOL = 10;
+const TREASURY_WALLET = "0xf621ADAbA16Ee50D7145d8F9D65B6DA881341E37";
+const DISTRIBUTION_THRESHOLD_BNB = 1;
 const HOLDER_SHARE_PERCENT = 69;
 
-/** Live treasury SOL balance */
+/** Live treasury BNB balance */
 function useTreasuryBalance() {
   return useQuery({
     queryKey: ["treasury-balance-69", TREASURY_WALLET],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("fetch-sol-balances", {
-        body: { wallets: [TREASURY_WALLET] },
+      const { data, error } = await supabase.functions.invoke("bsc-rpc", {
+        body: { jsonrpc: "2.0", method: "eth_getBalance", params: [TREASURY_WALLET, "latest"], id: 1 },
       });
       if (error) throw error;
-      return (data?.balances?.[TREASURY_WALLET] ?? 0) as number;
+      const wei = parseInt(data?.result || "0", 16);
+      return wei / 1e18;
     },
     refetchInterval: 15_000,
     staleTime: 10_000,
