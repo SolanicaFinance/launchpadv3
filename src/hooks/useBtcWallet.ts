@@ -313,16 +313,17 @@ function detectWallets(): BtcWalletInfo[] {
 }
 
 async function connectUniSat(): Promise<string | null> {
-  if (isEmbeddedPreviewContext() && !getInjectedProvider('unisat')) {
-    const topLevelUrl = getTopLevelConnectUrl();
-    if (topLevelUrl) {
-      window.open(topLevelUrl, '_blank', 'noopener,noreferrer');
-    }
-    throw new Error('UniSat cannot connect from the embedded preview. Open this page in a new tab and connect there.');
-  }
-
+  // Re-check window.unisat at connect time (it may have loaded late)
   const provider = getInjectedProvider('unisat');
-  if (!provider) return null;
+  
+  if (!provider) {
+    // In iframe or extension not installed — open published URL in new tab
+    const publishedUrl = 'https://saturntrade.lovable.app';
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+    const targetUrl = publishedUrl + currentPath;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    throw new Error('UniSat cannot connect here. We\'ve opened the app in a new tab where UniSat can connect. If UniSat is not installed, get it at unisat.io');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
