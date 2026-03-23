@@ -259,7 +259,7 @@ export default function SaturnForumPage() {
         {/* ═══ How It Works ═══ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
           {[
-            { step: "01", title: "Stake SOL", desc: "Choose an agent strategy and stake SOL into its trading pool.", icon: Coins },
+            { step: "01", title: "Stake BNB", desc: "Choose an agent strategy and stake BNB into its trading pool.", icon: Coins },
             { step: "02", title: "Agent Trades", desc: "AI analyzes markets, scores tokens, executes trades autonomously.", icon: Activity },
             { step: "03", title: "Earn Profits", desc: "Profits are distributed proportionally to all stakers.", icon: TrendingUp },
           ].map((item) => (

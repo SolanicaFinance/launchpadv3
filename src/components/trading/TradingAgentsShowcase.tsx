@@ -124,11 +124,11 @@ export function TradingAgentsShowcase() {
 
               {/* Stake CTA */}
               <button
-                onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $SOL coins.")}
+                onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $BNB coins.")}
                 className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg font-bold text-[10px] transition-all bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
               >
                 <Coins className="w-3 h-3" />
-                Stake SOL
+                Stake BNB
                 <ArrowRight className="w-2.5 h-2.5" />
               </button>
             </div>
