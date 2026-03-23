@@ -18,6 +18,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
 import { BtcWalletConnect } from "@/components/bitcoin/BtcWalletConnect";
+import { SaturnTokenPriceDisplay } from "./SaturnTokenPriceDisplay";
 
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
@@ -175,6 +176,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
 
           {/* ── Center: Price display (desktop only) ── */}
           <div className="hidden md:flex flex-1 items-center justify-center gap-2">
+            <SaturnTokenPriceDisplay />
             {isBtcMode ? <BtcPriceDisplay /> : chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
           </div>
 
@@ -182,7 +184,8 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
             {/* Price — mobile only */}
             {/* Price — mobile only */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-1.5">
+              <SaturnTokenPriceDisplay />
               {isBtcMode ? <BtcPriceDisplay /> : chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
             </div>
 
