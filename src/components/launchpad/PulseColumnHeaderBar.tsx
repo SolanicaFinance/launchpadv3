@@ -1,5 +1,6 @@
-import { memo, useState, useCallback, useEffect, useRef } from "react";
+import { memo, useState, useCallback, useEffect } from "react";
 import { Zap, Menu, SlidersHorizontal } from "lucide-react";
+import type { SupportedChain } from "@/contexts/ChainContext";
 
 interface PulseColumnHeaderBarProps {
   label: string;
@@ -10,73 +11,85 @@ interface PulseColumnHeaderBarProps {
   onQuickBuyChange: (amount: number) => void;
   onOpenFilters?: () => void;
   hasActiveFilters?: boolean;
+  chain?: SupportedChain;
 }
 
 const WALLET_PRESETS = ["P1", "P2", "P3"] as const;
-const PRESET_DEFAULTS: Record<string, number> = { P1: 0.5, P2: 1.0, P3: 2.0 };
+const PRESET_DEFAULTS_SOL: Record<string, number> = { P1: 0.5, P2: 1.0, P3: 2.0 };
+const PRESET_DEFAULTS_BNB: Record<string, number> = { P1: 0.01, P2: 0.05, P3: 0.1 };
 
-function getPresetAmount(columnId: string, preset: string): number {
+function getPresetStorageKey(columnId: string, preset: string, chain?: SupportedChain) {
+  return `pulse-qb-${columnId}-${preset}${chain === "bnb" ? "-bnb" : ""}`;
+}
+
+function getActivePresetKey(columnId: string, chain?: SupportedChain) {
+  return `pulse-active-preset-${columnId}${chain === "bnb" ? "-bnb" : ""}`;
+}
+
+function getPresetAmount(columnId: string, preset: string, chain?: SupportedChain): number {
   try {
-    const v = localStorage.getItem(`pulse-qb-${columnId}-${preset}`);
-    if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
+    const v = localStorage.getItem(getPresetStorageKey(columnId, preset, chain));
+    if (v) {
+      const n = parseFloat(v);
+      if (n > 0 && isFinite(n)) return n;
+    }
   } catch {}
-  return PRESET_DEFAULTS[preset] ?? 0.5;
+  const defaults = chain === "bnb" ? PRESET_DEFAULTS_BNB : PRESET_DEFAULTS_SOL;
+  return defaults[preset] ?? defaults.P1;
 }
 
-function savePresetAmount(columnId: string, preset: string, amount: number) {
-  try { localStorage.setItem(`pulse-qb-${columnId}-${preset}`, String(amount)); } catch {}
+function savePresetAmount(columnId: string, preset: string, amount: number, chain?: SupportedChain) {
+  try { localStorage.setItem(getPresetStorageKey(columnId, preset, chain), String(amount)); } catch {}
 }
 
-function getActivePreset(columnId: string): string {
-  try { return localStorage.getItem(`pulse-active-preset-${columnId}`) || "P1"; } catch { return "P1"; }
+function getActivePreset(columnId: string, chain?: SupportedChain): string {
+  try { return localStorage.getItem(getActivePresetKey(columnId, chain)) || "P1"; } catch { return "P1"; }
 }
 
-function saveActivePreset(columnId: string, preset: string) {
-  try { localStorage.setItem(`pulse-active-preset-${columnId}`, preset); } catch {}
+function saveActivePreset(columnId: string, preset: string, chain?: SupportedChain) {
+  try { localStorage.setItem(getActivePresetKey(columnId, chain), preset); } catch {}
 }
 
 export const PulseColumnHeaderBar = memo(function PulseColumnHeaderBar({
-  label, color, icon: Icon, columnId, quickBuyAmount, onQuickBuyChange, onOpenFilters, hasActiveFilters,
+  label, color, icon: Icon, columnId, quickBuyAmount, onQuickBuyChange, onOpenFilters, hasActiveFilters, chain,
 }: PulseColumnHeaderBarProps) {
-  const [activePreset, setActivePreset] = useState(() => getActivePreset(columnId));
+  const [activePreset, setActivePreset] = useState(() => getActivePreset(columnId, chain));
   const [editingQb, setEditingQb] = useState(false);
   const [qbInput, setQbInput] = useState(String(quickBuyAmount));
-  const mountedRef = useRef(false);
 
-  // On mount, load the active preset's amount for THIS column
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      const stored = getPresetAmount(columnId, activePreset);
-      if (stored !== quickBuyAmount) {
-        onQuickBuyChange(stored);
-      }
+    const preset = getActivePreset(columnId, chain);
+    const stored = getPresetAmount(columnId, preset, chain);
+    setActivePreset(preset);
+    setQbInput(String(stored));
+    if (stored !== quickBuyAmount) {
+      onQuickBuyChange(stored);
     }
-  }, []);
+  }, [chain, columnId]);
 
   useEffect(() => {
     if (!editingQb) setQbInput(String(quickBuyAmount));
   }, [quickBuyAmount, editingQb]);
 
   const handlePresetSwitch = useCallback((preset: string) => {
-    savePresetAmount(columnId, activePreset, quickBuyAmount);
-    const newAmount = getPresetAmount(columnId, preset);
+    savePresetAmount(columnId, activePreset, quickBuyAmount, chain);
+    const newAmount = getPresetAmount(columnId, preset, chain);
     setActivePreset(preset);
-    saveActivePreset(columnId, preset);
+    saveActivePreset(columnId, preset, chain);
     setQbInput(String(newAmount));
     onQuickBuyChange(newAmount);
-  }, [columnId, activePreset, quickBuyAmount, onQuickBuyChange]);
+  }, [columnId, activePreset, quickBuyAmount, onQuickBuyChange, chain]);
 
   const handleQbSave = useCallback(() => {
     setEditingQb(false);
     const num = parseFloat(qbInput);
     if (num > 0 && isFinite(num)) {
       onQuickBuyChange(num);
-      savePresetAmount(columnId, activePreset, num);
+      savePresetAmount(columnId, activePreset, num, chain);
     } else {
       setQbInput(String(quickBuyAmount));
     }
-  }, [columnId, qbInput, quickBuyAmount, onQuickBuyChange, activePreset]);
+  }, [columnId, qbInput, quickBuyAmount, onQuickBuyChange, activePreset, chain]);
 
   return (
     <div className="pulse-axiom-header" style={{ "--col-accent": color } as React.CSSProperties}>
