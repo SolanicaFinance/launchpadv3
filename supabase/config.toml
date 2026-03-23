@@ -483,3 +483,6 @@ verify_jwt = false
 
 [functions.transak-widget-url]
 verify_jwt = false
+
+[functions.btc-market-data]
+verify_jwt = false
