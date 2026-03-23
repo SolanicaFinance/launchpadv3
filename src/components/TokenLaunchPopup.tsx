@@ -39,12 +39,12 @@ export function TokenLaunchPopup() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
           <div className="relative flex flex-col items-center text-center gap-3">
             <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <Rocket className="h-7 w-7 text-primary" />
+              <span className="text-3xl">🪐</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">🚀 Token Launched on BNB Chain!</h2>
+              <h2 className="text-lg font-bold text-foreground">🪐 Saturn is Live on Binance Chain!</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Our native token is now live. Trade it on PancakeSwap.
+                Our native token is now live. Copy the contract address below to get started.
               </p>
             </div>
           </div>
