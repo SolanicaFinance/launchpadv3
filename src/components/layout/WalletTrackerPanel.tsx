@@ -20,10 +20,12 @@ export function WalletTrackerPanel({
   onRefresh,
   refreshing,
   compact = false,
+  chain = 'solana',
 }: {
   onRefresh: (e: React.MouseEvent) => void;
   refreshing: boolean;
   compact?: boolean;
+  chain?: string;
 }) {
   const navigate = useNavigate();
   const {
