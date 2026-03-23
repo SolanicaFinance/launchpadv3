@@ -284,7 +284,7 @@ export function StickyStatsFooter() {
                 transform: isMobile ? "translateX(-50%)" : undefined,
                 zIndex: 100000,
               }}>
-                <NewPairsPanel onRefresh={handleNpRefresh} refreshing={npRefreshing} compact={isMobile} />
+                <NewPairsPanel onRefresh={handleNpRefresh} refreshing={npRefreshing} compact={isMobile} defaultChain={isBnb ? "bnb" : "solana"} />
               </div>
             )}
           </div>
