@@ -33,6 +33,7 @@ function getAuthorizationSignature(
   options: {
     idempotencyKey?: string;
     expiresAt?: string;
+    authorizationKeyId?: string | null;
   } = {},
 ): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
