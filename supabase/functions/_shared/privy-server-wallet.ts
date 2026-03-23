@@ -98,7 +98,7 @@ function getAuthorizationSignature(
   // Sign with ECDSA P-256
   // Try ieee-p1363 first; Deno's node:crypto polyfill may silently produce DER,
   // so we detect and convert DER→P1363 if needed.
-  let signatureBuffer: Buffer;
+  let signatureBuffer: Uint8Array;
   try {
     signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, {
       key: privateKey,
@@ -116,14 +116,15 @@ function getAuthorizationSignature(
     signatureBuffer = derToP1363(signatureBuffer, 32) as Buffer;
   }
 
-  const signature = Buffer.from(signatureBuffer).toString("base64");
+  // Base64 encode without Node Buffer (Deno compatible)
+  const signature = btoa(String.fromCharCode(...signatureBuffer));
 
   console.log("[privy-auth] Signature generated, length:", signature.length, "raw_bytes:", signatureBuffer.length, "URL:", url);
   return signature;
 }
 
 // Convert DER-encoded ECDSA signature to IEEE P1363 (raw r||s)
-function derToP1363(derSig: Buffer | Uint8Array, componentLength: number): Uint8Array {
+function derToP1363(derSig: Uint8Array, componentLength: number): Uint8Array {
   const result = new Uint8Array(componentLength * 2);
   let offset = 0;
 
@@ -150,12 +151,12 @@ function derToP1363(derSig: Buffer | Uint8Array, componentLength: number): Uint8
   // Strip leading zeros from r and copy right-aligned into result
   while (rLen > componentLength && derSig[rStart] === 0) { rStart++; rLen--; }
   const rPad = componentLength - rLen;
-  result.set(derSig.slice(rStart, rStart + rLen), rPad > 0 ? rPad : 0);
+  result.set(new Uint8Array(derSig.buffer, derSig.byteOffset + rStart, rLen), rPad > 0 ? rPad : 0);
 
   // Strip leading zeros from s and copy right-aligned into result
   while (sLen > componentLength && derSig[sStart] === 0) { sStart++; sLen--; }
   const sPad = componentLength - sLen;
-  result.set(derSig.slice(sStart, sStart + sLen), componentLength + (sPad > 0 ? sPad : 0));
+  result.set(new Uint8Array(derSig.buffer, derSig.byteOffset + sStart, sLen), componentLength + (sPad > 0 ? sPad : 0));
 
   return result;
 }
