@@ -198,15 +198,25 @@ function normalizeAuthorizationKeyId(rawValue: string): string | null {
   return rawValue;
 }
 
-async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
-  const expiresAt = String(Date.now() + 5 * 60 * 1000);
+async function postPrivyRpc(
+  url: string,
+  bodyObj: Record<string, unknown>,
+  options: {
+    expiresAt?: string;
+    additionalSignatures?: string[];
+  } = {},
+): Promise<Response> {
+  const expiresAt = options.expiresAt ?? String(Date.now() + 5 * 60 * 1000);
+  const additionalSignatures = (options.additionalSignatures ?? []).filter(Boolean);
+  const serverSignature = getAuthorizationSignature(url, bodyObj, {
+    expiresAt,
+  });
+  const authorizationSignatures = [serverSignature, ...additionalSignatures].join(",");
 
   const headers: Record<string, string> = {
     ...getAuthHeaders(),
     "privy-request-expiry": expiresAt,
-    "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
-      expiresAt,
-    }),
+    "privy-authorization-signature": authorizationSignatures,
   };
 
   const response = await fetch(url, {
@@ -448,7 +458,8 @@ export async function signTransaction(
 export async function evmSendTransaction(
   walletId: string,
   txParams: { to: string; data?: string; value?: string; gas_limit?: string },
-  caip2 = "eip155:56"
+  caip2 = "eip155:56",
+  authOptions: { expiresAt?: string; additionalSignatures?: string[] } = {},
 ): Promise<string> {
   const url = `https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`;
   const bodyObj = {
@@ -462,7 +473,7 @@ export async function evmSendTransaction(
 
   console.log("[privy] eth_sendTransaction URL:", url, "to:", txParams.to);
 
-  const res = await postPrivyRpc(url, bodyObj);
+  const res = await postPrivyRpc(url, bodyObj, authOptions);
 
   if (!res.ok) {
     const body = await res.text();
