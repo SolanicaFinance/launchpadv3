@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
 
       await supabase.from("btc_meme_tokens").update({
         genesis_txid: pendingTxid,
+        status: "active",
       }).eq("id", tokenId);
 
       return new Response(JSON.stringify({
