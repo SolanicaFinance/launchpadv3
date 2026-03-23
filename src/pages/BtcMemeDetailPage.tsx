@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowUpRight, ArrowDownRight, Copy, Users, BarChart3, ExternalLink, Shield } from "lucide-react";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
+import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
+import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
