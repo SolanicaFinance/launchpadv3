@@ -55,10 +55,10 @@ export default function SixtyNineListPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const countdown = useCountdown();
 
-  const potProgress = Math.min((treasuryBalance / DISTRIBUTION_THRESHOLD_SOL) * 100, 100);
+  const potProgress = Math.min((treasuryBalance / DISTRIBUTION_THRESHOLD_BNB) * 100, 100);
   const distributionAmount = (treasuryBalance * HOLDER_SHARE_PERCENT) / 100;
   const perHolder = distributionAmount / 69;
-  const isPotFull = treasuryBalance >= DISTRIBUTION_THRESHOLD_SOL;
+  const isPotFull = treasuryBalance >= DISTRIBUTION_THRESHOLD_BNB;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
