@@ -304,11 +304,21 @@ export default function BtcMemeDetailPage() {
                   My Trades {myTrades.length > 0 && <span className="text-xs text-primary ml-1">({myTrades.length})</span>}
                 </button>
               )}
+              <button
+                onClick={() => setTradeTab("holders")}
+                className={`text-sm font-bold transition-colors flex items-center gap-1 ${tradeTab === "holders" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"}`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Holders
+                <span className="text-xs text-primary ml-0.5">({token.holder_count})</span>
+              </button>
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Shield className="w-3 h-3 text-purple-400/60" />
-              <span>Solana Proof</span>
-            </div>
+            {tradeTab !== "holders" && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Shield className="w-3 h-3 text-purple-400/60" />
+                <span>Solana Proof</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-0.5 max-h-96 overflow-y-auto">
