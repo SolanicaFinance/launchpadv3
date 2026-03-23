@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
 
     if (!btcTreasuryWif) {
       // No BTC wallet configured yet — store as pending genesis
-      console.log("[btc-genesis] BTC_TREASURY_WIF not configured. Storing pending genesis.");
+      console.log("[btc-genesis] BTC_PLATFORM_WIF not configured. Storing pending genesis.");
       
       // Generate a deterministic "pending" txid from the payload hash
       const payloadHash = await crypto.subtle.digest("SHA-256", encoder.encode(payload));
