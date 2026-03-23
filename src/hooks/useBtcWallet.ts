@@ -67,6 +67,8 @@ export interface BtcWalletInfo {
   icon: string;
   installed: boolean;
   downloadUrl: string;
+  connectUrl?: string;
+  unavailableReason?: string;
 }
 
 export interface BtcBalance {
@@ -99,6 +101,21 @@ const WALLET_META: Array<Pick<BtcWalletInfo, 'id' | 'name' | 'icon' | 'downloadU
   { id: 'okx', name: 'OKX Wallet', icon: 'OKX', downloadUrl: 'https://www.okx.com/web3' },
   { id: 'phantom', name: 'Phantom', icon: 'P', downloadUrl: 'https://phantom.app' },
 ];
+
+function isEmbeddedPreviewContext() {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+function getTopLevelConnectUrl() {
+  if (typeof window === 'undefined') return undefined;
+  return window.location.href;
+}
 
 function getRegistryProviders(): InjectedProviderDescriptor[] {
   if (typeof window === 'undefined') return [];
@@ -267,13 +284,28 @@ async function getExistingAddress(walletId: BtcWalletProvider): Promise<string |
 }
 
 function detectWallets(): BtcWalletInfo[] {
+  const inEmbeddedPreview = isEmbeddedPreviewContext();
+
   return WALLET_META.map(wallet => ({
     ...wallet,
     installed: !!getInjectedProvider(wallet.id),
+    connectUrl: inEmbeddedPreview ? getTopLevelConnectUrl() : undefined,
+    unavailableReason:
+      inEmbeddedPreview && wallet.id === 'unisat'
+        ? 'UniSat may not inject inside the embedded preview. Open this page in a new tab to connect it.'
+        : undefined,
   }));
 }
 
 async function connectUniSat(): Promise<string | null> {
+  if (isEmbeddedPreviewContext() && !getInjectedProvider('unisat')) {
+    const topLevelUrl = getTopLevelConnectUrl();
+    if (topLevelUrl) {
+      window.open(topLevelUrl, '_blank', 'noopener,noreferrer');
+    }
+    throw new Error('UniSat cannot connect from the embedded preview. Open this page in a new tab and connect there.');
+  }
+
   const provider = getInjectedProvider('unisat');
   if (!provider) return null;
 
