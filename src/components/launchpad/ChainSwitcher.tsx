@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import solanaLogo from '@/assets/solana-logo.png';
+import bitcoinLogo from '@/assets/bitcoin-logo.png';
 
 // Chain logo components
 function SolanaLogo({ className }: { className?: string }) {
@@ -81,7 +82,7 @@ function BnbLogo({ className }: { className?: string }) {
 }
 
 function BitcoinLogo({ className }: { className?: string }) {
-  return <span className={className}>₿</span>;
+  return <img src={bitcoinLogo} alt="Bitcoin" className={cn("rounded-full", className)} />;
 }
 
 const CHAIN_LOGOS: Record<SupportedChain, React.FC<{ className?: string }>> = {
@@ -149,7 +150,7 @@ export function ChainSwitcher({ variant = 'default', className }: ChainSwitcherP
         align="start" 
         className="w-48 bg-card border-border"
       >
-        {allChains.filter((c) => c.id === 'solana' || c.id === 'bitcoin').map((c) => {
+        {allChains.filter((c) => c.id === 'solana' || c.id === 'bitcoin' || c.id === 'bnb').map((c) => {
           const Logo = CHAIN_LOGOS[c.id];
           const isSelected = chain === c.id;
           const isDisabled = !c.isEnabled;
