@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/hooks/useBtcWallet";
 import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance } from "@/hooks/useBtcMemeTokens";
@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowUpRight, ArrowDownRight, Copy, Users, BarChart3 } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, Copy, Users, BarChart3, ExternalLink, Shield } from "lucide-react";
+import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
@@ -30,6 +31,11 @@ function timeAgo(d: string) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
+function truncate(s: string, n = 6) {
+  if (!s || s.length <= n * 2) return s;
+  return `${s.slice(0, n)}...${s.slice(-n)}`;
+}
+
 export default function BtcMemeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -42,6 +48,40 @@ export default function BtcMemeDetailPage() {
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [trading, setTrading] = useState(false);
+  const [tradeTab, setTradeTab] = useState<"all" | "my">("all");
+
+  // Poll for Solana proof after trade
+  const [pendingProofTradeId, setPendingProofTradeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pendingProofTradeId) return;
+    let cancelled = false;
+    const poll = async () => {
+      for (let i = 0; i < 15; i++) {
+        if (cancelled) return;
+        await new Promise(r => setTimeout(r, 2000));
+        const { data } = await supabase
+          .from("btc_meme_trades")
+          .select("solana_proof_signature, solana_proof_memo")
+          .eq("id", pendingProofTradeId)
+          .maybeSingle();
+        if (data?.solana_proof_signature) {
+          toast.success("Solana proof recorded!", {
+            description: `Signature: ${truncate(data.solana_proof_signature, 8)}`,
+            action: {
+              label: "View",
+              onClick: () => window.open(`https://solscan.io/tx/${data.solana_proof_signature}`, "_blank"),
+            },
+          });
+          setPendingProofTradeId(null);
+          return;
+        }
+      }
+      setPendingProofTradeId(null);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [pendingProofTradeId]);
 
   const handleTrade = async () => {
     if (!address || !id || !amount) return;
@@ -52,6 +92,7 @@ export default function BtcMemeDetailPage() {
     }
 
     setTrading(true);
+    const startMs = Date.now();
     try {
       const { data, error } = await supabase.functions.invoke("btc-meme-swap", {
         body: { tokenId: id, walletAddress: address, tradeType, amount: numAmount },
@@ -59,11 +100,39 @@ export default function BtcMemeDetailPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(
-        tradeType === "buy"
-          ? `Bought ${formatNum(data.trade.tokenAmount)} ${token?.ticker}`
-          : `Sold ${formatNum(data.trade.tokenAmount)} ${token?.ticker}`
-      );
+      const executionMs = Date.now() - startMs;
+      const trade = data.trade;
+
+      // Show advanced trade success popup
+      showTradeSuccess({
+        type: tradeType,
+        ticker: token?.ticker || "",
+        tokenName: token?.name,
+        amount: tradeType === "buy"
+          ? `${trade.btcAmount.toFixed(8)} BTC`
+          : `${formatNum(trade.tokenAmount)} ${token?.ticker}`,
+        tokenImageUrl: token?.image_url || undefined,
+        chain: "btc",
+        executionMs,
+        mintAddress: id, // for navigation
+      });
+
+      // Poll for Solana proof asynchronously
+      if (data.proofPending) {
+        // Get the latest trade id
+        const { data: latestTrade } = await supabase
+          .from("btc_meme_trades")
+          .select("id")
+          .eq("token_id", id)
+          .eq("wallet_address", address)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestTrade?.id) {
+          setPendingProofTradeId(latestTrade.id);
+        }
+      }
+
       setAmount("");
     } catch (e: any) {
       toast.error(e.message || "Trade failed");
@@ -71,6 +140,10 @@ export default function BtcMemeDetailPage() {
       setTrading(false);
     }
   };
+
+  // Filter trades for "my" tab
+  const myTrades = trades?.filter((t: any) => t.wallet_address === address) || [];
+  const displayTrades = tradeTab === "my" ? myTrades : (trades || []);
 
   if (isLoading) {
     return (
@@ -219,29 +292,73 @@ export default function BtcMemeDetailPage() {
           )}
         </div>
 
-        {/* Recent Trades */}
+        {/* Trade History */}
         <div className="md:col-span-2 bg-card border border-border rounded-xl p-4">
-          <h3 className="text-sm font-bold text-foreground mb-3">Recent Trades</h3>
-          <div className="space-y-1 max-h-80 overflow-y-auto">
-            {(!trades || trades.length === 0) ? (
-              <p className="text-xs text-muted-foreground text-center py-6">No trades yet. Be the first!</p>
+          {/* Tab header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTradeTab("all")}
+                className={`text-sm font-bold transition-colors ${tradeTab === "all" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"}`}
+              >
+                All Trades
+              </button>
+              {isConnected && (
+                <button
+                  onClick={() => setTradeTab("my")}
+                  className={`text-sm font-bold transition-colors ${tradeTab === "my" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"}`}
+                >
+                  My Trades {myTrades.length > 0 && <span className="text-xs text-primary ml-1">({myTrades.length})</span>}
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Shield className="w-3 h-3 text-purple-400/60" />
+              <span>Solana Proof</span>
+            </div>
+          </div>
+
+          <div className="space-y-0.5 max-h-96 overflow-y-auto">
+            {displayTrades.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">
+                {tradeTab === "my" ? "You haven't made any trades yet." : "No trades yet. Be the first!"}
+              </p>
             ) : (
-              trades.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/20 text-xs">
-                  <div className="flex items-center gap-2">
+              displayTrades.map((t: any) => (
+                <div key={t.id} className="flex items-center justify-between py-2 px-2 rounded hover:bg-muted/20 text-xs group">
+                  <div className="flex items-center gap-2 min-w-0">
                     {t.trade_type === "buy" ? (
-                      <ArrowUpRight className="w-3 h-3 text-[hsl(var(--success))]" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-[hsl(var(--success))] flex-shrink-0" />
                     ) : (
-                      <ArrowDownRight className="w-3 h-3 text-destructive" />
+                      <ArrowDownRight className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
                     )}
-                    <span className="font-mono text-muted-foreground">{t.wallet_address?.slice(0, 6)}...{t.wallet_address?.slice(-4)}</span>
+                    <span className="font-mono text-muted-foreground">{truncate(t.wallet_address, 5)}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`font-mono font-semibold ${t.trade_type === "buy" ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
                       {t.trade_type === "buy" ? "+" : "-"}{formatNum(t.token_amount)}
                     </span>
-                    <span className="font-mono text-muted-foreground">{formatBtc(t.btc_amount)}</span>
-                    <span className="text-muted-foreground/60">{timeAgo(t.created_at)}</span>
+                    <span className="font-mono text-muted-foreground text-[10px]">{formatBtc(t.btc_amount)}</span>
+
+                    {/* Solana proof badge */}
+                    {t.solana_proof_signature ? (
+                      <button
+                        onClick={() => window.open(`https://solscan.io/tx/${t.solana_proof_signature}`, "_blank")}
+                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer"
+                        title={`Solana Proof: ${t.solana_proof_signature}`}
+                      >
+                        <Shield className="w-2.5 h-2.5" />
+                        <span className="text-[9px] font-mono">SOL</span>
+                        <ExternalLink className="w-2 h-2" />
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">
+                        <Shield className="w-2.5 h-2.5" />
+                        pending
+                      </span>
+                    )}
+
+                    <span className="text-muted-foreground/60 text-[10px] w-12 text-right">{timeAgo(t.created_at)}</span>
                   </div>
                 </div>
               ))
