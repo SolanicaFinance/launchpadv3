@@ -184,7 +184,8 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
             {/* Price — mobile only */}
             {/* Price — mobile only */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-1.5">
+              <SaturnTokenPriceDisplay />
               {isBtcMode ? <BtcPriceDisplay /> : chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
             </div>
 
