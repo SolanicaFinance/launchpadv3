@@ -65,6 +65,8 @@ function getLaunchpadIcon(type: string): string | null {
 }
 
 export function StickyStatsFooter() {
+  const { chain } = useChain();
+  const isBnb = chain === 'bnb';
   const { data: launchpadStats, refetch: refetchLaunchpads } = useLaunchpadStats();
   const isMobile = useIsMobile();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
