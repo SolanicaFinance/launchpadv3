@@ -5,6 +5,7 @@ import { ExternalLink, Download } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useReferralCode } from "@/hooks/useReferral";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 
