@@ -127,7 +127,7 @@ function FeaturedAgentCard({ strategy, agentData }: {
           "text-right",
         )}>
           <div className={cn("text-xs font-bold", isProfit ? "text-emerald-400" : "text-red-400")}>
-            {isProfit ? "+" : ""}{profit.toFixed(3)} SOL
+            {isProfit ? "+" : ""}{profit.toFixed(3)} BNB
           </div>
           <div className="text-[9px] text-muted-foreground">Total P&L</div>
         </div>
