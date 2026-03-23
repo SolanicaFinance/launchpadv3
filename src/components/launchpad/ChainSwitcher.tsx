@@ -57,26 +57,12 @@ function BnbLogo({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="16" fill="#F3BA2F" />
-      <path
-        d="M16 8L18.5 10.5L13.5 15.5L11 13L16 8Z"
-        fill="white"
-      />
-      <path
-        d="M20.5 12.5L23 15L18.5 19.5L16 17L20.5 12.5Z"
-        fill="white"
-      />
-      <path
-        d="M11.5 12.5L14 15L9 20L6.5 17.5L11.5 12.5Z"
-        fill="white"
-      />
-      <path
-        d="M16 17L18.5 19.5L16 22L13.5 19.5L16 17Z"
-        fill="white"
-      />
-      <path
-        d="M23 20L25.5 22.5L20.5 27.5L18 25L23 20Z"
-        fill="white"
-      />
+      <path d="M16 6.4l3.2 3.2-1.9 1.9L16 10.2l-1.3 1.3-1.9-1.9L16 6.4z" fill="white"/>
+      <path d="M21.6 12l3.2 3.2-1.9 1.9-3.2-3.2L21.6 12z" fill="white"/>
+      <path d="M10.4 12l1.9 1.9-3.2 3.2-1.9-1.9L10.4 12z" fill="white"/>
+      <path d="M16 17.3l3.2-3.2 1.9 1.9L16 21.1l-5.1-5.1 1.9-1.9L16 17.3z" fill="white"/>
+      <path d="M16 14.1l1.9-1.9L16 10.2l-1.9 1.9L16 14.1z" fill="white"/>
+      <path d="M16 25.6l-3.2-3.2 1.9-1.9 1.3 1.3 1.3-1.3 1.9 1.9-3.2 3.2z" fill="white"/>
     </svg>
   );
 }
