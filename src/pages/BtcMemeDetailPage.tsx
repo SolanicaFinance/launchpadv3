@@ -161,6 +161,17 @@ export default function BtcMemeDetailPage() {
     <div className="max-w-6xl mx-auto py-4 space-y-4">
       <button onClick={() => navigate("/btc")} className="text-muted-foreground hover:text-foreground text-sm">← Back</button>
 
+      {/* Pending Genesis Banner */}
+      {token.status === "pending_genesis" && (
+        <div className="bg-[hsl(30,100%,50%)]/10 border border-[hsl(30,100%,50%)]/30 rounded-xl p-4 flex items-center gap-3">
+          <Loader2 className="w-5 h-5 animate-spin text-[hsl(30,100%,50%)]" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Awaiting Bitcoin Network Confirmation</p>
+            <p className="text-xs text-muted-foreground">Your token's genesis OP_RETURN transaction is being confirmed. Trading will be enabled once confirmed.</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         {token.image_url ? (
