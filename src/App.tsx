@@ -9,6 +9,7 @@ import { GlobalTradeNotifier } from "@/components/GlobalTradeNotifier";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 
 function LaunchpadRedirect() {
   const { mintAddress } = useParams();
