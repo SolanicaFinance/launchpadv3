@@ -39,7 +39,8 @@ const PANCAKE_ROUTER_ABI = parseAbi([
 
 // ── Four.meme ABI ──
 const FOURMEME_MANAGER_ABI = parseAbi([
-  "function buyTokenAMAP(address token) external payable",
+  "function buyTokenAMAP(address token, uint256 funds, uint256 minAmount) external payable",
+  "function buyTokenAMAP(address token, address to, uint256 funds, uint256 minAmount) external payable",
   "function sellToken(address token, uint256 amount) external",
 ]);
 
@@ -142,11 +143,7 @@ async function resolveTokenRoute(
       address: FOURMEME_HELPER3 as `0x${string}`,
       abi: FOURMEME_HELPER_ABI,
       functionName: "tryBuy",
-      args: [
-        tokenAddress as `0x${string}`,
-        parseEther("1"),
-        parseEther("0.01"),
-      ],
+        args: [tokenAddress as `0x${string}`, 0n, parseEther("0.01")],
     });
     const [tokenManager] = result;
     if (tokenManager && tokenManager !== "0x0000000000000000000000000000000000000000") {
@@ -296,24 +293,72 @@ async function executePancakeSwapSell(
   return { txHash, estimatedOutput: formatEther(amountOutMin) };
 }
 
+async function getFourMemeBuyQuote(
+  tokenAddress: string,
+  bnbAmount: bigint,
+  slippage: number,
+  publicClient: any
+): Promise<{ estimatedOutput: string; fundRequirement: bigint; fundAsParameter: bigint; minAmount: bigint }> {
+  const result = await publicClient.readContract({
+    address: FOURMEME_HELPER3 as `0x${string}`,
+    abi: FOURMEME_HELPER_ABI,
+    functionName: "tryBuy",
+    args: [tokenAddress as `0x${string}`, 0n, bnbAmount],
+  });
+
+  const [tokenManager, , estimatedAmount, , , fundRequirement, fundAsParameter] = result;
+
+  if (!tokenManager || tokenManager === "0x0000000000000000000000000000000000000000") {
+    throw new Error("Four.meme quote failed: token manager not found");
+  }
+
+  if (estimatedAmount <= 0n || fundRequirement <= 0n) {
+    throw new Error("Four.meme quote failed: no buy output available");
+  }
+
+  const minAmount = (estimatedAmount * BigInt(100 - slippage)) / 100n;
+  console.log(
+    `[bnb-swap] Four.meme quote: est=${estimatedAmount.toString()} fundRequirement=${fundRequirement.toString()} fundAsParameter=${fundAsParameter.toString()} minAmount=${minAmount.toString()}`
+  );
+
+  return {
+    estimatedOutput: estimatedAmount.toString(),
+    fundRequirement,
+    fundAsParameter,
+    minAmount,
+  };
+}
+
 // ── Four.meme Buy ──
 async function executeFourMemeBuy(
   walletId: string,
+  walletAddress: string,
   tokenAddress: string,
-  bnbAmount: bigint
-): Promise<string> {
+  bnbAmount: bigint,
+  slippage: number,
+  publicClient: any
+): Promise<{ txHash: string; estimatedOutput: string }> {
+  const quote = await getFourMemeBuyQuote(tokenAddress, bnbAmount, slippage, publicClient);
+
   const callData = encodeFunctionData({
     abi: FOURMEME_MANAGER_ABI,
     functionName: "buyTokenAMAP",
-    args: [tokenAddress as `0x${string}`],
+    args: [
+      tokenAddress as `0x${string}`,
+      walletAddress as `0x${string}`,
+      quote.fundAsParameter,
+      quote.minAmount,
+    ],
   });
 
-  return await evmSendTransaction(walletId, {
+  const txHash = await evmSendTransaction(walletId, {
     to: FOURMEME_TOKEN_MANAGER,
     data: callData,
-    value: numberToHex(bnbAmount),
-    gas_limit: numberToHex(300000n),
+    value: numberToHex(quote.fundRequirement),
+    gas_limit: numberToHex(500000n),
   });
+
+  return { txHash, estimatedOutput: quote.estimatedOutput };
 }
 
 // ── Four.meme Sell ──
@@ -633,7 +678,16 @@ Deno.serve(async (req) => {
       console.log(`[bnb-swap] Executing via Four.meme: ${body.action}`);
       try {
         if (body.action === "buy") {
-          txHash = await executeFourMemeBuy(walletId, body.tokenAddress, parseEther(body.amount));
+          const result = await executeFourMemeBuy(
+            walletId,
+            walletAddress,
+            body.tokenAddress,
+            parseEther(body.amount),
+            slippage,
+            publicClient
+          );
+          txHash = result.txHash;
+          estimatedOutput = result.estimatedOutput;
         } else {
           txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
         }
@@ -693,7 +747,16 @@ Deno.serve(async (req) => {
           console.log(`[bnb-swap] PancakeSwap no liquidity, trying Four.meme fallback...`);
           try {
             if (body.action === "buy") {
-              txHash = await executeFourMemeBuy(walletId, body.tokenAddress, parseEther(body.amount));
+                const result = await executeFourMemeBuy(
+                  walletId,
+                  walletAddress,
+                  body.tokenAddress,
+                  parseEther(body.amount),
+                  slippage,
+                  publicClient
+                );
+                txHash = result.txHash;
+                estimatedOutput = result.estimatedOutput;
             } else {
               txHash = await executeFourMemeSell(walletId, walletAddress, body.tokenAddress, parseEther(body.amount), publicClient);
             }
