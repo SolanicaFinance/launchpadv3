@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
-import { useAuthorizationSignature, usePrivy } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 
 interface BnbSwapResult {
   success: boolean;
@@ -15,7 +16,7 @@ interface BnbSwapResult {
 export function useBnbSwap() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = usePrivy();
-  const { generateAuthorizationSignature } = useAuthorizationSignature();
+  const { wallet: evmWallet } = usePrivyEvmWallet();
 
   const executeBnbSwap = useCallback(async (
     tokenAddress: string,
@@ -26,62 +27,110 @@ export function useBnbSwap() {
   ): Promise<BnbSwapResult> => {
     setIsLoading(true);
     try {
-      const baseBody = {
+      // Step 1: Ask edge function to BUILD the unsigned transaction
+      const buildBody = {
         tokenAddress,
         action,
         amount: amount.toString(),
         userWallet,
         privyUserId: user?.id || undefined,
         slippage,
+        mode: "build",
       };
 
-      let data: any;
-      let error: any;
+      const { data: buildData, error: buildError } = await supabase.functions.invoke("bnb-swap", {
+        body: buildBody,
+      });
 
-      if (action === "buy") {
-        const prepareResponse = await supabase.functions.invoke("bnb-swap", {
-          body: {
-            ...baseBody,
-            mode: "prepare",
-          },
+      if (buildError) throw new Error(buildError.message || "Build failed");
+      if (!buildData?.success) throw new Error(buildData?.error || "Build failed");
+
+      const { txParams, approveTx, route, estimatedOutput, walletAddress } = buildData;
+
+      if (!txParams) throw new Error("No transaction params returned");
+
+      // Step 2: Get provider from Privy embedded EVM wallet
+      if (!evmWallet) throw new Error("EVM wallet not available. Please try again.");
+
+      const provider = await (evmWallet as any).getEthereumProvider();
+      if (!provider) throw new Error("Could not get wallet provider");
+
+      // Ensure we're on BSC (chain ID 56 = 0x38)
+      try {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x38" }],
         });
-
-        if (prepareResponse.error) throw new Error(prepareResponse.error.message || "Swap failed");
-
-        const preparedData = prepareResponse.data;
-        if (preparedData?.requiresAuthorizationSignature && preparedData?.signaturePayload && preparedData?.preparedExecution) {
-          const clientAuthorizationSignature = await generateAuthorizationSignature(preparedData.signaturePayload);
-
-          ({ data, error } = await supabase.functions.invoke("bnb-swap", {
-            body: {
-              ...baseBody,
-              mode: "execute",
-              preparedExecution: preparedData.preparedExecution,
-              clientAuthorizationSignature,
-            },
-          }));
-        } else {
-          data = preparedData;
-          error = prepareResponse.error;
+      } catch (switchErr: any) {
+        // If BSC not added, try adding it
+        if (switchErr?.code === 4902) {
+          await provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x38",
+              chainName: "BNB Smart Chain",
+              nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+              rpcUrls: ["https://bsc-dataseed.binance.org"],
+              blockExplorerUrls: ["https://bscscan.com"],
+            }],
+          });
         }
-      } else {
-        ({ data, error } = await supabase.functions.invoke("bnb-swap", {
-          body: baseBody,
-        }));
       }
 
-      if (error) throw new Error(error.message || "Swap failed");
-      if (!data?.success) throw new Error(data?.error || "Swap failed");
+      // Step 3: If approval needed, send approve tx first
+      if (approveTx) {
+        console.log("[bnb-swap] Sending approval tx...");
+        const approveTxHash = await provider.request({
+          method: "eth_sendTransaction",
+          params: [{
+            from: walletAddress,
+            to: approveTx.to,
+            data: approveTx.data,
+            value: approveTx.value || "0x0",
+          }],
+        });
+        console.log("[bnb-swap] Approval tx:", approveTxHash);
+
+        // Wait for approval to confirm
+        await waitForTx(provider, approveTxHash);
+      }
+
+      // Step 4: Send the main swap transaction via client wallet
+      console.log("[bnb-swap] Sending swap tx via client wallet...");
+      const txHash = await provider.request({
+        method: "eth_sendTransaction",
+        params: [{
+          from: walletAddress,
+          to: txParams.to,
+          data: txParams.data,
+          value: txParams.value || "0x0",
+          gas: txParams.gas,
+        }],
+      });
+
+      console.log("[bnb-swap] Swap tx sent:", txHash);
+
+      // Step 5: Record trade in background
+      supabase.functions.invoke("bnb-swap", {
+        body: {
+          tokenAddress,
+          action,
+          amount: amount.toString(),
+          userWallet,
+          privyUserId: user?.id || undefined,
+          mode: "record",
+          txHash,
+        },
+      }).catch(() => {});
 
       return {
         success: true,
-        txHash: data.txHash,
-        explorerUrl: data.explorerUrl,
-        route: data.route,
-        estimatedOutput: data.estimatedOutput,
+        txHash,
+        explorerUrl: `https://bscscan.com/tx/${txHash}`,
+        route: route || "unknown",
+        estimatedOutput: estimatedOutput || "0",
       };
     } catch (err: any) {
-      // Parse structured error from edge function
       let errorMsg = err?.message || "Unknown error";
       let route: string | undefined;
       let reason: string | undefined;
@@ -104,7 +153,22 @@ export function useBnbSwap() {
     } finally {
       setIsLoading(false);
     }
-  }, [generateAuthorizationSignature, user?.id]);
+  }, [user?.id, evmWallet]);
 
   return { executeBnbSwap, isLoading };
+}
+
+// Simple poll-based tx receipt wait
+async function waitForTx(provider: any, txHash: string, timeoutMs = 30000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const receipt = await provider.request({
+        method: "eth_getTransactionReceipt",
+        params: [txHash],
+      });
+      if (receipt) return;
+    } catch {}
+    await new Promise(r => setTimeout(r, 2000));
+  }
 }

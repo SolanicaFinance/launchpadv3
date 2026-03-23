@@ -108,9 +108,10 @@ interface SwapRequest {
   userWallet: string;
   privyUserId?: string;
   slippage?: number;
-  mode?: "prepare" | "execute";
+  mode?: "prepare" | "execute" | "build" | "record";
   clientAuthorizationSignature?: string;
   preparedExecution?: PreparedExecution;
+  txHash?: string;
 }
 
 type SwapRoute = "portal" | "fourmeme" | "pancakeswap";
@@ -864,6 +865,232 @@ Deno.serve(async (req) => {
     let estimatedOutput = "0";
     let executedRoute = route;
 
+    // ── "record" mode: just record a client-sent txHash ──
+    if (body.mode === "record" && body.txHash) {
+      try {
+        let bnbTokenName: string | null = null;
+        let bnbTokenTicker: string | null = null;
+        const { data: funToken } = await supabase
+          .from("fun_tokens")
+          .select("name, ticker")
+          .eq("evm_token_address", body.tokenAddress)
+          .single();
+        if (funToken) {
+          bnbTokenName = funToken.name;
+          bnbTokenTicker = funToken.ticker;
+        }
+        await supabase.from("alpha_trades").upsert({
+          token_mint: body.tokenAddress,
+          wallet_address: walletAddress,
+          trade_type: body.action,
+          amount_sol: parseFloat(body.amount),
+          amount_tokens: 0,
+          tx_hash: body.txHash,
+          chain: "bnb",
+          token_name: bnbTokenName,
+          token_ticker: bnbTokenTicker,
+        }, { onConflict: "tx_hash" });
+      } catch (e) {
+        console.error("[bnb-swap] record trade failed:", e);
+      }
+      return new Response(
+        JSON.stringify({ success: true, recorded: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── "build" mode: return unsigned tx params for client-side signing ──
+    if (body.mode === "build") {
+      let txParams: { to: string; data: string; value: string; gas?: string } | null = null;
+      let buildEstimatedOutput = "0";
+      let buildRoute = route;
+
+      if (body.action === "buy") {
+        if (route === "fourmeme") {
+          const prepared = await executeFourMemeBuy(
+            walletId, walletAddress, body.tokenAddress,
+            parseEther(body.amount), slippage, publicClient, fourMemeInfo,
+            { prepareOnly: true },
+          );
+          if (prepared.preparedExecution) {
+            txParams = {
+              to: prepared.preparedExecution.to,
+              data: prepared.preparedExecution.data || "0x",
+              value: prepared.preparedExecution.value || "0x0",
+              gas: prepared.preparedExecution.gas_limit,
+            };
+            buildEstimatedOutput = prepared.estimatedOutput;
+          }
+        } else if (route === "pancakeswap") {
+          const prepared = await executePancakeSwapBuy(
+            walletId, walletAddress, body.tokenAddress,
+            parseEther(body.amount), slippage, publicClient,
+            { prepareOnly: true },
+          );
+          if (prepared.preparedExecution) {
+            txParams = {
+              to: prepared.preparedExecution.to,
+              data: prepared.preparedExecution.data || "0x",
+              value: prepared.preparedExecution.value || "0x0",
+              gas: prepared.preparedExecution.gas_limit,
+            };
+            buildEstimatedOutput = prepared.estimatedOutput;
+          }
+        } else {
+          // Portal
+          const callData = encodeFunctionData({
+            abi: PORTAL_ABI,
+            functionName: "buy",
+            args: [body.tokenAddress as `0x${string}`],
+          });
+          txParams = {
+            to: portalAddress,
+            data: callData,
+            value: numberToHex(parseEther(body.amount)),
+            gas: numberToHex(300000n),
+          };
+        }
+      } else {
+        // Sell — build approve + sell txs
+        // For sells we need approval first, so return both transactions
+        if (route === "fourmeme") {
+          const targetManager = fourMemeInfo?.tokenManager || FOURMEME_TOKEN_MANAGER;
+          const tokenAmount = parseEther(body.amount);
+          
+          // Check allowance
+          const currentAllowance = await publicClient.readContract({
+            address: body.tokenAddress as `0x${string}`,
+            abi: ERC20_ABI,
+            functionName: "allowance",
+            args: [walletAddress as `0x${string}`, targetManager as `0x${string}`],
+          });
+          
+          let approveTx = null;
+          if (currentAllowance < tokenAmount) {
+            const approveData = encodeFunctionData({
+              abi: ERC20_ABI,
+              functionName: "approve",
+              args: [targetManager as `0x${string}`, tokenAmount * 2n],
+            });
+            approveTx = { to: body.tokenAddress, data: approveData, value: "0x0" };
+          }
+
+          const callData = encodeFunctionData({
+            abi: FOURMEME_MANAGER_ABI,
+            functionName: "sellToken",
+            args: [body.tokenAddress as `0x${string}`, tokenAmount],
+          });
+          txParams = {
+            to: targetManager,
+            data: callData,
+            value: "0x0",
+            gas: numberToHex(350000n),
+          };
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              mode: "build",
+              route: "fourmeme",
+              approveTx,
+              txParams,
+              estimatedOutput: buildEstimatedOutput,
+              walletAddress,
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else if (route === "pancakeswap") {
+          const tokenAmount = parseEther(body.amount);
+          const path = [body.tokenAddress as `0x${string}`, WBNB as `0x${string}`];
+          
+          const currentAllowance = await publicClient.readContract({
+            address: body.tokenAddress as `0x${string}`,
+            abi: ERC20_ABI,
+            functionName: "allowance",
+            args: [walletAddress as `0x${string}`, PANCAKE_ROUTER as `0x${string}`],
+          });
+          
+          let approveTx = null;
+          if (currentAllowance < tokenAmount) {
+            const approveData = encodeFunctionData({
+              abi: ERC20_ABI,
+              functionName: "approve",
+              args: [PANCAKE_ROUTER as `0x${string}`, tokenAmount * 2n],
+            });
+            approveTx = { to: body.tokenAddress, data: approveData, value: "0x0" };
+          }
+
+          let amountOutMin = 0n;
+          try {
+            const amounts = await publicClient.readContract({
+              address: PANCAKE_ROUTER as `0x${string}`,
+              abi: PANCAKE_ROUTER_ABI,
+              functionName: "getAmountsOut",
+              args: [tokenAmount, path],
+            });
+            amountOutMin = (amounts[1] * BigInt(100 - slippage)) / 100n;
+          } catch {}
+
+          const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
+          const callData = encodeFunctionData({
+            abi: PANCAKE_ROUTER_ABI,
+            functionName: "swapExactTokensForETHSupportingFeeOnTransferTokens",
+            args: [tokenAmount, amountOutMin, path, walletAddress as `0x${string}`, deadline],
+          });
+          txParams = {
+            to: PANCAKE_ROUTER,
+            data: callData,
+            value: "0x0",
+            gas: numberToHex(350000n),
+          };
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              mode: "build",
+              route: "pancakeswap",
+              approveTx,
+              txParams,
+              estimatedOutput: formatEther(amountOutMin),
+              walletAddress,
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else {
+          // Portal sell
+          const callData = encodeFunctionData({
+            abi: PORTAL_ABI,
+            functionName: "sell",
+            args: [body.tokenAddress as `0x${string}`, parseEther(body.amount)],
+          });
+          txParams = {
+            to: portalAddress,
+            data: callData,
+            value: "0x0",
+          };
+        }
+      }
+
+      if (!txParams) {
+        return new Response(
+          JSON.stringify({ error: "Could not build transaction for this route" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "build",
+          route: buildRoute,
+          txParams,
+          estimatedOutput: buildEstimatedOutput,
+          walletAddress,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (body.mode === "prepare" && body.action === "buy") {
       let prepared:
         | { txHash?: string; estimatedOutput: string; preparedExecution?: PreparedExecution; signaturePayload?: PrivySignaturePayload }
@@ -871,23 +1098,14 @@ Deno.serve(async (req) => {
 
       if (route === "fourmeme") {
         prepared = await executeFourMemeBuy(
-          walletId,
-          walletAddress,
-          body.tokenAddress,
-          parseEther(body.amount),
-          slippage,
-          publicClient,
-          fourMemeInfo,
+          walletId, walletAddress, body.tokenAddress,
+          parseEther(body.amount), slippage, publicClient, fourMemeInfo,
           { prepareOnly: true },
         );
       } else if (route === "pancakeswap") {
         prepared = await executePancakeSwapBuy(
-          walletId,
-          walletAddress,
-          body.tokenAddress,
-          parseEther(body.amount),
-          slippage,
-          publicClient,
+          walletId, walletAddress, body.tokenAddress,
+          parseEther(body.amount), slippage, publicClient,
           { prepareOnly: true },
         );
       } else {
