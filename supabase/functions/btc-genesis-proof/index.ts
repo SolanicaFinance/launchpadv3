@@ -6,9 +6,9 @@
  *   SATURN|TICKER|NAME_HASH|IMAGE_HASH_PREFIX|TIMESTAMP
  *
  * Uses mempool.space API to broadcast the raw tx.
- * Requires a funded BTC wallet (BTC_TREASURY_WIF secret).
+ * Requires a funded BTC wallet (BTC_PLATFORM_WIF secret).
  *
- * NOTE: If BTC_TREASURY_WIF is not yet configured, this function
+ * NOTE: If BTC_PLATFORM_WIF is not yet configured, this function
  * will generate a simulated genesis and store the intended payload,
  * ready to anchor once the BTC wallet is funded.
  */
