@@ -79,8 +79,14 @@ interface FeeEstimates {
 
 export default function BitcoinModePage() {
   const { isConnected, address, balance } = useBtcWallet();
+  const { chain, setChain } = useChain();
   const navigate = useNavigate();
   const [recentTokens, setRecentTokens] = useState<any[]>([]);
+
+  // Sync chain context to bitcoin when on /btc
+  useEffect(() => {
+    if (chain !== 'bitcoin') setChain('bitcoin');
+  }, []);
   const [fees, setFees] = useState<FeeEstimates | null>(null);
   const [blockHeight, setBlockHeight] = useState<number | null>(null);
 
