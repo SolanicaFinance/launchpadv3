@@ -48,8 +48,8 @@ export default function TradePage() {
   // Codex data — chain-aware
   const { newPairs: codexNewPairs, completing: codexCompleting, graduated: codexGraduated } = useCodexNewPairs(networkId);
 
-  const [quickBuyAmount, setQuickBuyAmount] = useState(getStoredQuickBuy);
-  const [quickBuyInput, setQuickBuyInput] = useState(String(getStoredQuickBuy()));
+  const [quickBuyAmount, setQuickBuyAmount] = useState(() => getStoredQuickBuy(isBnb));
+  const [quickBuyInput, setQuickBuyInput] = useState(() => String(getStoredQuickBuy(isBnb)));
   const { toggle: toggleSounds, isEnabled: isSoundsEnabled } = useTradeSounds();
   const [soundsOn, setSoundsOn] = useState(() => localStorage.getItem("pulse-sounds-enabled") === "true");
 
