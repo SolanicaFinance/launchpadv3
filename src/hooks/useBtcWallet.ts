@@ -351,7 +351,15 @@ async function connectUniSat(): Promise<string | null> {
 
 async function connectXverse(): Promise<string | null> {
   const provider = getInjectedProvider('xverse');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Xverse wallet not detected. Install it from xverse.app');
+  }
 
   const response = await requestProviderMethod(provider, 'getAccounts', {
     purposes: ['payment'],
@@ -363,7 +371,15 @@ async function connectXverse(): Promise<string | null> {
 
 async function connectLeather(): Promise<string | null> {
   const provider = getInjectedProvider('leather');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Leather wallet not detected. Install it from leather.io');
+  }
 
   const response = await requestProviderMethod(provider, 'getAddresses');
   const address = extractAddress(response);
@@ -377,7 +393,15 @@ async function connectLeather(): Promise<string | null> {
 
 async function connectOKX(): Promise<string | null> {
   const provider = getInjectedProvider('okx');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('OKX wallet not detected. Install it from okx.com/web3');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
@@ -391,7 +415,15 @@ async function connectOKX(): Promise<string | null> {
 
 async function connectPhantom(): Promise<string | null> {
   const provider = getInjectedProvider('phantom');
-  if (!provider) return null;
+  if (!provider) {
+    if (isEmbeddedPreviewContext()) {
+      const publishedUrl = 'https://saturntrade.lovable.app';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      window.open(publishedUrl + currentPath, '_blank', 'noopener,noreferrer');
+      throw new Error('Browser extensions cannot connect inside the preview iframe. We\'ve opened the app in a new tab.');
+    }
+    throw new Error('Phantom wallet not detected. Install it from phantom.app');
+  }
 
   if (typeof provider.requestAccounts === 'function') {
     return extractAddress(await provider.requestAccounts());
