@@ -142,32 +142,70 @@ function normalizeAuthorizationKeyId(rawValue: string): string | null {
 async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
   const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
   const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
-
-  // Set request expiry 5 minutes from now (prevents replay attacks)
   const expiresAt = String(Date.now() + 5 * 60 * 1000);
 
-  const requestHeaders: Record<string, string> = {
+  const baseHeaders: Record<string, string> = {
     ...getAuthHeaders(),
     "privy-request-expiry": expiresAt,
   };
 
+  const attempts: Array<{ name: string; headers: Record<string, string> }> = [];
+
   if (authKeyId) {
-    requestHeaders["privy-authorization-key"] = authKeyId;
+    const withKeyHeaders = {
+      ...baseHeaders,
+      "privy-authorization-key": authKeyId,
+    };
+
+    attempts.push({
+      name: "docs-canonical+key-header(on)",
+      headers: {
+        ...withKeyHeaders,
+        "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
+          expiresAt,
+          authorizationKeyId: authKeyId,
+        }),
+      },
+    });
   }
 
-  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt, authorizationKeyId: authKeyId });
-
-  const response = await fetch(url, {
-    method: "POST",
+  attempts.push({
+    name: "docs-canonical+key-header(off)",
     headers: {
-      ...requestHeaders,
-      "privy-authorization-signature": authSignature,
+      ...baseHeaders,
+      "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
+        expiresAt,
+        authorizationKeyId: null,
+      }),
     },
-    body: JSON.stringify(bodyObj),
   });
 
-  console.log(`[privy-auth] Attempt docs-canonical+key-header(${authKeyId ? "on" : "off"}) → status ${response.status}`);
-  return response;
+  attempts.push({
+    name: "basic-auth-only",
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
+
+  let lastResponse: Response | null = null;
+
+  for (const attempt of attempts) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: attempt.headers,
+      body: JSON.stringify(bodyObj),
+    });
+
+    console.log(`[privy-auth] Attempt ${attempt.name} → status ${response.status}`);
+
+    if (response.ok || response.status !== 401) {
+      return response;
+    }
+
+    lastResponse = response;
+  }
+
+  return lastResponse ?? new Response("Privy RPC request failed before any attempt was made", { status: 500 });
 }
 
 async function getWalletAuthDebug(walletId: string): Promise<string> {
@@ -407,6 +445,7 @@ export async function evmSendTransaction(
   const bodyObj = {
     method: "eth_sendTransaction",
     caip2,
+    chain_type: "ethereum",
     params: {
       transaction: txParams,
     },
