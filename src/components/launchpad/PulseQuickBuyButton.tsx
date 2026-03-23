@@ -145,41 +145,54 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
   const [isSelling, setIsSelling] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Check ERC-20 balance on BNB Chain
+  // Check ERC-20 balance on BNB Chain via public RPC (not Privy's rate-limited RPC)
   const { data: tokenBalance } = useQuery({
     queryKey: ["bnb-token-balance", evmAddress, mintAddress],
     queryFn: async () => {
       if (!evmAddress || !mintAddress) return 0;
       try {
-        const provider = await (evmWallet as any)?.getEthereumProvider?.();
-        if (!provider) return 0;
-        // ERC-20 balanceOf(address)
-        const balanceHex = await provider.request({
-          method: "eth_call",
+        const rpcUrl = "https://bsc-dataseed.binance.org";
+        const balanceCall = {
+          jsonrpc: "2.0", id: 1, method: "eth_call",
           params: [{
             to: mintAddress,
             data: "0x70a08231000000000000000000000000" + evmAddress.slice(2).toLowerCase(),
           }, "latest"],
+        };
+        const balResp = await fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(balanceCall),
         });
+        const balJson = await balResp.json();
+        const balanceHex = balJson?.result;
+        if (!balanceHex || balanceHex === "0x") return 0;
+
         // Get decimals
         let decimals = 18;
         try {
-          const decHex = await provider.request({
-            method: "eth_call",
-            params: [{ to: mintAddress, data: "0x313ce567" }, "latest"],
+          const decResp = await fetch(rpcUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0", id: 2, method: "eth_call",
+              params: [{ to: mintAddress, data: "0x313ce567" }, "latest"],
+            }),
           });
-          decimals = parseInt(decHex, 16);
-          if (isNaN(decimals) || decimals > 36) decimals = 18;
+          const decJson = await decResp.json();
+          const d = parseInt(decJson?.result, 16);
+          if (!isNaN(d) && d <= 36) decimals = d;
         } catch {}
+
         const raw = BigInt(balanceHex || "0x0");
         return Number(raw) / (10 ** decimals);
       } catch {
         return 0;
       }
     },
-    enabled: !!isAuthenticated && !!evmAddress && !!mintAddress && !!evmWallet,
-    staleTime: 5_000,
-    refetchInterval: 10_000,
+    enabled: !!isAuthenticated && !!evmAddress && !!mintAddress,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
     refetchOnMount: "always",
   });
 
