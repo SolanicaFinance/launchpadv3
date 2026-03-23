@@ -264,7 +264,7 @@ export default function SixtyNineListPage() {
               <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Dice5 className="h-5 w-5 text-primary" />
-                  <h3 className="font-bold text-foreground text-sm">Weekly 69 BNB Lottery</h3>
+                  <h3 className="font-bold text-foreground text-sm"><h3 className="font-bold text-foreground text-sm">Weekly 6.9 BNB Lottery</h3></h3>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                   Holders who haven't transferred any <span className="text-primary font-semibold">$SATURN</span> in{" "}
