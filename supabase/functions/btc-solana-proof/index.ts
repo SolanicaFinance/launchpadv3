@@ -38,9 +38,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build memo string: SATURN_BTC|TYPE|BTC_AMT|TOKEN_AMT|TICKER|WALLET|GENESIS|IMG_HASH
+    // Build memo string: Saturn.Trade|TYPE|BTC_AMT|TOKEN_AMT|TICKER|WALLET|GENESIS|IMG_HASH
     const memoFields = [
-      "SATURN_BTC",
+      "Saturn.Trade",
       tradeType.toUpperCase(),
       `${btcAmount}BTC`,
       `${tokenAmount}${tokenTicker}`,
