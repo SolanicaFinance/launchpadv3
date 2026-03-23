@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useBtcWallet } from '@/hooks/useBtcWallet';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
-
 import { Button } from '@/components/ui/button';
 import { TrendingRunes } from '@/components/bitcoin/TrendingRunes';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useBtcMemeTokens } from '@/hooks/useBtcMemeTokens';
+import { Rocket, TrendingUp } from 'lucide-react';
 
 interface FeeEstimates {
   fastestFee: number;
@@ -62,19 +63,19 @@ export default function BitcoinModePage() {
       {/* Hero */}
       <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
         <h2 className="text-3xl font-bold text-foreground">
-          Launch & Trade Bitcoin Runes
+          Bitcoin Meme Tokens
         </h2>
         <p className="text-muted-foreground max-w-lg mx-auto">
-          The only platform with Rune etching, RugShield deployer scanning, and PSBT trading — all in one app. Built for whales.
+          Launch meme tokens backed by Bitcoin. Instant trading with bonding curves — no blockchain confirmations needed.
         </p>
         <div className="flex items-center justify-center gap-4 pt-2">
           <Button
-            onClick={() => navigate('/btc/launch')}
+            onClick={() => navigate('/btc/meme/launch')}
             className="bg-[hsl(30,100%,50%)] hover:bg-[hsl(30,100%,45%)] text-white"
             size="lg"
             disabled={!isConnected}
           >
-            Launch a Rune
+            <Rocket className="w-4 h-4 mr-2" /> Launch Meme Token
           </Button>
         </div>
       </div>
@@ -135,10 +136,13 @@ export default function BitcoinModePage() {
         </div>
       )}
 
-      {/* Trending Runes from the network */}
+      {/* BTC Meme Tokens Feed */}
+      <BtcMemeTokenFeed />
+
+      {/* Legacy Runes */}
       <TrendingRunes />
 
-      {/* Recent launches */}
+      {/* Legacy recent launches */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <h3 className="text-sm font-bold text-foreground mb-3">Recent Rune Launches</h3>
         {recentTokens.length === 0 ? (
