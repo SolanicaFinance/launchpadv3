@@ -33,7 +33,8 @@ interface ProfitCardModalProps {
 export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { referralLink } = useReferralCode();
-  const { solanaAddress, evmAddress } = useAuth();
+  const { solanaAddress } = useAuth();
+  const { address: evmAddress } = usePrivyEvmWallet();
   const [saving, setSaving] = useState(false);
 
   if (!data) return null;
