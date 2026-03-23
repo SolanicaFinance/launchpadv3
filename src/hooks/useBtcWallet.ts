@@ -192,7 +192,7 @@ function getWindowProviderCandidates(): WindowProviderCandidate[] {
   const dynamicKeys = Object.getOwnPropertyNames(window).filter(key => /unisat|xverse|leather|okx|phantom|bitcoin|btc/i.test(key));
   for (const key of dynamicKeys) {
     try {
-      pushCandidate(key, (window as Record<string, unknown>)[key]);
+      pushCandidate(key, (window as unknown as Record<string, unknown>)[key]);
     } catch {
       // Ignore guarded window getters from extensions or the browser.
     }
@@ -214,7 +214,7 @@ function getInjectedProvider(walletId: BtcWalletProvider): GenericBitcoinProvide
   const registryProviders = getRegistryProviders();
   const searchTerms = getProviderSearchTerms(walletId);
 
-  const entry = registryProviders.find(provider => providerMatches(provider, searchTerms[walletId]));
+  const entry = registryProviders.find(provider => providerMatches(provider, searchTerms));
   if (entry) return unwrapProvider(entry);
 
   const windowCandidate = getWindowProviderCandidates().find(candidate => providerMatches(candidate, searchTerms, candidate.provider));
