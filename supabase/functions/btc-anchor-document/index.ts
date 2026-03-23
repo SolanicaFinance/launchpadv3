@@ -158,7 +158,13 @@ Deno.serve(async (req) => {
     }
 
     psbt.addOutput({ address, value: changeValue });
-    psbt.signInput(0, keyPair);
+
+    // Wrap signer to return Buffer instead of Uint8Array
+    const signer = {
+      publicKey: Buffer.from(keyPair.publicKey),
+      sign: (hash: Uint8Array) => Buffer.from(keyPair.sign(hash)),
+    };
+    psbt.signInput(0, signer);
     psbt.finalizeAllInputs();
     const rawTx = psbt.extractTransaction().toHex();
 
