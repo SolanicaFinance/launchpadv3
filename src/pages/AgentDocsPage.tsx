@@ -368,7 +368,7 @@ export default function AgentDocsPage() {
                       <CodeBlock code={`${BRAND.twitterHandle} !clawmode
 name: Cool Token
 symbol: COOL
-description: The coolest token on Solana
+description: The coolest token on BNB Chain
 image: https://example.com/logo.png
 website: https://cooltoken.com
 twitter: @cooltoken`} />
