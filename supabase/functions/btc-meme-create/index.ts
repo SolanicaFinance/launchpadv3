@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         bonding_progress: 0,
         platform_fee_bps: 100,
         creator_fee_bps: feeBps,
-        status: "active",
+        status: "pending_genesis",
       })
       .select("id, ticker, price_btc, market_cap_btc")
       .single();

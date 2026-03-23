@@ -93,7 +93,7 @@ export default function BtcMemeLaunchPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`$${data.token.ticker} launched!`);
+      toast.success(`$${data.token.ticker} submitted! Awaiting Bitcoin network confirmation...`);
       navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");
@@ -132,7 +132,7 @@ export default function BtcMemeLaunchPage() {
 
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
         <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">
-          ⚡ Instant trading — your token goes live immediately with a bonding curve pool. No blockchain confirmations needed.
+          ₿ Your token will go live once the Bitcoin genesis OP_RETURN transaction is confirmed on the network. Trading begins after confirmation.
         </div>
 
         <div className="space-y-3">

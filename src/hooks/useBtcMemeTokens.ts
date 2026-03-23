@@ -31,6 +31,7 @@ export function useBtcMemeTokens() {
       const { data, error } = await supabase
         .from("btc_meme_tokens")
         .select("*")
+        .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;

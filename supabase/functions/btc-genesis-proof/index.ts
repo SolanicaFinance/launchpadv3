@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
 
       await supabase.from("btc_meme_tokens").update({
         genesis_txid: pendingTxid,
+        status: "active",
       }).eq("id", tokenId);
 
       return new Response(JSON.stringify({
@@ -176,9 +177,10 @@ Deno.serve(async (req) => {
     const txid = await broadcastRes.text();
     console.log(`[btc-genesis] ✅ Genesis txid: ${txid}`);
 
-    // Update token with real genesis txid
+    // Update token with real genesis txid and activate
     await supabase.from("btc_meme_tokens").update({
       genesis_txid: txid,
+      status: "active",
     }).eq("id", tokenId);
 
     return new Response(JSON.stringify({
