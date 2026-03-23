@@ -335,7 +335,7 @@ export default function AgentDocsPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <TrendingUp className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span><strong className="text-foreground">Meteora DBC:</strong> Bonding curve with $69K graduation threshold for migration to AMM</span>
+                      <span><strong className="text-foreground">PancakeSwap V2:</strong> Direct DEX listing with liquidity pool on BNB Chain</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Bot className="h-4 w-4 text-primary mt-0.5 shrink-0" />
