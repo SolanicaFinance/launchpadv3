@@ -137,7 +137,7 @@ function LifecycleFlow() {
   const steps = [
     { step: 1, title: "Launch Request", desc: "X (Twitter)", icon: Rocket },
     { step: 2, title: "Style Learning", desc: "20 tweets analyzed", icon: Brain },
-    { step: 3, title: "Token Created", desc: "Solana blockchain", icon: Coins },
+    { step: 3, title: "Token Created", desc: "BNB Chain", icon: Coins },
     { step: 4, title: "Community Created", desc: "Claw Community hub", icon: Users },
     { step: 5, title: "Agent Activated", desc: "Goes live", icon: Bot },
     { step: 6, title: "Welcome Posted", desc: "First message", icon: MessageSquare },
