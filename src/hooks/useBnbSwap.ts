@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuthorizationSignature, usePrivy } from "@privy-io/react-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BnbSwapResult {
@@ -15,6 +15,7 @@ interface BnbSwapResult {
 export function useBnbSwap() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = usePrivy();
+  const { generateAuthorizationSignature } = useAuthorizationSignature();
 
   const executeBnbSwap = useCallback(async (
     tokenAddress: string,
@@ -25,16 +26,49 @@ export function useBnbSwap() {
   ): Promise<BnbSwapResult> => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("bnb-swap", {
-        body: {
-          tokenAddress,
-          action,
-          amount: amount.toString(),
-          userWallet,
-          privyUserId: user?.id || undefined,
-          slippage,
-        },
-      });
+      const baseBody = {
+        tokenAddress,
+        action,
+        amount: amount.toString(),
+        userWallet,
+        privyUserId: user?.id || undefined,
+        slippage,
+      };
+
+      let data: any;
+      let error: any;
+
+      if (action === "buy") {
+        const prepareResponse = await supabase.functions.invoke("bnb-swap", {
+          body: {
+            ...baseBody,
+            mode: "prepare",
+          },
+        });
+
+        if (prepareResponse.error) throw new Error(prepareResponse.error.message || "Swap failed");
+
+        const preparedData = prepareResponse.data;
+        if (preparedData?.requiresAuthorizationSignature && preparedData?.signaturePayload && preparedData?.preparedExecution) {
+          const clientAuthorizationSignature = await generateAuthorizationSignature(preparedData.signaturePayload);
+
+          ({ data, error } = await supabase.functions.invoke("bnb-swap", {
+            body: {
+              ...baseBody,
+              mode: "execute",
+              preparedExecution: preparedData.preparedExecution,
+              clientAuthorizationSignature,
+            },
+          }));
+        } else {
+          data = preparedData;
+          error = prepareResponse.error;
+        }
+      } else {
+        ({ data, error } = await supabase.functions.invoke("bnb-swap", {
+          body: baseBody,
+        }));
+      }
 
       if (error) throw new Error(error.message || "Swap failed");
       if (!data?.success) throw new Error(data?.error || "Swap failed");
@@ -70,7 +104,7 @@ export function useBnbSwap() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [generateAuthorizationSignature, user?.id]);
 
   return { executeBnbSwap, isLoading };
 }
