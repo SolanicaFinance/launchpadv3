@@ -524,7 +524,7 @@ Deno.serve(async (req) => {
     // Resolve route
     const { route, graduated } = await resolveTokenRoute(body.tokenAddress, publicClient, portalAddress);
 
-    // Balance check for buys
+    // Balance check for buys — also re-resolve wallet if frontend wallet has funds but resolved wallet doesn't
     if (body.action === "buy") {
       const resolvedBalance = await publicClient.getBalance({ address: walletAddress as `0x${string}` });
       const frontendAddr = body.userWallet?.toLowerCase();
@@ -536,11 +536,49 @@ Deno.serve(async (req) => {
         const frontendBalance = await publicClient.getBalance({ address: body.userWallet as `0x${string}` });
         if (frontendBalance > resolvedBalance) {
           balance = frontendBalance;
-          console.log(`[bnb-swap] Frontend wallet has balance: ${formatEther(frontendBalance)} BNB. Updating profile.`);
-          await supabase
-            .from("profiles")
-            .update({ evm_wallet_address: body.userWallet })
-            .eq("evm_wallet_address", walletAddress);
+          console.log(`[bnb-swap] Frontend wallet has balance: ${formatEther(frontendBalance)} BNB. Re-resolving wallet.`);
+
+          // The frontend wallet is the one with funds — we need to find its Privy wallet ID
+          // First try to find it via Privy user lookup
+          if (body.privyUserId) {
+            try {
+              const user = await getPrivyUser(body.privyUserId);
+              // Find ALL EVM wallets and pick the one matching the frontend address
+              const allEvmWallets = user.linked_accounts.filter(
+                (a: any) => a.type === "wallet" && a.chain_type === "ethereum"
+              );
+              const matchingWallet = allEvmWallets.find(
+                (w: any) => w.address?.toLowerCase() === frontendAddr
+              );
+              if (matchingWallet && matchingWallet.id) {
+                walletId = matchingWallet.id;
+                walletAddress = matchingWallet.address;
+                console.log(`[bnb-swap] Re-resolved to matching Privy wallet: ${walletAddress} (id: ${walletId})`);
+              } else {
+                // Use embedded wallet but update address
+                const embeddedWallet = findEvmEmbeddedWallet(user);
+                if (embeddedWallet) {
+                  walletId = embeddedWallet.walletId;
+                  walletAddress = embeddedWallet.address;
+                  console.log(`[bnb-swap] Using embedded EVM wallet: ${walletAddress} (id: ${walletId})`);
+                }
+              }
+            } catch (reResolveErr) {
+              console.log(`[bnb-swap] Re-resolve failed: ${(reResolveErr as Error).message?.slice(0, 100)}`);
+            }
+          }
+
+          // Update profile with correct wallet info
+          if (body.privyUserId) {
+            await supabase
+              .from("profiles")
+              .update({ privy_evm_wallet_id: walletId, evm_wallet_address: walletAddress })
+              .eq("privy_did", body.privyUserId);
+          }
+
+          // Re-check balance with the (potentially updated) wallet
+          const updatedBalance = await publicClient.getBalance({ address: walletAddress as `0x${string}` });
+          balance = updatedBalance > 0n ? updatedBalance : frontendBalance;
         }
       }
 
