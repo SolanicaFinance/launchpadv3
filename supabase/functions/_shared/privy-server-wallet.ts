@@ -38,6 +38,7 @@ function getAuthorizationSignature(
   options: {
     idempotencyKey?: string;
     expiresAt?: string;
+    authorizationKeyId?: string;
   } = {},
 ): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
@@ -56,6 +57,7 @@ function getAuthorizationSignature(
   };
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
+  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
 
   const payload = {
     version: 1,
@@ -209,24 +211,21 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
   const attempts: Array<{ name: string; headers: Record<string, string> }> = [];
 
   if (authKeyId) {
-    const withKeyHeaders = {
-      ...baseHeaders,
-      "privy-authorization-key": authKeyId,
-    };
-
     attempts.push({
-      name: "docs-canonical+key-header(on)",
+      name: "with-key-id",
       headers: {
-        ...withKeyHeaders,
+        ...baseHeaders,
+        "privy-authorization-key": authKeyId,
         "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
           expiresAt,
+          authorizationKeyId: authKeyId,
         }),
       },
     });
   }
 
   attempts.push({
-    name: "docs-canonical+key-header(off)",
+    name: "without-key-id",
     headers: {
       ...baseHeaders,
       "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
