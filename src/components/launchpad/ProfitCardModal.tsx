@@ -17,7 +17,11 @@ export interface ProfitCardData {
   pnlPercent?: number;
   signature?: string;
   tokenImageUrl?: string;
+  chain?: 'solana' | 'bnb' | 'btc';
 }
+
+const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
+const SOL_LOGO = "https://assets.coingecko.com/coins/images/4128/small/solana.png";
 
 interface ProfitCardModalProps {
   open: boolean;
