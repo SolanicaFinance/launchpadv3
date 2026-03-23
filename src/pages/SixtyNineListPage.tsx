@@ -184,7 +184,7 @@ export default function SixtyNineListPage() {
                 </div>
                 <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
                   <div className="text-xs text-muted-foreground mb-0.5">69% to holders</div>
-                  <div className="text-sm font-bold text-primary tabular-nums">{distributionAmount.toFixed(4)} SOL</div>
+                  <div className="text-sm font-bold text-primary tabular-nums">{distributionAmount.toFixed(4)} BNB</div>
                 </div>
                 <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
                   <div className="text-xs text-muted-foreground mb-0.5">Per holder</div>
