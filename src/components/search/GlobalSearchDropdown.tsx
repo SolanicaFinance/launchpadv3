@@ -143,12 +143,19 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
               <button
                 key={`${r.baseToken.address}-${r.pairAddress}-${i}`}
                 onClick={() => {
-                  if (isSolana && r.baseToken.address) {
-                    navigate(`/trade/${r.baseToken.address}`);
+                  if (r.baseToken.address) {
+                    const chain = normalizeChainId(r.chainId);
+                    if (chain === "solana") {
+                      navigate(`/trade/${r.baseToken.address}`);
+                    } else if (chain === "bsc") {
+                      navigate(`/trade/${r.baseToken.address}?chain=bnb`);
+                    } else {
+                      navigate(`/trade/${r.baseToken.address}?chain=${chain}`);
+                    }
                   }
                   onClose();
                 }}
-                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 transition-colors text-left group hover:bg-muted/35 active:bg-muted/50"
+                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 transition-colors text-left group hover:bg-muted/35 active:bg-muted/50 cursor-pointer"
                 style={{
                   borderBottom: i < grouped.length - 1 ? "1px solid hsl(var(--border) / 0.35)" : "none",
                 }}
@@ -169,7 +176,7 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[13px] font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                      ${r.baseToken.symbol || "?"}
+                      {r.baseToken.symbol || "?"}
                     </span>
                     <span className="hidden xs:inline text-[11px] text-muted-foreground truncate max-w-[110px]">
                       {r.baseToken.name || "Unknown token"}
