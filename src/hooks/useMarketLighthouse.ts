@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useChain } from "@/contexts/ChainContext";
 
 export type LighthouseTimeframe = "5m" | "1h" | "6h" | "24h";
 
 export interface MarketLighthouseData {
   timeframe?: string;
+  chain?: string;
   totalVol24hUsd: number;
   volChange24h: number;
   solPrice: number;
@@ -36,11 +38,14 @@ export interface MarketLighthouseData {
 }
 
 export function useMarketLighthouse(timeframe: LighthouseTimeframe = "24h") {
+  const { chain } = useChain();
+  const apiChain = chain === "bnb" ? "bnb" : "solana";
+
   return useQuery<MarketLighthouseData>({
-    queryKey: ["market-lighthouse", timeframe],
+    queryKey: ["market-lighthouse", timeframe, apiChain],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("market-lighthouse", {
-        body: { timeframe },
+        body: { timeframe, chain: apiChain },
       });
       if (error) throw error;
       return data as MarketLighthouseData;

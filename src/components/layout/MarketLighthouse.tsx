@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { useMarketLighthouse, type LighthouseTimeframe } from "@/hooks/useMarketLighthouse";
+import { useChain } from "@/contexts/ChainContext";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
 import bonkIcon from "@/assets/bonk-icon.jpg";
 import meteoraIcon from "@/assets/meteora-icon.svg";
@@ -14,7 +15,8 @@ import lifinityIcon from "@/assets/lifinity-icon.ico";
 import pumpswapIcon from "@/assets/pumpswap-icon.png";
 import solfiIcon from "@/assets/solfi-icon.png";
 
-const LAUNCHPAD_ICONS: Record<string, string> = {
+// Solana launchpad icons
+const SOL_LAUNCHPAD_ICONS: Record<string, string> = {
   pumpfun: pumpfunPill,
   pump: pumpfunPill,
   bonk: bonkIcon,
@@ -26,7 +28,15 @@ const LAUNCHPAD_ICONS: Record<string, string> = {
   raydium: raydiumIcon,
 };
 
-const PROTOCOL_ICONS: Record<string, string> = {
+// BNB launchpad emoji fallbacks (no icon assets yet)
+const BNB_LAUNCHPAD_LABELS: Record<string, string> = {
+  pancakeswap: "🥞",
+  "four.meme": "4️⃣",
+  moonit: "🌙",
+};
+
+// Solana protocol icons
+const SOL_PROTOCOL_ICONS: Record<string, string> = {
   "Raydium": raydiumIcon,
   "Orca": orcaIcon,
   "Orca DEX": orcaIcon,
@@ -47,9 +57,30 @@ const PROTOCOL_ICONS: Record<string, string> = {
   "Raydium CPMM": raydiumIcon,
 };
 
-/** Fuzzy-match protocol name to icon */
-function getProtocolIcon(name: string): string {
-  if (PROTOCOL_ICONS[name]) return PROTOCOL_ICONS[name];
+// BNB protocol emoji fallbacks
+const BNB_PROTOCOL_EMOJIS: Record<string, string> = {
+  "PancakeSwap": "🥞",
+  "PancakeSwap AMM": "🥞",
+  "PancakeSwap V3": "🥞",
+  "Biswap": "🔄",
+  "DODO": "🦤",
+  "Thena": "⚡",
+  "Venus": "🌟",
+};
+
+function getLaunchpadIcon(name: string, isBnb: boolean): string {
+  if (isBnb) return "";
+  return SOL_LAUNCHPAD_ICONS[name] || "";
+}
+
+function getLaunchpadEmoji(name: string, isBnb: boolean): string {
+  if (isBnb) return BNB_LAUNCHPAD_LABELS[name] || name.charAt(0).toUpperCase();
+  return "";
+}
+
+function getProtocolIcon(name: string, isBnb: boolean): string {
+  if (isBnb) return "";
+  if (SOL_PROTOCOL_ICONS[name]) return SOL_PROTOCOL_ICONS[name];
   const lower = name.toLowerCase();
   if (lower.includes("raydium")) return raydiumIcon;
   if (lower.includes("orca")) return orcaIcon;
@@ -60,6 +91,16 @@ function getProtocolIcon(name: string): string {
   if (lower.includes("lifinity")) return lifinityIcon;
   if (lower.includes("solfi")) return solfiIcon;
   return "";
+}
+
+function getProtocolEmoji(name: string, isBnb: boolean): string {
+  if (!isBnb) return "";
+  if (BNB_PROTOCOL_EMOJIS[name]) return BNB_PROTOCOL_EMOJIS[name];
+  const lower = name.toLowerCase();
+  if (lower.includes("pancake")) return "🥞";
+  if (lower.includes("thena")) return "⚡";
+  if (lower.includes("venus")) return "🌟";
+  return name.charAt(0).toUpperCase();
 }
 
 const TIME_TABS = ["5m", "1h", "6h", "24h"] as const;
@@ -108,6 +149,8 @@ export function MarketLighthouse({
 }) {
   const [activeTab, setActiveTab] = useState<LighthouseTimeframe>("1h");
   const { data, isLoading, refetch } = useMarketLighthouse(activeTab);
+  const { chain } = useChain();
+  const isBnb = chain === "bnb";
 
   const handleRefreshAll = (e: React.MouseEvent) => {
     onRefresh(e);
@@ -226,7 +269,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topLaunchpads || []).length > 0 ? (
             data!.topLaunchpads.map((lp, i) => (
-              <IconCard key={i} icon={LAUNCHPAD_ICONS[lp.type] || pumpfunPill} label={lp.type} value={fUsd(lp.vol24hUsd)} compact={compact} />
+              <IconCard key={i} icon={getLaunchpadIcon(lp.type, isBnb)} emoji={getLaunchpadEmoji(lp.type, isBnb)} label={lp.type} value={fUsd(lp.vol24hUsd)} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
@@ -247,7 +290,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topProtocols || []).length > 0 ? (
             data!.topProtocols.map((p, i) => (
-              <IconCard key={i} icon={getProtocolIcon(p.name)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
+              <IconCard key={i} icon={getProtocolIcon(p.name, isBnb)} emoji={getProtocolEmoji(p.name, isBnb)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
@@ -286,7 +329,8 @@ function MiniStat({ icon, iconColor, label, value, change, compact }: { icon: st
   );
 }
 
-function IconCard({ icon, label, value, change, compact }: { icon: string; label: string; value: string; change?: number; compact?: boolean }) {
+function IconCard({ icon, emoji, label, value, change, compact }: { icon: string; emoji?: string; label: string; value: string; change?: number; compact?: boolean }) {
+  const sz = compact ? "18px" : "24px";
   return (
     <div style={{
       background: cardBg,
@@ -299,9 +343,11 @@ function IconCard({ icon, label, value, change, compact }: { icon: string; label
       gap: compact ? "2px" : "3px",
     }}>
       {icon ? (
-        <img src={icon} alt={label} style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+        <img src={icon} alt={label} style={{ width: sz, height: sz, borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+      ) : emoji ? (
+        <span style={{ fontSize: compact ? "16px" : "20px", lineHeight: 1 }}>{emoji}</span>
       ) : (
-        <div style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: compact ? "10px" : "13px", fontWeight: 700, color: "#aaa" }}>{label.charAt(0)}</div>
+        <div style={{ width: sz, height: sz, borderRadius: compact ? "4px" : "5px", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: compact ? "10px" : "13px", fontWeight: 700, color: "#aaa" }}>{label.charAt(0)}</div>
       )}
       <span style={{ fontSize: compact ? "10px" : "13px", fontWeight: 700 }}>{value}</span>
       {change !== undefined && (
