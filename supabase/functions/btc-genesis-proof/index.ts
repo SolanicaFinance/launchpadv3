@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         status: "pending",
         pendingTxid,
         payload,
-        message: "Genesis payload prepared. Will anchor to Bitcoin once BTC_TREASURY_WIF is configured.",
+        message: "Genesis payload prepared. Will anchor to Bitcoin once BTC_PLATFORM_WIF is configured.",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
