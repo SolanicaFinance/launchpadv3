@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useBtcWallet } from '@/hooks/useBtcWallet';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
+import { SaturnProtocolExplainer } from '@/components/bitcoin/SaturnProtocolExplainer';
+import { BtcNetworkDashboard } from '@/components/bitcoin/BtcNetworkDashboard';
 import { Button } from '@/components/ui/button';
 import { TrendingRunes } from '@/components/bitcoin/TrendingRunes';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useBtcMemeTokens } from '@/hooks/useBtcMemeTokens';
-import { Rocket, TrendingUp, Zap, Shield, Layers } from 'lucide-react';
+import { Rocket, TrendingUp, Zap, Shield, Layers, ArrowRight } from 'lucide-react';
 import { useChain } from '@/contexts/ChainContext';
 import { motion } from 'framer-motion';
 
@@ -72,11 +74,7 @@ function BtcMemeTokenFeed() {
   );
 }
 
-interface FeeEstimates {
-  fastestFee: number;
-  halfHourFee: number;
-  hourFee: number;
-}
+interface FeeEstimates { fastestFee: number; halfHourFee: number; hourFee: number; }
 
 export default function BitcoinModePage() {
   const { isConnected, address, balance } = useBtcWallet();
@@ -91,20 +89,13 @@ export default function BitcoinModePage() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from('btc_tokens')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        if (data) setRecentTokens(data);
-      });
+    supabase.from('btc_tokens').select('*').order('created_at', { ascending: false }).limit(10)
+      .then(({ data }) => { if (data) setRecentTokens(data); });
   }, []);
 
   useEffect(() => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ptwytypavumcrbofspno';
     const base = `https://${projectId}.supabase.co/functions/v1/btc-market-data`;
-    
     Promise.all([
       fetch(`${base}?action=fees`).then(r => r.json()).catch(() => null),
       fetch(`${base}?action=block-tip`).then(r => r.json()).catch(() => null),
@@ -116,32 +107,27 @@ export default function BitcoinModePage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* Hero Section — always visible */}
-      <motion.div 
+      {/* Hero Section */}
+      <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative bg-card border border-border rounded-2xl overflow-hidden"
       >
-        {/* Background accent */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
-        
         <div className="relative px-8 py-10 text-center space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-            <Zap className="w-3 h-3" /> Instant Trading • Bitcoin Security
+            <Zap className="w-3 h-3" /> First-ever Hybrid BTC Settlement Protocol
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             Bitcoin Meme Tokens
           </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-            Launch and trade meme tokens backed by Bitcoin. Instant bonding curve execution with on-chain solvency proofs.
+          <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
+            The world's first instant Bitcoin meme coin protocol. Trade with <span className="text-foreground font-semibold">Solana speed</span>, 
+            backed by <span className="text-foreground font-semibold">Bitcoin security</span>. Every trade is provable, every balance is anchored.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             {isConnected ? (
-              <Button
-                onClick={() => navigate('/btc/meme/launch')}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                size="lg"
-              >
+              <Button onClick={() => navigate('/btc/meme/launch')} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="lg">
                 <Rocket className="w-4 h-4 mr-2" /> Launch Token
               </Button>
             ) : (
@@ -155,32 +141,24 @@ export default function BitcoinModePage() {
             )}
           </div>
         </div>
-
-        {/* Protocol features strip */}
         <div className="border-t border-border bg-secondary/20 px-6 py-3">
           <div className="flex items-center justify-center gap-6 sm:gap-10 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-primary" /> Merkle Anchoring</span>
-            <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-primary" /> Sub-second Fills</span>
-            <span className="flex items-center gap-1.5"><Layers className="w-3 h-3 text-primary" /> Solana Receipts</span>
+            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-primary" /> OP_RETURN Genesis</span>
+            <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-primary" /> &lt;100ms Fills</span>
+            <span className="flex items-center gap-1.5"><Layers className="w-3 h-3 text-primary" /> Merkle Anchoring</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Network Stats — always visible */}
+      {/* Quick Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</div>
           <div className="text-sm font-semibold text-foreground mt-1 flex items-center gap-1.5">
             {isConnected ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Connected
-              </>
+              <><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Connected</>
             ) : (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-                Not connected
-              </>
+              <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" /> Not connected</>
             )}
           </div>
           {isConnected && address && (
@@ -195,24 +173,22 @@ export default function BitcoinModePage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Block Height</div>
-          <div className="text-sm font-mono font-semibold text-foreground mt-1">
-            {blockHeight?.toLocaleString() || '—'}
-          </div>
+          <div className="text-sm font-mono font-semibold text-foreground mt-1">{blockHeight?.toLocaleString() || '—'}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Fee (sat/vB)</div>
-          <div className="text-sm font-mono font-semibold text-foreground mt-1">
-            {fees ? `${fees.halfHourFee}` : '—'}
-          </div>
-          {fees && (
-            <div className="text-[10px] text-muted-foreground mt-0.5">
-              Fast: {fees.fastestFee} · Slow: {fees.hourFee}
-            </div>
-          )}
+          <div className="text-sm font-mono font-semibold text-foreground mt-1">{fees ? `${fees.halfHourFee}` : '—'}</div>
+          {fees && <div className="text-[10px] text-muted-foreground mt-0.5">Fast: {fees.fastestFee} · Slow: {fees.hourFee}</div>}
         </div>
       </div>
 
-      {/* Fee tiers */}
+      {/* Saturn Protocol Explainer */}
+      <SaturnProtocolExplainer />
+
+      {/* BTC Network Dashboard */}
+      <BtcNetworkDashboard />
+
+      {/* Fee Tiers */}
       {fees && (
         <div className="bg-card border border-border rounded-2xl p-6">
           <h3 className="text-sm font-bold text-foreground mb-3">Current Network Fees</h3>
@@ -236,32 +212,19 @@ export default function BitcoinModePage() {
       {/* BTC Meme Tokens Feed */}
       <BtcMemeTokenFeed />
 
-      {/* Legacy Runes */}
+      {/* Runes */}
       <TrendingRunes />
 
-      {/* Legacy recent launches */}
+      {/* Recent Rune Launches */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <h3 className="text-sm font-bold text-foreground mb-3">Recent Rune Launches</h3>
         {recentTokens.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground text-sm">No Runes launched yet. Be the first!</p>
             {isConnected ? (
-              <Button
-                onClick={() => navigate('/btc/launch')}
-                variant="outline"
-                size="sm"
-                className="mt-3"
-              >
-                Launch a Rune
-              </Button>
+              <Button onClick={() => navigate('/btc/launch')} variant="outline" size="sm" className="mt-3">Launch a Rune</Button>
             ) : (
-              <BtcConnectWalletModal
-                trigger={
-                  <Button variant="outline" size="sm" className="mt-3">
-                    Connect Wallet to Launch
-                  </Button>
-                }
-              />
+              <BtcConnectWalletModal trigger={<Button variant="outline" size="sm" className="mt-3">Connect Wallet to Launch</Button>} />
             )}
           </div>
         ) : (
@@ -274,23 +237,15 @@ export default function BitcoinModePage() {
               >
                 <div>
                   <div className="text-sm font-semibold text-foreground">{token.rune_name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Supply: {Number(token.supply).toLocaleString()} · Status: {token.status}
-                  </div>
+                  <div className="text-xs text-muted-foreground">Supply: {Number(token.supply).toLocaleString()} · Status: {token.status}</div>
                 </div>
                 <div className="text-right">
                   {token.rugshield_score !== null && (
-                    <div className={`text-xs font-mono ${
-                      token.rugshield_score <= 25 ? 'text-green-500' :
-                      token.rugshield_score <= 50 ? 'text-yellow-500' :
-                      'text-destructive'
-                    }`}>
+                    <div className={`text-xs font-mono ${token.rugshield_score <= 25 ? 'text-green-500' : token.rugshield_score <= 50 ? 'text-yellow-500' : 'text-destructive'}`}>
                       RS: {token.rugshield_score}
                     </div>
                   )}
-                  <div className="text-[10px] text-muted-foreground">
-                    {new Date(token.created_at).toLocaleDateString()}
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">{new Date(token.created_at).toLocaleDateString()}</div>
                 </div>
               </button>
             ))}
