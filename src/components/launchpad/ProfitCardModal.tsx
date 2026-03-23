@@ -32,18 +32,22 @@ interface ProfitCardModalProps {
 export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { referralLink } = useReferralCode();
-  const { solanaAddress } = useAuth();
+  const { solanaAddress, evmAddress } = useAuth();
   const [saving, setSaving] = useState(false);
 
   if (!data) return null;
+
+  const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL';
+  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : SOL_LOGO;
+  const walletAddress = data.chain === 'bnb' ? evmAddress : solanaAddress;
 
   const isBuy = data.action === "buy";
   const hasPnl = data.pnlPercent !== undefined && data.pnlPercent !== null;
   const pnl = data.pnlPercent ?? 0;
   const isPositive = isBuy || pnl >= 0;
   const qrLink = referralLink || "https://saturn.trade/";
-  const truncatedWallet = solanaAddress
-    ? `${solanaAddress.slice(0, 4)}...${solanaAddress.slice(-4)}`
+  const truncatedWallet = walletAddress
+    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
     : "—";
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
