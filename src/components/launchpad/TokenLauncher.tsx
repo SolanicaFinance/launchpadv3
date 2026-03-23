@@ -418,7 +418,7 @@ export function TokenLauncher({ onLaunchSuccess, onShowResult, bare = false, def
         message: "🚀 Token launched successfully!",
       });
 
-      toast({ title: "🚀 Token Launched!", description: `${tokenToLaunch.name} is now live on Solana!` });
+      toast({ title: "🚀 Token Launched!", description: `${tokenToLaunch.name} is now live on BNB Chain!` });
 
       // Clear form and regenerate idempotency key for next launch
       setMeme(null);

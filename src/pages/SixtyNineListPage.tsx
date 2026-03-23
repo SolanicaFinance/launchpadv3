@@ -8,20 +8,21 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 
-const TREASURY_WALLET = "B85zVUNhN6bzyjEVkn7qwMVYTYodKUdWAfBHztpWxWvc";
-const DISTRIBUTION_THRESHOLD_SOL = 10;
+const TREASURY_WALLET = "0xf621ADAbA16Ee50D7145d8F9D65B6DA881341E37";
+const DISTRIBUTION_THRESHOLD_BNB = 1;
 const HOLDER_SHARE_PERCENT = 69;
 
-/** Live treasury SOL balance */
+/** Live treasury BNB balance */
 function useTreasuryBalance() {
   return useQuery({
     queryKey: ["treasury-balance-69", TREASURY_WALLET],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("fetch-sol-balances", {
-        body: { wallets: [TREASURY_WALLET] },
+      const { data, error } = await supabase.functions.invoke("bsc-rpc", {
+        body: { jsonrpc: "2.0", method: "eth_getBalance", params: [TREASURY_WALLET, "latest"], id: 1 },
       });
       if (error) throw error;
-      return (data?.balances?.[TREASURY_WALLET] ?? 0) as number;
+      const wei = parseInt(data?.result || "0", 16);
+      return wei / 1e18;
     },
     refetchInterval: 15_000,
     staleTime: 10_000,
@@ -54,10 +55,10 @@ export default function SixtyNineListPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const countdown = useCountdown();
 
-  const potProgress = Math.min((treasuryBalance / DISTRIBUTION_THRESHOLD_SOL) * 100, 100);
+  const potProgress = Math.min((treasuryBalance / DISTRIBUTION_THRESHOLD_BNB) * 100, 100);
   const distributionAmount = (treasuryBalance * HOLDER_SHARE_PERCENT) / 100;
   const perHolder = distributionAmount / 69;
-  const isPotFull = treasuryBalance >= DISTRIBUTION_THRESHOLD_SOL;
+  const isPotFull = treasuryBalance >= DISTRIBUTION_THRESHOLD_BNB;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -117,7 +118,7 @@ export default function SixtyNineListPage() {
                   those who've committed to the long game. By holding strong, you climb the ladder to lifetime rewards:{" "}
                   <span className="text-foreground font-semibold">69% of our 1% launchpad fees</span> from every coin swap is 
                   distributed evenly among the top 69, based on the last 60 minutes' profits. Plus, immovable holders have a 
-                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 69 SOL</span>. The mission? 
+                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 69 BNB</span>. The mission? 
                   Don't sell — ascend to the top and earn passively from every token launched on Saturn Terminal.{" "}
                   <span className="text-primary font-bold italic">Hold $SATURN, get rich like a Forbes lister.</span>
                 </p>
@@ -129,7 +130,7 @@ export default function SixtyNineListPage() {
               {[
                 { value: "69%", label: "Fees Distributed", icon: Trophy },
                 { value: "1%", label: "Per Swap Fee", icon: TrendingUp },
-                { value: "69 SOL", label: "Weekly Bonus Draw", icon: Dice5 },
+                { value: "69 BNB", label: "Weekly Bonus Draw", icon: Dice5 },
                 { value: "∞", label: "Lifetime Earnings", icon: Gem },
               ].map(({ value, label, icon: Icon }) => (
                 <div
@@ -167,10 +168,10 @@ export default function SixtyNineListPage() {
                   <span className="text-2xl sm:text-3xl font-black text-foreground tabular-nums">
                     {balanceLoading ? "—" : treasuryBalance.toFixed(4)}
                   </span>
-                  <span className="text-sm text-muted-foreground ml-1.5">SOL</span>
+                  <span className="text-sm text-muted-foreground ml-1.5">BNB</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  / {DISTRIBUTION_THRESHOLD_SOL} SOL threshold
+                  / {DISTRIBUTION_THRESHOLD_BNB} BNB threshold
                 </span>
               </div>
 
@@ -183,16 +184,16 @@ export default function SixtyNineListPage() {
                 </div>
                 <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
                   <div className="text-xs text-muted-foreground mb-0.5">69% to holders</div>
-                  <div className="text-sm font-bold text-primary tabular-nums">{distributionAmount.toFixed(4)} SOL</div>
+                  <div className="text-sm font-bold text-primary tabular-nums">{distributionAmount.toFixed(4)} BNB</div>
                 </div>
                 <div className="bg-background/40 rounded-lg p-2.5 border border-border/10">
                   <div className="text-xs text-muted-foreground mb-0.5">Per holder</div>
-                  <div className="text-sm font-bold text-foreground tabular-nums">{perHolder.toFixed(4)} SOL</div>
+                  <div className="text-sm font-bold text-foreground tabular-nums">{perHolder.toFixed(4)} BNB</div>
                 </div>
               </div>
 
               <p className="text-[10px] text-muted-foreground mt-3 text-center">
-                Live balance of treasury wallet · Auto-distributes 69% to The List when {DISTRIBUTION_THRESHOLD_SOL} SOL is reached
+                Live balance of treasury wallet · Auto-distributes 69% to The List when {DISTRIBUTION_THRESHOLD_BNB} BNB is reached
               </p>
             </div>
 
@@ -206,7 +207,7 @@ export default function SixtyNineListPage() {
                 {[
                   { n: "01", text: "Top 69 holders scanned every hour, 5 minutes past — LP wallets excluded" },
                   { n: "02", text: "69% of the 1% platform swap fee split evenly among all 69 listed holders" },
-                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 69 SOL lottery draw" },
+                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 69 BNB lottery draw" },
                   { n: "04", text: "Lifetime passive income — hold your rank and earn from every token forever" },
                 ].map(({ n, text }) => (
                   <div key={n} className="flex items-start gap-3 bg-background/40 rounded-lg p-3 border border-border/10">
@@ -263,12 +264,12 @@ export default function SixtyNineListPage() {
               <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Dice5 className="h-5 w-5 text-primary" />
-                  <h3 className="font-bold text-foreground text-sm">Weekly 69 SOL Lottery</h3>
+                  <h3 className="font-bold text-foreground text-sm">Weekly 69 BNB Lottery</h3>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                   Holders who haven't transferred any <span className="text-primary font-semibold">$SATURN</span> in{" "}
                   <span className="text-foreground font-semibold">7 days</span> are automatically entered into a weekly draw 
-                  for <span className="text-primary font-bold">69 SOL</span>. Your odds increase with rank — top 10 holders get 3× entries.
+                  for <span className="text-primary font-bold">69 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
@@ -287,7 +288,7 @@ export default function SixtyNineListPage() {
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Trophy className="h-3 w-3" /> Prize Pool
                     </span>
-                    <span className="text-foreground font-bold">69 SOL / week</span>
+                    <span className="text-foreground font-bold">69 BNB / week</span>
                   </div>
                 </div>
               </div>
