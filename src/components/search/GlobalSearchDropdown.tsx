@@ -155,7 +155,7 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
                   }
                   onClose();
                 }}
-                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 transition-colors text-left group hover:bg-muted/35 active:bg-muted/50"
+                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 transition-colors text-left group hover:bg-muted/35 active:bg-muted/50 cursor-pointer"
                 style={{
                   borderBottom: i < grouped.length - 1 ? "1px solid hsl(var(--border) / 0.35)" : "none",
                 }}
