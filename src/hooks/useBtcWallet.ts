@@ -286,15 +286,30 @@ async function getExistingAddress(walletId: BtcWalletProvider): Promise<string |
 function detectWallets(): BtcWalletInfo[] {
   const inEmbeddedPreview = isEmbeddedPreviewContext();
 
-  return WALLET_META.map(wallet => ({
-    ...wallet,
-    installed: !!getInjectedProvider(wallet.id),
-    connectUrl: inEmbeddedPreview ? getTopLevelConnectUrl() : undefined,
-    unavailableReason:
-      inEmbeddedPreview && wallet.id === 'unisat'
-        ? 'UniSat may not inject inside the embedded preview. Open this page in a new tab to connect it.'
-        : undefined,
-  }));
+  console.log('[BTC Wallet Detection]', {
+    isIframe: inEmbeddedPreview,
+    'window.unisat': typeof window !== 'undefined' ? !!window.unisat : 'N/A',
+    'window.phantom?.bitcoin': typeof window !== 'undefined' ? !!window.phantom?.bitcoin : 'N/A',
+    'window.LeatherProvider': typeof window !== 'undefined' ? !!window.LeatherProvider : 'N/A',
+    'window.okxwallet?.bitcoin': typeof window !== 'undefined' ? !!window.okxwallet?.bitcoin : 'N/A',
+    'window.XverseProviders': typeof window !== 'undefined' ? !!window.XverseProviders?.BitcoinProvider : 'N/A',
+  });
+
+  return WALLET_META.map(wallet => {
+    const providerDetected = !!getInjectedProvider(wallet.id);
+    const isUniSat = wallet.id === 'unisat';
+
+    // UniSat is ALWAYS shown as installed/clickable — it's the recommended wallet.
+    // In iframe contexts where it can't inject, clicking it will open a new tab.
+    const installed = isUniSat ? true : providerDetected;
+
+    return {
+      ...wallet,
+      installed,
+      connectUrl: (!providerDetected && !isUniSat && inEmbeddedPreview) ? getTopLevelConnectUrl() : undefined,
+      unavailableReason: undefined,
+    };
+  });
 }
 
 async function connectUniSat(): Promise<string | null> {
