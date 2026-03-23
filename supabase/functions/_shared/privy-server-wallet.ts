@@ -7,7 +7,7 @@
 
 import canonicalize from "npm:canonicalize@2.0.0";
 import crypto from "node:crypto";
-import { Buffer } from "https://deno.land/std@0.224.0/node/buffer.ts";
+import { Buffer } from "node:buffer";
 
 if (!(globalThis as { Buffer?: typeof Buffer }).Buffer) {
   (globalThis as { Buffer?: typeof Buffer }).Buffer = Buffer;
