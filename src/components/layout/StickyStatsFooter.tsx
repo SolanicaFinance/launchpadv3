@@ -392,11 +392,16 @@ export function StickyStatsFooter() {
                 cursor: "pointer",
               }}
             >
-              {[
+              {(isBnb ? [
+                { icon: null, alt: "PancakeSwap", emoji: "🥞" },
+                { icon: null, alt: "Four.meme", emoji: "4️⃣" },
+                { icon: null, alt: "Moonit", emoji: "🌙" },
+              ] : [
                 { icon: pumpfunPill, alt: "pumpfun" },
                 { icon: bonkIcon, alt: "bonk" },
                 { icon: meteoraIcon, alt: "meteora" },
-              ].map((item, i) => (
+              ]).map((item, i) => (
+                item.icon ? (
                 <img
                   key={item.alt}
                   src={item.icon}
