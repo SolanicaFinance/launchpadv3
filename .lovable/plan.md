@@ -1,66 +1,85 @@
 
+Goal: fix Four.meme bonding swaps properly, not just reshuffle the same fallback error, and make BNB buy/sell/history behave like the more advanced trade systems.
 
-# Bitcoin Mode: Separate Auth System (No Privy)
+What I found from the current code and logs:
+- The wallet resolution is working. The logs show the correct embedded wallet is being found.
+- Route detection is partly working. The function detects the token as a Four.meme bonding token:
+  - `Route: Four.meme (bonding curve, manager: 0x5c9520...)`
+- The actual failure is here:
+  - `Executing via Four.meme: buy`
+  - `Four.meme reverted, falling back to PancakeSwap: Four.meme quote failed: no buy output available`
+  - then PancakeSwap quote reverts too, which is expected if the token is still bonding and not migrated yet.
+- So the real bug is not “there is no liquidity”; it is that the current Four.meme quote/execution path is wrong or outdated for the token state/contract flow we are hitting.
 
-## The Problem
+Plan
 
-The current plan routes Bitcoin Mode pages through the same Privy-gated auth flow used for Solana/BNB. But Bitcoin Mode uses a completely different wallet system — **UniSat/Xverse browser extensions** — and should never trigger Privy login.
+1. Replace the brittle Four.meme quote logic with the current verified on-chain flow
+- Re-audit `bnb-swap` against current Four.meme contract behavior instead of relying on the current `tryBuy(..., 0n, bnbAmount)` assumption.
+- Verify the exact helper/manager function signatures and how `fundRequirement`, `fundAsParameter`, and `minAmount` are supposed to be derived for live bonding tokens.
+- Update both buy and sell execution paths to use the actual contract pattern Four.meme expects now.
 
-## The Fix
+2. Stop masking the real failure as “NO_LIQUIDITY”
+- Add explicit classification for:
+  - bonding token quote failure
+  - migrated token on PancakeSwap
+  - unsupported token / invalid token manager
+  - contract revert / tax / min-out failure
+- If Four.meme is detected but quote/build fails, return the raw categorized reason instead of the generic no-liquidity message.
+- Keep PancakeSwap fallback only for genuinely migrated tokens or verified DEX pairs.
 
-Bitcoin Mode pages (`/btc`, `/btc/launch`, `/btc/token/:id`) will use their own auth context based on the `useBtcWallet` hook, completely independent of Privy.
+3. Add preflight simulation before sending the Privy transaction
+- For Four.meme buys/sells, run an `eth_call`/contract simulation with the exact calldata/value first.
+- If simulation fails, surface the revert reason and do not attempt the Privy send.
+- This prevents the current loop where the app “tries Four.meme”, silently fails, then throws the same fallback message.
 
-### Architecture
+4. Make route resolution more reliable
+- Separate:
+  - “token exists on Four.meme bonding”
+  - “token migrated from Four.meme to PancakeSwap”
+  - “token only tradable on PancakeSwap”
+- Do not depend on one reverting `liquidityAdded` check to decide everything.
+- Add a secondary migration/pair existence check so we only route to PancakeSwap when a real pair exists.
 
-```text
-Solana / BNB Mode          Bitcoin Mode
-─────────────────          ────────────────
-Privy login flow           UniSat/Xverse connect
-useAuth() hook             useBtcWallet() hook
-NotLoggedInModal           BtcConnectWalletModal
-Privy embedded wallet      Browser extension wallet
-profiles table (UUID)      btc_tokens.creator_wallet
-```
+5. Bring BNB trade recording/history up to the advanced standard
+- Ensure every successful BNB buy/sell saves:
+  - BNB tx hash
+  - route used (`fourmeme` / `pancakeswap` / `portal`)
+  - token amount / native amount
+  - wallet
+  - explorer URL
+  - execution status / timestamps
+- Extend the client trade history UI so the user sees these references immediately after success and later in history.
+- Keep the data model flexible so extra proof/reference hashes can be shown the same way as the BTC/SOL flows where applicable.
 
-### Key Changes to the Plan
+6. Improve debugging visibility
+- Add structured logs around:
+  - detected route
+  - quote result
+  - generated calldata target/function
+  - simulation result
+  - Privy send result
+- This makes future failures debuggable in minutes instead of repeating the same generic 400.
 
-1. **`useBtcWallet.ts` hook becomes the auth gate for BTC pages** — exposes `isConnected`, `address`, `connect()`, `disconnect()` via `window.unisat`
-2. **Bitcoin pages never import `useAuth()`** — they use `useBtcWallet()` instead for wallet state and gating
-3. **New `BtcConnectWalletModal`** — replaces `NotLoggedInModal` on BTC pages; prompts UniSat/Xverse install or connection
-4. **`PanelPage.tsx` unchanged** — Panel remains Privy-only (Solana/BNB portfolio). Bitcoin activity is accessed via `/btc` routes
-5. **`btc_token_comments` table** uses `creator_wallet TEXT` instead of `user_id UUID` — no dependency on Privy profiles
-6. **Chain context `isEvmChain` updated** — add `isBtcChain` boolean so components can conditionally render the correct wallet UI
-7. **Sidebar** — BTC nav links go to `/btc` routes directly, no auth gate needed (wallet connect happens on the page itself)
+7. Verification after implementation
+- Test a known Four.meme bonding token buy.
+- Test a known migrated token buy on PancakeSwap.
+- Test Four.meme sell on a bonded token.
+- Verify the success payload reaches the client and history shows the saved transaction data.
+- Verify the user no longer sees the fake “No liquidity” message when the real problem is contract-path failure.
 
-### BTC Page Auth Pattern
+Technical details
+- Files most likely involved:
+  - `supabase/functions/bnb-swap/index.ts`
+  - `supabase/functions/_shared/privy-server-wallet.ts` (only if send payload needs adjustment, but current evidence says wallet signing is not the main blocker)
+  - BNB history/success UI components around the trade panel and trade-history display
+- Current root cause from logs:
+  - Four.meme token detected correctly
+  - current Four.meme quote method returns zero / invalid output
+  - PancakeSwap fallback then correctly fails because pair is not live yet
+- In short: the integration is failing because the app is not using the correct current Four.meme trade path, not because Privy embedded wallets fundamentally cannot trade it.
 
-Every Bitcoin page follows this pattern instead of the Privy pattern:
-
-```typescript
-// Bitcoin pages use this — NOT useAuth()
-const { isConnected, address, connect } = useBtcWallet();
-
-if (!isConnected) {
-  return <BtcConnectWalletModal onConnect={connect} />;
-}
-```
-
-### Files Affected
-
-| File | Change |
-|------|--------|
-| `src/hooks/useBtcWallet.ts` | Create — UniSat wallet hook with connect/sign/balance |
-| `src/components/bitcoin/BtcConnectWalletModal.tsx` | Create — UniSat/Xverse connect prompt (replaces NotLoggedInModal for BTC) |
-| `src/contexts/ChainContext.tsx` | Add `bitcoin` chain + `isBtcChain` helper |
-| `src/pages/BitcoinModePage.tsx` | Create — uses `useBtcWallet`, never touches Privy |
-| `src/pages/BitcoinLaunchPage.tsx` | Create — uses `useBtcWallet` for PSBT signing |
-| `src/pages/BitcoinTokenDetailPage.tsx` | Create — uses `useBtcWallet` for trading |
-| `src/App.tsx` | Add `/btc` routes (outside any Privy auth gate) |
-| DB migration | `btc_token_comments` uses `wallet_address TEXT` not `user_id UUID` |
-
-### What Does NOT Change
-
-- `useAuth()`, `PanelPage`, `NotLoggedInModal` — untouched, remain Privy-only
-- Solana/BNB flows — completely unaffected
-- `PrivyProviderWrapper` still wraps everything (it's fine — BTC pages just don't call any Privy hooks)
-
+Expected result after implementation
+- Bonding tokens trade through Four.meme correctly.
+- Migrated tokens trade through PancakeSwap correctly.
+- Errors become specific and actionable instead of the same misleading 400.
+- Successful BNB trades are saved and shown in trade history with the same “advanced system” level of visibility you asked for.
