@@ -11,6 +11,7 @@ interface NewPairsPanelProps {
   onRefresh?: (e: React.MouseEvent) => void;
   refreshing?: boolean;
   compact?: boolean;
+  defaultChain?: PanelChain;
 }
 
 function formatMcap(n: number): string {
