@@ -101,6 +101,9 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
 
   const { goToPanel } = usePanelNav();
   const handleLaunchAppClick = useCallback(() => {
+    setShowDropdown(false);
+    setMobileSearchOpen(false);
+
     if (isAuthenticated) {
       goToPanel();
       return;
