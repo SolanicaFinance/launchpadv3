@@ -210,9 +210,9 @@ const App = () => (
                      <Route path="/wallet-tracker" element={<WalletTrackerPage />} />
                      <Route path="/rewards" element={<RewardsPage />} />
                      <Route path="/lab/bonding-curve" element={<BondingCurveLabPage />} />
-                     <Route path="/btc" element={<BitcoinModePage />} />
-                     <Route path="/btc/launch" element={<BitcoinLaunchPage />} />
-                     <Route path="/btc/token/:id" element={<BitcoinTokenDetailPage />} />
+                     <Route path="/btc" element={<LaunchpadLayout><BitcoinModePage /></LaunchpadLayout>} />
+                     <Route path="/btc/launch" element={<LaunchpadLayout><BitcoinLaunchPage /></LaunchpadLayout>} />
+                     <Route path="/btc/token/:id" element={<LaunchpadLayout><BitcoinTokenDetailPage /></LaunchpadLayout>} />
                      <Route path="/ai-collab" element={<Navigate to="/admin?tab=ai-collab" replace />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>
