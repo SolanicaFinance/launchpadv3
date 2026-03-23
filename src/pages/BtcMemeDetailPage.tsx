@@ -118,19 +118,8 @@ export default function BtcMemeDetailPage() {
       });
 
       // Poll for Solana proof asynchronously
-      if (data.proofPending) {
-        // Get the latest trade id
-        const { data: latestTrade } = await supabase
-          .from("btc_meme_trades")
-          .select("id")
-          .eq("token_id", id)
-          .eq("wallet_address", address)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (latestTrade?.id) {
-          setPendingProofTradeId(latestTrade.id);
-        }
+      if (data.proofPending && data.tradeId) {
+        setPendingProofTradeId(data.tradeId);
       }
 
       setAmount("");
