@@ -95,16 +95,69 @@ function getAuthorizationSignature(
     throw new Error("invalid PEM private key");
   }
 
-  // Sign with ECDSA P-256 using IEEE P1363 encoding (raw r||s, 64 bytes)
-  // Privy expects this format, NOT DER encoding
-  const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, {
-    key: privateKey,
-    dsaEncoding: "ieee-p1363",
-  });
-  const signature = signatureBuffer.toString("base64");
+  // Sign with ECDSA P-256
+  // Try ieee-p1363 first; Deno's node:crypto polyfill may silently produce DER,
+  // so we detect and convert DER→P1363 if needed.
+  let signatureBuffer: Buffer;
+  try {
+    signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, {
+      key: privateKey,
+      dsaEncoding: "ieee-p1363",
+    });
+  } catch {
+    // Fallback: sign with default DER, then convert below
+    signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, {
+      key: privateKey,
+    });
+  }
 
-  console.log("[privy-auth] Signature generated, length:", signature.length, "URL:", url);
+  // If we got DER instead of P1363 (DER is >64 bytes, P1363 is exactly 64 for P-256)
+  if (signatureBuffer.length !== 64) {
+    signatureBuffer = derToP1363(signatureBuffer, 32) as Buffer;
+  }
+
+  const signature = Buffer.from(signatureBuffer).toString("base64");
+
+  console.log("[privy-auth] Signature generated, length:", signature.length, "raw_bytes:", signatureBuffer.length, "URL:", url);
   return signature;
+}
+
+// Convert DER-encoded ECDSA signature to IEEE P1363 (raw r||s)
+function derToP1363(derSig: Buffer | Uint8Array, componentLength: number): Uint8Array {
+  const result = new Uint8Array(componentLength * 2);
+  let offset = 0;
+
+  // SEQUENCE tag
+  if (derSig[offset++] !== 0x30) throw new Error("Invalid DER signature: missing SEQUENCE tag");
+  // Skip total length (may be 1 or 2 bytes)
+  let totalLen = derSig[offset++];
+  if (totalLen & 0x80) {
+    const lenBytes = totalLen & 0x7f;
+    offset += lenBytes; // skip extended length bytes
+  }
+
+  // Read r
+  if (derSig[offset++] !== 0x02) throw new Error("Invalid DER signature: missing INTEGER tag for r");
+  let rLen = derSig[offset++];
+  let rStart = offset;
+  offset += rLen;
+
+  // Read s
+  if (derSig[offset++] !== 0x02) throw new Error("Invalid DER signature: missing INTEGER tag for s");
+  let sLen = derSig[offset++];
+  let sStart = offset;
+
+  // Strip leading zeros from r and copy right-aligned into result
+  while (rLen > componentLength && derSig[rStart] === 0) { rStart++; rLen--; }
+  const rPad = componentLength - rLen;
+  result.set(derSig.slice(rStart, rStart + rLen), rPad > 0 ? rPad : 0);
+
+  // Strip leading zeros from s and copy right-aligned into result
+  while (sLen > componentLength && derSig[sStart] === 0) { sStart++; sLen--; }
+  const sPad = componentLength - sLen;
+  result.set(derSig.slice(sStart, sStart + sLen), componentLength + (sPad > 0 ? sPad : 0));
+
+  return result;
 }
 
 // --- Auth Headers ---
