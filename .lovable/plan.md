@@ -1,51 +1,37 @@
 
 
-## V2 Bitcoin Mode — Pure Bitcoin Edition at `/v2btc`
+## Fix: BNB trades showing SOL in PnL Card
 
-### Overview
-Create a parallel set of routes at `/v2btc` that mirror the existing `/btc` mode but with the **Pure Bitcoin narrative** — Fractal Bitcoin as Layer 2 instead of Solana. Same database tables, same wallet connections, same backend — just rebranded UI and explainer content. This lets you test the new narrative live without touching the existing `/btc` mode.
+### Problem
+The `ProfitCardModal` is hardcoded to display "SOL" as the currency unit and uses `solanaAddress` for the wallet. When a BNB trade triggers the PnL card, it incorrectly shows "SOL" instead of "BNB" and displays the Solana wallet address.
 
-### What Gets Built
+### Changes
 
-**1. V2 Bitcoin Home Page** (`src/pages/V2BitcoinModePage.tsx`)
-- Clone of `BitcoinModePage.tsx` with updated copy:
-  - Hero: "Pure Bitcoin Meme Tokens" — "Born on Mainnet, Trades on Fractal, Audited on Mainnet"
-  - Badge: "First-ever Pure Bitcoin Settlement Protocol"
-  - Footer stats: "OP_RETURN Genesis · ~30s Fractal Blocks · Merkle Anchoring"
-- Same token feed, network stats, wallet connection — all functional
-- Links to `/v2btc/meme/launch` and `/v2btc/meme/:id`
+**1. Add `chain` field to `ProfitCardData` (src/components/launchpad/ProfitCardModal.tsx)**
+- Add `chain?: 'solana' | 'bnb' | 'btc'` to the `ProfitCardData` interface
+- Replace all hardcoded `"SOL"` text with a chain-aware currency label (defaults to "SOL", shows "BNB" when chain is "bnb")
+- Show the BNB icon (from CoinGecko URL used elsewhere) next to the currency when chain is "bnb"
+- Use the EVM wallet address (from `useAuth`) when chain is "bnb" instead of `solanaAddress`
+- Update the `handleShareX` tweet text to use the correct currency
 
-**2. V2 Protocol Explainer** (`src/components/bitcoin/V2SaturnProtocolExplainer.tsx`)
-- Step 1: OP_RETURN Genesis (unchanged)
-- Step 2: Instant Bonding Curve AMM (unchanged)
-- Step 3: **Fractal Bitcoin Settlement** — replaces Solana Memo Receipts. "Every trade settles as a native UTXO transfer on Fractal Bitcoin (~30s blocks, merge-mined security). Fully verifiable via Fractal explorer, compatible with Unisat/Xverse."
-- Step 4: Merkle Anchoring (unchanged)
-- Footer: "30s blocks · 1% platform fee · Unisat native"
+**2. Pass `chain` through to ProfitCardData (src/components/TradeSuccessPopup.tsx)**
+- When constructing `profitCardData` from the trade success store data, include `chain: data.chain`
 
-**3. V2 Launch Page** (`src/pages/V2BtcMemeLaunchPage.tsx`)
-- Clone of `BtcMemeLaunchPage.tsx` — same form, same image upload, same `btc-meme-create` edge function call
-- Updated copy: references Fractal Bitcoin instead of Solana
-- Navigates to `/v2btc/meme/:id` on success
-
-**4. V2 Token Detail Page** (`src/pages/V2BtcMemeDetailPage.tsx`)
-- Clone of `BtcMemeDetailPage.tsx` — same trading, holders, charts
-- Updated proof labels: "Fractal Settlement" instead of "Solana Memo"
-- Back button goes to `/v2btc`
-
-**5. Routes** (in `App.tsx`)
-- `/v2btc` → V2BitcoinModePage
-- `/v2btc/meme/launch` → V2BtcMemeLaunchPage
-- `/v2btc/meme/:id` → V2BtcMemeDetailPage
-
-### What Does NOT Change
-- No new database tables — uses same `btc_meme_tokens`, `btc_meme_trades`, `btc_meme_balances`
-- No new edge functions — uses same `btc-meme-create`, `btc-meme-swap`
-- No wallet changes — same Unisat/Xverse integration
-- Existing `/btc` routes remain untouched
+**3. Ensure BNB trade callers set `chain: 'bnb'`**
+- Verify `BnbTradePanel.tsx` already passes `chain: 'bnb'` in `showTradeSuccess` calls (it records to `alpha_trades` with `chain: "bnb"` but may not set it on the popup store)
+- If missing, add `chain: 'bnb'` to the `showTradeSuccess` call in BnbTradePanel
 
 ### Technical Details
-- 4 new page files + 1 new component file
-- 3 new route entries in `App.tsx`
-- Sidebar entry added for "V2 BTC" (optional, or access via direct URL)
-- All V2 pages share the same hooks: `useBtcWallet`, `useBtcMemeTokens`, `useBtcMemeHolders`
+
+Files modified:
+- `src/components/launchpad/ProfitCardModal.tsx` — Add chain awareness, BNB icon, dynamic currency label
+- `src/components/TradeSuccessPopup.tsx` — Forward chain from store to ProfitCardData
+- `src/components/launchpad/BnbTradePanel.tsx` — Ensure chain is set on success popup (if not already)
+
+Currency display logic:
+```
+const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL'
+```
+
+BNB icon: `https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png` (already used in BnbTradePanel)
 
