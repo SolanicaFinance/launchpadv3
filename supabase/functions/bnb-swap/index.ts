@@ -436,25 +436,54 @@ async function resolveWallet(
   let walletAddress: string = body.userWallet;
 
   if (body.privyUserId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("privy_evm_wallet_id, evm_wallet_address")
-      .eq("privy_did", body.privyUserId)
-      .maybeSingle();
-
-    if (profile?.privy_evm_wallet_id) {
-      walletId = profile.privy_evm_wallet_id;
-      walletAddress = profile.evm_wallet_address || body.userWallet;
-    } else {
+    // Always do a fresh Privy lookup to get the current wallet state
+    try {
       const user = await getPrivyUser(body.privyUserId);
-      const evmWallet = findEvmEmbeddedWallet(user);
-      if (!evmWallet) throw new Error("No EVM embedded wallet found.");
-      walletId = evmWallet.walletId;
-      walletAddress = evmWallet.address;
-      await supabase
+      
+      // First, try to find a wallet matching the frontend address
+      const frontendAddr = body.userWallet?.toLowerCase();
+      const allEvmWallets = user.linked_accounts.filter(
+        (a: any) => a.type === "wallet" && a.chain_type === "ethereum"
+      );
+      
+      const matchingWallet = allEvmWallets.find(
+        (w: any) => w.address?.toLowerCase() === frontendAddr
+      );
+      
+      if (matchingWallet && matchingWallet.id) {
+        walletId = matchingWallet.id;
+        walletAddress = matchingWallet.address;
+        console.log(`[bnb-swap] Found Privy wallet matching frontend address: ${walletAddress} (id: ${walletId})`);
+      } else {
+        // Fall back to embedded wallet
+        const evmWallet = findEvmEmbeddedWallet(user);
+        if (evmWallet) {
+          walletId = evmWallet.walletId;
+          walletAddress = evmWallet.address;
+          console.log(`[bnb-swap] Using embedded EVM wallet: ${walletAddress} (id: ${walletId})`);
+        }
+      }
+      
+      // Cache for future lookups
+      if (walletId) {
+        await supabase
+          .from("profiles")
+          .update({ privy_evm_wallet_id: walletId, evm_wallet_address: walletAddress })
+          .eq("privy_did", body.privyUserId);
+      }
+    } catch (e) {
+      console.log(`[bnb-swap] Fresh Privy lookup failed, trying cached: ${(e as Error).message?.slice(0, 80)}`);
+      // Fall back to cached wallet from DB
+      const { data: profile } = await supabase
         .from("profiles")
-        .update({ privy_evm_wallet_id: walletId, evm_wallet_address: walletAddress })
-        .eq("privy_did", body.privyUserId);
+        .select("privy_evm_wallet_id, evm_wallet_address")
+        .eq("privy_did", body.privyUserId)
+        .maybeSingle();
+
+      if (profile?.privy_evm_wallet_id) {
+        walletId = profile.privy_evm_wallet_id;
+        walletAddress = profile.evm_wallet_address || body.userWallet;
+      }
     }
   } else {
     const { data: profile } = await supabase
