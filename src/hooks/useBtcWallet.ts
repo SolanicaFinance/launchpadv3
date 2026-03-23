@@ -34,6 +34,11 @@ interface InjectedProviderDescriptor {
   [key: string]: any;
 }
 
+interface WindowProviderCandidate {
+  key: string;
+  provider: GenericBitcoinProvider;
+}
+
 declare global {
   interface Window {
     unisat?: GenericBitcoinProvider;
@@ -102,9 +107,59 @@ function getRegistryProviders(): InjectedProviderDescriptor[] {
   return [...fromRegistry, ...fromLegacyRegistry].filter(Boolean);
 }
 
-function providerMatches(entry: InjectedProviderDescriptor, searchTerms: string[]) {
-  const haystack = [entry?.id, entry?.name, entry?.providerId, entry?.displayName]
-    .filter(Boolean)
+function isProviderLike(value: unknown): value is GenericBitcoinProvider {
+  if (!value || typeof value !== 'object') return false;
+
+  const candidate = value as GenericBitcoinProvider;
+  return [
+    candidate.request,
+    candidate.requestAccounts,
+    candidate.getAccounts,
+    candidate.getBalance,
+    candidate.signPsbt,
+    candidate.signPSBT,
+    candidate.signMessage,
+  ].some(method => typeof method === 'function');
+}
+
+function getProviderSearchTerms(walletId: BtcWalletProvider) {
+  const searchTerms: Record<BtcWalletProvider, string[]> = {
+    unisat: ['unisat', 'unisat wallet', 'isunisat', 'satsconnect'],
+    xverse: ['xverse', 'bitcoinprovider', 'isxverse'],
+    leather: ['leather', 'hiro', 'isleather'],
+    okx: ['okx', 'okxwallet', 'isokx'],
+    phantom: ['phantom', 'isphantom'],
+    unknown: ['bitcoin'],
+  };
+
+  return searchTerms[walletId];
+}
+
+function getProviderIdentityParts(entry: InjectedProviderDescriptor | WindowProviderCandidate, provider?: GenericBitcoinProvider) {
+  const candidates = [entry, provider, (entry as InjectedProviderDescriptor)?.provider, (entry as InjectedProviderDescriptor)?.wallet]
+    .filter(Boolean);
+
+  const values = candidates.flatMap((candidate: any) => ([
+    candidate?.key,
+    candidate?.id,
+    candidate?.name,
+    candidate?.providerId,
+    candidate?.displayName,
+    candidate?.walletClientType,
+    candidate?.constructor?.name,
+    candidate?.isUnisat ? 'isUnisat' : null,
+    candidate?.isXverse ? 'isXverse' : null,
+    candidate?.isLeather ? 'isLeather' : null,
+    candidate?.isOkxWallet ? 'isOkx' : null,
+    candidate?.isOKX ? 'isOkx' : null,
+    candidate?.isPhantom ? 'isPhantom' : null,
+  ]));
+
+  return Array.from(new Set(values.filter(Boolean).map(value => String(value).toLowerCase())));
+}
+
+function providerMatches(entry: InjectedProviderDescriptor | WindowProviderCandidate, searchTerms: string[], provider?: GenericBitcoinProvider) {
+  const haystack = getProviderIdentityParts(entry, provider)
     .join(' ')
     .toLowerCase();
 
@@ -118,6 +173,34 @@ function unwrapProvider(entry: InjectedProviderDescriptor | GenericBitcoinProvid
   return entry as GenericBitcoinProvider;
 }
 
+function getWindowProviderCandidates(): WindowProviderCandidate[] {
+  if (typeof window === 'undefined') return [];
+
+  const candidates: WindowProviderCandidate[] = [];
+  const pushCandidate = (key: string, value: unknown) => {
+    if (!isProviderLike(value)) return;
+    candidates.push({ key, provider: value });
+  };
+
+  pushCandidate('unisat', window.unisat);
+  pushCandidate('xverseproviders.bitcoinprovider', window.XverseProviders?.BitcoinProvider);
+  pushCandidate('btc', window.btc);
+  pushCandidate('leatherprovider', window.LeatherProvider);
+  pushCandidate('okxwallet.bitcoin', window.okxwallet?.bitcoin);
+  pushCandidate('phantom.bitcoin', window.phantom?.bitcoin);
+
+  const dynamicKeys = Object.getOwnPropertyNames(window).filter(key => /unisat|xverse|leather|okx|phantom|bitcoin|btc/i.test(key));
+  for (const key of dynamicKeys) {
+    try {
+      pushCandidate(key, (window as unknown as Record<string, unknown>)[key]);
+    } catch {
+      // Ignore guarded window getters from extensions or the browser.
+    }
+  }
+
+  return candidates;
+}
+
 function getInjectedProvider(walletId: BtcWalletProvider): GenericBitcoinProvider | null {
   if (typeof window === 'undefined') return null;
 
@@ -129,17 +212,13 @@ function getInjectedProvider(walletId: BtcWalletProvider): GenericBitcoinProvide
   if (walletId === 'phantom' && window.phantom?.bitcoin) return window.phantom.bitcoin;
 
   const registryProviders = getRegistryProviders();
-  const searchTerms: Record<BtcWalletProvider, string[]> = {
-    unisat: ['unisat'],
-    xverse: ['xverse', 'bitcoinprovider'],
-    leather: ['leather'],
-    okx: ['okx'],
-    phantom: ['phantom'],
-    unknown: ['bitcoin'],
-  };
+  const searchTerms = getProviderSearchTerms(walletId);
 
-  const entry = registryProviders.find(provider => providerMatches(provider, searchTerms[walletId]));
-  return unwrapProvider(entry);
+  const entry = registryProviders.find(provider => providerMatches(provider, searchTerms));
+  if (entry) return unwrapProvider(entry);
+
+  const windowCandidate = getWindowProviderCandidates().find(candidate => providerMatches(candidate, searchTerms, candidate.provider));
+  return windowCandidate?.provider ?? null;
 }
 
 async function requestProviderMethod(provider: GenericBitcoinProvider, method: string, params?: any) {
@@ -293,11 +372,13 @@ export function useBtcWallet(): UseBtcWalletReturn {
     const interval = setInterval(detect, 700);
     const stopPolling = setTimeout(() => clearInterval(interval), 12000);
     const onFocus = () => detect();
+    const onLoad = () => detect();
     const onVisibility = () => {
       if (!document.hidden) detect();
     };
 
     window.addEventListener('focus', onFocus);
+    window.addEventListener('load', onLoad);
     document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
@@ -306,6 +387,7 @@ export function useBtcWallet(): UseBtcWalletReturn {
       clearInterval(interval);
       clearTimeout(stopPolling);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('load', onLoad);
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
