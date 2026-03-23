@@ -196,12 +196,22 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
   const isConnected = !!address;
 
-  // Detect wallets on mount and periodically (extensions may load late)
+  // Detect wallets on mount and re-detect aggressively for slow extensions
   useEffect(() => {
     const detect = () => setAvailableWallets(detectWallets());
     detect();
-    const timer = setTimeout(detect, 1500); // re-detect after extensions load
-    return () => clearTimeout(timer);
+    const timers = [300, 800, 1500, 3000, 5000].map(ms => setTimeout(detect, ms));
+    // Also listen for unisat injection
+    const interval = setInterval(() => {
+      if (window.unisat) {
+        detect();
+        clearInterval(interval);
+      }
+    }, 500);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(interval);
+    };
   }, []);
 
   const refreshBalance = useCallback(async () => {
