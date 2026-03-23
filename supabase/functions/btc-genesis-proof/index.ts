@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     const imgPrefix = imageHash ? imageHash.slice(0, 12) : "0";
     const creatorPrefix = creatorWallet ? creatorWallet.slice(0, 8) : "0";
     
-    let payload = `SATURN|${ticker}|${nameShort}|${imgPrefix}|${creatorPrefix}|${timestamp}`;
+    let payload = `Saturn.Trade|${ticker}|${nameShort}|${imgPrefix}|${creatorPrefix}|${timestamp}`;
     // Ensure ≤80 bytes
     const encoder = new TextEncoder();
     while (encoder.encode(payload).length > 80) {
