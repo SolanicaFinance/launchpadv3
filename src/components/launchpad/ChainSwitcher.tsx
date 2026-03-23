@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import solanaLogo from '@/assets/solana-logo.png';
-import bitcoinLogo from '@/assets/bitcoin-logo.png';
+
 
 // Chain logo components
 function SolanaLogo({ className }: { className?: string }) {
