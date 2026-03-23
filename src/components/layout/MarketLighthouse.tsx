@@ -329,7 +329,8 @@ function MiniStat({ icon, iconColor, label, value, change, compact }: { icon: st
   );
 }
 
-function IconCard({ icon, label, value, change, compact }: { icon: string; label: string; value: string; change?: number; compact?: boolean }) {
+function IconCard({ icon, emoji, label, value, change, compact }: { icon: string; emoji?: string; label: string; value: string; change?: number; compact?: boolean }) {
+  const sz = compact ? "18px" : "24px";
   return (
     <div style={{
       background: cardBg,
@@ -342,9 +343,11 @@ function IconCard({ icon, label, value, change, compact }: { icon: string; label
       gap: compact ? "2px" : "3px",
     }}>
       {icon ? (
-        <img src={icon} alt={label} style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+        <img src={icon} alt={label} style={{ width: sz, height: sz, borderRadius: compact ? "4px" : "5px", objectFit: "cover" }} />
+      ) : emoji ? (
+        <span style={{ fontSize: compact ? "16px" : "20px", lineHeight: 1 }}>{emoji}</span>
       ) : (
-        <div style={{ width: compact ? "18px" : "24px", height: compact ? "18px" : "24px", borderRadius: compact ? "4px" : "5px", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: compact ? "10px" : "13px", fontWeight: 700, color: "#aaa" }}>{label.charAt(0)}</div>
+        <div style={{ width: sz, height: sz, borderRadius: compact ? "4px" : "5px", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: compact ? "10px" : "13px", fontWeight: 700, color: "#aaa" }}>{label.charAt(0)}</div>
       )}
       <span style={{ fontSize: compact ? "10px" : "13px", fontWeight: 700 }}>{value}</span>
       {change !== undefined && (
