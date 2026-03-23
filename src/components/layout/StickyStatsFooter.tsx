@@ -393,30 +393,52 @@ export function StickyStatsFooter() {
               }}
             >
               {(isBnb ? [
-                { icon: null, alt: "PancakeSwap", emoji: "🥞" },
-                { icon: null, alt: "Four.meme", emoji: "4️⃣" },
-                { icon: null, alt: "Moonit", emoji: "🌙" },
+                { icon: null as string | null, alt: "PancakeSwap", emoji: "🥞" },
+                { icon: null as string | null, alt: "Four.meme", emoji: "4️⃣" },
+                { icon: null as string | null, alt: "Moonit", emoji: "🌙" },
               ] : [
-                { icon: pumpfunPill, alt: "pumpfun" },
-                { icon: bonkIcon, alt: "bonk" },
-                { icon: meteoraIcon, alt: "meteora" },
+                { icon: pumpfunPill as string | null, alt: "pumpfun", emoji: undefined as string | undefined },
+                { icon: bonkIcon as string | null, alt: "bonk", emoji: undefined as string | undefined },
+                { icon: meteoraIcon as string | null, alt: "meteora", emoji: undefined as string | undefined },
               ]).map((item, i) => (
                 item.icon ? (
-                <img
-                  key={item.alt}
-                  src={item.icon}
-                  alt={item.alt}
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "1.5px solid #0d0d0f",
-                    marginLeft: i > 0 ? "-5px" : "0",
-                    position: "relative",
-                    zIndex: 3 - i,
-                  }}
-                />
+                  <img
+                    key={item.alt}
+                    src={item.icon}
+                    alt={item.alt}
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1.5px solid #0d0d0f",
+                      marginLeft: i > 0 ? "-5px" : "0",
+                      position: "relative",
+                      zIndex: 3 - i,
+                    }}
+                  />
+                ) : (
+                  <span
+                    key={item.alt}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      background: "#1a1a1e",
+                      border: "1.5px solid #0d0d0f",
+                      marginLeft: i > 0 ? "-5px" : "0",
+                      position: "relative",
+                      zIndex: 3 - i,
+                      fontSize: "9px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.emoji}
+                  </span>
+                )
               ))}
             </button>
 
