@@ -134,10 +134,30 @@ Deno.serve(async (req) => {
       devBuyResult = { tokensReceived: tokensOut, priceAfterBuy: newPrice, marketCapAfterBuy: newMcap };
     }
 
+    // Fire Bitcoin genesis proof asynchronously
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+    fetch(`${supabaseUrl}/functions/v1/btc-genesis-proof`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        tokenId: token.id,
+        ticker: ticker.toUpperCase().trim(),
+        name: name.trim(),
+        imageUrl: imageUrl || null,
+        creatorWallet,
+      }),
+    }).catch(err => console.warn("[btc-meme-create] Genesis proof fire-and-forget error:", err));
+
     return new Response(JSON.stringify({
       success: true,
       token: { id: token.id, ticker: token.ticker, priceBtc: devBuyResult?.priceAfterBuy || token.price_btc, marketCapBtc: devBuyResult?.marketCapAfterBuy || token.market_cap_btc },
       devBuy: devBuyResult,
+      genesisProofPending: true,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("[btc-meme-create] Error:", error);
