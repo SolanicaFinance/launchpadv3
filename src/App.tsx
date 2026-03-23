@@ -4,6 +4,7 @@ import { lazyWithRetry } from "@/utils/lazyWithRetry";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TradeSuccessPopup } from "@/components/TradeSuccessPopup";
+import { TokenLaunchPopup } from "@/components/TokenLaunchPopup";
 
 import { GlobalTradeNotifier } from "@/components/GlobalTradeNotifier";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -128,6 +129,7 @@ const App = () => (
             <ErrorBoundary>
               <BrowserRouter>
               <TradeSuccessPopup />
+              <TokenLaunchPopup />
               
               <GlobalTradeNotifier />
               <StickyStatsFooter />
