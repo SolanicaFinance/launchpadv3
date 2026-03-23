@@ -17,6 +17,8 @@ import bonkIcon from "@/assets/bonk-icon.jpg";
 import bagsIcon from "@/assets/bags-icon.ico";
 import moonshotIcon from "@/assets/moonshot-icon.ico";
 import raydiumIcon from "@/assets/raydium-icon.ico";
+import pancakeswapBunny from "@/assets/pancakeswap-bunny.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 
 const REGIONS = [
   { id: "US-W", label: "US-W", basePing: 95, variance: 45 },
@@ -393,9 +395,9 @@ export function StickyStatsFooter() {
               }}
             >
               {(isBnb ? [
-                { icon: null as string | null, alt: "PancakeSwap", emoji: "🥞" },
-                { icon: null as string | null, alt: "Four.meme", emoji: "4️⃣" },
-                { icon: null as string | null, alt: "Moonit", emoji: "🌙" },
+                { icon: pancakeswapBunny as string | null, alt: "PancakeSwap", emoji: undefined as string | undefined },
+                { icon: saturnLogo as string | null, alt: "SaturnPortal", emoji: undefined as string | undefined },
+                { icon: null as string | null, alt: "Four.meme", emoji: "4" },
               ] : [
                 { icon: pumpfunPill as string | null, alt: "pumpfun", emoji: undefined as string | undefined },
                 { icon: bonkIcon as string | null, alt: "bonk", emoji: undefined as string | undefined },
