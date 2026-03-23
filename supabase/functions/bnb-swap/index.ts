@@ -906,49 +906,73 @@ Deno.serve(async (req) => {
       let buildRoute = route;
 
       if (body.action === "buy") {
-        if (route === "fourmeme") {
-          const prepared = await executeFourMemeBuy(
-            walletId, walletAddress, body.tokenAddress,
-            parseEther(body.amount), slippage, publicClient, fourMemeInfo,
-            { prepareOnly: true },
-          );
-          if (prepared.preparedExecution) {
-            txParams = {
-              to: prepared.preparedExecution.to,
-              data: prepared.preparedExecution.data || "0x",
-              value: prepared.preparedExecution.value || "0x0",
-              gas: prepared.preparedExecution.gas_limit,
-            };
-            buildEstimatedOutput = prepared.estimatedOutput;
+        // Try primary route, fall back if it fails
+        const tryBuildBuy = async (targetRoute: SwapRoute): Promise<boolean> => {
+          try {
+            if (targetRoute === "fourmeme") {
+              const prepared = await executeFourMemeBuy(
+                walletId, walletAddress, body.tokenAddress,
+                parseEther(body.amount), slippage, publicClient, fourMemeInfo,
+                { prepareOnly: true },
+              );
+              if (prepared.preparedExecution) {
+                txParams = {
+                  to: prepared.preparedExecution.to,
+                  data: prepared.preparedExecution.data || "0x",
+                  value: prepared.preparedExecution.value || "0x0",
+                  gas: prepared.preparedExecution.gas_limit,
+                };
+                buildEstimatedOutput = prepared.estimatedOutput;
+                buildRoute = "fourmeme";
+                return true;
+              }
+            } else if (targetRoute === "pancakeswap") {
+              const prepared = await executePancakeSwapBuy(
+                walletId, walletAddress, body.tokenAddress,
+                parseEther(body.amount), slippage, publicClient,
+                { prepareOnly: true },
+              );
+              if (prepared.preparedExecution) {
+                txParams = {
+                  to: prepared.preparedExecution.to,
+                  data: prepared.preparedExecution.data || "0x",
+                  value: prepared.preparedExecution.value || "0x0",
+                  gas: prepared.preparedExecution.gas_limit,
+                };
+                buildEstimatedOutput = prepared.estimatedOutput;
+                buildRoute = "pancakeswap";
+                return true;
+              }
+            } else {
+              const callData = encodeFunctionData({
+                abi: PORTAL_ABI,
+                functionName: "buy",
+                args: [body.tokenAddress as `0x${string}`],
+              });
+              txParams = {
+                to: portalAddress,
+                data: callData,
+                value: numberToHex(parseEther(body.amount)),
+                gas: numberToHex(300000n),
+              };
+              buildRoute = "portal";
+              return true;
+            }
+          } catch (e) {
+            console.log(`[bnb-swap] build ${targetRoute} failed: ${(e as Error).message?.slice(0, 120)}`);
           }
-        } else if (route === "pancakeswap") {
-          const prepared = await executePancakeSwapBuy(
-            walletId, walletAddress, body.tokenAddress,
-            parseEther(body.amount), slippage, publicClient,
-            { prepareOnly: true },
-          );
-          if (prepared.preparedExecution) {
-            txParams = {
-              to: prepared.preparedExecution.to,
-              data: prepared.preparedExecution.data || "0x",
-              value: prepared.preparedExecution.value || "0x0",
-              gas: prepared.preparedExecution.gas_limit,
-            };
-            buildEstimatedOutput = prepared.estimatedOutput;
-          }
-        } else {
-          // Portal
-          const callData = encodeFunctionData({
-            abi: PORTAL_ABI,
-            functionName: "buy",
-            args: [body.tokenAddress as `0x${string}`],
-          });
-          txParams = {
-            to: portalAddress,
-            data: callData,
-            value: numberToHex(parseEther(body.amount)),
-            gas: numberToHex(300000n),
-          };
+          return false;
+        };
+
+        // Primary route
+        let built = await tryBuildBuy(route);
+        // Fallback: fourmeme <-> pancakeswap
+        if (!built && route === "fourmeme") {
+          console.log("[bnb-swap] build: Four.meme failed, trying PancakeSwap fallback");
+          built = await tryBuildBuy("pancakeswap");
+        } else if (!built && route === "pancakeswap") {
+          console.log("[bnb-swap] build: PancakeSwap failed, trying Four.meme fallback");
+          built = await tryBuildBuy("fourmeme");
         }
       } else {
         // Sell — build approve + sell txs
