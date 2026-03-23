@@ -10,6 +10,7 @@ import { MarketLighthouse } from "./MarketLighthouse";
 import { WalletTrackerPanel } from "./WalletTrackerPanel";
 import { NewPairsPanel } from "./NewPairsPanel";
 import { useWalletTradeNotifications } from "@/hooks/useWalletTradeNotifications";
+import { useChain } from "@/contexts/ChainContext";
 import pumpfunPill from "@/assets/pumpfun-pill.webp";
 import meteoraIcon from "@/assets/meteora-icon.svg";
 import bonkIcon from "@/assets/bonk-icon.jpg";
