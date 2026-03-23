@@ -119,7 +119,7 @@ export const PulseQuickBuyButton = memo(function PulseQuickBuyButton({
   return <SolanaQuickBuy funToken={funToken} codexToken={codexToken} quickBuyAmount={quickBuyAmount} isCompact={isCompact} mintAddress={mintAddress} />;
 });
 
-/** BNB quick buy — uses bnb-swap edge function with OpenOcean */
+/** BNB quick buy/sell — uses bnb-swap edge function */
 const BnbQuickBuy = memo(function BnbQuickBuy({
   mintAddress,
   ticker,
@@ -137,11 +137,51 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
 }) {
   const { executeBnbSwap, isLoading } = useBnbSwap();
   const { isAuthenticated } = useAuth();
-  const { address: evmAddress } = usePrivyEvmWallet();
+  const { address: evmAddress, wallet: evmWallet } = usePrivyEvmWallet();
   const userWallet = evmAddress || "unknown";
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [buyingAmount, setBuyingAmount] = useState<number | null>(null);
+  const [isSelling, setIsSelling] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Check ERC-20 balance on BNB Chain
+  const { data: tokenBalance } = useQuery({
+    queryKey: ["bnb-token-balance", evmAddress, mintAddress],
+    queryFn: async () => {
+      if (!evmAddress || !mintAddress) return 0;
+      try {
+        const provider = await (evmWallet as any)?.getEthereumProvider?.();
+        if (!provider) return 0;
+        // ERC-20 balanceOf(address)
+        const balanceHex = await provider.request({
+          method: "eth_call",
+          params: [{
+            to: mintAddress,
+            data: "0x70a08231000000000000000000000000" + evmAddress.slice(2).toLowerCase(),
+          }, "latest"],
+        });
+        // Get decimals
+        let decimals = 18;
+        try {
+          const decHex = await provider.request({
+            method: "eth_call",
+            params: [{ to: mintAddress, data: "0x313ce567" }, "latest"],
+          });
+          decimals = parseInt(decHex, 16);
+          if (isNaN(decimals) || decimals > 36) decimals = 18;
+        } catch {}
+        const raw = BigInt(balanceHex || "0x0");
+        return Number(raw) / (10 ** decimals);
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !!isAuthenticated && !!evmAddress && !!mintAddress && !!evmWallet,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
+    refetchOnMount: "always",
+  });
 
   const handleBuy = useCallback(async (amount: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -175,6 +215,12 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
           tokenImageUrl,
         });
 
+        // Optimistic: set balance to flip to sell mode
+        queryClient.setQueryData(["bnb-token-balance", evmAddress, mintAddress], 1);
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["bnb-token-balance", evmAddress, mintAddress] });
+        }, 8000);
+
         if (result.txHash) {
           recordAlphaTradeInBackground({
             walletAddress: userWallet,
@@ -197,7 +243,75 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
       setBuyingAmount(null);
       setOpen(false);
     }
-  }, [isAuthenticated, userWallet, mintAddress, ticker, tokenName, tokenImageUrl, executeBnbSwap]);
+  }, [isAuthenticated, userWallet, mintAddress, ticker, tokenName, tokenImageUrl, executeBnbSwap, evmAddress, queryClient]);
+
+  const handleSell100 = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!userWallet || userWallet === "unknown") {
+      toast.error("Connect your wallet first.");
+      return;
+    }
+
+    const balance = tokenBalance ?? 0;
+    if (balance <= 0) {
+      queryClient.setQueryData(["bnb-token-balance", evmAddress, mintAddress], 0);
+      toast.error("No tokens to sell — switched back to Buy");
+      return;
+    }
+
+    const toastId = `bnb-sell-${Date.now()}`;
+    toast.loading("⚡ Selling 100%...", { id: toastId, description: `Selling $${ticker}` });
+    setIsSelling(true);
+
+    try {
+      const result = await executeBnbSwap(mintAddress, "sell", balance, userWallet);
+      if (result.success) {
+        toast.dismiss(toastId);
+        showTradeSuccess({
+          type: 'sell',
+          ticker,
+          tokenName,
+          mintAddress,
+          amount: `${balance.toFixed(2)} ${ticker}`,
+          signature: result.txHash,
+          tokenImageUrl,
+        });
+
+        // Optimistic: flip back to buy
+        queryClient.setQueryData(["bnb-token-balance", evmAddress, mintAddress], 0);
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["bnb-token-balance", evmAddress, mintAddress] });
+        }, 8000);
+
+        if (result.txHash) {
+          recordAlphaTradeInBackground({
+            walletAddress: userWallet,
+            tokenMint: mintAddress,
+            tokenName,
+            tokenTicker: ticker,
+            tradeType: 'sell',
+            amountSol: result.estimatedOutput ? Number(result.estimatedOutput) : 0,
+            amountTokens: balance,
+            txHash: result.txHash,
+            chain: 'bnb',
+          });
+        }
+      } else {
+        toast.error("❌ Sell Failed", { id: toastId, description: result.error?.slice(0, 80) });
+      }
+    } catch (err: any) {
+      toast.error("❌ Sell Failed", { id: toastId, description: err?.message?.slice(0, 80) });
+    } finally {
+      setIsSelling(false);
+    }
+  }, [isAuthenticated, userWallet, mintAddress, ticker, tokenName, tokenImageUrl, tokenBalance, executeBnbSwap, evmAddress, queryClient]);
 
   const handleTriggerClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -213,53 +327,73 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
     setOpen((prev) => !prev);
   }, [isAuthenticated, quickBuyAmount, handleBuy]);
 
-  const isBusy = isLoading || buyingAmount !== null;
+  const isBusy = isLoading || buyingAmount !== null || isSelling;
+  const hasBalance = (tokenBalance ?? 0) > 0;
 
   return (
     <>
       <NotLoggedInModal open={showLoginModal} onOpenChange={setShowLoginModal} />
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            onClick={handleTriggerClick}
-            className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
-            disabled={isBusy}
-          >
-            {isBusy ? (
-              <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
-            ) : (
-              <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
-            )}
-            <span>{isBusy ? "Buying..." : quickBuyAmount ? `${quickBuyAmount} BNB` : "Buy"}</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-auto p-2 bg-card border-border"
-          side="top"
-          align="end"
-          sideOffset={6}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+
+      {hasBalance ? (
+        <button
+          type="button"
+          onClick={handleSell100}
+          disabled={isBusy}
+          className={isCompact
+            ? "discover-quick-buy-btn pulse-sell-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 border-red-500/20 hover:border-red-500/40"
+            : "pulse-sol-btn pulse-sell-btn"}
         >
-          <div className="flex items-center gap-1.5">
-            {PRESET_AMOUNTS_BNB.map((amt) => (
-              <button
-                key={amt}
-                type="button"
-                disabled={isBusy}
-                onClick={(e) => handleBuy(amt, e)}
-                className="px-3 py-1.5 rounded-md text-[11px] font-mono font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
-              >
-                {buyingAmount === amt ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  `${amt} BNB`
-                )}
-              </button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+          {isSelling ? (
+            <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
+          ) : (
+            <ArrowDownToLine className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
+          )}
+          <span>{isSelling ? "Selling..." : "Sell 100%"}</span>
+        </button>
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              onClick={handleTriggerClick}
+              className={isCompact ? "discover-quick-buy-btn" : "pulse-sol-btn"}
+              disabled={isBusy}
+            >
+              {isBusy ? (
+                <Loader2 className={isCompact ? "h-3 w-3 animate-spin" : "h-2.5 w-2.5 animate-spin"} />
+              ) : (
+                <Zap className={isCompact ? "h-3 w-3" : "h-2.5 w-2.5"} />
+              )}
+              <span>{isBusy ? "Buying..." : quickBuyAmount ? `${quickBuyAmount} BNB` : "Buy"}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-2 bg-card border-border"
+            side="top"
+            align="end"
+            sideOffset={6}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            <div className="flex items-center gap-1.5">
+              {PRESET_AMOUNTS_BNB.map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  disabled={isBusy}
+                  onClick={(e) => handleBuy(amt, e)}
+                  className="px-3 py-1.5 rounded-md text-[11px] font-mono font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+                >
+                  {buyingAmount === amt ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    `${amt} BNB`
+                  )}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </>
   );
 });
