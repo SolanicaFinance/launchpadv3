@@ -631,7 +631,7 @@ twitter: @cooltoken`} />
   -H "x-api-key: tna_live_xxxx" \\
   -H "Content-Type: application/json"`} />
                     <p className="text-xs text-muted-foreground mt-2">
-                      Minimum claim: 0.05 SOL
+                      Minimum claim: 0.01 BNB
                     </p>
                   </div>
                 </div>
