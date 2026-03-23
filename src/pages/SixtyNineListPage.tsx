@@ -207,7 +207,7 @@ export default function SixtyNineListPage() {
                 {[
                   { n: "01", text: "Top 69 holders scanned every hour, 5 minutes past — LP wallets excluded" },
                   { n: "02", text: "69% of the 1% platform swap fee split evenly among all 69 listed holders" },
-                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 69 BNB lottery draw" },
+                  { n: "03", text: "Diamond hands (no transfers in 7 days) enter a { n: "03", text: "Diamond hands (no transfers in 7 days) enter a weekly 6.9 BNB lottery draw" }," },
                   { n: "04", text: "Lifetime passive income — hold your rank and earn from every token forever" },
                 ].map(({ n, text }) => (
                   <div key={n} className="flex items-start gap-3 bg-background/40 rounded-lg p-3 border border-border/10">
