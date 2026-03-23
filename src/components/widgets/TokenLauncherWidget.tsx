@@ -96,7 +96,7 @@ export default function TokenLauncherWidget({ config }: TokenLauncherWidgetProps
         </CardHeader>
       )}
         <CardContent className="space-y-4 text-center">
-          <p className="text-sm text-muted-foreground">Your token is now live on Solana</p>
+          <p className="text-sm text-muted-foreground">Your token is now live on BNB Chain</p>
           
           <div className="bg-muted/50 p-4 rounded-lg break-all">
             <p className="text-xs text-muted-foreground mb-1">Mint Address</p>

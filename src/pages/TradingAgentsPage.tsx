@@ -324,7 +324,7 @@ export default function TradingAgentsPage() {
                   <div className="font-medium text-sm mb-1">Capital Flow</div>
                   <div className="text-xs text-muted-foreground">
                     50% of swap fees → encrypted trading wallet. 
-                    Trading activates at 0.5 SOL threshold.
+                    Trading activates at 0.5 BNB threshold.
                   </div>
                 </div>
               </CardContent>
