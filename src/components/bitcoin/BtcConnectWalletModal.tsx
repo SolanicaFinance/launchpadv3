@@ -140,7 +140,7 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
               {notInstalledWallets.map((w) => (
                 <a
                   key={w.id}
-                  href={w.downloadUrl}
+                  href={w.connectUrl || w.downloadUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary/40 transition-all duration-150 group"
@@ -153,6 +153,11 @@ export function BtcConnectWalletModal({ onConnect, trigger, open: controlledOpen
                     <p className="text-[11px] text-muted-foreground truncate">
                       {WALLET_DESCRIPTIONS[w.id] || 'Bitcoin wallet'}
                     </p>
+                    {w.unavailableReason && (
+                      <p className="text-[10px] text-primary truncate">
+                        {w.unavailableReason}
+                      </p>
+                    )}
                   </div>
                   <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/70 group-hover:text-foreground flex-shrink-0" />
                 </a>
