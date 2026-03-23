@@ -14,6 +14,8 @@ import phoenixIcon from "@/assets/phoenix-icon.png";
 import lifinityIcon from "@/assets/lifinity-icon.ico";
 import pumpswapIcon from "@/assets/pumpswap-icon.png";
 import solfiIcon from "@/assets/solfi-icon.png";
+import pancakeswapBunny from "@/assets/pancakeswap-bunny.png";
+import saturnLogo from "@/assets/saturn-logo.png";
 
 // Solana launchpad icons
 const SOL_LAUNCHPAD_ICONS: Record<string, string> = {
@@ -28,11 +30,17 @@ const SOL_LAUNCHPAD_ICONS: Record<string, string> = {
   raydium: raydiumIcon,
 };
 
-// BNB launchpad emoji fallbacks (no icon assets yet)
-const BNB_LAUNCHPAD_LABELS: Record<string, string> = {
-  pancakeswap: "🥞",
-  "four.meme": "4️⃣",
-  moonit: "🌙",
+const BNB_LAUNCHPAD_ICONS: Record<string, string> = {
+  pancakeswap: pancakeswapBunny,
+  saturnportal: saturnLogo,
+  saturn: saturnLogo,
+  portal: saturnLogo,
+};
+
+const BNB_LAUNCHPAD_MONOGRAMS: Record<string, string> = {
+  "four.meme": "4",
+  fourmeme: "4",
+  moonit: "M",
 };
 
 // Solana protocol icons
@@ -57,29 +65,58 @@ const SOL_PROTOCOL_ICONS: Record<string, string> = {
   "Raydium CPMM": raydiumIcon,
 };
 
-// BNB protocol emoji fallbacks
-const BNB_PROTOCOL_EMOJIS: Record<string, string> = {
-  "PancakeSwap": "🥞",
-  "PancakeSwap AMM": "🥞",
-  "PancakeSwap V3": "🥞",
-  "Biswap": "🔄",
-  "DODO": "🦤",
-  "Thena": "⚡",
-  "Venus": "🌟",
+const BNB_PROTOCOL_ICONS: Record<string, string> = {
+  "PancakeSwap": pancakeswapBunny,
+  "PancakeSwap AMM": pancakeswapBunny,
+  "PancakeSwap AMM V3": pancakeswapBunny,
+  "PancakeSwap Infinity": pancakeswapBunny,
 };
 
+const BNB_PROTOCOL_MONOGRAMS: Record<string, string> = {
+  "Uniswap V4": "U",
+  "Biswap": "B",
+  "DODO": "D",
+  "Thena": "T",
+  "Venus": "V",
+};
+
+function normalizeBrandKey(name: string) {
+  return name.trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function getDisplayLabel(name: string, isLaunchpad: boolean, isBnb: boolean) {
+  if (!isBnb) return name;
+
+  const key = normalizeBrandKey(name);
+
+  if (isLaunchpad) {
+    if (["saturnportal", "saturn", "portal"].includes(key)) return "SaturnPortal";
+    if (["four.meme", "fourmeme"].includes(key)) return "four.meme";
+    if (key === "pancakeswap") return "PancakeSwap";
+    if (key === "moonit") return "Moonit";
+  }
+
+  if (key.includes("pancakeswap")) return name.replace(/^pancakeswap/i, "PancakeSwap");
+  if (key === "uniswapv4") return "Uniswap V4";
+
+  return name;
+}
+
 function getLaunchpadIcon(name: string, isBnb: boolean): string {
-  if (isBnb) return "";
+  if (isBnb) return BNB_LAUNCHPAD_ICONS[normalizeBrandKey(name)] || "";
   return SOL_LAUNCHPAD_ICONS[name] || "";
 }
 
-function getLaunchpadEmoji(name: string, isBnb: boolean): string {
-  if (isBnb) return BNB_LAUNCHPAD_LABELS[name] || name.charAt(0).toUpperCase();
+function getLaunchpadMonogram(name: string, isBnb: boolean): string {
+  if (isBnb) return BNB_LAUNCHPAD_MONOGRAMS[normalizeBrandKey(name)] || name.charAt(0).toUpperCase();
   return "";
 }
 
 function getProtocolIcon(name: string, isBnb: boolean): string {
-  if (isBnb) return "";
+  if (isBnb) {
+    const normalizedLabel = getDisplayLabel(name, false, true);
+    return BNB_PROTOCOL_ICONS[normalizedLabel] || "";
+  }
   if (SOL_PROTOCOL_ICONS[name]) return SOL_PROTOCOL_ICONS[name];
   const lower = name.toLowerCase();
   if (lower.includes("raydium")) return raydiumIcon;
@@ -93,13 +130,14 @@ function getProtocolIcon(name: string, isBnb: boolean): string {
   return "";
 }
 
-function getProtocolEmoji(name: string, isBnb: boolean): string {
+function getProtocolMonogram(name: string, isBnb: boolean): string {
   if (!isBnb) return "";
-  if (BNB_PROTOCOL_EMOJIS[name]) return BNB_PROTOCOL_EMOJIS[name];
-  const lower = name.toLowerCase();
-  if (lower.includes("pancake")) return "🥞";
-  if (lower.includes("thena")) return "⚡";
-  if (lower.includes("venus")) return "🌟";
+  const normalizedLabel = getDisplayLabel(name, false, true);
+  if (BNB_PROTOCOL_MONOGRAMS[normalizedLabel]) return BNB_PROTOCOL_MONOGRAMS[normalizedLabel];
+  const lower = normalizedLabel.toLowerCase();
+  if (lower.includes("pancake")) return "P";
+  if (lower.includes("thena")) return "T";
+  if (lower.includes("venus")) return "V";
   return name.charAt(0).toUpperCase();
 }
 
@@ -269,7 +307,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topLaunchpads || []).length > 0 ? (
             data!.topLaunchpads.map((lp, i) => (
-              <IconCard key={i} icon={getLaunchpadIcon(lp.type, isBnb)} emoji={getLaunchpadEmoji(lp.type, isBnb)} label={lp.type} value={fUsd(lp.vol24hUsd)} compact={compact} />
+              <IconCard key={i} icon={getLaunchpadIcon(lp.type, isBnb)} emoji={getLaunchpadMonogram(lp.type, isBnb)} label={getDisplayLabel(lp.type, true, isBnb)} value={fUsd(lp.vol24hUsd)} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
@@ -290,7 +328,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topProtocols || []).length > 0 ? (
             data!.topProtocols.map((p, i) => (
-              <IconCard key={i} icon={getProtocolIcon(p.name, isBnb)} emoji={getProtocolEmoji(p.name, isBnb)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
+              <IconCard key={i} icon={getProtocolIcon(p.name, isBnb)} emoji={getProtocolMonogram(p.name, isBnb)} label={getDisplayLabel(p.name, false, isBnb)} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
