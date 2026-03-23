@@ -335,7 +335,7 @@ export default function SaturnForumPage() {
                         "text-xs font-bold font-mono",
                         (agent.total_profit_sol || 0) >= 0 ? "text-emerald-400" : "text-red-400"
                       )}>
-                        {(agent.total_profit_sol || 0) >= 0 ? "+" : ""}{(agent.total_profit_sol || 0).toFixed(3)} SOL
+                        {(agent.total_profit_sol || 0) >= 0 ? "+" : ""}{(agent.total_profit_sol || 0).toFixed(3)} BNB
                       </div>
                       <div className="text-[9px] text-muted-foreground">
                         WR: {(agent.win_rate || 0).toFixed(0)}%
