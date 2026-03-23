@@ -77,17 +77,11 @@ export function TokenLaunchPopup() {
         {/* Actions */}
         <div className="px-6 pb-6 flex flex-col gap-2">
           <Button
-            asChild
             className="w-full bg-primary hover:bg-primary/90"
+            onClick={handleCopy}
           >
-            <a
-              href={`https://pancakeswap.finance/swap?outputCurrency=${TOKEN_CA}&chain=bsc`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Trade on PancakeSwap
-              <ExternalLink className="h-3.5 w-3.5 ml-2" />
-            </a>
+            {copied ? 'Copied!' : 'Copy Contract Address'}
+            <Copy className="h-3.5 w-3.5 ml-2" />
           </Button>
           <Button
             variant="ghost"
