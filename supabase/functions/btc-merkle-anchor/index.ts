@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     const timestamp = Math.floor(Date.now() / 1000).toString(36);
     const payload = `SATURN_ANCHOR|${merkleRoot.slice(0, 48)}|${timestamp}`;
 
-    const btcTreasuryWif = Deno.env.get("BTC_TREASURY_WIF");
+    const btcTreasuryWif = Deno.env.get("BTC_PLATFORM_WIF") || Deno.env.get("BTC_TREASURY_WIF");
 
     let anchorTxid: string;
     let status: string;
