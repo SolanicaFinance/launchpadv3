@@ -149,6 +149,8 @@ export function MarketLighthouse({
 }) {
   const [activeTab, setActiveTab] = useState<LighthouseTimeframe>("1h");
   const { data, isLoading, refetch } = useMarketLighthouse(activeTab);
+  const { chain } = useChain();
+  const isBnb = chain === "bnb";
 
   const handleRefreshAll = (e: React.MouseEvent) => {
     onRefresh(e);
