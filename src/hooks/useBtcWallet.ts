@@ -305,7 +305,6 @@ async function connectUniSat(): Promise<string | null> {
   const provider = getInjectedProvider('unisat');
   
   if (!provider) {
-    // In iframe or extension not installed — open published URL in new tab
     if (isEmbeddedPreviewContext()) {
       const publishedUrl = 'https://saturntrade.lovable.app';
       const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
@@ -316,35 +315,39 @@ async function connectUniSat(): Promise<string | null> {
     throw new Error('UniSat wallet not detected. Please install it from unisat.io and refresh the page.');
   }
 
-  // Try requestAccounts first (standard UniSat API)
+  console.log('[UniSat Connect] Provider found, attempting requestAccounts...');
+  console.log('[UniSat Connect] Available methods:', {
+    requestAccounts: typeof provider.requestAccounts,
+    request: typeof provider.request,
+    getAccounts: typeof provider.getAccounts,
+  });
+
+  // Strategy: try requestAccounts FIRST — if it throws due to user rejection, 
+  // DO NOT fall through. Only use fallbacks if the primary method doesn't exist.
   if (typeof provider.requestAccounts === 'function') {
-    try {
-      const result = await provider.requestAccounts();
-      const addr = extractAddress(result);
-      if (addr) return addr;
-    } catch (e: any) {
-      console.warn('[UniSat] requestAccounts failed, trying request():', e?.message);
-    }
+    // This is the standard UniSat API — it WILL open the approval popup
+    const result = await provider.requestAccounts();
+    console.log('[UniSat Connect] requestAccounts result:', result);
+    const addr = extractAddress(result);
+    if (addr) return addr;
+    throw new Error('UniSat returned empty accounts. Please unlock your wallet and try again.');
   }
 
-  // Fallback: use request({ method: 'requestAccounts' })
-  try {
+  // Fallback only if requestAccounts doesn't exist (non-standard provider)
+  if (typeof provider.request === 'function') {
+    console.log('[UniSat Connect] Falling back to request("requestAccounts")');
     const result = await requestProviderMethod(provider, 'requestAccounts');
     const addr = extractAddress(result);
     if (addr) return addr;
-  } catch (e: any) {
-    console.warn('[UniSat] request(requestAccounts) failed:', e?.message);
   }
 
-  // Final fallback: getAccounts (only works if already connected)
-  try {
-    const result = await requestProviderMethod(provider, 'getAccounts', {
-      purposes: ['payment'],
-      message: 'Connect to Saturn Terminal',
-    });
+  // Last resort: getAccounts (only works if already approved)
+  if (typeof provider.getAccounts === 'function') {
+    console.log('[UniSat Connect] Falling back to getAccounts');
+    const result = await provider.getAccounts();
     const addr = extractAddress(result);
     if (addr) return addr;
-  } catch {}
+  }
 
   throw new Error('UniSat did not return an address. Make sure your wallet is unlocked and try again.');
 }
