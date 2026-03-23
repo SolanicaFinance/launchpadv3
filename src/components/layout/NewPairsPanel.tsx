@@ -354,8 +354,8 @@ function TokenRowCard({ pair, chain, onClick }: {
 }
 
 
-export function NewPairsPanel({ onRefresh, refreshing, compact }: NewPairsPanelProps) {
-  const [selectedChain, setSelectedChain] = useState<PanelChain>("solana");
+export function NewPairsPanel({ onRefresh, refreshing, compact, defaultChain = "solana" }: NewPairsPanelProps) {
+  const [selectedChain, setSelectedChain] = useState<PanelChain>(defaultChain);
   const networkId = selectedChain === "bnb" ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
   const { newPairs, isLoading } = useCodexNewPairs(networkId);
   const navigate = useNavigate();
