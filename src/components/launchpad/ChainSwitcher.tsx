@@ -112,8 +112,13 @@ export function ChainSwitcher({ variant = 'default', className }: ChainSwitcherP
     
     setChain(newChain);
     
-    // If we're on a launch page, navigate to the new chain's launch page
-    if (location.pathname.startsWith('/launch')) {
+    // Navigate to the appropriate home for each chain
+    if (newChain === 'bitcoin') {
+      navigate('/btc');
+    } else if (location.pathname.startsWith('/btc')) {
+      // Leaving Bitcoin mode — go to home
+      navigate('/');
+    } else if (location.pathname.startsWith('/launch')) {
       navigate(`/launch/${newChain}`);
     }
   };
