@@ -143,8 +143,15 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
               <button
                 key={`${r.baseToken.address}-${r.pairAddress}-${i}`}
                 onClick={() => {
-                  if (isSolana && r.baseToken.address) {
-                    navigate(`/trade/${r.baseToken.address}`);
+                  if (r.baseToken.address) {
+                    const chain = normalizeChainId(r.chainId);
+                    if (chain === "solana") {
+                      navigate(`/trade/${r.baseToken.address}`);
+                    } else if (chain === "bsc") {
+                      navigate(`/trade/${r.baseToken.address}?chain=bnb`);
+                    } else {
+                      navigate(`/trade/${r.baseToken.address}?chain=${chain}`);
+                    }
                   }
                   onClose();
                 }}
