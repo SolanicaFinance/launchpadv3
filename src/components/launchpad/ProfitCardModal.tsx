@@ -5,6 +5,7 @@ import { ExternalLink, Download } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useReferralCode } from "@/hooks/useReferral";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrivyEvmWallet } from "@/hooks/usePrivyEvmWallet";
 import saturnLogo from "@/assets/saturn-logo.png";
 import { BRAND } from "@/config/branding";
 
@@ -17,7 +18,11 @@ export interface ProfitCardData {
   pnlPercent?: number;
   signature?: string;
   tokenImageUrl?: string;
+  chain?: 'solana' | 'bnb' | 'btc';
 }
+
+const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
+const SOL_LOGO = "https://assets.coingecko.com/coins/images/4128/small/solana.png";
 
 interface ProfitCardModalProps {
   open: boolean;
@@ -29,17 +34,22 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { referralLink } = useReferralCode();
   const { solanaAddress } = useAuth();
+  const { address: evmAddress } = usePrivyEvmWallet();
   const [saving, setSaving] = useState(false);
 
   if (!data) return null;
+
+  const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL';
+  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : SOL_LOGO;
+  const walletAddress = data.chain === 'bnb' ? evmAddress : solanaAddress;
 
   const isBuy = data.action === "buy";
   const hasPnl = data.pnlPercent !== undefined && data.pnlPercent !== null;
   const pnl = data.pnlPercent ?? 0;
   const isPositive = isBuy || pnl >= 0;
   const qrLink = referralLink || "https://saturn.trade/";
-  const truncatedWallet = solanaAddress
-    ? `${solanaAddress.slice(0, 4)}...${solanaAddress.slice(-4)}`
+  const truncatedWallet = walletAddress
+    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
     : "—";
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -93,7 +103,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   };
 
   const handleShareX = async () => {
-    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} SOL`;
+    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} ${currencyLabel}`;
     const pnlLine = hasPnl ? `\nPNL - ${isPositive ? "+" : ""}${pnl.toFixed(2)}%` : "";
     const truncSig = data.signature ? `${data.signature.slice(0, 6)}...${data.signature.slice(-6)}` : "";
     const txLine = truncSig ? `\nTX - ${truncSig}` : "";
@@ -242,7 +252,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                         }}
                       >
                         {data.amountSol.toFixed(4)}
-                        <span style={{ fontSize: 18, marginLeft: 4, color: "rgba(255,255,255,0.4)" }}>SOL</span>
+                        <span style={{ fontSize: 18, marginLeft: 4, color: "rgba(255,255,255,0.4)" }}>{currencyLabel}</span>
                       </div>
                     )}
                   </div>
@@ -260,7 +270,10 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                     >
                       {isBuy ? "-" : "+"}{data.amountSol.toFixed(4)}
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2 }}>SOL</div>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                      <img src={chainLogo} alt={currencyLabel} style={{ width: 14, height: 14, borderRadius: "50%" }} crossOrigin="anonymous" />
+                      {currencyLabel}
+                    </div>
                   </div>
                 </div>
 

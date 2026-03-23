@@ -105,6 +105,7 @@ export function TradeSuccessPopup() {
         pnlPercent: data.pnlPercent,
         signature: data.signature,
         tokenImageUrl: data.tokenImageUrl,
+        chain: data.chain,
       }
     : null;
 
