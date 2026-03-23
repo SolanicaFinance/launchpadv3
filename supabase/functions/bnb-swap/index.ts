@@ -108,9 +108,57 @@ interface SwapRequest {
   userWallet: string;
   privyUserId?: string;
   slippage?: number;
+  mode?: "prepare" | "execute";
+  clientAuthorizationSignature?: string;
+  preparedExecution?: PreparedExecution;
 }
 
 type SwapRoute = "portal" | "fourmeme" | "pancakeswap";
+
+interface PreparedExecution {
+  route: SwapRoute;
+  to: string;
+  data?: string;
+  value?: string;
+  gas_limit?: string;
+  estimatedOutput: string;
+  expiresAt: string;
+}
+
+interface PrivySignaturePayload {
+  version: 1;
+  method: "POST";
+  url: string;
+  headers: Record<string, string>;
+  body: Record<string, unknown>;
+}
+
+function createPrivySignaturePayload(
+  walletId: string,
+  txParams: { to: string; data?: string; value?: string; gas_limit?: string },
+  expiresAt: string,
+): PrivySignaturePayload {
+  const appId = Deno.env.get("PRIVY_APP_ID");
+  if (!appId) throw new Error("PRIVY_APP_ID must be configured");
+
+  return {
+    version: 1,
+    method: "POST",
+    url: `https://api.privy.io/v1/wallets/${encodeURIComponent(walletId)}/rpc`,
+    headers: {
+      "privy-app-id": appId,
+      "privy-request-expiry": expiresAt,
+    },
+    body: {
+      method: "eth_sendTransaction",
+      caip2: "eip155:56",
+      chain_type: "ethereum",
+      params: {
+        transaction: txParams,
+      },
+    },
+  };
+}
 
 // ── Four.meme token info cache ──
 interface FourMemeTokenInfo {
@@ -205,8 +253,9 @@ async function executePancakeSwapBuy(
   tokenAddress: string,
   bnbAmount: bigint,
   slippage: number,
-  publicClient: any
-): Promise<{ txHash: string; estimatedOutput: string }> {
+  publicClient: any,
+  options: { prepareOnly?: boolean; clientAuthorizationSignature?: string } = {}
+): Promise<{ txHash?: string; estimatedOutput: string; preparedExecution?: PreparedExecution; signaturePayload?: PrivySignaturePayload }> {
   const path = [WBNB as `0x${string}`, tokenAddress as `0x${string}`];
 
   let amountOutMin = 0n;
@@ -232,11 +281,30 @@ async function executePancakeSwapBuy(
     args: [amountOutMin, path, walletAddress as `0x${string}`, deadline],
   });
 
-  const txHash = await evmSendTransaction(walletId, {
+  const txParams = {
     to: PANCAKE_ROUTER,
     data: callData,
     value: numberToHex(bnbAmount),
     gas_limit: numberToHex(350000n),
+  };
+
+  const expiresAt = String(Date.now() + 5 * 60 * 1000);
+  if (options.prepareOnly) {
+    return {
+      estimatedOutput: amountOutMin.toString(),
+      preparedExecution: {
+        route: "pancakeswap",
+        estimatedOutput: amountOutMin.toString(),
+        expiresAt,
+        ...txParams,
+      },
+      signaturePayload: createPrivySignaturePayload(walletId, txParams, expiresAt),
+    };
+  }
+
+  const txHash = await evmSendTransaction(walletId, txParams, "eip155:56", {
+    expiresAt,
+    additionalSignatures: options.clientAuthorizationSignature ? [options.clientAuthorizationSignature] : [],
   });
 
   return { txHash, estimatedOutput: amountOutMin.toString() };
@@ -320,8 +388,9 @@ async function executeFourMemeBuy(
   bnbAmount: bigint,
   slippage: number,
   publicClient: any,
-  fourMemeInfo?: FourMemeTokenInfo
-): Promise<{ txHash: string; estimatedOutput: string }> {
+  fourMemeInfo?: FourMemeTokenInfo,
+  options: { prepareOnly?: boolean; clientAuthorizationSignature?: string } = {}
+): Promise<{ txHash?: string; estimatedOutput: string; preparedExecution?: PreparedExecution; signaturePayload?: PrivySignaturePayload }> {
   // Step 1: Get quote via tryBuy (spend X BNB → get tokens)
   const result = await publicClient.readContract({
     address: FOURMEME_HELPER3 as `0x${string}`,
@@ -408,11 +477,30 @@ async function executeFourMemeBuy(
   }
 
   // Step 6: Execute
-  const txHash = await evmSendTransaction(walletId, {
+  const txParams = {
     to: targetManager,
     data: callData,
     value: numberToHex(amountMsgValue),
     gas_limit: numberToHex(500000n),
+  };
+
+  const expiresAt = String(Date.now() + 5 * 60 * 1000);
+  if (options.prepareOnly) {
+    return {
+      estimatedOutput: estimatedAmount.toString(),
+      preparedExecution: {
+        route: "fourmeme",
+        estimatedOutput: estimatedAmount.toString(),
+        expiresAt,
+        ...txParams,
+      },
+      signaturePayload: createPrivySignaturePayload(walletId, txParams, expiresAt),
+    };
+  }
+
+  const txHash = await evmSendTransaction(walletId, txParams, "eip155:56", {
+    expiresAt,
+    additionalSignatures: options.clientAuthorizationSignature ? [options.clientAuthorizationSignature] : [],
   });
 
   return { txHash, estimatedOutput: estimatedAmount.toString() };
@@ -776,8 +864,93 @@ Deno.serve(async (req) => {
     let estimatedOutput = "0";
     let executedRoute = route;
 
+    if (body.mode === "prepare" && body.action === "buy") {
+      let prepared:
+        | { txHash?: string; estimatedOutput: string; preparedExecution?: PreparedExecution; signaturePayload?: PrivySignaturePayload }
+        | null = null;
+
+      if (route === "fourmeme") {
+        prepared = await executeFourMemeBuy(
+          walletId,
+          walletAddress,
+          body.tokenAddress,
+          parseEther(body.amount),
+          slippage,
+          publicClient,
+          fourMemeInfo,
+          { prepareOnly: true },
+        );
+      } else if (route === "pancakeswap") {
+        prepared = await executePancakeSwapBuy(
+          walletId,
+          walletAddress,
+          body.tokenAddress,
+          parseEther(body.amount),
+          slippage,
+          publicClient,
+          { prepareOnly: true },
+        );
+      } else {
+        const callData = encodeFunctionData({
+          abi: PORTAL_ABI,
+          functionName: "buy",
+          args: [body.tokenAddress as `0x${string}`],
+        });
+        const txParams = {
+          to: portalAddress,
+          data: callData,
+          value: numberToHex(parseEther(body.amount)),
+        };
+        const expiresAt = String(Date.now() + 5 * 60 * 1000);
+        prepared = {
+          estimatedOutput: "0",
+          preparedExecution: {
+            route: "portal",
+            estimatedOutput: "0",
+            expiresAt,
+            ...txParams,
+          },
+          signaturePayload: createPrivySignaturePayload(walletId, txParams, expiresAt),
+        };
+      }
+
+      return new Response(
+        JSON.stringify({
+          requiresAuthorizationSignature: true,
+          route,
+          preparedExecution: prepared.preparedExecution,
+          signaturePayload: prepared.signaturePayload,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── Execute based on route ──
-    if (route === "portal") {
+    if (body.mode === "execute" && body.preparedExecution) {
+      if (!body.clientAuthorizationSignature) {
+        return new Response(
+          JSON.stringify({ error: "Missing client authorization signature" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      executedRoute = body.preparedExecution.route;
+      estimatedOutput = body.preparedExecution.estimatedOutput;
+      txHash = await evmSendTransaction(
+        walletId,
+        {
+          to: body.preparedExecution.to,
+          data: body.preparedExecution.data,
+          value: body.preparedExecution.value,
+          gas_limit: body.preparedExecution.gas_limit,
+        },
+        "eip155:56",
+        {
+          expiresAt: body.preparedExecution.expiresAt,
+          additionalSignatures: [body.clientAuthorizationSignature],
+        }
+      );
+    } else if (route === "portal") {
       console.log(`[bnb-swap] Executing via SaturnPortal: ${body.action}`);
       txHash = await executePortalSwap(walletId, portalAddress, body.tokenAddress, body.action, body.amount);
 
