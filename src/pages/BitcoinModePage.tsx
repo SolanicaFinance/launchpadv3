@@ -123,7 +123,7 @@ export default function BitcoinModePage() {
           <div className="text-5xl">₿</div>
           <h2 className="text-2xl font-bold text-foreground">Connect Bitcoin Wallet</h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            Bitcoin Mode uses native BTC wallets. Connect your UniSat or Xverse wallet to get started.
+            Bitcoin Mode uses native BTC wallets. Connect UniSat, Xverse, Leather, OKX, or Phantom to get started.
           </p>
           <BtcConnectWalletModal />
         </div>
