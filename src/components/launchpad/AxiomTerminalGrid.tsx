@@ -37,14 +37,16 @@ const COLUMN_TABS = [
 
 type ColumnTab = typeof COLUMN_TABS[number]["id"];
 
-const DEFAULT_QB = 0.5;
+const DEFAULT_QB_SOL = 0.5;
+const DEFAULT_QB_BNB = 0.01;
 
-function getColumnQb(colId: string): number {
+function getColumnQb(colId: string, chain?: string): number {
   try {
-    const v = localStorage.getItem(`pulse-col-qb-${colId}`);
+    const suffix = chain === 'bnb' ? `-bnb` : '';
+    const v = localStorage.getItem(`pulse-col-qb-${colId}${suffix}`);
     if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
   } catch {}
-  return DEFAULT_QB;
+  return chain === 'bnb' ? DEFAULT_QB_BNB : DEFAULT_QB_SOL;
 }
 
 function saveColumnQb(colId: string, amount: number) {
@@ -93,9 +95,9 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
 
   // Per-column quick-buy amounts
-  const [qbNew, setQbNew] = useState(() => getColumnQb("new"));
-  const [qbFinal, setQbFinal] = useState(() => getColumnQb("final"));
-  const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated"));
+  const [qbNew, setQbNew] = useState(() => getColumnQb("new", chain));
+  const [qbFinal, setQbFinal] = useState(() => getColumnQb("final", chain));
+  const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated", chain));
 
   const handleQbChange = useCallback((colId: ColumnTab, amount: number) => {
     saveColumnQb(colId, amount);
