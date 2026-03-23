@@ -155,7 +155,7 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
     requestHeaders["privy-authorization-key"] = authKeyId;
   }
 
-  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt });
+  const authSignature = getAuthorizationSignature(url, bodyObj, { expiresAt, authorizationKeyId: authKeyId });
 
   const response = await fetch(url, {
     method: "POST",
