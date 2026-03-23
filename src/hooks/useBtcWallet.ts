@@ -286,21 +286,9 @@ async function getExistingAddress(walletId: BtcWalletProvider): Promise<string |
 function detectWallets(): BtcWalletInfo[] {
   const inEmbeddedPreview = isEmbeddedPreviewContext();
 
-  console.log('[BTC Wallet Detection]', {
-    isIframe: inEmbeddedPreview,
-    'window.unisat': typeof window !== 'undefined' ? !!window.unisat : 'N/A',
-    'window.phantom?.bitcoin': typeof window !== 'undefined' ? !!window.phantom?.bitcoin : 'N/A',
-    'window.LeatherProvider': typeof window !== 'undefined' ? !!window.LeatherProvider : 'N/A',
-    'window.okxwallet?.bitcoin': typeof window !== 'undefined' ? !!window.okxwallet?.bitcoin : 'N/A',
-    'window.XverseProviders': typeof window !== 'undefined' ? !!window.XverseProviders?.BitcoinProvider : 'N/A',
-  });
-
   return WALLET_META.map(wallet => {
     const providerDetected = !!getInjectedProvider(wallet.id);
     const isUniSat = wallet.id === 'unisat';
-
-    // UniSat is ALWAYS shown as installed/clickable — it's the recommended wallet.
-    // In iframe contexts where it can't inject, clicking it will open a new tab.
     const installed = isUniSat ? true : providerDetected;
 
     return {
@@ -405,13 +393,28 @@ export function useBtcWallet(): UseBtcWalletReturn {
 
   const isConnected = !!address;
 
+  // Wallet detection with reduced logging
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     let mounted = true;
+    let hasLoggedOnce = false;
+
     const detect = () => {
       if (!mounted) return;
-      setAvailableWallets(detectWallets());
+      const wallets = detectWallets();
+      setAvailableWallets(wallets);
+
+      // Log only once to reduce spam
+      if (!hasLoggedOnce) {
+        hasLoggedOnce = true;
+        console.log('[BTC Wallet Detection]', {
+          isIframe: isEmbeddedPreviewContext(),
+          'window.unisat': !!window.unisat,
+          'window.phantom?.bitcoin': !!window.phantom?.bitcoin,
+          detectedInstalled: wallets.filter(w => w.installed && w.id !== 'unisat').map(w => w.id),
+        });
+      }
     };
 
     detect();
@@ -438,6 +441,51 @@ export function useBtcWallet(): UseBtcWalletReturn {
       window.removeEventListener('load', onLoad);
       document.removeEventListener('visibilitychange', onVisibility);
     };
+  }, []);
+
+  // Auto-reconnect from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const wasConnected = localStorage.getItem(BTC_WALLET_KEY);
+    const savedProvider = localStorage.getItem(BTC_PROVIDER_KEY) as BtcWalletProvider | null;
+
+    if (!wasConnected || !savedProvider) return;
+
+    let cancelled = false;
+
+    const tryReconnect = async () => {
+      // Wait a bit for extensions to inject
+      await new Promise(r => setTimeout(r, 1500));
+      if (cancelled) return;
+
+      try {
+        const provider = getInjectedProvider(savedProvider);
+        if (!provider) {
+          console.log('[BTC Auto-reconnect] Provider not found:', savedProvider);
+          return;
+        }
+
+        const addr = await getExistingAddress(savedProvider);
+        if (cancelled) return;
+
+        if (addr) {
+          console.log('[BTC Auto-reconnect] Restored session:', savedProvider, addr.slice(0, 8) + '…');
+          setAddress(addr);
+          setActiveProvider(savedProvider);
+          const bal = await getBalance(savedProvider);
+          if (bal && !cancelled) setBalance(bal);
+        } else {
+          console.log('[BTC Auto-reconnect] No address returned, clearing saved state');
+          localStorage.removeItem(BTC_WALLET_KEY);
+          localStorage.removeItem(BTC_PROVIDER_KEY);
+        }
+      } catch (e) {
+        console.warn('[BTC Auto-reconnect] Failed:', e);
+      }
+    };
+
+    tryReconnect();
+    return () => { cancelled = true; };
   }, []);
 
   const refreshBalance = useCallback(async () => {
