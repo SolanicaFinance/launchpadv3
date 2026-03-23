@@ -47,10 +47,12 @@ export default function BtcMemeDetailPage() {
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
 
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply);
+
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [trading, setTrading] = useState(false);
-  const [tradeTab, setTradeTab] = useState<"all" | "my">("all");
+  const [tradeTab, setTradeTab] = useState<"all" | "my" | "holders">("all");
 
   // Poll for Solana proof after trade
   const [pendingProofTradeId, setPendingProofTradeId] = useState<string | null>(null);
