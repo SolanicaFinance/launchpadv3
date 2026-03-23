@@ -8,6 +8,68 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBtcMemeTokens } from '@/hooks/useBtcMemeTokens';
 import { Rocket, TrendingUp } from 'lucide-react';
 
+function formatBtc(v: number) {
+  if (v >= 1) return `${v.toFixed(4)} ₿`;
+  if (v >= 0.001) return `${v.toFixed(6)} ₿`;
+  return `${v.toFixed(8)} ₿`;
+}
+
+function BtcMemeTokenFeed() {
+  const { data: tokens, isLoading } = useBtcMemeTokens();
+  const navigate = useNavigate();
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-[hsl(30,100%,50%)]" /> BTC Meme Tokens
+        </h3>
+      </div>
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground text-center py-6">Loading...</p>
+      ) : !tokens || tokens.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground text-sm">No meme tokens launched yet. Be the first!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {tokens.map(token => {
+            const pct = Math.min(token.bonding_progress, 100);
+            return (
+              <button
+                key={token.id}
+                onClick={() => navigate(`/btc/meme/${token.id}`)}
+                className="w-full flex items-center justify-between bg-background rounded-lg p-3 hover:bg-muted/50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  {token.image_url ? (
+                    <img src={token.image_url} alt={token.ticker} className="w-8 h-8 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-[hsl(30,100%,50%)]/20 flex items-center justify-center text-sm font-bold text-[hsl(30,100%,50%)]">{token.ticker.charAt(0)}</div>
+                  )}
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">${token.ticker}</div>
+                    <div className="text-[10px] text-muted-foreground">{token.name}</div>
+                  </div>
+                </div>
+                <div className="text-right space-y-0.5">
+                  <div className="text-xs font-mono font-bold text-foreground">{formatBtc(token.market_cap_btc)}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-[hsl(30,100%,50%)] rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">{pct.toFixed(0)}%</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface FeeEstimates {
   fastestFee: number;
   halfHourFee: number;
