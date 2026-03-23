@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useBtcMemeTokens } from '@/hooks/useBtcMemeTokens';
 import { Rocket, TrendingUp } from 'lucide-react';
+import { useChain } from '@/contexts/ChainContext';
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} ₿`;
