@@ -16,6 +16,8 @@ import { BRAND } from "@/config/branding";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { GlobalSearchDropdown } from "@/components/search/GlobalSearchDropdown";
 import { NotLoggedInModal } from "@/components/launchpad/NotLoggedInModal";
+import { BtcWalletConnect } from "@/components/bitcoin/BtcWalletConnect";
+
 interface TopBarProps {
   onMobileMenuOpen?: () => void;
   showBack?: boolean;
@@ -30,6 +32,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isOnTrade = location.pathname === "/trade";
+  const isBtcMode = location.pathname.startsWith("/btc");
 
   const [search, setSearch] = useState(() => isOnTrade ? (searchParams.get("q") || "") : "");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -80,7 +83,6 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
 
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && search.trim()) {
-      // If on trade page, just filter locally; otherwise navigate
       if (!isOnTrade) {
         navigate(`/trade?q=${encodeURIComponent(search.trim())}`);
         setMobileSearchOpen(false);
@@ -170,80 +172,90 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             </button>
           </div>
 
-          {/* ── Center: SOL Price + Saturn Token (desktop only) ── */}
+          {/* ── Center: Price display (desktop only) ── */}
           <div className="hidden md:flex flex-1 items-center justify-center gap-2">
-            {chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
+            {!isBtcMode && (chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />)}
           </div>
 
-          {/* ── Right: X link, Wallet, Panel, Create ── */}
+          {/* ── Right: context-aware actions ── */}
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
-            {/* SOL price — mobile only, compact */}
-            <div className="md:hidden">
-              {chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
-            </div>
-
-            <Link
-              to="/rewards"
-              className="hidden sm:flex items-center gap-1.5 h-9 px-2.5 rounded-lg transition-all duration-200
-                         text-muted-foreground/70 hover:text-primary
-                         hover:bg-primary/5 hover:scale-[1.03]
-                         border border-transparent hover:border-primary/20"
-              title="Social Rewards"
-            >
-              <Gift className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Rewards</span>
-            </Link>
-            <a
-              href="https://x.com/saturnterminal"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
-                         text-muted-foreground/70 hover:text-foreground
-                         hover:bg-card/40 hover:scale-[1.03]"
-            >
-              <XIcon className="h-3.5 w-3.5" />
-            </a>
-            <a
-              href="https://t.me/saturnterminal"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
-                         text-muted-foreground/70 hover:text-foreground
-                         hover:bg-card/40 hover:scale-[1.03]"
-              title="Telegram"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-            </a>
-
-            {isAuthenticated && (
-              <div className="hidden sm:block">
-                <HeaderWalletBalance />
+            {/* Price — mobile only */}
+            {!isBtcMode && (
+              <div className="md:hidden">
+                {chain === 'bnb' ? <BnbPriceDisplay /> : chain === 'base' ? <EthPriceDisplay /> : <SolPriceDisplay />}
               </div>
             )}
 
-            <button
-              onClick={handleLaunchAppClick}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold
-                         transition-all duration-200
-                         border border-primary/30 text-primary
-                         bg-primary/5 backdrop-blur-sm
-                         hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.03]
-                         hover:shadow-[0_0_16px_hsl(84_81%_44%/0.12)]
-                         cursor-pointer flex-shrink-0"
-            >
-              <img src={saturnLogo} alt="" className="h-4 w-4 rounded-sm" />
-              <span>{isAuthenticated ? 'Dashboard' : 'Launch App'}</span>
-            </button>
+            {isBtcMode ? (
+              /* ── BTC-specific header actions ── */
+              <BtcWalletConnect />
+            ) : (
+              /* ── Default Privy / Solana / EVM header actions ── */
+              <>
+                <Link
+                  to="/rewards"
+                  className="hidden sm:flex items-center gap-1.5 h-9 px-2.5 rounded-lg transition-all duration-200
+                             text-muted-foreground/70 hover:text-primary
+                             hover:bg-primary/5 hover:scale-[1.03]
+                             border border-transparent hover:border-primary/20"
+                  title="Social Rewards"
+                >
+                  <Gift className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Rewards</span>
+                </Link>
+                <a
+                  href="https://x.com/saturnterminal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
+                             text-muted-foreground/70 hover:text-foreground
+                             hover:bg-card/40 hover:scale-[1.03]"
+                >
+                  <XIcon className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href="https://t.me/saturnterminal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200
+                             text-muted-foreground/70 hover:text-foreground
+                             hover:bg-card/40 hover:scale-[1.03]"
+                  title="Telegram"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                </a>
 
-            <Link
-              to="/launchpad"
-              className="flex items-center gap-1.5 h-9 px-3.5 sm:px-4 rounded-lg text-xs font-bold
-                         btn-gradient-green flex-shrink-0
-                         hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Create</span>
-            </Link>
+                {isAuthenticated && (
+                  <div className="hidden sm:block">
+                    <HeaderWalletBalance />
+                  </div>
+                )}
+
+                <button
+                  onClick={handleLaunchAppClick}
+                  className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold
+                             transition-all duration-200
+                             border border-primary/30 text-primary
+                             bg-primary/5 backdrop-blur-sm
+                             hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.03]
+                             hover:shadow-[0_0_16px_hsl(84_81%_44%/0.12)]
+                             cursor-pointer flex-shrink-0"
+                >
+                  <img src={saturnLogo} alt="" className="h-4 w-4 rounded-sm" />
+                  <span>{isAuthenticated ? 'Dashboard' : 'Launch App'}</span>
+                </button>
+
+                <Link
+                  to="/launchpad"
+                  className="flex items-center gap-1.5 h-9 px-3.5 sm:px-4 rounded-lg text-xs font-bold
+                             btn-gradient-green flex-shrink-0
+                             hover:shadow-[0_0_24px_hsl(72_100%_50%/0.3)]"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Create</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
