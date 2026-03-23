@@ -469,11 +469,9 @@ export async function evmSendTransaction(
   if (!res.ok) {
     const body = await res.text();
     if (res.status === 401) {
-      const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
-      const authKeyIdStatus = normalizeAuthorizationKeyId(rawAuthKeyId) ? "present" : "missing_or_invalid";
       const walletAuthDebug = await getWalletAuthDebug(walletId);
       throw new Error(
-        `Privy eth_sendTransaction failed (401): ${body} | auth_key_id_status=${authKeyIdStatus} | wallet_auth=${walletAuthDebug}`,
+        `Privy eth_sendTransaction failed (401): ${body} | wallet_auth=${walletAuthDebug}`,
       );
     }
     throw new Error(`Privy eth_sendTransaction failed (${res.status}): ${body}`);
