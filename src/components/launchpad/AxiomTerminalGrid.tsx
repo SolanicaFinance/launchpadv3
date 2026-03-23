@@ -95,9 +95,9 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
 
   // Per-column quick-buy amounts
-  const [qbNew, setQbNew] = useState(() => getColumnQb("new"));
-  const [qbFinal, setQbFinal] = useState(() => getColumnQb("final"));
-  const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated"));
+  const [qbNew, setQbNew] = useState(() => getColumnQb("new", chain));
+  const [qbFinal, setQbFinal] = useState(() => getColumnQb("final", chain));
+  const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated", chain));
 
   const handleQbChange = useCallback((colId: ColumnTab, amount: number) => {
     saveColumnQb(colId, amount);
