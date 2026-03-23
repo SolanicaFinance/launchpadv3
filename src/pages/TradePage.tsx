@@ -15,14 +15,16 @@ import {
 } from "lucide-react";
 
 const QUICK_BUY_KEY = "pulse-quick-buy-amount";
-const DEFAULT_QUICK_BUY = 0.5;
+const DEFAULT_QUICK_BUY_SOL = 0.5;
+const DEFAULT_QUICK_BUY_BNB = 0.01;
 
-function getStoredQuickBuy(): number {
+function getStoredQuickBuy(isBnb = false): number {
   try {
-    const v = localStorage.getItem(QUICK_BUY_KEY);
+    const key = isBnb ? `${QUICK_BUY_KEY}-bnb` : QUICK_BUY_KEY;
+    const v = localStorage.getItem(key);
     if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
   } catch {}
-  return DEFAULT_QUICK_BUY;
+  return isBnb ? DEFAULT_QUICK_BUY_BNB : DEFAULT_QUICK_BUY_SOL;
 }
 
 export default function TradePage() {
