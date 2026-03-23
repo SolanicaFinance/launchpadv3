@@ -486,3 +486,27 @@ verify_jwt = false
 
 [functions.btc-market-data]
 verify_jwt = false
+
+[functions.btc-genesis-proof]
+verify_jwt = false
+
+[functions.btc-meme-create]
+verify_jwt = false
+
+[functions.btc-meme-swap]
+verify_jwt = false
+
+[functions.btc-merkle-anchor]
+verify_jwt = false
+
+[functions.btc-rugshield]
+verify_jwt = false
+
+[functions.btc-rune-launch]
+verify_jwt = false
+
+[functions.btc-solana-proof]
+verify_jwt = false
+
+[functions.btc-trade]
+verify_jwt = false
