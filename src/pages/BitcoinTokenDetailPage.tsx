@@ -89,8 +89,14 @@ export default function BitcoinTokenDetailPage() {
         <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
           <div className="text-5xl">₿</div>
           <h2 className="text-2xl font-bold text-foreground">Connect Bitcoin Wallet</h2>
-          <p className="text-muted-foreground text-sm">Connect your UniSat wallet to view this Rune.</p>
-          <BtcConnectWalletModal />
+          <p className="text-muted-foreground text-sm">Connect your Bitcoin wallet to view this Rune.</p>
+          <BtcConnectWalletModal
+            trigger={
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="lg">
+                Connect Wallet
+              </Button>
+            }
+          />
         </div>
       </div>
     );

@@ -158,7 +158,13 @@ export default function BtcMemeDetailPage() {
           {!isConnected ? (
             <div className="text-center py-4 space-y-2">
               <p className="text-xs text-muted-foreground">Connect wallet to trade</p>
-              <BtcConnectWalletModal />
+              <BtcConnectWalletModal
+                trigger={
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">
+                    Connect Wallet
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <>
