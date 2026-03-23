@@ -1,64 +1,51 @@
 
 
-## Problem Analysis
+## V2 Bitcoin Mode — Pure Bitcoin Edition at `/v2btc`
 
-The current BTC meme token launch flow has a fundamental integrity issue:
+### Overview
+Create a parallel set of routes at `/v2btc` that mirror the existing `/btc` mode but with the **Pure Bitcoin narrative** — Fractal Bitcoin as Layer 2 instead of Solana. Same database tables, same wallet connections, same backend — just rebranded UI and explainer content. This lets you test the new narrative live without touching the existing `/btc` mode.
 
-1. **`btc-meme-create`** inserts the token with `status: "active"` immediately
-2. **`btc-genesis-proof`** is fired as fire-and-forget (async, no callback)
-3. The user is redirected to the token page and trading begins **before** the OP_RETURN genesis transaction is even broadcast — let alone confirmed by the Bitcoin network
-4. The launch page says "No blockchain confirmations needed" which is misleading
-5. Token listings (`useBtcMemeTokens`) show ALL tokens with no status filter — pending tokens appear alongside confirmed ones
+### What Gets Built
 
-This means tokens can be "traded" before they have any on-chain existence.
+**1. V2 Bitcoin Home Page** (`src/pages/V2BitcoinModePage.tsx`)
+- Clone of `BitcoinModePage.tsx` with updated copy:
+  - Hero: "Pure Bitcoin Meme Tokens" — "Born on Mainnet, Trades on Fractal, Audited on Mainnet"
+  - Badge: "First-ever Pure Bitcoin Settlement Protocol"
+  - Footer stats: "OP_RETURN Genesis · ~30s Fractal Blocks · Merkle Anchoring"
+- Same token feed, network stats, wallet connection — all functional
+- Links to `/v2btc/meme/launch` and `/v2btc/meme/:id`
 
----
+**2. V2 Protocol Explainer** (`src/components/bitcoin/V2SaturnProtocolExplainer.tsx`)
+- Step 1: OP_RETURN Genesis (unchanged)
+- Step 2: Instant Bonding Curve AMM (unchanged)
+- Step 3: **Fractal Bitcoin Settlement** — replaces Solana Memo Receipts. "Every trade settles as a native UTXO transfer on Fractal Bitcoin (~30s blocks, merge-mined security). Fully verifiable via Fractal explorer, compatible with Unisat/Xverse."
+- Step 4: Merkle Anchoring (unchanged)
+- Footer: "30s blocks · 1% platform fee · Unisat native"
 
-## Plan
+**3. V2 Launch Page** (`src/pages/V2BtcMemeLaunchPage.tsx`)
+- Clone of `BtcMemeLaunchPage.tsx` — same form, same image upload, same `btc-meme-create` edge function call
+- Updated copy: references Fractal Bitcoin instead of Solana
+- Navigates to `/v2btc/meme/:id` on success
 
-### 1. Add a `pending_genesis` status to the token lifecycle
+**4. V2 Token Detail Page** (`src/pages/V2BtcMemeDetailPage.tsx`)
+- Clone of `BtcMemeDetailPage.tsx` — same trading, holders, charts
+- Updated proof labels: "Fractal Settlement" instead of "Solana Memo"
+- Back button goes to `/v2btc`
 
-- **`btc-meme-create`**: Change `status: "active"` → `status: "pending_genesis"` on insert
-- **`btc-genesis-proof`**: After successful broadcast (or simulated pending genesis), update `status` to `"active"`
-- This ensures no token appears as tradable until genesis is at least broadcast
+**5. Routes** (in `App.tsx`)
+- `/v2btc` → V2BitcoinModePage
+- `/v2btc/meme/launch` → V2BtcMemeLaunchPage
+- `/v2btc/meme/:id` → V2BtcMemeDetailPage
 
-### 2. Block trading on non-active tokens
+### What Does NOT Change
+- No new database tables — uses same `btc_meme_tokens`, `btc_meme_trades`, `btc_meme_balances`
+- No new edge functions — uses same `btc-meme-create`, `btc-meme-swap`
+- No wallet changes — same Unisat/Xverse integration
+- Existing `/btc` routes remain untouched
 
-- **`btc-meme-swap`**: Add a check at the top — if `pool.status !== 'active'`, reject the swap with "Token genesis not yet confirmed"
-
-### 3. Update token listing queries
-
-- **`useBtcMemeTokens`**: Add `.eq("status", "active")` filter so pending tokens don't show in the main feed
-- Keep the detail page query unfiltered so creators can still see their token's pending state
-
-### 4. Update the token detail page for pending state
-
-- In `BtcMemeDetailPage.tsx`: Show a "Awaiting Bitcoin confirmation..." banner with a spinner when `token.status === 'pending_genesis'`
-- Disable the buy/sell form while pending
-- Auto-refresh every 5s (already in place) so it flips to active once genesis confirms
-
-### 5. Update the launch page UX
-
-- **`BtcMemeLaunchPage.tsx`**: Replace the misleading "No blockchain confirmations needed" text with accurate messaging: "Your token will go live once the Bitcoin genesis transaction is confirmed"
-- After launch, navigate to the detail page where the user sees the pending state
-- Update the "How It Works" section in `LaunchTokenPage.tsx` for BTC chain to mention the confirmation step
-
-### 6. Update the launch success flow
-
-- After `btc-meme-create` returns, show a toast like "Token submitted! Awaiting Bitcoin network confirmation..." instead of "launched!"
-
----
-
-## Technical Details
-
-**Edge function changes:**
-- `btc-meme-create/index.ts`: `status: "active"` → `status: "pending_genesis"`
-- `btc-genesis-proof/index.ts`: Add `status: "active"` to the update query after broadcast
-- `btc-meme-swap/index.ts`: Add guard clause rejecting trades on non-active tokens
-
-**Frontend changes:**
-- `src/hooks/useBtcMemeTokens.ts`: Add status filter to list query
-- `src/pages/BtcMemeLaunchPage.tsx`: Fix misleading copy, update toast
-- `src/pages/BtcMemeDetailPage.tsx`: Add pending banner, disable trading form
-- `src/pages/LaunchTokenPage.tsx`: Update BTC "How It Works" step 3 text
+### Technical Details
+- 4 new page files + 1 new component file
+- 3 new route entries in `App.tsx`
+- Sidebar entry added for "V2 BTC" (optional, or access via direct URL)
+- All V2 pages share the same hooks: `useBtcWallet`, `useBtcMemeTokens`, `useBtcMemeHolders`
 
