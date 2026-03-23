@@ -127,7 +127,7 @@ function FeaturedAgentCard({ strategy, agentData }: {
           "text-right",
         )}>
           <div className={cn("text-xs font-bold", isProfit ? "text-emerald-400" : "text-red-400")}>
-            {isProfit ? "+" : ""}{profit.toFixed(3)} SOL
+            {isProfit ? "+" : ""}{profit.toFixed(3)} BNB
           </div>
           <div className="text-[9px] text-muted-foreground">Total P&L</div>
         </div>
@@ -174,20 +174,20 @@ function FeaturedAgentCard({ strategy, agentData }: {
           <span className="text-[11px] text-muted-foreground">Total Staked</span>
         </div>
         <span className="text-sm font-bold text-primary font-mono">
-          {(agentData?.capital || 0).toFixed(2)} SOL
+          {(agentData?.capital || 0).toFixed(2)} BNB
         </span>
       </div>
 
       {/* CTA */}
       <button
-        onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $SOL coins.")}
+        onClick={() => toast.info("Staking on AI agents will become available soon with the $SATURN and $BNB coins.")}
         className={cn(
           "flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-xs transition-all",
           "bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
         )}
       >
         <Coins className="w-3.5 h-3.5" />
-        Stake SOL
+        Stake BNB
         <ArrowRight className="w-3 h-3" />
       </button>
     </div>
@@ -241,17 +241,17 @@ export default function SaturnForumPage() {
             {BRAND.name} Trading Agents
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-1">
-            3 AI agents with distinct trading strategies. Stake SOL, earn a share of profits.
+            3 AI agents with distinct trading strategies. Stake BNB, earn a share of profits.
           </p>
           <p className="text-xs text-muted-foreground/60 max-w-md mx-auto">
-            Each agent autonomously analyzes markets, executes trades via Jupiter DEX, and distributes profits to stakers proportionally.
+            Each agent autonomously analyzes markets, executes trades via PancakeSwap, and distributes profits to stakers proportionally.
           </p>
         </div>
 
         {/* ═══ Global Stats ═══ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <StatBox icon={Coins} label="Total Staked" value={`${totalStaked.toFixed(2)} SOL`} accent="text-primary" />
-          <StatBox icon={TrendingUp} label="Total Profit" value={`${totalProfit >= 0 ? "+" : ""}${totalProfit.toFixed(3)} SOL`} accent={totalProfit >= 0 ? "text-emerald-400" : "text-red-400"} />
+          <StatBox icon={Coins} label="Total Staked" value={`${totalStaked.toFixed(2)} BNB`} accent="text-primary" />
+          <StatBox icon={TrendingUp} label="Total Profit" value={`${totalProfit >= 0 ? "+" : ""}${totalProfit.toFixed(3)} BNB`} accent={totalProfit >= 0 ? "text-emerald-400" : "text-red-400"} />
           <StatBox icon={BarChart3} label="Total Trades" value={String(totalTrades)} />
           <StatBox icon={Percent} label="Avg Win Rate" value={`${avgWinRate.toFixed(1)}%`} />
         </div>
@@ -259,7 +259,7 @@ export default function SaturnForumPage() {
         {/* ═══ How It Works ═══ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
           {[
-            { step: "01", title: "Stake SOL", desc: "Choose an agent strategy and stake SOL into its trading pool.", icon: Coins },
+            { step: "01", title: "Stake BNB", desc: "Choose an agent strategy and stake BNB into its trading pool.", icon: Coins },
             { step: "02", title: "Agent Trades", desc: "AI analyzes markets, scores tokens, executes trades autonomously.", icon: Activity },
             { step: "03", title: "Earn Profits", desc: "Profits are distributed proportionally to all stakers.", icon: TrendingUp },
           ].map((item) => (
@@ -335,7 +335,7 @@ export default function SaturnForumPage() {
                         "text-xs font-bold font-mono",
                         (agent.total_profit_sol || 0) >= 0 ? "text-emerald-400" : "text-red-400"
                       )}>
-                        {(agent.total_profit_sol || 0) >= 0 ? "+" : ""}{(agent.total_profit_sol || 0).toFixed(3)} SOL
+                        {(agent.total_profit_sol || 0) >= 0 ? "+" : ""}{(agent.total_profit_sol || 0).toFixed(3)} BNB
                       </div>
                       <div className="text-[9px] text-muted-foreground">
                         WR: {(agent.win_rate || 0).toFixed(0)}%
