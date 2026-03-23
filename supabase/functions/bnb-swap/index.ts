@@ -108,9 +108,10 @@ interface SwapRequest {
   userWallet: string;
   privyUserId?: string;
   slippage?: number;
-  mode?: "prepare" | "execute";
+  mode?: "prepare" | "execute" | "build" | "record";
   clientAuthorizationSignature?: string;
   preparedExecution?: PreparedExecution;
+  txHash?: string;
 }
 
 type SwapRoute = "portal" | "fourmeme" | "pancakeswap";
