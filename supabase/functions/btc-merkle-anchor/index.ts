@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       const payloadHash = await sha256(payload);
       anchorTxid = `pending:${payloadHash.slice(0, 48)}`;
       status = "pending";
-      console.log("[btc-merkle-anchor] BTC_TREASURY_WIF not configured. Storing pending anchor.");
+      console.log("[btc-merkle-anchor] BTC_PLATFORM_WIF not configured. Storing pending anchor.");
     } else {
       // Real Bitcoin OP_RETURN
       const bitcoinjs = await import("npm:bitcoinjs-lib@6.1.6");
