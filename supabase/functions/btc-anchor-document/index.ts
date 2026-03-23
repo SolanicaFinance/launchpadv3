@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
     }
 
     // === Real Bitcoin OP_RETURN transaction ===
+    const { Buffer } = await import("node:buffer");
     const bitcoinjs = await import("npm:bitcoinjs-lib@6.1.6");
     const ECPairFactory = (await import("npm:ecpair@3.0.0")).default;
     const ecc = await import("npm:tiny-secp256k1@2.2.3");
