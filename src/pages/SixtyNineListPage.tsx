@@ -288,7 +288,7 @@ export default function SixtyNineListPage() {
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Trophy className="h-3 w-3" /> Prize Pool
                     </span>
-                    <span className="text-foreground font-bold">69 BNB / week</span>
+                    <span className="text-foreground font-bold"><span className="text-foreground font-bold">6.9 BNB / week</span></span>
                   </div>
                 </div>
               </div>
