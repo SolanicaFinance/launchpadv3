@@ -974,8 +974,6 @@ Deno.serve(async (req) => {
           console.log("[bnb-swap] build: PancakeSwap failed, trying Four.meme fallback");
           built = await tryBuildBuy("fourmeme");
         }
-          };
-        }
       } else {
         // Sell — build approve + sell txs
         // For sells we need approval first, so return both transactions
