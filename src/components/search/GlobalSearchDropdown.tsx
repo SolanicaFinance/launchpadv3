@@ -176,7 +176,7 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[13px] font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                      ${r.baseToken.symbol || "?"}
+                      {r.baseToken.symbol || "?"}
                     </span>
                     <span className="hidden xs:inline text-[11px] text-muted-foreground truncate max-w-[110px]">
                       {r.baseToken.name || "Unknown token"}
