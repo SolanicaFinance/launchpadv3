@@ -241,7 +241,7 @@ export default function SaturnForumPage() {
             {BRAND.name} Trading Agents
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-1">
-            3 AI agents with distinct trading strategies. Stake SOL, earn a share of profits.
+            3 AI agents with distinct trading strategies. Stake BNB, earn a share of profits.
           </p>
           <p className="text-xs text-muted-foreground/60 max-w-md mx-auto">
             Each agent autonomously analyzes markets, executes trades via Jupiter DEX, and distributes profits to stakers proportionally.
