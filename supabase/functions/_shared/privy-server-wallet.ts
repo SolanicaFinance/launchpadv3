@@ -51,8 +51,8 @@ function getAuthorizationSignature(
     throw new Error("PRIVY_APP_ID must be configured");
   }
 
-  // Canonical payload exactly per Privy docs: only these privy-* headers are signed.
-  // privy-authorization-key is an HTTP header but is NOT part of the signed payload.
+  // Canonical payload exactly per Privy docs.
+  // Only the Privy headers that are actually sent and documented should be signed.
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
@@ -199,60 +199,24 @@ function normalizeAuthorizationKeyId(rawValue: string): string | null {
 }
 
 async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Promise<Response> {
-  const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
-  const authKeyId = normalizeAuthorizationKeyId(rawAuthKeyId);
   const expiresAt = String(Date.now() + 5 * 60 * 1000);
 
-  const baseHeaders: Record<string, string> = {
+  const headers: Record<string, string> = {
     ...getAuthHeaders(),
     "privy-request-expiry": expiresAt,
+    "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
+      expiresAt,
+    }),
   };
 
-  const attempts: Array<{ name: string; headers: Record<string, string> }> = [];
-
-  if (authKeyId) {
-    attempts.push({
-      name: "with-key-id",
-      headers: {
-        ...baseHeaders,
-        "privy-authorization-key": authKeyId,
-        "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
-          expiresAt,
-          authorizationKeyId: authKeyId,
-        }),
-      },
-    });
-  }
-
-  attempts.push({
-    name: "without-key-id",
-    headers: {
-      ...baseHeaders,
-      "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
-        expiresAt,
-      }),
-    },
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(bodyObj),
   });
 
-  let lastResponse: Response | null = null;
-
-  for (const attempt of attempts) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: attempt.headers,
-      body: JSON.stringify(bodyObj),
-    });
-
-    console.log(`[privy-auth] Attempt ${attempt.name} → status ${response.status}`);
-
-    if (response.ok || response.status !== 401) {
-      return response;
-    }
-
-    lastResponse = response;
-  }
-
-  return lastResponse ?? new Response("Privy RPC request failed before any attempt was made", { status: 500 });
+  console.log(`[privy-auth] Single signed attempt → status ${response.status}`);
+  return response;
 }
 
 async function getWalletAuthDebug(walletId: string): Promise<string> {
@@ -437,11 +401,9 @@ export async function signAndSendTransaction(
     const body = await res.text();
 
     if (res.status === 401) {
-      const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
-      const authKeyIdStatus = normalizeAuthorizationKeyId(rawAuthKeyId) ? "present" : "missing_or_invalid";
       const walletAuthDebug = await getWalletAuthDebug(walletId);
       throw new Error(
-        `Privy signAndSendTransaction failed (401): ${body} | auth_key_id_status=${authKeyIdStatus} | wallet_auth=${walletAuthDebug}`,
+        `Privy signAndSendTransaction failed (401): ${body} | wallet_auth=${walletAuthDebug}`,
       );
     }
 
@@ -505,11 +467,9 @@ export async function evmSendTransaction(
   if (!res.ok) {
     const body = await res.text();
     if (res.status === 401) {
-      const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
-      const authKeyIdStatus = normalizeAuthorizationKeyId(rawAuthKeyId) ? "present" : "missing_or_invalid";
       const walletAuthDebug = await getWalletAuthDebug(walletId);
       throw new Error(
-        `Privy eth_sendTransaction failed (401): ${body} | auth_key_id_status=${authKeyIdStatus} | wallet_auth=${walletAuthDebug}`,
+        `Privy eth_sendTransaction failed (401): ${body} | wallet_auth=${walletAuthDebug}`,
       );
     }
     throw new Error(`Privy eth_sendTransaction failed (${res.status}): ${body}`);
