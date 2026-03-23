@@ -138,7 +138,7 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             </div>
 
             {/* Desktop search with dropdown */}
-            <div className="hidden md:block relative w-56 lg:w-72 xl:w-80">
+            <div className="hidden md:block relative z-[60] w-56 lg:w-72 xl:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none text-muted-foreground/60" />
               <input
                 type="text"
