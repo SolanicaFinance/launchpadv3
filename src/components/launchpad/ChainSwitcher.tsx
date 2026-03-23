@@ -82,7 +82,7 @@ function BnbLogo({ className }: { className?: string }) {
 }
 
 function BitcoinLogo({ className }: { className?: string }) {
-  return <span className={className}>₿</span>;
+  return <img src={bitcoinLogo} alt="Bitcoin" className={cn("rounded-full", className)} />;
 }
 
 const CHAIN_LOGOS: Record<SupportedChain, React.FC<{ className?: string }>> = {
