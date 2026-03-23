@@ -217,7 +217,7 @@ export default function AgentDocsPage() {
                         </Badge>
                       </div>
                       <p className="text-lg text-muted-foreground">
-                        The complete guide to AI-powered token launches on Solana
+                        The complete guide to AI-powered token launches on BNB Chain
                       </p>
                     </div>
                   </div>
