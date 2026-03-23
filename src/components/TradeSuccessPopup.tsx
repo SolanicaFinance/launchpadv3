@@ -58,10 +58,25 @@ export function TradeSuccessPopup() {
     setTimeout(() => setCopied(false), 2000);
   }, [data?.signature]);
 
+  const getExplorerUrl = useCallback((sig: string, chain?: string) => {
+    if (chain === 'btc') return `https://mempool.space/tx/${sig}`;
+    if (chain === 'bnb') return `https://bscscan.com/tx/${sig}`;
+    return `https://solscan.io/tx/${sig}`;
+  }, []);
+
   const handleViewTx = useCallback(() => {
     if (!data?.signature) return;
-    window.open(`https://solscan.io/tx/${data.signature}`, "_blank");
-  }, [data?.signature]);
+    if (data.explorerUrl) {
+      window.open(data.explorerUrl, "_blank");
+    } else {
+      window.open(getExplorerUrl(data.signature, data.chain), "_blank");
+    }
+  }, [data?.signature, data?.chain, data?.explorerUrl, getExplorerUrl]);
+
+  const handleViewSolanaProof = useCallback(() => {
+    if (!data?.solanaProofSignature) return;
+    window.open(`https://solscan.io/tx/${data.solanaProofSignature}`, "_blank");
+  }, [data?.solanaProofSignature]);
 
   const handleGeneratePnl = useCallback(() => {
     clearTimer(); // Pause auto-dismiss
@@ -217,13 +232,27 @@ export function TradeSuccessPopup() {
                         ) : (
                           <TrendingDown className="h-3 w-3" />
                         )}
-                        {data.pnlSol >= 0 ? '+' : ''}{data.pnlSol.toFixed(4)} SOL
+                        {data.pnlSol >= 0 ? '+' : ''}{data.pnlSol.toFixed(4)} {data.chain === 'btc' ? 'BTC' : data.chain === 'bnb' ? 'BNB' : 'SOL'}
                         {data.pnlPercent != null && (
                           <span className="text-[10px] opacity-70">
                             ({data.pnlPercent >= 0 ? '+' : ''}{data.pnlPercent.toFixed(1)}%)
                           </span>
                         )}
                       </span>
+                    </div>
+                  )}
+
+                  {/* Solana Proof (BTC trades) */}
+                  {data.chain === 'btc' && data.solanaProofSignature && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Solana Proof</span>
+                      <button
+                        onClick={handleViewSolanaProof}
+                        className="flex items-center gap-1.5 text-xs font-mono text-purple-400/80 hover:text-purple-400 transition-colors cursor-pointer"
+                      >
+                        <span>{truncateSig(data.solanaProofSignature, 6)}</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
                     </div>
                   )}
                 </div>

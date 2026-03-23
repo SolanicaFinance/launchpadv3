@@ -12,6 +12,12 @@ export interface TradeSuccessData {
   tokenImageUrl?: string;
   pnlSol?: number;
   pnlPercent?: number;
+  /** Chain context for explorer links */
+  chain?: 'solana' | 'btc' | 'bnb';
+  /** Solana proof signature for BTC trades */
+  solanaProofSignature?: string;
+  /** Additional explorer URL override */
+  explorerUrl?: string;
 }
 
 interface TradeSuccessStore {

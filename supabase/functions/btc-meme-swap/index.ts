@@ -206,6 +206,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       trade: { type: tradeType, btcAmount, tokenAmount, feeBtc: feeAmount, priceBtc: newPrice, marketCapBtc: newMcap, bondingProgress: newProgress, isGraduated },
+      tradeId: latestTrade?.id || null,
       proofPending: !!latestTrade?.id,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
