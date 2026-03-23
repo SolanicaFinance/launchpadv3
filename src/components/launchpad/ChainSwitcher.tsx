@@ -150,7 +150,7 @@ export function ChainSwitcher({ variant = 'default', className }: ChainSwitcherP
         align="start" 
         className="w-48 bg-card border-border"
       >
-        {allChains.filter((c) => c.id === 'solana' || c.id === 'bitcoin').map((c) => {
+        {allChains.filter((c) => c.id === 'solana' || c.id === 'bitcoin' || c.id === 'bnb').map((c) => {
           const Logo = CHAIN_LOGOS[c.id];
           const isSelected = chain === c.id;
           const isDisabled = !c.isEnabled;
