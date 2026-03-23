@@ -58,10 +58,25 @@ export function TradeSuccessPopup() {
     setTimeout(() => setCopied(false), 2000);
   }, [data?.signature]);
 
+  const getExplorerUrl = useCallback((sig: string, chain?: string) => {
+    if (chain === 'btc') return `https://mempool.space/tx/${sig}`;
+    if (chain === 'bnb') return `https://bscscan.com/tx/${sig}`;
+    return `https://solscan.io/tx/${sig}`;
+  }, []);
+
   const handleViewTx = useCallback(() => {
     if (!data?.signature) return;
-    window.open(`https://solscan.io/tx/${data.signature}`, "_blank");
-  }, [data?.signature]);
+    if (data.explorerUrl) {
+      window.open(data.explorerUrl, "_blank");
+    } else {
+      window.open(getExplorerUrl(data.signature, data.chain), "_blank");
+    }
+  }, [data?.signature, data?.chain, data?.explorerUrl, getExplorerUrl]);
+
+  const handleViewSolanaProof = useCallback(() => {
+    if (!data?.solanaProofSignature) return;
+    window.open(`https://solscan.io/tx/${data.solanaProofSignature}`, "_blank");
+  }, [data?.solanaProofSignature]);
 
   const handleGeneratePnl = useCallback(() => {
     clearTimer(); // Pause auto-dismiss
