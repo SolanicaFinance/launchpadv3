@@ -264,12 +264,12 @@ export default function SixtyNineListPage() {
               <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Dice5 className="h-5 w-5 text-primary" />
-                  <h3 className="font-bold text-foreground text-sm">Weekly 69 SOL Lottery</h3>
+                  <h3 className="font-bold text-foreground text-sm">Weekly 69 BNB Lottery</h3>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                   Holders who haven't transferred any <span className="text-primary font-semibold">$SATURN</span> in{" "}
                   <span className="text-foreground font-semibold">7 days</span> are automatically entered into a weekly draw 
-                  for <span className="text-primary font-bold">69 SOL</span>. Your odds increase with rank — top 10 holders get 3× entries.
+                  for <span className="text-primary font-bold">69 BNB</span>. Your odds increase with rank — top 10 holders get 3× entries.
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
