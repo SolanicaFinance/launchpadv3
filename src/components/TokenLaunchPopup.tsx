@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ExternalLink, Rocket, X } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TOKEN_CA = '0x27a51c96b84c6d9f24d5d054c396ae0e1c96ffff';
