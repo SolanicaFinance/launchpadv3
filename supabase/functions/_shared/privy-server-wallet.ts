@@ -33,7 +33,6 @@ function getAuthorizationSignature(
   options: {
     idempotencyKey?: string;
     expiresAt?: string;
-    authorizationKeyId?: string | null;
   } = {},
 ): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
@@ -50,7 +49,6 @@ function getAuthorizationSignature(
   const payloadHeaders: Record<string, string> = {
     "privy-app-id": appId,
   };
-  if (options.authorizationKeyId) payloadHeaders["privy-authorization-key"] = options.authorizationKeyId;
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
   if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
 
@@ -163,7 +161,6 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
         ...withKeyHeaders,
         "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
           expiresAt,
-          authorizationKeyId: authKeyId,
         }),
       },
     });
@@ -175,15 +172,7 @@ async function postPrivyRpc(url: string, bodyObj: Record<string, unknown>): Prom
       ...baseHeaders,
       "privy-authorization-signature": getAuthorizationSignature(url, bodyObj, {
         expiresAt,
-        authorizationKeyId: null,
       }),
-    },
-  });
-
-  attempts.push({
-    name: "basic-auth-only",
-    headers: {
-      ...getAuthHeaders(),
     },
   });
 
@@ -457,6 +446,14 @@ export async function evmSendTransaction(
 
   if (!res.ok) {
     const body = await res.text();
+    if (res.status === 401) {
+      const rawAuthKeyId = (Deno.env.get("PRIVY_AUTHORIZATION_KEY_ID") || "").trim();
+      const authKeyIdStatus = normalizeAuthorizationKeyId(rawAuthKeyId) ? "present" : "missing_or_invalid";
+      const walletAuthDebug = await getWalletAuthDebug(walletId);
+      throw new Error(
+        `Privy eth_sendTransaction failed (401): ${body} | auth_key_id_status=${authKeyIdStatus} | wallet_auth=${walletAuthDebug}`,
+      );
+    }
     throw new Error(`Privy eth_sendTransaction failed (${res.status}): ${body}`);
   }
 
