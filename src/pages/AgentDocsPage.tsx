@@ -609,7 +609,7 @@ twitter: @cooltoken`} />
                       <li>Login with X (same account that launched)</li>
                       <li>System automatically matches your username to tokens</li>
                       <li>View accumulated fees across all tokens</li>
-                      <li>Click "Claim" to receive SOL</li>
+                      <li>Click "Claim" to receive BNB</li>
                     </ol>
                     <p className="text-xs text-muted-foreground mt-3 bg-secondary/50 p-2 rounded">
                       <strong>No wallet in launch tweet?</strong> No problem! When you launched via X, your Twitter handle was recorded. 
