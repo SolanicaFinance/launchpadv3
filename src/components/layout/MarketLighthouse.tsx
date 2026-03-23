@@ -269,7 +269,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topLaunchpads || []).length > 0 ? (
             data!.topLaunchpads.map((lp, i) => (
-              <IconCard key={i} icon={LAUNCHPAD_ICONS[lp.type] || pumpfunPill} label={lp.type} value={fUsd(lp.vol24hUsd)} compact={compact} />
+              <IconCard key={i} icon={getLaunchpadIcon(lp.type, isBnb)} emoji={getLaunchpadEmoji(lp.type, isBnb)} label={lp.type} value={fUsd(lp.vol24hUsd)} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
