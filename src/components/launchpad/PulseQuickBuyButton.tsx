@@ -187,13 +187,15 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
         const raw = BigInt(balanceHex || "0x0");
         return Number(raw) / (10 ** decimals);
       } catch {
-        return 0;
+        // Return undefined so react-query keeps the previous value
+        return undefined;
       }
     },
     enabled: !!isAuthenticated && !!evmAddress && !!mintAddress,
     staleTime: 10_000,
     refetchInterval: 15_000,
     refetchOnMount: "always",
+    placeholderData: (prev: number | undefined) => prev ?? 0,
   });
 
   const handleBuy = useCallback(async (amount: number, e: React.MouseEvent) => {
