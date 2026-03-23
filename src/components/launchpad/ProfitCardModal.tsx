@@ -270,7 +270,10 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                     >
                       {isBuy ? "-" : "+"}{data.amountSol.toFixed(4)}
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2 }}>SOL</div>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                      <img src={chainLogo} alt={currencyLabel} style={{ width: 14, height: 14, borderRadius: "50%" }} crossOrigin="anonymous" />
+                      {currencyLabel}
+                    </div>
                   </div>
                 </div>
 
