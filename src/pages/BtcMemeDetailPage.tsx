@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowUpRight, ArrowDownRight, Copy, Users, BarChart3, ExternalLink, Shield } from "lucide-react";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
+import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
+import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
@@ -45,10 +47,12 @@ export default function BtcMemeDetailPage() {
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
 
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply);
+
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [trading, setTrading] = useState(false);
-  const [tradeTab, setTradeTab] = useState<"all" | "my">("all");
+  const [tradeTab, setTradeTab] = useState<"all" | "my" | "holders">("all");
 
   // Poll for Solana proof after trade
   const [pendingProofTradeId, setPendingProofTradeId] = useState<string | null>(null);
@@ -300,59 +304,77 @@ export default function BtcMemeDetailPage() {
                   My Trades {myTrades.length > 0 && <span className="text-xs text-primary ml-1">({myTrades.length})</span>}
                 </button>
               )}
+              <button
+                onClick={() => setTradeTab("holders")}
+                className={`text-sm font-bold transition-colors flex items-center gap-1 ${tradeTab === "holders" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"}`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Holders
+                <span className="text-xs text-primary ml-0.5">({token.holder_count})</span>
+              </button>
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Shield className="w-3 h-3 text-purple-400/60" />
-              <span>Solana Proof</span>
-            </div>
-          </div>
-
-          <div className="space-y-0.5 max-h-96 overflow-y-auto">
-            {displayTrades.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">
-                {tradeTab === "my" ? "You haven't made any trades yet." : "No trades yet. Be the first!"}
-              </p>
-            ) : (
-              displayTrades.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between py-2 px-2 rounded hover:bg-muted/20 text-xs group">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {t.trade_type === "buy" ? (
-                      <ArrowUpRight className="w-3.5 h-3.5 text-[hsl(var(--success))] flex-shrink-0" />
-                    ) : (
-                      <ArrowDownRight className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
-                    )}
-                    <span className="font-mono text-muted-foreground">{truncate(t.wallet_address, 5)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`font-mono font-semibold ${t.trade_type === "buy" ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                      {t.trade_type === "buy" ? "+" : "-"}{formatNum(t.token_amount)}
-                    </span>
-                    <span className="font-mono text-muted-foreground text-[10px]">{formatBtc(t.btc_amount)}</span>
-
-                    {/* Solana proof badge */}
-                    {t.solana_proof_signature ? (
-                      <button
-                        onClick={() => window.open(`https://solscan.io/tx/${t.solana_proof_signature}`, "_blank")}
-                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer"
-                        title={`Solana Proof: ${t.solana_proof_signature}`}
-                      >
-                        <Shield className="w-2.5 h-2.5" />
-                        <span className="text-[9px] font-mono">SOL</span>
-                        <ExternalLink className="w-2 h-2" />
-                      </button>
-                    ) : (
-                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">
-                        <Shield className="w-2.5 h-2.5" />
-                        pending
-                      </span>
-                    )}
-
-                    <span className="text-muted-foreground/60 text-[10px] w-12 text-right">{timeAgo(t.created_at)}</span>
-                  </div>
-                </div>
-              ))
+            {tradeTab !== "holders" && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Shield className="w-3 h-3 text-purple-400/60" />
+                <span>Solana Proof</span>
+              </div>
             )}
           </div>
+
+          {tradeTab === "holders" ? (
+            <BtcMemeHoldersTable
+              holders={holders || []}
+              isLoading={holdersLoading}
+              ticker={token.ticker}
+              currentPriceBtc={token.price_btc}
+            />
+          ) : (
+            <div className="space-y-0.5 max-h-96 overflow-y-auto">
+              {displayTrades.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">
+                  {tradeTab === "my" ? "You haven't made any trades yet." : "No trades yet. Be the first!"}
+                </p>
+              ) : (
+                displayTrades.map((t: any) => (
+                  <div key={t.id} className="flex items-center justify-between py-2 px-2 rounded hover:bg-muted/20 text-xs group">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {t.trade_type === "buy" ? (
+                        <ArrowUpRight className="w-3.5 h-3.5 text-[hsl(var(--success))] flex-shrink-0" />
+                      ) : (
+                        <ArrowDownRight className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                      )}
+                      <span className="font-mono text-muted-foreground">{truncate(t.wallet_address, 5)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`font-mono font-semibold ${t.trade_type === "buy" ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                        {t.trade_type === "buy" ? "+" : "-"}{formatNum(t.token_amount)}
+                      </span>
+                      <span className="font-mono text-muted-foreground text-[10px]">{formatBtc(t.btc_amount)}</span>
+
+                      {t.solana_proof_signature ? (
+                        <button
+                          onClick={() => window.open(`https://solscan.io/tx/${t.solana_proof_signature}`, "_blank")}
+                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer"
+                          title={`Solana Proof: ${t.solana_proof_signature}`}
+                        >
+                          <Shield className="w-2.5 h-2.5" />
+                          <span className="text-[9px] font-mono">SOL</span>
+                          <ExternalLink className="w-2 h-2" />
+                        </button>
+                      ) : (
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">
+                          <Shield className="w-2.5 h-2.5" />
+                          pending
+                        </span>
+                      )}
+
+                      <span className="text-muted-foreground/60 text-[10px] w-12 text-right">{timeAgo(t.created_at)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
