@@ -167,9 +167,46 @@ Deno.serve(async (req) => {
       pool_real_btc: newRealBtc, bonding_progress: newProgress, market_cap_btc: newMcap,
     });
 
+    // Get the inserted trade ID for proof linking
+    const { data: latestTrade } = await supabase
+      .from("btc_meme_trades")
+      .select("id")
+      .eq("token_id", tokenId)
+      .eq("wallet_address", walletAddress)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Fire Solana memo proof asynchronously (don't block the trade response)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+    if (latestTrade?.id) {
+      // Fire-and-forget: post Solana proof
+      fetch(`${supabaseUrl}/functions/v1/btc-solana-proof`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          tradeId: latestTrade.id,
+          tokenTicker: token.ticker,
+          tokenName: token.name,
+          tradeType,
+          btcAmount,
+          tokenAmount,
+          walletAddress,
+          genesisTxid: token.genesis_txid || null,
+          imageHash: token.image_hash || null,
+        }),
+      }).catch(err => console.warn("[btc-meme-swap] Solana proof fire-and-forget error:", err));
+    }
+
     return new Response(JSON.stringify({
       success: true,
       trade: { type: tradeType, btcAmount, tokenAmount, feeBtc: feeAmount, priceBtc: newPrice, marketCapBtc: newMcap, bondingProgress: newProgress, isGraduated },
+      proofPending: !!latestTrade?.id,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("[btc-meme-swap] Error:", error);
