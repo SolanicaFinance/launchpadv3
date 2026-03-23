@@ -105,8 +105,8 @@ export default function LaunchTokenPage() {
                   ] : [
                     { n: "01", t: "Fill token details" },
                     { n: "02", t: "Set initial buy amount" },
-                    { n: "03", t: "Verify & launch" },
-                    { n: "04", t: "Token goes live instantly" },
+                    { n: "03", t: "Bitcoin genesis confirmation" },
+                    { n: "04", t: "Token goes live on-chain" },
                   ]).map(({ n, t }) => (
                     <div key={n} className="flex items-center gap-3">
                       <span className="font-mono text-[10px] text-primary w-5">{n}</span>
