@@ -32,6 +32,7 @@ function getAuthorizationSignature(
   body: Record<string, unknown>,
   options: {
     idempotencyKey?: string;
+    expiresAt?: string;
   } = {},
 ): string {
   const authKeyRaw = Deno.env.get("PRIVY_AUTHORIZATION_KEY");
@@ -49,6 +50,7 @@ function getAuthorizationSignature(
     "privy-app-id": appId,
   };
   if (options.idempotencyKey) payloadHeaders["privy-idempotency-key"] = options.idempotencyKey;
+  if (options.expiresAt) payloadHeaders["privy-request-expiry"] = options.expiresAt;
 
   const payload = {
     version: 1,
@@ -67,6 +69,8 @@ function getAuthorizationSignature(
     .replace(/^wallet-auth:/, "")
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/-----BEGIN EC PRIVATE KEY-----/g, "")
+    .replace(/-----END EC PRIVATE KEY-----/g, "")
     .replace(/\\n/g, "")
     .replace(/\r/g, "")
     .replace(/\n/g, "")
@@ -91,8 +95,12 @@ function getAuthorizationSignature(
     throw new Error("invalid PEM private key");
   }
 
-  // Sign (per docs: crypto.sign with sha256)
-  const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, privateKey);
+  // Sign with ECDSA P-256 using IEEE P1363 encoding (raw r||s, 64 bytes)
+  // Privy expects this format, NOT DER encoding
+  const signatureBuffer = crypto.sign("sha256", serializedPayloadBuffer, {
+    key: privateKey,
+    dsaEncoding: "ieee-p1363",
+  });
   const signature = signatureBuffer.toString("base64");
 
   console.log("[privy-auth] Signature generated, length:", signature.length, "URL:", url);
