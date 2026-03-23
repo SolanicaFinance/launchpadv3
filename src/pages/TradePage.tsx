@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { LaunchpadLayout } from "@/components/layout/LaunchpadLayout";
 import { useFunTokensPaginated } from "@/hooks/useFunTokensPaginated";
@@ -18,10 +18,13 @@ const QUICK_BUY_KEY = "pulse-quick-buy-amount";
 const DEFAULT_QUICK_BUY_SOL = 0.5;
 const DEFAULT_QUICK_BUY_BNB = 0.01;
 
+function getQuickBuyStorageKey(isBnb = false) {
+  return isBnb ? `${QUICK_BUY_KEY}-bnb` : QUICK_BUY_KEY;
+}
+
 function getStoredQuickBuy(isBnb = false): number {
   try {
-    const key = isBnb ? `${QUICK_BUY_KEY}-bnb` : QUICK_BUY_KEY;
-    const v = localStorage.getItem(key);
+    const v = localStorage.getItem(getQuickBuyStorageKey(isBnb));
     if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
   } catch {}
   return isBnb ? DEFAULT_QUICK_BUY_BNB : DEFAULT_QUICK_BUY_SOL;
@@ -35,6 +38,7 @@ export default function TradePage() {
   const isBnb = chain === 'bnb';
   const networkId = isBnb ? BSC_NETWORK_ID : SOLANA_NETWORK_ID;
   const nativeCurrency = chainConfig.nativeCurrency.symbol;
+  const quickBuyStorageKey = getQuickBuyStorageKey(isBnb);
 
   // Solana DB tokens (only when on Solana)
   const { tokens, totalCount, isLoading } = useFunTokensPaginated(1, 100);
@@ -53,6 +57,12 @@ export default function TradePage() {
   const { toggle: toggleSounds, isEnabled: isSoundsEnabled } = useTradeSounds();
   const [soundsOn, setSoundsOn] = useState(() => localStorage.getItem("pulse-sounds-enabled") === "true");
 
+  useEffect(() => {
+    const nextAmount = getStoredQuickBuy(isBnb);
+    setQuickBuyAmount(nextAmount);
+    setQuickBuyInput(String(nextAmount));
+  }, [isBnb]);
+
   const handleQuickBuyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val === "" || /^\d*\.?\d*$/.test(val)) {
@@ -60,16 +70,16 @@ export default function TradePage() {
       const num = parseFloat(val);
       if (num > 0 && isFinite(num)) {
         setQuickBuyAmount(num);
-        localStorage.setItem(QUICK_BUY_KEY, String(num));
+        localStorage.setItem(quickBuyStorageKey, String(num));
       }
     }
-  }, []);
+  }, [quickBuyStorageKey]);
 
   const handleQuickBuySet = useCallback((amount: number) => {
     setQuickBuyAmount(amount);
     setQuickBuyInput(String(amount));
-    localStorage.setItem(QUICK_BUY_KEY, String(amount));
-  }, []);
+    localStorage.setItem(quickBuyStorageKey, String(amount));
+  }, [quickBuyStorageKey]);
 
   // On Solana, merge DB tokens; on BNB, only Codex tokens
   const allTokens = useMemo(() => {
