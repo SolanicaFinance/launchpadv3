@@ -80,6 +80,8 @@ const BondingCurveLabPage = lazyWithRetry(() => import("./pages/BondingCurveLabP
 const BitcoinModePage = lazyWithRetry(() => import("./pages/BitcoinModePage"));
 const BitcoinLaunchPage = lazyWithRetry(() => import("./pages/BitcoinLaunchPage"));
 const BitcoinTokenDetailPage = lazyWithRetry(() => import("./pages/BitcoinTokenDetailPage"));
+const BtcMemeLaunchPage = lazyWithRetry(() => import("./pages/BtcMemeLaunchPage"));
+const BtcMemeDetailPage = lazyWithRetry(() => import("./pages/BtcMemeDetailPage"));
 
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
@@ -213,6 +215,8 @@ const App = () => (
                      <Route path="/btc" element={<LaunchpadLayout><BitcoinModePage /></LaunchpadLayout>} />
                      <Route path="/btc/launch" element={<LaunchpadLayout><BitcoinLaunchPage /></LaunchpadLayout>} />
                      <Route path="/btc/token/:id" element={<LaunchpadLayout><BitcoinTokenDetailPage /></LaunchpadLayout>} />
+                     <Route path="/btc/meme/launch" element={<LaunchpadLayout><BtcMemeLaunchPage /></LaunchpadLayout>} />
+                     <Route path="/btc/meme/:id" element={<LaunchpadLayout><BtcMemeDetailPage /></LaunchpadLayout>} />
                      <Route path="/ai-collab" element={<Navigate to="/admin?tab=ai-collab" replace />} />
                      <Route path="*" element={<NotFound />} />
                   </Routes>

@@ -1335,6 +1335,214 @@ export type Database = {
         }
         Relationships: []
       }
+      btc_meme_balances: {
+        Row: {
+          avg_buy_price_btc: number | null
+          balance: number
+          created_at: string
+          id: string
+          token_id: string
+          total_bought: number | null
+          total_sold: number | null
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          avg_buy_price_btc?: number | null
+          balance?: number
+          created_at?: string
+          id?: string
+          token_id: string
+          total_bought?: number | null
+          total_sold?: number | null
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          avg_buy_price_btc?: number | null
+          balance?: number
+          created_at?: string
+          id?: string
+          token_id?: string
+          total_bought?: number | null
+          total_sold?: number | null
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "btc_meme_balances_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "btc_meme_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      btc_meme_tokens: {
+        Row: {
+          bonding_progress: number
+          created_at: string
+          creator_fee_bps: number
+          creator_wallet: string
+          description: string | null
+          genesis_txid: string | null
+          graduated_at: string | null
+          graduation_threshold_btc: number
+          holder_count: number
+          id: string
+          image_url: string | null
+          last_anchor_at: string | null
+          last_anchor_txid: string | null
+          market_cap_btc: number
+          market_cap_usd: number | null
+          name: string
+          platform_fee_bps: number
+          price_btc: number
+          price_usd: number | null
+          real_btc_reserves: number
+          real_token_reserves: number
+          status: string
+          ticker: string
+          total_supply: number
+          trade_count: number
+          twitter_url: string | null
+          updated_at: string
+          virtual_btc_reserves: number
+          virtual_token_reserves: number
+          volume_btc: number
+          website_url: string | null
+        }
+        Insert: {
+          bonding_progress?: number
+          created_at?: string
+          creator_fee_bps?: number
+          creator_wallet: string
+          description?: string | null
+          genesis_txid?: string | null
+          graduated_at?: string | null
+          graduation_threshold_btc?: number
+          holder_count?: number
+          id?: string
+          image_url?: string | null
+          last_anchor_at?: string | null
+          last_anchor_txid?: string | null
+          market_cap_btc?: number
+          market_cap_usd?: number | null
+          name: string
+          platform_fee_bps?: number
+          price_btc?: number
+          price_usd?: number | null
+          real_btc_reserves?: number
+          real_token_reserves?: number
+          status?: string
+          ticker: string
+          total_supply?: number
+          trade_count?: number
+          twitter_url?: string | null
+          updated_at?: string
+          virtual_btc_reserves?: number
+          virtual_token_reserves?: number
+          volume_btc?: number
+          website_url?: string | null
+        }
+        Update: {
+          bonding_progress?: number
+          created_at?: string
+          creator_fee_bps?: number
+          creator_wallet?: string
+          description?: string | null
+          genesis_txid?: string | null
+          graduated_at?: string | null
+          graduation_threshold_btc?: number
+          holder_count?: number
+          id?: string
+          image_url?: string | null
+          last_anchor_at?: string | null
+          last_anchor_txid?: string | null
+          market_cap_btc?: number
+          market_cap_usd?: number | null
+          name?: string
+          platform_fee_bps?: number
+          price_btc?: number
+          price_usd?: number | null
+          real_btc_reserves?: number
+          real_token_reserves?: number
+          status?: string
+          ticker?: string
+          total_supply?: number
+          trade_count?: number
+          twitter_url?: string | null
+          updated_at?: string
+          virtual_btc_reserves?: number
+          virtual_token_reserves?: number
+          volume_btc?: number
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      btc_meme_trades: {
+        Row: {
+          bonding_progress: number | null
+          btc_amount: number
+          created_at: string
+          fee_btc: number
+          id: string
+          market_cap_btc: number | null
+          pool_real_btc: number | null
+          pool_virtual_btc: number | null
+          pool_virtual_tokens: number | null
+          price_btc: number
+          price_usd: number | null
+          token_amount: number
+          token_id: string
+          trade_type: string
+          wallet_address: string
+        }
+        Insert: {
+          bonding_progress?: number | null
+          btc_amount: number
+          created_at?: string
+          fee_btc?: number
+          id?: string
+          market_cap_btc?: number | null
+          pool_real_btc?: number | null
+          pool_virtual_btc?: number | null
+          pool_virtual_tokens?: number | null
+          price_btc: number
+          price_usd?: number | null
+          token_amount: number
+          token_id: string
+          trade_type: string
+          wallet_address: string
+        }
+        Update: {
+          bonding_progress?: number | null
+          btc_amount?: number
+          created_at?: string
+          fee_btc?: number
+          id?: string
+          market_cap_btc?: number | null
+          pool_real_btc?: number | null
+          pool_virtual_btc?: number | null
+          pool_virtual_tokens?: number | null
+          price_btc?: number
+          price_usd?: number | null
+          token_amount?: number
+          token_id?: string
+          trade_type?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "btc_meme_trades_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "btc_meme_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       btc_token_comments: {
         Row: {
           btc_token_id: string | null
@@ -1467,6 +1675,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      btc_trading_balances: {
+        Row: {
+          balance_btc: number
+          id: string
+          total_deposited: number
+          total_withdrawn: number
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          balance_btc?: number
+          id?: string
+          total_deposited?: number
+          total_withdrawn?: number
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          balance_btc?: number
+          id?: string
+          total_deposited?: number
+          total_withdrawn?: number
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
       }
       claw_agent_bids: {
         Row: {
