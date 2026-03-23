@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useBtcWallet } from '@/hooks/useBtcWallet';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
-import { BtcWalletConnect } from '@/components/bitcoin/BtcWalletConnect';
+
 import { Button } from '@/components/ui/button';
 import { TrendingRunes } from '@/components/bitcoin/TrendingRunes';
 import { useNavigate } from 'react-router-dom';
@@ -48,20 +48,6 @@ export default function BitcoinModePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">₿</span>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Bitcoin Mode</h1>
-              <p className="text-xs text-muted-foreground">Runes Launchpad & Trading Terminal</p>
-            </div>
-          </div>
-          <BtcWalletConnect />
-        </div>
-      </div>
-
       {!isConnected ? (
         <BtcConnectWalletModal />
       ) : (
