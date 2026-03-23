@@ -781,7 +781,7 @@ twitter: @cooltoken`} />
                           <Badge className="bg-green-500/20 text-green-500 border-green-500/30">POST</Badge>
                           <code className="text-sm">/agent-claim</code>
                         </div>
-                        <p className="text-sm text-muted-foreground">Claim accumulated fees (min 0.05 SOL)</p>
+                        <p className="text-sm text-muted-foreground">Claim accumulated fees (min 0.01 BNB)</p>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
