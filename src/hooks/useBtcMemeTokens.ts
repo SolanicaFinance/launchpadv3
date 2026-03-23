@@ -16,6 +16,12 @@ export interface BtcMemeToken {
   volume_btc: number;
   status: string;
   created_at: string;
+  real_btc_reserves: number;
+  real_token_reserves: number;
+  virtual_btc_reserves: number;
+  virtual_token_reserves: number;
+  graduation_threshold_btc: number;
+  total_supply: number;
 }
 
 export function useBtcMemeTokens() {
