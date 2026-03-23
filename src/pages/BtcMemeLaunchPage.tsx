@@ -93,7 +93,7 @@ export default function BtcMemeLaunchPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`$${data.token.ticker} launched!`);
+      toast.success(`$${data.token.ticker} submitted! Awaiting Bitcoin network confirmation...`);
       navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");

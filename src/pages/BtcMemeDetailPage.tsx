@@ -232,7 +232,12 @@ export default function BtcMemeDetailPage() {
         <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h3 className="text-sm font-bold text-foreground">Trade</h3>
 
-          {!isConnected ? (
+          {token.status === "pending_genesis" ? (
+            <div className="text-center py-6 space-y-2">
+              <Loader2 className="w-6 h-6 animate-spin text-[hsl(30,100%,50%)] mx-auto" />
+              <p className="text-xs text-muted-foreground">Trading disabled until Bitcoin genesis is confirmed</p>
+            </div>
+          ) : !isConnected ? (
             <div className="text-center py-4 space-y-2">
               <p className="text-xs text-muted-foreground">Connect wallet to trade</p>
               <BtcConnectWalletModal

@@ -48,8 +48,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (token.status === "pending_genesis") {
+      return new Response(JSON.stringify({ error: "Token genesis not yet confirmed on Bitcoin network. Please wait for confirmation." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (token.status !== "active") {
-      return new Response(JSON.stringify({ error: "Token is no longer active" }), {
+      return new Response(JSON.stringify({ error: "Token is no longer active for trading" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
