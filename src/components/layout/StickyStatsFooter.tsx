@@ -247,7 +247,7 @@ export function StickyStatsFooter() {
                 transform: isMobile ? "translateX(-50%)" : undefined,
                 zIndex: 100000,
               }}>
-                <WalletTrackerPanel onRefresh={handleWtRefresh} refreshing={wtRefreshing} compact={isMobile} />
+                <WalletTrackerPanel onRefresh={handleWtRefresh} refreshing={wtRefreshing} compact={isMobile} chain={chain} />
               </div>
             )}
           </div>
