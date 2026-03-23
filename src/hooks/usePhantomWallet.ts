@@ -23,9 +23,6 @@ interface PhantomProvider {
 declare global {
   interface Window {
     solana?: PhantomProvider;
-    phantom?: {
-      solana?: PhantomProvider;
-    };
   }
 }
 
