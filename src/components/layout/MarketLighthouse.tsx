@@ -290,7 +290,7 @@ export function MarketLighthouse({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: compact ? "4px" : "6px" }}>
           {(data?.topProtocols || []).length > 0 ? (
             data!.topProtocols.map((p, i) => (
-              <IconCard key={i} icon={getProtocolIcon(p.name)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
+              <IconCard key={i} icon={getProtocolIcon(p.name, isBnb)} emoji={getProtocolEmoji(p.name, isBnb)} label={p.name} value={fUsd(p.vol24hUsd)} change={p.change} compact={compact} />
             ))
           ) : (
             <div style={{ gridColumn: "1/-1", textAlign: "center", fontSize: sz.fs.bar, color: dim, padding: "4px" }}>
