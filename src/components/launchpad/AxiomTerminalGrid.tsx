@@ -40,17 +40,20 @@ type ColumnTab = typeof COLUMN_TABS[number]["id"];
 const DEFAULT_QB_SOL = 0.5;
 const DEFAULT_QB_BNB = 0.01;
 
+function getColumnQbKey(colId: string, chain?: string) {
+  return `pulse-col-qb-${colId}${chain === 'bnb' ? '-bnb' : ''}`;
+}
+
 function getColumnQb(colId: string, chain?: string): number {
   try {
-    const suffix = chain === 'bnb' ? `-bnb` : '';
-    const v = localStorage.getItem(`pulse-col-qb-${colId}${suffix}`);
+    const v = localStorage.getItem(getColumnQbKey(colId, chain));
     if (v) { const n = parseFloat(v); if (n > 0 && isFinite(n)) return n; }
   } catch {}
   return chain === 'bnb' ? DEFAULT_QB_BNB : DEFAULT_QB_SOL;
 }
 
-function saveColumnQb(colId: string, amount: number) {
-  try { localStorage.setItem(`pulse-col-qb-${colId}`, String(amount)); } catch {}
+function saveColumnQb(colId: string, amount: number, chain?: string) {
+  try { localStorage.setItem(getColumnQbKey(colId, chain), String(amount)); } catch {}
 }
 
 function PulseColumnSkeleton() {
@@ -99,12 +102,18 @@ export function AxiomTerminalGrid({ tokens, solPrice, isLoading, codexNewPairs =
   const [qbFinal, setQbFinal] = useState(() => getColumnQb("final", chain));
   const [qbMigrated, setQbMigrated] = useState(() => getColumnQb("migrated", chain));
 
+  useEffect(() => {
+    setQbNew(getColumnQb("new", chain));
+    setQbFinal(getColumnQb("final", chain));
+    setQbMigrated(getColumnQb("migrated", chain));
+  }, [chain]);
+
   const handleQbChange = useCallback((colId: ColumnTab, amount: number) => {
-    saveColumnQb(colId, amount);
+    saveColumnQb(colId, amount, chain);
     if (colId === "new") setQbNew(amount);
     else if (colId === "final") setQbFinal(amount);
     else setQbMigrated(amount);
-  }, []);
+  }, [chain]);
 
   const qbMap: Record<ColumnTab, number> = { new: qbNew, final: qbFinal, migrated: qbMigrated };
 
