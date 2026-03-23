@@ -193,7 +193,7 @@ export default function SixtyNineListPage() {
               </div>
 
               <p className="text-[10px] text-muted-foreground mt-3 text-center">
-                Live balance of treasury wallet · Auto-distributes 69% to The List when {DISTRIBUTION_THRESHOLD_SOL} SOL is reached
+                Live balance of treasury wallet · Auto-distributes 69% to The List when {DISTRIBUTION_THRESHOLD_BNB} BNB is reached
               </p>
             </div>
 
