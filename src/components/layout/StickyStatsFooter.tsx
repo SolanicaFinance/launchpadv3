@@ -69,6 +69,7 @@ function getLaunchpadIcon(type: string): string | null {
 export function StickyStatsFooter() {
   const { chain } = useChain();
   const isBnb = chain === 'bnb';
+  const isBitcoin = chain === 'bitcoin';
   const { data: launchpadStats, refetch: refetchLaunchpads } = useLaunchpadStats();
   const isMobile = useIsMobile();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -179,6 +180,9 @@ export function StickyStatsFooter() {
 
 
   const currentPing = pings[selectedRegion] ?? 0;
+
+  // Hide footer entirely in Bitcoin mode — BTC page has its own UI
+  if (isBitcoin) return null;
 
   const footer = (
     <div
