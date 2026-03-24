@@ -48,6 +48,19 @@ Deno.serve(async (req) => {
   try {
     const { walletAddress, txid } = await req.json();
 
+    // GET request returns the platform deposit address (public info)
+    if (!walletAddress && !txid) {
+      const platformAddress = Deno.env.get("BTC_PLATFORM_DEPOSIT_ADDRESS") || Deno.env.get("BTC_PLATFORM_ADDRESS");
+      if (!platformAddress) {
+        return new Response(JSON.stringify({ error: "Platform deposit address not configured" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ depositAddress: platformAddress }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!walletAddress || !txid) {
       return new Response(JSON.stringify({ error: "walletAddress and txid are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
