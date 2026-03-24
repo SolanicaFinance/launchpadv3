@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PriceData {
   price: number;
@@ -40,13 +41,11 @@ export function BtcPriceDisplay() {
           }
         }
 
-        // Fallback: fetch from Binance
-        const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
-        if (res.ok) {
-          const data = await res.json();
+        const { data, error } = await supabase.functions.invoke("crypto-prices");
+        if (!error && data?.btc) {
           const newData = {
-            price: parseFloat(data.lastPrice),
-            change24h: parseFloat(data.priceChangePercent),
+            price: data.btc.price,
+            change24h: data.btc.change24h || 0,
           };
           setPriceData(newData);
           setIsLoading(false);
