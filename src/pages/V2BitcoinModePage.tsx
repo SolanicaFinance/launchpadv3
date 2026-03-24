@@ -8,7 +8,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useBtcMemeTokensAll, type BtcMemeToken } from '@/hooks/useBtcMemeTokens';
 import {
   Rocket, TrendingUp, Zap, Shield, Layers, Cpu, FileText,
-  ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ArrowRight
+  ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ArrowRight, Crown
 } from 'lucide-react';
 import { useChain } from '@/contexts/ChainContext';
 import { motion } from 'framer-motion';
@@ -82,7 +82,12 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-foreground truncate">{token.ticker}</span>
           <span className="text-[9px] text-muted-foreground font-mono">{timeAgo(token.created_at)}</span>
-          {!isGraduated && pct > 0 && (
+          {!isGraduated && pct >= 50 && (
+            <span className="flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded" style={{ background: "hsl(45 90% 50% / 0.15)", color: "hsl(45 90% 50%)" }}>
+              <Crown className="w-2.5 h-2.5" /> KOTH
+            </span>
+          )}
+          {!isGraduated && pct > 0 && pct < 50 && (
             <span className="text-[9px] text-muted-foreground font-mono px-1 rounded" style={{ background: "hsl(220 20% 18% / 0.8)" }}>
               {pct.toFixed(0)}%
             </span>
