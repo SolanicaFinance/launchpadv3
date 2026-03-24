@@ -20,7 +20,7 @@ export function useBtcMemeHolders(tokenId: string | undefined, totalSupply: numb
         .from("btc_meme_balances")
         .select("wallet_address, balance, total_bought, total_sold, avg_buy_price_btc")
         .eq("token_id", tokenId)
-        .gt("balance", 0)
+        .gte("balance", 1)
         .order("balance", { ascending: false })
         .limit(100);
       if (error) throw error;
