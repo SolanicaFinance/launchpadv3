@@ -20,10 +20,24 @@ function getSupabase() {
   );
 }
 
+const LAUNCH_FEE_SATS = 10_000; // 10,000 sats (~$1) to cover OP_RETURN genesis miner fee
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
+  // Preflight: return platform deposit address and launch fee
+  if (req.method === "GET") {
+    const platformAddress = Deno.env.get("BTC_PLATFORM_ADDRESS");
+    if (!platformAddress) {
+      return new Response(JSON.stringify({ error: "Platform address not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({
+      platformAddress,
+      launchFeeSats: LAUNCH_FEE_SATS,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
     const body = await req.json();
     const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps } = body;
 
