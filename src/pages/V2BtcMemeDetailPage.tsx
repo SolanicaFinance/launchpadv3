@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, Cpu, TrendingUp, Crown, Code } from "lucide-react";
-import { showTradeSuccess } from "@/stores/tradeSuccessStore";
+import { showTradeSuccess, useTradeSuccessStore } from "@/stores/tradeSuccessStore";
 import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
 import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 import { useQueryClient } from "@tanstack/react-query";
@@ -109,6 +109,26 @@ export default function V2BtcMemeDetailPage() {
     return () => { supabase.removeChannel(channel); };
   }, [tokenId, id, queryClient]);
 
+  // Poll for Solana proof signature after trade
+  const pollForSolanaProof = async (tradeId: string) => {
+    for (let i = 0; i < 15; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const { data: row } = await supabase
+        .from("btc_meme_trades")
+        .select("solana_proof_signature")
+        .eq("id", tradeId)
+        .maybeSingle();
+      if (row?.solana_proof_signature) {
+        // Update the trade success store with the proof
+        const store = useTradeSuccessStore.getState();
+        if (store.isVisible && store.data) {
+          store.show({ ...store.data, solanaProofSignature: row.solana_proof_signature });
+        }
+        return;
+      }
+    }
+  };
+
   const handleTrade = async () => {
     if (!address || !tokenId || !amount) return;
     const numAmount = parseFloat(amount);
@@ -132,6 +152,7 @@ export default function V2BtcMemeDetailPage() {
       const executionMs = Date.now() - startMs;
       const trade = data.trade;
       const tokenCA = token?.genesis_txid || id;
+      const tradeId = data.tradeId;
 
       showTradeSuccess({
         type: tradeType,
@@ -144,7 +165,16 @@ export default function V2BtcMemeDetailPage() {
         chain: "btc",
         executionMs,
         mintAddress: tokenCA,
+        pnlSol: trade.pnlBtc ?? undefined,
+        pnlPercent: trade.pnlPercent ?? undefined,
+        signature: tradeId || undefined,
       });
+
+      // Poll for Solana proof signature (async, non-blocking)
+      if (tradeId) {
+        pollForSolanaProof(tradeId);
+      }
+
       setAmount("");
     } catch (e: any) {
       toast.error(e.message || "Trade failed");
