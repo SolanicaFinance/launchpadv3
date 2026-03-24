@@ -17,7 +17,7 @@ const steps = [
     subtitle: 'Instant Execution on Saturn Layer',
     color: 'text-yellow-400',
     bg: 'bg-yellow-400/10',
-    description: 'Trades execute using x·y=k bonding curve denominated in satoshis. Virtual reserves (0.3 BTC + 1.073B tokens) provide initial liquidity. 800M tokens available for purchase. Fees deducted BEFORE entering the pool — 1% platform fee + 0-8% creator fee.',
+    description: 'Trades execute using x·y=k bonding curve denominated in satoshis. Virtual reserves (0.3 BTC + 1.073B tokens) provide initial liquidity. 800M tokens available for purchase. Fees deducted BEFORE entering the pool — configurable 0-8% creator fee.',
     technical: 'x·y=k | Δy = (y·Δx)/(x+Δx) | Graduation at real_btc_reserves ≥ 0.5 BTC',
   },
   {
@@ -134,7 +134,7 @@ export function V2SaturnProtocolExplainer() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant execution</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% platform + 0-8% creator</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 0-8% creator fee</span>
             <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Native Rune</span>
           </div>
           <a
