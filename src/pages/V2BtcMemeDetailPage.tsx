@@ -152,8 +152,10 @@ export default function V2BtcMemeDetailPage() {
     }
   };
 
-  const myTrades = trades?.filter((t: any) => t.wallet_address === address) || [];
-  const displayTrades = tradeTab === "my" ? myTrades : (trades || []);
+  // Only show verified trades (with L2 proof) to prevent fake data
+  const verifiedTrades = trades?.filter((t: any) => t.solana_proof_signature) || [];
+  const myTrades = verifiedTrades.filter((t: any) => t.wallet_address === address);
+  const displayTrades = tradeTab === "my" ? myTrades : verifiedTrades;
 
   if (isLoading) {
     return (
