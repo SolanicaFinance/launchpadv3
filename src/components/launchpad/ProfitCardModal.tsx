@@ -24,6 +24,7 @@ export interface ProfitCardData {
 
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 const SOL_LOGO = "https://assets.coingecko.com/coins/images/4128/small/solana.png";
+const BTC_LOGO = "https://assets.coingecko.com/coins/images/1/small/bitcoin.png";
 
 interface ProfitCardModalProps {
   open: boolean;
