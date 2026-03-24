@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     }
 
     const virtualBtc = INITIAL_VIRTUAL_BTC;
-    const virtualTokens = TOTAL_SUPPLY;
+    const virtualTokens = INITIAL_VIRTUAL_TOKENS;
     const priceBtc = virtualBtc / virtualTokens;
     const marketCapBtc = priceBtc * TOTAL_SUPPLY;
 
