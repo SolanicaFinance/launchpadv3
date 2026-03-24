@@ -121,7 +121,11 @@ export default function V2BtcMemeDetailPage() {
       const { data, error } = await supabase.functions.invoke("btc-meme-swap", {
         body: { tokenId, walletAddress: address, tradeType, amount: numAmount },
       });
-      if (error) throw error;
+      if (error) {
+        // Edge function errors often have the real message in data
+        const msg = data?.error || error.message || "Trade failed";
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       const executionMs = Date.now() - startMs;
