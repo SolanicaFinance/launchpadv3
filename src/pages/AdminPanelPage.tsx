@@ -289,6 +289,12 @@ export default function AdminPanelPage() {
                   <AICollabPage />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="token-send" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <TokenSendTab />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
