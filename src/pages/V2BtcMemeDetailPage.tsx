@@ -78,33 +78,33 @@ export default function V2BtcMemeDetailPage() {
 
   // Realtime subscription for trades and token updates
   useEffect(() => {
-    if (!id) return;
+    if (!tokenId) return;
 
     const channel = supabase
-      .channel(`btc-meme-${id}`)
+      .channel(`btc-meme-${tokenId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "btc_meme_trades",
-        filter: `token_id=eq.${id}`,
+        filter: `token_id=eq.${tokenId}`,
       }, () => {
-        queryClient.invalidateQueries({ queryKey: ["btc-meme-trades", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-trades", tokenId] });
         queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
         queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
-        queryClient.invalidateQueries({ queryKey: ["btc-meme-balance", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-balance", tokenId] });
       })
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "btc_meme_tokens",
-        filter: `id=eq.${id}`,
+        filter: `id=eq.${tokenId}`,
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [id, queryClient]);
+  }, [tokenId, id, queryClient]);
 
   const handleTrade = async () => {
     if (!address || !id || !amount) return;
