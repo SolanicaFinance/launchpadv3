@@ -364,15 +364,13 @@ export default function BtcMemeDetailPage() {
                       <span className="font-mono text-muted-foreground text-[10px]">{formatBtc(t.btc_amount)}</span>
 
                       {t.solana_proof_signature ? (
-                        <button
-                          onClick={() => window.open(`https://solscan.io/tx/${t.solana_proof_signature}`, "_blank")}
-                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 transition-colors cursor-pointer"
-                          title={`Solana Proof: ${t.solana_proof_signature}`}
+                        <span
+                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px]"
+                          title={`L2 Proof: ${t.solana_proof_signature}`}
                         >
                           <Shield className="w-2.5 h-2.5" />
-                          <span className="text-[9px] font-mono">SOL</span>
-                          <ExternalLink className="w-2 h-2" />
-                        </button>
+                          <span className="text-[9px] font-mono">verified</span>
+                        </span>
                       ) : (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">
                           <Shield className="w-2.5 h-2.5" />

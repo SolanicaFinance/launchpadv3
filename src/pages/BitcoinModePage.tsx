@@ -116,13 +116,13 @@ export default function BitcoinModePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
         <div className="relative px-8 py-10 text-center space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-            <Zap className="w-3 h-3" /> First-ever Hybrid BTC Settlement Protocol
+            <Zap className="w-3 h-3" /> First-ever Bitcoin-Native Meme Token Protocol
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
             Bitcoin Meme Tokens
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            The world's first instant Bitcoin meme coin protocol. Trade with <span className="text-foreground font-semibold">Solana speed</span>, 
+            The world's first instant Bitcoin meme coin protocol. Trade with <span className="text-foreground font-semibold">instant speed</span>, 
             backed by <span className="text-foreground font-semibold">Bitcoin security</span>. Every trade is provable, every balance is anchored.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">

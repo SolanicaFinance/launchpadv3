@@ -602,14 +602,14 @@ btc_tokens (
 
 | Feature | TAT | BRC-20 | Runes | pump.fun |
 |---------|-------------|--------|-------|----------|
-| Genesis chain | Bitcoin L1 | Bitcoin L1 | Bitcoin L1 | Solana |
+| Genesis chain | Bitcoin L1 | Bitcoin L1 | Bitcoin L1 | Other |
 | Trading speed | Instant (off-chain) | ~10min (on-chain) | ~10min (on-chain) | Instant (on-chain) |
 | Wallet visibility (pre-grad) | Platform only | Universal | Universal | Platform only |
-| Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal (Raydium) |
+| Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal |
 | State verifiability | Merkle anchors | Full on-chain | Full on-chain | Full on-chain |
 | Trading fees | 1% + creator tax | Miner fees | Miner fees | 1% |
 | Throughput | ~65,000 TPS | ~7 TPS | ~7 TPS | ~65,000 TPS |
-| Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Solana slot |
+| Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Platform slot |
 
 ---
 
