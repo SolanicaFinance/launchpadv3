@@ -9,7 +9,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const TOTAL_SUPPLY = 1_000_000_000;
 const INITIAL_VIRTUAL_BTC = 0.0005;
 const REAL_TOKEN_RESERVES = 800_000_000;
-const GRADUATION_THRESHOLD_BTC = 0.015;
+const GRADUATION_THRESHOLD_BTC = 0.5;
+const PLATFORM_FEE_BPS = 100; // Fixed 1% platform fee, no creator fees
 
 function getSupabase() {
   return createClient(
