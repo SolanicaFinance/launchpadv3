@@ -173,6 +173,21 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     }).eq("id", tokenId);
 
+    // If just graduated, fire the graduation handler asynchronously
+    if (isGraduated) {
+      const supabaseUrl2 = Deno.env.get("SUPABASE_URL") || "";
+      const supabaseAnonKey2 = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+      fetch(`${supabaseUrl2}/functions/v1/btc-meme-graduate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey2}`,
+        },
+        body: JSON.stringify({ tokenId }),
+      }).catch(err => console.warn("[btc-meme-swap] Graduation handler fire-and-forget error:", err));
+      console.log(`[btc-meme-swap] 🎓 Token ${token.ticker} graduated! Migration initiated.`);
+    }
+
     await supabase.from("btc_meme_trades").insert({
       token_id: tokenId, wallet_address: walletAddress, trade_type: tradeType,
       btc_amount: btcAmount, token_amount: tokenAmount, price_btc: newPrice, fee_btc: feeAmount,
