@@ -152,24 +152,70 @@ export default function V2BtcMemeLaunchPage() {
       const devBuySats = Math.round(form.initialBuyBtc * 1e8);
       const totalSats = devBuySats + launchFeeSats;
       const totalBtc = totalSats / 1e8;
+      const cleanTicker = form.ticker.toUpperCase().trim();
 
+      // Step 1: Build PSBT with OP_RETURN genesis proof embedded
       setLaunchStep('paying');
-      toast.info(`Your wallet will prompt you to send ${totalSats.toLocaleString()} sats (${totalBtc.toFixed(8)} BTC) to fund the launch.`);
+      toast.info("Building genesis transaction with your token's birth certificate...");
 
-      let paymentTxId: string;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const buildRes = await fetch(`https://${projectId}.supabase.co/functions/v1/btc-launch-psbt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'build',
+          senderAddress: address,
+          platformAddress,
+          totalSats,
+          ticker: cleanTicker,
+          name: form.name,
+          creatorWallet: address,
+        }),
+      });
+      const buildData = await buildRes.json();
+      if (buildData.error) throw new Error(buildData.error);
+      if (!buildData.psbtHex) throw new Error("Failed to build transaction");
+
+      console.log(`[Launch] PSBT built — OP_RETURN: "${buildData.payload}", fee: ${buildData.estimatedFee} sats`);
+      toast.info(`Sign the transaction in your wallet — includes OP_RETURN genesis proof: "${cleanTicker}"`);
+
+      // Step 2: Sign PSBT with wallet
+      let signedPsbtHex: string | null;
       try {
-        paymentTxId = await sendBitcoin(platformAddress, totalSats);
+        signedPsbtHex = await signPsbt(buildData.psbtHex, {
+          autoFinalized: false,
+          toSignInputs: Array.from({ length: buildData.inputCount }, (_, i) => ({
+            index: i,
+            address: address,
+          })),
+        });
       } catch (walletErr: any) {
         if (walletErr?.message?.includes('rejected') || walletErr?.message?.includes('cancel') || walletErr?.message?.includes('denied')) {
           toast.error("Transaction cancelled by user");
         } else {
-          toast.error(`Wallet error: ${walletErr?.message || 'Failed to send BTC'}`);
+          toast.error(`Wallet error: ${walletErr?.message || 'Failed to sign transaction'}`);
         }
         return;
       }
+      if (!signedPsbtHex) {
+        toast.error("Transaction signing cancelled");
+        return;
+      }
 
-      toast.success(`Payment sent! TX: ${paymentTxId.slice(0, 12)}...`);
+      // Step 3: Broadcast signed transaction
+      toast.info("Broadcasting genesis transaction to Bitcoin network...");
+      const broadcastRes = await fetch(`https://${projectId}.supabase.co/functions/v1/btc-launch-psbt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'broadcast', signedPsbtHex }),
+      });
+      const broadcastData = await broadcastRes.json();
+      if (broadcastData.error) throw new Error(broadcastData.error);
+      
+      const paymentTxId = broadcastData.txid;
+      toast.success(`Genesis TX broadcast! ${paymentTxId.slice(0, 12)}... — OP_RETURN birth certificate included ✓`);
 
+      // Step 4: Create the token with genesis-embedded payment proof
       setLaunchStep('creating');
       const { data, error } = await supabase.functions.invoke("btc-meme-create", {
         body: {
@@ -183,11 +229,12 @@ export default function V2BtcMemeLaunchPage() {
           initialBuyBtc: form.initialBuyBtc,
           creatorFeeBps: 0,
           paymentTxId,
+          genesisEmbedded: true,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`$${data.token.ticker} launched! 🚀 Awaiting Bitcoin mainnet confirmation...`);
+      toast.success(`$${data.token.ticker} launched! 🚀 Genesis proof on Bitcoin mainnet!`);
       navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");
