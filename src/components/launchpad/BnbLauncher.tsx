@@ -59,7 +59,7 @@ export function BnbLauncher() {
           ticker: formData.ticker.toUpperCase(),
           creatorWallet: address,
           initialBuyBnb: formData.initialBuyBnb !== '0' ? formData.initialBuyBnb : undefined,
-          creatorFeeBps: formData.creatorFeePct * 100, // Convert % to bps
+          creatorFeeBps: 0,
           description: formData.description || null,
           imageUrl: formData.imageUrl || null,
           websiteUrl: formData.websiteUrl || null,
