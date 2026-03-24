@@ -451,6 +451,7 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeProvider, setActiveProvider] = useState<BtcWalletProvider | null>(null);
   const [availableWallets, setAvailableWallets] = useState<BtcWalletInfo[]>([]);
+  const reconnectAttemptsRef = useRef(0);
 
   const isConnected = !!address;
 
