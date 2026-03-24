@@ -292,7 +292,7 @@ Step 5: Seed Liquidity (Rune DEX Pool)
   - Pool pairs: RUNE/BTC on Saturn's Rune DEX
   - Initial price = final bonding curve price (ensures no price gap)
   - LP tokens are burned (no one can withdraw the liquidity — locked forever)
-  - This is analogous to Meteora DAMM LP lock on Solana graduation
+  - This is analogous to how pump.fun tokens lock LP on Raydium graduation
 
 Step 6: Activate Post-Graduation Trading
   - Update token status to 'graduated'
