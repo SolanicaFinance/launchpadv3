@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useBtcWallet } from "@/hooks/useBtcWallet";
+import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

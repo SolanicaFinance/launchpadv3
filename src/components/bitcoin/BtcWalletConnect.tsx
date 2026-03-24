@@ -1,4 +1,4 @@
-import { useBtcWallet } from '@/hooks/useBtcWallet';
+import { useBtcWallet } from '@/contexts/BtcWalletContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

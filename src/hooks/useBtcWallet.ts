@@ -445,7 +445,7 @@ async function getBalance(provider: BtcWalletProvider): Promise<BtcBalance | nul
   }
 }
 
-export function useBtcWallet(): UseBtcWalletReturn {
+export function useBtcWalletInternal(): UseBtcWalletReturn {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<BtcBalance | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
