@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
 // Blockhash poller is started lazily in useFastSwap when trading is needed
 import { Toaster } from "@/components/ui/toaster";
