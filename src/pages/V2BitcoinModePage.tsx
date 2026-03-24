@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useBtcWallet } from '@/contexts/BtcWalletContext';
+import { useBtcUsdPrice } from '@/hooks/useBtcUsdPrice';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { V2SaturnProtocolExplainer } from '@/components/bitcoin/V2SaturnProtocolExplainer';
 import { BtcNetworkDashboard } from '@/components/bitcoin/BtcNetworkDashboard';
