@@ -184,6 +184,7 @@ export function StickyStatsFooter() {
   // Hide footer entirely in Bitcoin mode — BTC page has its own UI
   if (isBitcoin) return null;
 
+  const footer = (
     <div
       className="sticky-stats-footer"
       style={{
