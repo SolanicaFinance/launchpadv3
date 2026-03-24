@@ -123,6 +123,7 @@ const App = () => (
     <PrivyProviderWrapper>
       <ChainProvider>
         <EvmWalletProvider>
+          <BtcWalletProvider>
           <MatrixModeProvider>
           <TooltipProvider delayDuration={300}>
             <Toaster />
