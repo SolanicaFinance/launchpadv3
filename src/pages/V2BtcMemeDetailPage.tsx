@@ -370,7 +370,7 @@ export default function V2BtcMemeDetailPage() {
                       {t.solana_proof_signature ? (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px]">
                           <Cpu className="w-2.5 h-2.5" />
-                          Fractal
+                          verified
                         </span>
                       ) : (
                         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">

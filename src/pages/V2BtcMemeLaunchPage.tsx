@@ -189,12 +189,12 @@ export default function V2BtcMemeLaunchPage() {
         </div>
 
         <div className="bg-muted/20 rounded-lg p-3 space-y-1 text-xs">
-          <div className="flex justify-between"><span className="text-muted-foreground">Protocol</span><span className="text-foreground font-semibold">TAT Protocol — Pure Bitcoin</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Protocol</span><span className="text-foreground font-semibold">TAT Protocol — Graduated Rune Architecture</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Pool Model</span><span className="text-foreground font-semibold">Bonding Curve (x·y=k)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Total Supply</span><span className="text-foreground">1,000,000,000</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Settlement</span><span className="text-foreground">Fractal Bitcoin (~30s)</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Execution</span><span className="text-foreground">Saturn Layer + L2 Proof Receipts</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Graduation</span><span className="text-foreground">0.5 BTC → Native Rune</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform (no creator tax)</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform + 0-8% creator</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Genesis</span><span className="text-foreground">Bitcoin Mainnet OP_RETURN</span></div>
         </div>
 

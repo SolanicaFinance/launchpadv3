@@ -410,9 +410,9 @@ export default function V2BitcoinModePage() {
               style={{ animationDelay: "0.35s", animationFillMode: "both" }}>
               {[
                 { icon: Shield, label: "OP_RETURN Genesis" },
-                { icon: Zap, label: "~30s Fractal Blocks" },
+                { icon: Zap, label: "Instant Execution" },
                 { icon: Layers, label: "Merkle Anchoring" },
-                { icon: TrendingUp, label: "1% Fixed Fee" },
+                { icon: TrendingUp, label: "0.5 BTC → Rune" },
               ].map(({ icon: FIcon, label }) => (
                 <div
                   key={label}
