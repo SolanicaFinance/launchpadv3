@@ -228,6 +228,7 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
           amount: `${amount} BNB`,
           signature: result.txHash,
           tokenImageUrl,
+          chain: 'bnb',
         });
 
         // Optimistic: set balance to flip to sell mode
