@@ -369,7 +369,7 @@ export default function V2BitcoinModePage() {
               style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
               Born on <span style={{ color: "#F7931A" }} className="font-semibold">Bitcoin Mainnet</span> (OP_RETURN genesis),
               trades instantly on <span style={{ color: "#F7931A" }} className="font-semibold">Saturn Execution Layer</span>,
-              audited on <span style={{ color: "#F7931A" }} className="font-semibold">Mainnet</span> via Merkle anchors. 1% fee + 0-8% creator tax. Graduates to native Rune at 0.5 BTC.
+              audited on <span style={{ color: "#F7931A" }} className="font-semibold">Mainnet</span> via Merkle anchors. Graduates to native Rune at 0.5 BTC.
             </p>
 
             {/* CTA Buttons */}
