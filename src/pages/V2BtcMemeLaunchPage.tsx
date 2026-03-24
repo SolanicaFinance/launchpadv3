@@ -86,7 +86,7 @@ export default function V2BtcMemeLaunchPage() {
           twitterUrl: form.twitterUrl,
           creatorWallet: address,
           initialBuyBtc: form.initialBuyBtc,
-          creatorFeeBps: form.creatorFeeBps,
+          creatorFeeBps: 0,
         },
       });
       if (error) throw error;
