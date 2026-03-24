@@ -181,7 +181,9 @@ export function StickyStatsFooter() {
 
   const currentPing = pings[selectedRegion] ?? 0;
 
-  const footer = (
+  // Hide footer entirely in Bitcoin mode — BTC page has its own UI
+  if (isBitcoin) return null;
+
     <div
       className="sticky-stats-footer"
       style={{
