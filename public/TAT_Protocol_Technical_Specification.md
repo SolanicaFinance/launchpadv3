@@ -472,7 +472,7 @@ It is the ONLY pool of BTC at graduation time.
 | Name commitment | ~0.00003 BTC | Bitcoin miners | At token genesis (paid by platform treasury) |
 | Remaining pool (~99.5%) | ~0.498 BTC | Locked LP (burned, permanent) | At graduation |
 
-**Key insight**: Nobody "gets" the bonding pool BTC. It becomes permanent, unwithdrawable liquidity for the graduated Rune — exactly like how pump.fun tokens lock LP on Raydium graduation, or how Saturn's Solana tokens lock LP on Meteora DAMM.
+**Key insight**: Nobody "gets" the bonding pool BTC. It becomes permanent, unwithdrawable liquidity for the graduated Rune — exactly like how pump.fun tokens lock LP on Raydium graduation.
 
 ### 5.3 Post-Graduation Revenue
 
