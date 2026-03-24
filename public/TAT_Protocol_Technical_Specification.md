@@ -564,7 +564,7 @@ btc_meme_balances (
 btc_meme_trades (
     id, token_id, wallet_address, trade_type,
     btc_amount, token_amount, price_btc, fee_btc,
-    solana_proof_signature, solana_proof_memo,
+    l2_proof_signature, l2_proof_memo,
     bonding_progress, market_cap_btc
 )
 
