@@ -117,8 +117,8 @@ function BtcPulseTokenRow({ token, btcUsdPrice }: { token: BtcMemeToken; btcUsdP
 }
 
 /* ── Pulse Column ── */
-function BtcPulseColumn({ title, icon, tokens, loading }: {
-  title: string; icon: string; tokens: BtcMemeToken[]; loading: boolean;
+function BtcPulseColumn({ title, icon, tokens, loading, btcUsdPrice }: {
+  title: string; icon: string; tokens: BtcMemeToken[]; loading: boolean; btcUsdPrice: number;
 }) {
   return (
     <div className="flex flex-col gap-2">
