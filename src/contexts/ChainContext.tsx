@@ -88,7 +88,13 @@ export function ChainProvider({ children }: ChainProviderProps) {
   const [chain, setChainState] = useState<SupportedChain>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored && stored in CHAIN_CONFIGS) {
+      const isBitcoinRoute = window.location.pathname.startsWith('/btc');
+
+      if (isBitcoinRoute) {
+        return 'bitcoin';
+      }
+
+      if (stored && stored in CHAIN_CONFIGS && stored !== 'bitcoin') {
         return stored as SupportedChain;
       }
     }

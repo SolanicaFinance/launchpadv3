@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
 // Blockhash poller is started lazily in useFastSwap when trading is needed
 import { Toaster } from "@/components/ui/toaster";
@@ -17,7 +17,7 @@ function LaunchpadRedirect() {
   return <Navigate to={`/trade/${mintAddress}`} replace />;
 }
 import { PrivyProviderWrapper } from "@/providers/PrivyProviderWrapper";
-import { ChainProvider } from "@/contexts/ChainContext";
+import { ChainProvider, useChain } from "@/contexts/ChainContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RuntimeConfigBootstrap } from "@/components/RuntimeConfigBootstrap";
 import { EvmWalletProvider } from "@/providers/EvmWalletProvider";
@@ -91,6 +91,26 @@ const V2BtcMemeDetailPage = lazyWithRetry(() => import("./pages/V2BtcMemeDetailP
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
+function RouteChainSync() {
+  const { pathname } = useLocation();
+  const { chain, setChain } = useChain();
+
+  React.useEffect(() => {
+    const isBitcoinRoute = pathname.startsWith('/btc');
+
+    if (isBitcoinRoute && chain !== 'bitcoin') {
+      setChain('bitcoin');
+      return;
+    }
+
+    if (!isBitcoinRoute && chain === 'bitcoin') {
+      setChain('bnb');
+    }
+  }, [pathname, chain, setChain]);
+
+  return null;
+}
+
 function DomainRoot() {
   return <Suspense fallback={<RouteLoader />}><HomePage /></Suspense>;
 }
@@ -130,6 +150,7 @@ const App = () => (
             <Sonner />
             <ErrorBoundary>
               <BrowserRouter>
+              <RouteChainSync />
               <TradeSuccessPopup />
               <TokenLaunchPopup />
               
