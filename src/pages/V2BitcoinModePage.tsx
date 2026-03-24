@@ -504,6 +504,7 @@ export default function V2BitcoinModePage() {
             finalStretch={finalStretch}
             graduated={graduated}
             loading={isLoading}
+            btcUsdPrice={btcUsdPrice}
           />
         </div>
 
