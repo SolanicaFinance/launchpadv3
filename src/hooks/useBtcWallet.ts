@@ -88,6 +88,7 @@ export interface UseBtcWalletReturn {
   disconnect: () => void;
   signPsbt: (psbtHex: string, options?: any) => Promise<string | null>;
   signMessage: (msg: string) => Promise<string | null>;
+  sendBitcoin: (toAddress: string, satoshis: number) => Promise<string>;
   refreshBalance: () => Promise<void>;
 }
 
