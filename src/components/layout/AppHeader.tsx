@@ -212,17 +212,6 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
             ) : (
               /* ── Default Privy / Solana / EVM header actions ── */
               <>
-                <Link
-                  to="/rewards"
-                  className="hidden sm:flex items-center gap-1.5 h-9 px-2.5 rounded-lg transition-all duration-200
-                             text-muted-foreground/70 hover:text-primary
-                             hover:bg-primary/5 hover:scale-[1.03]
-                             border border-transparent hover:border-primary/20"
-                  title="Social Rewards"
-                >
-                  <Gift className="h-3.5 w-3.5" />
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Rewards</span>
-                </Link>
 
                 {isAuthenticated && (
                   <div className="hidden sm:block">
