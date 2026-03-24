@@ -558,8 +558,8 @@ export default function ClaudeLauncherPage() {
           telegramUrl: tokenData.telegramUrl,
           discordUrl: tokenData.discordUrl,
           phantomWallet: phantomWallet.address,
-          tradingFeeBps: phantomTradingFee + 100, // creator fee + 1% platform base
-          creatorFeeBps: phantomTradingFee, // creator portion only
+          tradingFeeBps: 100, // 1% platform fee only
+          creatorFeeBps: 0,
         },
       });
 
