@@ -14,8 +14,8 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     {
       name: 'md-charset',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
+      configureServer(server: any) {
+        server.middlewares.use((req: any, res: any, next: any) => {
           if (req.url?.endsWith('.md')) {
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
           }
