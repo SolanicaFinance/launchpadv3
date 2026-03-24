@@ -369,6 +369,11 @@ export default function V2BtcMemeDetailPage() {
           {isConnected && address && (showDeposit || btcBalance === 0) && (
             <BtcDepositPanel walletAddress={address} currentBalance={btcBalance} />
           )}
+
+          {/* Withdraw Panel */}
+          {isConnected && address && btcBalance > 0 && (
+            <BtcWithdrawPanel walletAddress={address} currentBalance={btcBalance} />
+          )}
         </div>
 
         {/* Trade History */}
