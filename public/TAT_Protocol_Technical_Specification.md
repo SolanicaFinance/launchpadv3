@@ -191,23 +191,16 @@ CREATE TABLE btc_meme_trades (
 
 ### 3.5 Layer 2 Proof Receipts (Execution Verification)
 
-Each trade generates a verifiable proof on the execution layer.
+Each trade generates a verifiable proof on the Saturn Execution Layer.
 
-**Option A — Solana SPL Memo (V1 Hybrid):**
-```
-Memo format: "TAT|<trade_id>|<token_id>|<type>|<btc_amount>|<token_amount>|<price>|<timestamp>"
-```
-- Recorded as a Solana SPL Memo transaction
-- Provides sub-second finality (~400ms)
-- Costs ~0.000005 SOL per proof
-
-**Option B — Saturn Execution Layer (V2 Pure Bitcoin):**
+**Saturn Execution Layer Proof Receipt:**
 ```
 OP_RETURN TAT_TRADE <trade_id> <token_id> <type> <amounts_hash>
 ```
-- Recorded on the Saturn Execution Layer
-- 100% Bitcoin-native execution
+- Recorded natively on Bitcoin via the Saturn Execution Layer
+- 100% Bitcoin-native execution — no sidechains, no bridges
 - Uses native UTXO model
+- Cryptographic trade verification anchored to Bitcoin
 
 ### 3.6 Merkle Anchor (Layer 3 Solvency Proof)
 
