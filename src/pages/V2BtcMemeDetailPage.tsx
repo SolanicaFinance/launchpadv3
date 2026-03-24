@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance, useBtcOnChainBalance } from "@/hooks/useBtcMemeTokens";
+import { useBtcUsdPrice } from "@/hooks/useBtcUsdPrice";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
 import { BtcMemeChart } from "@/components/bitcoin/BtcMemeChart";
@@ -61,6 +62,7 @@ export default function V2BtcMemeDetailPage() {
   const { data: myBalance } = useBtcMemeBalance(tokenId, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
   const { data: onChainBtc } = useBtcOnChainBalance(address);
+  const btcUsdPrice = useBtcUsdPrice();
   const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(tokenId, token?.total_supply, token?.creator_wallet);
 
   // Compute dev holdings %
@@ -274,7 +276,7 @@ export default function V2BtcMemeDetailPage() {
         {/* Left Column: Trade Panel + Deposit */}
         <div className="space-y-4">
           {/* Trade Panel */}
-          <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <div className="bg-card border border-border rounded-xl p-4 pb-5 space-y-3">
             <h3 className="text-sm font-bold text-foreground">Trade</h3>
             {token.status === "pending_genesis" ? (
               <div className="text-center py-6 space-y-2">
@@ -323,6 +325,11 @@ export default function V2BtcMemeDetailPage() {
                     </span>
                   </div>
                   <Input type="number" step="any" min="0" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} className="font-mono" />
+                  {amount && btcUsdPrice > 0 && tradeType === "buy" && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 text-right font-mono">
+                      ≈ ${(parseFloat(amount) * btcUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                    </p>
+                  )}
                 </div>
                 {tradeType === "buy" && (
                   <div className="grid grid-cols-4 gap-1">
@@ -338,7 +345,7 @@ export default function V2BtcMemeDetailPage() {
                     ))}
                   </div>
                 )}
-                <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
+                <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full mb-2 ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
                   {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
                 </Button>
                 {myBalance && myBalance.balance > 0 && (
