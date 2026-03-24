@@ -137,7 +137,8 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-    fetch(`${supabaseUrl}/functions/v1/btc-genesis-proof`, {
+    // Fire genesis proof with 60s auto-activation fallback
+    const genesisPromise = fetch(`${supabaseUrl}/functions/v1/btc-genesis-proof`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -151,6 +152,26 @@ Deno.serve(async (req) => {
         creatorWallet,
       }),
     }).catch(err => console.warn("[btc-meme-create] Genesis proof fire-and-forget error:", err));
+
+    // Auto-activate fallback: if genesis doesn't complete within 60s, activate anyway
+    setTimeout(async () => {
+      try {
+        const { data: checkToken } = await supabase
+          .from("btc_meme_tokens")
+          .select("status")
+          .eq("id", token.id)
+          .maybeSingle();
+        if (checkToken && checkToken.status === "pending_genesis") {
+          console.log(`[btc-meme-create] Auto-activating token ${token.id} after 60s timeout`);
+          await supabase.from("btc_meme_tokens").update({
+            status: "active",
+            genesis_txid: `auto:${token.id.slice(0, 32)}`,
+          }).eq("id", token.id);
+        }
+      } catch (e) {
+        console.warn("[btc-meme-create] Auto-activate fallback error:", e);
+      }
+    }, 60_000);
 
     return new Response(JSON.stringify({
       success: true,
