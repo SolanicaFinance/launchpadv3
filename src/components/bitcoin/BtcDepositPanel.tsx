@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowDownToLine, Wallet, Copy, Check } from "lucide-react";
+import { Loader2, ArrowDownToLine, Copy, Check, ExternalLink, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Platform deposit address — users send BTC here and then submit the txid
+const PLATFORM_DEPOSIT_ADDRESS = "bc1qsaturnplatformaddressplaceholder";
 
 interface BtcDepositPanelProps {
   walletAddress: string;
@@ -12,40 +15,40 @@ interface BtcDepositPanelProps {
 }
 
 export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPanelProps) {
-  const [amount, setAmount] = useState("");
-  const [depositing, setDepositing] = useState(false);
+  const [txid, setTxid] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleDeposit = async () => {
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      toast.error("Enter a valid BTC amount");
+  const handleVerifyDeposit = async () => {
+    const cleanTxid = txid.trim();
+    if (!/^[a-fA-F0-9]{64}$/.test(cleanTxid)) {
+      toast.error("Enter a valid 64-character transaction ID");
       return;
     }
 
-    setDepositing(true);
+    setVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("btc-meme-deposit", {
-        body: { walletAddress, amountBtc: numAmount },
+        body: { walletAddress, txid: cleanTxid },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`Deposited ${numAmount} BTC successfully`);
-      setAmount("");
+      toast.success(`Verified! ${data.credited} BTC credited to your balance`);
+      setTxid("");
       queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
     } catch (e: any) {
-      toast.error(e.message || "Deposit failed");
+      toast.error(e.message || "Verification failed");
     } finally {
-      setDepositing(false);
+      setVerifying(false);
     }
   };
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(walletAddress);
+  const copyDepositAddress = () => {
+    navigator.clipboard.writeText(PLATFORM_DEPOSIT_ADDRESS);
     setCopied(true);
-    toast.success("Wallet address copied");
+    toast.success("Deposit address copied");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -56,57 +59,67 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
         <h3 className="text-sm font-bold text-foreground">Deposit BTC</h3>
       </div>
 
+      {/* Step 1: Send BTC to platform address */}
       <div className="bg-muted/20 rounded-lg p-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground uppercase">Your Balance</span>
           <span className="text-sm font-mono font-bold text-foreground">{currentBalance.toFixed(8)} BTC</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Wallet className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] font-mono text-muted-foreground truncate flex-1">{walletAddress}</span>
-          <button onClick={copyAddress} className="text-muted-foreground hover:text-foreground transition-colors">
-            {copied ? <Check className="w-3 h-3 text-[hsl(var(--success))]" /> : <Copy className="w-3 h-3" />}
-          </button>
+
+        <div className="border-t border-border/50 pt-2">
+          <span className="text-[10px] text-muted-foreground uppercase">Step 1: Send BTC to this address</span>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[10px] font-mono text-primary truncate flex-1">{PLATFORM_DEPOSIT_ADDRESS}</span>
+            <button onClick={copyDepositAddress} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+              {copied ? <Check className="w-3 h-3 text-[hsl(var(--chart-2))]" /> : <Copy className="w-3 h-3" />}
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Step 2: Submit txid for verification */}
       <div>
-        <div className="text-[10px] text-muted-foreground mb-1">Amount (BTC)</div>
+        <div className="text-[10px] text-muted-foreground mb-1">Step 2: Paste your transaction ID</div>
         <Input
-          type="number"
-          step="any"
-          min="0"
-          placeholder="0.001"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="font-mono"
+          type="text"
+          placeholder="e.g. a1b2c3d4e5f6..."
+          value={txid}
+          onChange={(e) => setTxid(e.target.value)}
+          className="font-mono text-xs"
+          maxLength={64}
         />
-      </div>
-
-      <div className="grid grid-cols-4 gap-1">
-        {[0.0001, 0.001, 0.01, 0.1].map((v) => (
-          <button
-            key={v}
-            onClick={() => setAmount(String(v))}
-            className="text-[10px] py-1 rounded bg-muted/50 hover:bg-muted text-foreground font-mono transition-colors"
+        <p className="text-[9px] text-muted-foreground mt-1">
+          Find your txid in your wallet's transaction history or on{" "}
+          <a
+            href="https://mempool.space"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline inline-flex items-center gap-0.5"
           >
-            {v} ₿
-          </button>
-        ))}
+            mempool.space <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        </p>
       </div>
 
       <Button
-        onClick={handleDeposit}
-        disabled={depositing || !amount}
+        onClick={handleVerifyDeposit}
+        disabled={verifying || txid.trim().length !== 64}
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         size="sm"
       >
-        {depositing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Deposit BTC"}
+        {verifying ? (
+          <><Loader2 className="w-4 h-4 animate-spin mr-1.5" /> Verifying on-chain...</>
+        ) : (
+          <><ShieldCheck className="w-4 h-4 mr-1.5" /> Verify &amp; Credit Deposit</>
+        )}
       </Button>
 
-      <p className="text-[9px] text-muted-foreground text-center">
-        Send BTC from UniSat or any wallet. Balance updates instantly.
-      </p>
+      <div className="flex items-start gap-1.5 bg-muted/10 rounded p-2">
+        <ShieldCheck className="w-3 h-3 text-[hsl(var(--chart-2))] shrink-0 mt-0.5" />
+        <p className="text-[9px] text-muted-foreground leading-tight">
+          Deposits are verified on-chain via mempool.space. Requires at least 1 confirmation. Each transaction can only be claimed once.
+        </p>
+      </div>
     </div>
   );
 }

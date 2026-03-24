@@ -1335,6 +1335,39 @@ export type Database = {
         }
         Relationships: []
       }
+      btc_deposit_ledger: {
+        Row: {
+          amount_btc: number
+          block_height: number | null
+          confirmed: boolean
+          created_at: string
+          id: string
+          txid: string
+          vout: number
+          wallet_address: string
+        }
+        Insert: {
+          amount_btc: number
+          block_height?: number | null
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          txid: string
+          vout?: number
+          wallet_address: string
+        }
+        Update: {
+          amount_btc?: number
+          block_height?: number | null
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          txid?: string
+          vout?: number
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       btc_meme_balances: {
         Row: {
           avg_buy_price_btc: number | null
