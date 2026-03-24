@@ -54,7 +54,7 @@ export default function BtcMemeDetailPage() {
   const [trading, setTrading] = useState(false);
   const [tradeTab, setTradeTab] = useState<"all" | "my" | "holders">("all");
 
-  // Poll for Solana proof after trade
+  // Poll for L2 proof after trade
   const [pendingProofTradeId, setPendingProofTradeId] = useState<string | null>(null);
 
   useEffect(() => {
