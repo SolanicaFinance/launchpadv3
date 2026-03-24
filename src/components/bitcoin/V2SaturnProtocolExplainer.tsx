@@ -50,8 +50,8 @@ export function V2SaturnProtocolExplainer() {
             <Shield className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-foreground">TAT Protocol v2 — Pure Bitcoin</h3>
-            <p className="text-xs text-muted-foreground">Born on Mainnet · Trades on Fractal · Audited on Mainnet</p>
+            <h3 className="text-base font-bold text-foreground">TAT Protocol — Pure Bitcoin Edition</h3>
+            <p className="text-xs text-muted-foreground">Born on Mainnet · Trades on Fractal · Audited on Mainnet · Graduates to Rune at 0.5 BTC</p>
           </div>
         </div>
       </div>
