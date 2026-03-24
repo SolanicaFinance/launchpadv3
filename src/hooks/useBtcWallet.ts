@@ -604,6 +604,7 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
       }
 
       if (addr) {
+        reconnectAttemptsRef.current = 0;
         setAddress(addr);
         setActiveProvider(usedProvider);
         localStorage.setItem(BTC_WALLET_KEY, 'true');
