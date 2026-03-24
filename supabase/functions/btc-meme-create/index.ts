@@ -92,8 +92,7 @@ Deno.serve(async (req) => {
         .from("btc_trading_balances")
         .upsert({ wallet_address: creatorWallet, balance_btc: initialBuyBtc, total_deposited: initialBuyBtc }, { onConflict: "wallet_address" });
 
-      const totalFeeBps = 100 + feeBps;
-      const feeAmount = initialBuyBtc * (totalFeeBps / 10000);
+      const feeAmount = initialBuyBtc * (PLATFORM_FEE_BPS / 10000);
       const netBtc = initialBuyBtc - feeAmount;
       const tokensOut = (virtualTokens * netBtc) / (virtualBtc + netBtc);
       const newVirtualBtc = virtualBtc + netBtc;

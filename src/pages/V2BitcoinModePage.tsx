@@ -109,10 +109,10 @@ export default function V2BitcoinModePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
         <div className="relative px-8 py-10 text-center space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-            <Cpu className="w-3 h-3" /> First-ever Pure Bitcoin Settlement Protocol
+            <Cpu className="w-3 h-3" /> TAT Protocol — Transaction-Attributed Tokens
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            Pure Bitcoin Meme Tokens
+            TAT Protocol
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
             Born on <span className="text-foreground font-semibold">Bitcoin Mainnet</span>, 

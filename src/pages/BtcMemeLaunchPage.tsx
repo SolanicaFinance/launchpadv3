@@ -131,7 +131,7 @@ export default function BtcMemeLaunchPage() {
 
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
         <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">
-          ₿ Your token will go live once the Bitcoin genesis OP_RETURN transaction is confirmed on the network. Trading begins after confirmation.
+          ₿ Your TAT token will be genesis-stamped on Bitcoin mainnet via OP_RETURN, then trade instantly on Fractal Bitcoin (~30s blocks). Graduates to a native Rune at 0.5 BTC.
         </div>
 
         <div className="space-y-3">
