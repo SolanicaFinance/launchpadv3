@@ -132,6 +132,7 @@ export default function V2BtcMemeDetailPage() {
       const executionMs = Date.now() - startMs;
       const trade = data.trade;
       const tokenCA = token?.genesis_txid || id;
+      const tradeId = data.tradeId;
 
       showTradeSuccess({
         type: tradeType,
@@ -144,7 +145,16 @@ export default function V2BtcMemeDetailPage() {
         chain: "btc",
         executionMs,
         mintAddress: tokenCA,
+        pnlSol: trade.pnlBtc ?? undefined,
+        pnlPercent: trade.pnlPercent ?? undefined,
+        signature: tradeId || undefined,
       });
+
+      // Poll for Solana proof signature (async, non-blocking)
+      if (tradeId) {
+        pollForSolanaProof(tradeId);
+      }
+
       setAmount("");
     } catch (e: any) {
       toast.error(e.message || "Trade failed");
