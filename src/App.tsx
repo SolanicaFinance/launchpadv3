@@ -234,6 +234,7 @@ const App = () => (
             </ErrorBoundary>
           </TooltipProvider>
           </MatrixModeProvider>
+          </BtcWalletProvider>
         </EvmWalletProvider>
       </ChainProvider>
     </PrivyProviderWrapper>
