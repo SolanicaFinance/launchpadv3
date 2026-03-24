@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
