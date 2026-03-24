@@ -6,12 +6,12 @@
 
 ## 1. Executive Summary
 
-TAT (Transaction-Attributed Tokens) implements a **graduated lifecycle model** where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion. This creates a two-phase token lifecycle:
+TAT (Transaction-Attributed Tokens) implements a **graduated lifecycle model** where tokens are instantiated as custodial bonding curve instruments with cryptographic Bitcoin L1 provenance, then deterministically graduate to fully decentralized native Bitcoin Runes upon bonding curve completion. This creates a two-phase token lifecycle:
 
-- **Phase 1 (Pre-Graduation)**: Virtual bonding curve on Saturn's execution layer, with Bitcoin OP_RETURN genesis proof
-- **Phase 2 (Post-Graduation)**: Native Rune etched on Bitcoin L1, visible in all compatible wallets (UniSat, Xverse, Leather, OKX)
+- **Phase 1 (Pre-Graduation)**: Custodial CPAMM bonding curve on the Saturn Execution Layer, anchored to Bitcoin L1 via OP_RETURN genesis proof. All state transitions are verifiable against on-chain anchors. Roadmap: full migration to Fractal Bitcoin for decentralized bonding curve execution.
+- **Phase 2 (Post-Graduation)**: Permissionless native Rune etched on Bitcoin L1 — fully self-custodial, visible in all compatible wallets (UniSat, Xverse, Leather, OKX), tradable on any Rune DEX.
 
-This is architecturally analogous to pump.fun → Raydium graduation, but for Bitcoin-native assets.
+Phase 1 operates as a validated custodial execution environment with deterministic state proofs, designed for production hardening before full decentralization on Fractal Bitcoin's UTXO-native smart contract layer.
 
 ---
 
