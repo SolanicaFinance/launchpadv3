@@ -184,6 +184,7 @@ Deno.serve(async (req) => {
         platform_fee_bps: PLATFORM_FEE_BPS,
         creator_fee_bps: 0,
         status: "pending_genesis",
+        payment_tx_id: paymentTxId,
       })
       .select("id, ticker, price_btc, market_cap_btc")
       .single();
