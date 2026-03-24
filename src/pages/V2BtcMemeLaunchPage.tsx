@@ -220,7 +220,22 @@ export default function V2BtcMemeLaunchPage() {
           <div>
             <Label htmlFor="devbuy">Initial Dev Buy (BTC)</Label>
             <Input id="devbuy" type="number" step="0.00001" min="0" value={form.initialBuyBtc} onChange={(e) => setForm({ ...form, initialBuyBtc: parseFloat(e.target.value) || 0 })} />
-            <p className="text-[10px] text-muted-foreground mt-1">Optional initial buy to seed the bonding curve</p>
+            {(() => {
+              const { tokens, pctSupply } = calcDevBuyTokens(form.initialBuyBtc);
+              const usdCost = btcPrice > 0 ? form.initialBuyBtc * btcPrice : 0;
+              return (
+                <div className="mt-1.5 space-y-0.5">
+                  <p className="text-[10px] text-muted-foreground">
+                    {formatSats(form.initialBuyBtc)}{usdCost > 0 && <span className="text-foreground/70 font-medium"> ≈ {formatUsd(usdCost)}</span>}
+                  </p>
+                  {tokens > 0 && (
+                    <p className="text-[10px] text-primary font-medium">
+                      You'll receive ~{formatTokens(tokens)} tokens ({pctSupply.toFixed(2)}% of supply)
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -229,7 +244,10 @@ export default function V2BtcMemeLaunchPage() {
           <div className="flex justify-between"><span className="text-muted-foreground">Pool Model</span><span className="text-foreground font-semibold">Bonding Curve (x·y=k)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Total Supply</span><span className="text-foreground">1,000,000,000</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Execution</span><span className="text-foreground">Saturn Layer + L2 Proof Receipts</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Graduation</span><span className="text-foreground">0.5 BTC → Native Rune</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Graduation</span>
+            <span className="text-foreground">0.5 BTC{btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd(0.5 * btcPrice)})</span>} → Native Rune</span>
+          </div>
           <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Genesis</span><span className="text-foreground">Bitcoin Mainnet OP_RETURN</span></div>
         </div>
