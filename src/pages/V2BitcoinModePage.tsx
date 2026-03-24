@@ -36,7 +36,7 @@ function timeAgo(d: string) {
 }
 
 /* ── Premium BTC Token Card ── */
-function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
+function BtcPulseTokenRow({ token, btcUsdPrice }: { token: BtcMemeToken; btcUsdPrice: number }) {
   const navigate = useNavigate();
   const pct = Math.min(token.bonding_progress, 100);
   const isGraduated = token.status === 'graduated';
