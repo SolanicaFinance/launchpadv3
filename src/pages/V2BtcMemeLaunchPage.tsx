@@ -45,7 +45,7 @@ function formatTokens(n: number) {
 }
 
 export default function V2BtcMemeLaunchPage() {
-  const { isConnected, address, sendBitcoin } = useBtcWallet();
+  const { isConnected, address, sendBitcoin, signPsbt } = useBtcWallet();
   const navigate = useNavigate();
   const btcPrice = useBtcUsdPrice();
   const [submitting, setSubmitting] = useState(false);
