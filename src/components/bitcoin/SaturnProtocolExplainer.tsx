@@ -104,7 +104,7 @@ export function SaturnProtocolExplainer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> 10min anchoring</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% platform fee</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 0-8% creator fee</span>
             <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> &lt;100ms fills</span>
           </div>
         </div>
