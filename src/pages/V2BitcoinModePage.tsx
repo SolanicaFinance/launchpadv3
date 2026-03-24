@@ -407,7 +407,7 @@ export default function V2BitcoinModePage() {
                 href="/TAT_Protocol_Technical_Specification.md"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm min-h-[48px] 
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs min-h-[36px] 
                            border border-primary/30 hover:border-primary/60 bg-card/20 backdrop-blur-sm
                            text-foreground hover:scale-[1.05] transition-all duration-300"
                 style={{ boxShadow: "0 4px 16px hsl(0 0% 0% / 0.3)" }}
