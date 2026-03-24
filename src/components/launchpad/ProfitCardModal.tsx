@@ -24,6 +24,7 @@ export interface ProfitCardData {
 
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 const SOL_LOGO = "https://assets.coingecko.com/coins/images/4128/small/solana.png";
+const BTC_LOGO = "https://assets.coingecko.com/coins/images/1/small/bitcoin.png";
 
 interface ProfitCardModalProps {
   open: boolean;
@@ -41,7 +42,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   if (!data) return null;
 
   const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL';
-  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : SOL_LOGO;
+  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : data.chain === 'btc' ? BTC_LOGO : SOL_LOGO;
   const walletAddress = data.chain === 'bnb' ? evmAddress : solanaAddress;
 
   const isBuy = data.action === "buy";
