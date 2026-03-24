@@ -253,17 +253,7 @@ export default function V2BtcMemeDetailPage() {
       </div>
 
       {/* Price Chart */}
-      {trades && trades.length >= 2 && (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">Price Chart</h3>
-          </div>
-          <div className="h-48">
-            <BtcMemePriceChart trades={trades} currentPrice={token.price_btc} />
-          </div>
-        </div>
-      )}
+      <BtcMemeChart trades={trades || []} currentPrice={token.price_btc} />
 
       {/* Bonding Progress */}
       <div className="bg-card border border-border rounded-xl p-4">
