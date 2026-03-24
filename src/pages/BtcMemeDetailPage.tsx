@@ -328,7 +328,7 @@ export default function BtcMemeDetailPage() {
             {tradeTab !== "holders" && (
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <Shield className="w-3 h-3 text-purple-400/60" />
-                <span>Solana Proof</span>
+                <span>L2 Proof</span>
               </div>
             )}
           </div>
