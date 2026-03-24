@@ -1,5 +1,5 @@
 import { BtcMemeHolder } from "@/hooks/useBtcMemeHolders";
-import { Loader2, Crown, Code } from "lucide-react";
+import { Loader2, Crown, Code, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
@@ -85,6 +85,15 @@ export function BtcMemeHoldersTable({ holders, isLoading, ticker, currentPriceBt
                   <div className="flex items-center gap-2">
                     <div className="h-5 w-5 rounded-full shrink-0" style={{ background: addrGradient(h.wallet_address) }} />
                     <span className="text-foreground/70 text-[11px]">{truncAddr(h.wallet_address)}</span>
+                    <a
+                      href={`https://mempool.space/address/${h.wallet_address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground/40 hover:text-primary transition-colors"
+                      title="View on mempool.space"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                     {h.is_creator && (
                       <span className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20">
                         <Code className="w-2.5 h-2.5" /> DEV
