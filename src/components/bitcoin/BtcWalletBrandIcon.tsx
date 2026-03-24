@@ -1,4 +1,9 @@
 import { BtcWalletProvider } from '@/hooks/useBtcWallet';
+import unisatLogo from '@/assets/wallets/unisat.png';
+import xverseLogo from '@/assets/wallets/xverse.png';
+import leatherLogo from '@/assets/wallets/leather.png';
+import okxLogo from '@/assets/wallets/okx.png';
+import phantomLogo from '@/assets/wallets/phantom.png';
 
 interface BtcWalletBrandIconProps {
   walletId: BtcWalletProvider | string;
@@ -6,6 +11,14 @@ interface BtcWalletBrandIconProps {
   size?: 'sm' | 'md' | 'lg';
   muted?: boolean;
 }
+
+const LOGOS: Record<string, string> = {
+  unisat: unisatLogo,
+  xverse: xverseLogo,
+  leather: leatherLogo,
+  okx: okxLogo,
+  phantom: phantomLogo,
+};
 
 const LABELS: Record<string, string> = {
   unisat: 'U',
@@ -16,46 +29,42 @@ const LABELS: Record<string, string> = {
   unknown: 'BTC',
 };
 
-const TONES: Record<string, string> = {
-  unisat: 'border-primary/25 bg-primary/15 text-primary',
-  xverse: 'border-accent/30 bg-accent/20 text-foreground',
-  leather: 'border-border bg-secondary text-foreground',
-  okx: 'border-foreground/10 bg-foreground text-background',
-  phantom: 'border-primary/20 bg-primary text-primary-foreground',
-  unknown: 'border-border bg-muted text-muted-foreground',
-};
-
-const SIZES: Record<NonNullable<BtcWalletBrandIconProps['size']>, string> = {
-  sm: 'h-9 w-9 text-xs',
-  md: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base',
-};
-
-const TYPE_STYLES: Record<string, string> = {
-  unisat: 'font-black',
-  xverse: 'font-black',
-  leather: 'font-serif font-bold',
-  okx: 'text-[9px] font-black tracking-[0.18em]',
-  phantom: 'font-black',
-  unknown: 'text-[10px] font-bold tracking-[0.14em]',
+const SIZES: Record<NonNullable<BtcWalletBrandIconProps['size']>, { container: string; img: number }> = {
+  sm: { container: 'h-9 w-9', img: 24 },
+  md: { container: 'h-10 w-10', img: 28 },
+  lg: { container: 'h-12 w-12', img: 32 },
 };
 
 export function BtcWalletBrandIcon({ walletId, name, size = 'md', muted = false }: BtcWalletBrandIconProps) {
-  const tone = TONES[walletId] || TONES.unknown;
-  const label = LABELS[walletId] || LABELS.unknown;
-  const typeStyle = TYPE_STYLES[walletId] || TYPE_STYLES.unknown;
+  const logo = LOGOS[walletId];
+  const sizeConfig = SIZES[size];
 
+  if (logo) {
+    return (
+      <div
+        aria-label={name || walletId}
+        className={`flex items-center justify-center rounded-xl bg-background border border-border shadow-sm overflow-hidden ${sizeConfig.container} ${muted ? 'opacity-60' : ''}`}
+      >
+        <img
+          src={logo}
+          alt={name || walletId}
+          width={sizeConfig.img}
+          height={sizeConfig.img}
+          className="object-contain"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  // Fallback letter icon
+  const label = LABELS[walletId] || LABELS.unknown;
   return (
     <div
       aria-label={name || walletId}
-      className={[
-        'flex items-center justify-center rounded-xl border shadow-sm transition-opacity',
-        SIZES[size],
-        tone,
-        muted ? 'opacity-75' : 'opacity-100',
-      ].join(' ')}
+      className={`flex items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground shadow-sm text-sm font-bold ${sizeConfig.container} ${muted ? 'opacity-60' : ''}`}
     >
-      <span className={['leading-none', typeStyle].join(' ')}>{label}</span>
+      {label}
     </div>
   );
 }

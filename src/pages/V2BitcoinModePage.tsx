@@ -462,8 +462,8 @@ export default function V2BitcoinModePage() {
               ))}
             </div>
 
-            {/* Trust badge */}
-            <div className="flex items-center justify-center mt-3 animate-fade-in"
+            {/* Trust badge + BitcoinTalk */}
+            <div className="flex items-center justify-center gap-3 mt-3 animate-fade-in"
               style={{ animationDelay: "0.45s", animationFillMode: "both" }}>
               <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-card/10 backdrop-blur-md border border-border/10 text-[9px] text-muted-foreground/40">
                 <span className="flex items-center gap-1">
@@ -473,6 +473,16 @@ export default function V2BitcoinModePage() {
                 <span className="w-px h-3 bg-border/20" />
                 <span className="font-mono">{fees ? `${fees.halfHourFee} sat/vB` : '—'}</span>
               </div>
+              <a
+                href="https://bitcointalk.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/10 backdrop-blur-md border border-border/10 text-[9px] text-muted-foreground/40 hover:text-primary hover:border-primary/30 transition-colors"
+                title="Read the TAT Protocol announcement on BitcoinTalk"
+              >
+                <svg viewBox="0 0 24 24" className="w-3 h-3" fill="currentColor"><path d="M12.3 2C6.6 2 2 6.6 2 12.3s4.6 10.3 10.3 10.3 10.3-4.6 10.3-10.3S18 2 12.3 2zm2.5 14.7h-1.8v-1.5h-1v1.5H10v-1.5H9v1.5H7.3v-1.3h.7v-6.8h-.7V7.3H9v1.5h1V7.3h2v1.5h1V7.3h1.8c1.7 0 3 1.3 3 3v3.4c0 1.7-1.3 3-3 3zm0-7.4h-.8v6.1h.8c.9 0 1.7-.7 1.7-1.7v-2.7c0-1-.8-1.7-1.7-1.7z"/></svg>
+                BitcoinTalk
+              </a>
             </div>
           </div>
         </section>
