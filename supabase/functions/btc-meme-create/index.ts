@@ -162,6 +162,10 @@ Deno.serve(async (req) => {
     const priceBtc = virtualBtc / virtualTokens;
     const marketCapBtc = priceBtc * TOTAL_SUPPLY;
 
+    // If genesis is embedded in the payment PSBT (OP_RETURN), token is immediately active
+    const tokenStatus = genesisEmbedded ? "active" : "pending_genesis";
+    const genesisTxid = genesisEmbedded ? paymentTxId : null;
+
     const { data: token, error: tokenErr } = await supabase
       .from("btc_meme_tokens")
       .insert({
@@ -183,8 +187,9 @@ Deno.serve(async (req) => {
         bonding_progress: 0,
         platform_fee_bps: PLATFORM_FEE_BPS,
         creator_fee_bps: 0,
-        status: "pending_genesis",
+        status: tokenStatus,
         payment_tx_id: paymentTxId,
+        genesis_txid: genesisTxid,
       })
       .select("id, ticker, price_btc, market_cap_btc")
       .single();
