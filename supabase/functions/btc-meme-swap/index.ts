@@ -54,8 +54,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (token.status === "graduated" || token.status === "migrating" || token.status === "migration_blocked") {
+      return new Response(JSON.stringify({ error: "Token has graduated and is migrating to a native Bitcoin Rune. Trading is closed." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (token.status !== "active") {
-      return new Response(JSON.stringify({ error: "Token is no longer active for trading" }), {
+      return new Response(JSON.stringify({ error: "Token is not active for trading" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -166,6 +172,21 @@ Deno.serve(async (req) => {
       graduated_at: isGraduated ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     }).eq("id", tokenId);
+
+    // If just graduated, fire the graduation handler asynchronously
+    if (isGraduated) {
+      const supabaseUrl2 = Deno.env.get("SUPABASE_URL") || "";
+      const supabaseAnonKey2 = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+      fetch(`${supabaseUrl2}/functions/v1/btc-meme-graduate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey2}`,
+        },
+        body: JSON.stringify({ tokenId }),
+      }).catch(err => console.warn("[btc-meme-swap] Graduation handler fire-and-forget error:", err));
+      console.log(`[btc-meme-swap] 🎓 Token ${token.ticker} graduated! Migration initiated.`);
+    }
 
     await supabase.from("btc_meme_trades").insert({
       token_id: tokenId, wallet_address: walletAddress, trade_type: tradeType,
