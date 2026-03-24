@@ -6,18 +6,6 @@ const corsHeaders = {
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-/**
- * btc-meme-deposit: Verifies an on-chain BTC transaction via mempool.space
- * and credits the sender's trading balance.
- *
- * Security layers:
- * 1. Requires a real txid — verified against mempool.space API
- * 2. Checks that the tx actually pays to the PLATFORM deposit address
- * 3. Idempotent via btc_deposit_ledger UNIQUE(txid, vout) constraint
- * 4. Rate-limited: max 5 deposits per hour per wallet
- * 5. Only credits confirmed outputs (≥1 confirmation)
- */
-
 const MEMPOOL_API = "https://mempool.space/api";
 
 function getSupabase() {
@@ -29,7 +17,7 @@ function getSupabase() {
 
 interface MempoolTxOutput {
   scriptpubkey_address?: string;
-  value: number; // satoshis
+  value: number;
 }
 
 interface MempoolTx {
@@ -46,11 +34,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { walletAddress, txid } = await req.json();
+    const body = await req.json();
+    const { walletAddress, txid, action } = body;
 
-    // GET request returns the platform deposit address (public info)
-    if (!walletAddress && !txid) {
-      const platformAddress = Deno.env.get("BTC_PLATFORM_DEPOSIT_ADDRESS") || Deno.env.get("BTC_PLATFORM_ADDRESS");
+    const platformAddress = Deno.env.get("BTC_PLATFORM_DEPOSIT_ADDRESS") || Deno.env.get("BTC_PLATFORM_ADDRESS");
+
+    // --- Action: get deposit address ---
+    if (!walletAddress && !txid && !action) {
       if (!platformAddress) {
         return new Response(JSON.stringify({ error: "Platform deposit address not configured" }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -61,22 +51,129 @@ Deno.serve(async (req) => {
       });
     }
 
+    // --- Action: scan-deposits — auto-detect incoming txs from connected wallet ---
+    if (action === "scan-deposits") {
+      if (!walletAddress || !platformAddress) {
+        return new Response(JSON.stringify({ error: "walletAddress required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const supabase = getSupabase();
+
+      // Fetch recent txs to the platform deposit address
+      const txsRes = await fetch(`${MEMPOOL_API}/address/${platformAddress}/txs`);
+      if (!txsRes.ok) throw new Error(`mempool.space address txs returned ${txsRes.status}`);
+      const allTxs: MempoolTx[] = await txsRes.json();
+
+      // Filter: only txs where at least one input is from the connected wallet
+      const userDeposits: {
+        txid: string;
+        amountBtc: number;
+        confirmed: boolean;
+        blockHeight: number | null;
+        credited: boolean;
+      }[] = [];
+
+      for (const tx of allTxs) {
+        const senderAddresses = tx.vin.map(v => v.prevout?.scriptpubkey_address).filter(Boolean);
+        if (!senderAddresses.includes(walletAddress)) continue;
+
+        // Sum outputs going to platform address
+        let totalSats = 0;
+        const vouts: number[] = [];
+        for (let i = 0; i < tx.vout.length; i++) {
+          if (tx.vout[i].scriptpubkey_address === platformAddress) {
+            totalSats += tx.vout[i].value;
+            vouts.push(i);
+          }
+        }
+        if (totalSats === 0) continue;
+
+        // Check if already credited in ledger
+        const { data: ledgerRows } = await supabase
+          .from("btc_deposit_ledger")
+          .select("vout")
+          .eq("txid", tx.txid)
+          .eq("wallet_address", walletAddress);
+
+        const creditedVouts = new Set((ledgerRows || []).map(r => r.vout));
+        const allCredited = vouts.every(v => creditedVouts.has(v));
+
+        // Auto-credit if confirmed and not yet credited
+        if (tx.status.confirmed && !allCredited) {
+          let credited = 0;
+          for (const voutIdx of vouts) {
+            if (creditedVouts.has(voutIdx)) continue;
+            const amountBtc = tx.vout[voutIdx].value / 1e8;
+
+            const { error: insertErr } = await supabase.from("btc_deposit_ledger").insert({
+              wallet_address: walletAddress,
+              amount_btc: amountBtc,
+              txid: tx.txid,
+              vout: voutIdx,
+              confirmed: true,
+              block_height: tx.status.block_height || null,
+            });
+
+            if (!insertErr) {
+              credited += amountBtc;
+            }
+          }
+
+          if (credited > 0) {
+            // Credit trading balance
+            const { data: existing } = await supabase
+              .from("btc_trading_balances")
+              .select("balance_btc, total_deposited")
+              .eq("wallet_address", walletAddress)
+              .maybeSingle();
+
+            if (existing) {
+              await supabase.from("btc_trading_balances").update({
+                balance_btc: existing.balance_btc + credited,
+                total_deposited: (existing.total_deposited || 0) + credited,
+                updated_at: new Date().toISOString(),
+              }).eq("wallet_address", walletAddress);
+            } else {
+              await supabase.from("btc_trading_balances").insert({
+                wallet_address: walletAddress,
+                balance_btc: credited,
+                total_deposited: credited,
+              });
+            }
+            console.log(`[btc-meme-deposit] ✅ Auto-credited ${credited} BTC from ${walletAddress} (tx: ${tx.txid})`);
+          }
+        }
+
+        userDeposits.push({
+          txid: tx.txid,
+          amountBtc: totalSats / 1e8,
+          confirmed: tx.status.confirmed,
+          blockHeight: tx.status.block_height || null,
+          credited: allCredited || tx.status.confirmed, // will be credited after this call
+        });
+      }
+
+      return new Response(JSON.stringify({ deposits: userDeposits, depositAddress: platformAddress }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- Legacy: manual txid verification (kept for backwards compat) ---
     if (!walletAddress || !txid) {
       return new Response(JSON.stringify({ error: "walletAddress and txid are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Validate txid format (64 hex chars)
     if (!/^[a-fA-F0-9]{64}$/.test(txid)) {
       return new Response(JSON.stringify({ error: "Invalid transaction ID format" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const platformAddress = Deno.env.get("BTC_PLATFORM_DEPOSIT_ADDRESS");
     if (!platformAddress) {
-      console.error("[btc-meme-deposit] BTC_PLATFORM_DEPOSIT_ADDRESS not configured");
       return new Response(JSON.stringify({ error: "Platform deposit address not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -84,7 +181,7 @@ Deno.serve(async (req) => {
 
     const supabase = getSupabase();
 
-    // --- Rate limit: max 5 deposits per hour per wallet ---
+    // Rate limit
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count: recentCount } = await supabase
       .from("btc_deposit_ledger")
@@ -93,62 +190,51 @@ Deno.serve(async (req) => {
       .gte("created_at", oneHourAgo);
 
     if ((recentCount || 0) >= 5) {
-      return new Response(JSON.stringify({ error: "Rate limit: max 5 deposits per hour. Try again later." }), {
+      return new Response(JSON.stringify({ error: "Rate limit: max 5 deposits per hour." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Fetch tx from mempool.space ---
     const txRes = await fetch(`${MEMPOOL_API}/tx/${txid}`);
     if (!txRes.ok) {
-      const statusCode = txRes.status;
-      if (statusCode === 404) {
-        return new Response(JSON.stringify({ error: "Transaction not found on the Bitcoin network. It may not have propagated yet — try again in a minute." }), {
+      if (txRes.status === 404) {
+        return new Response(JSON.stringify({ error: "Transaction not found. Try again in a minute." }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`mempool.space returned ${statusCode}`);
+      throw new Error(`mempool.space returned ${txRes.status}`);
     }
 
     const txData: MempoolTx = await txRes.json();
 
-    // --- Verify confirmation (at least 1 conf) ---
     if (!txData.status.confirmed) {
-      return new Response(JSON.stringify({ error: "Transaction is unconfirmed. Please wait for at least 1 confirmation and try again." }), {
+      return new Response(JSON.stringify({ error: "Transaction unconfirmed. Wait for ≥1 confirmation." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Verify sender: at least one input must come from walletAddress ---
-    const senderAddresses = txData.vin
-      .map(v => v.prevout?.scriptpubkey_address)
-      .filter(Boolean);
-    
+    const senderAddresses = txData.vin.map(v => v.prevout?.scriptpubkey_address).filter(Boolean);
     if (!senderAddresses.includes(walletAddress)) {
-      return new Response(JSON.stringify({ error: "Transaction was not sent from your wallet address. The sender does not match." }), {
+      return new Response(JSON.stringify({ error: "Transaction not sent from your wallet." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Find outputs paying to platform address ---
     const platformOutputs = txData.vout
       .map((out, index) => ({ ...out, vout: index }))
       .filter(out => out.scriptpubkey_address === platformAddress);
 
     if (platformOutputs.length === 0) {
-      return new Response(JSON.stringify({ error: "Transaction does not pay to the platform deposit address. Please send BTC to the correct address." }), {
+      return new Response(JSON.stringify({ error: "Transaction does not pay to the deposit address." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Credit each qualifying output (idempotent via UNIQUE constraint) ---
     let totalCredited = 0;
     let alreadyClaimed = 0;
 
     for (const out of platformOutputs) {
       const amountBtc = out.value / 1e8;
-
-      // Try to insert into ledger — will fail silently if already claimed
       const { error: insertErr } = await supabase.from("btc_deposit_ledger").insert({
         wallet_address: walletAddress,
         amount_btc: amountBtc,
@@ -159,30 +245,24 @@ Deno.serve(async (req) => {
       });
 
       if (insertErr) {
-        // UNIQUE violation = already credited
-        if (insertErr.code === "23505") {
-          alreadyClaimed++;
-          continue;
-        }
+        if (insertErr.code === "23505") { alreadyClaimed++; continue; }
         console.error("[btc-meme-deposit] Ledger insert error:", insertErr);
         continue;
       }
-
       totalCredited += amountBtc;
     }
 
     if (totalCredited === 0) {
       if (alreadyClaimed > 0) {
-        return new Response(JSON.stringify({ error: "This transaction has already been credited to your account." }), {
+        return new Response(JSON.stringify({ error: "Already credited." }), {
           status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "No creditable outputs found in this transaction." }), {
+      return new Response(JSON.stringify({ error: "No creditable outputs." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // --- Atomically credit trading balance ---
     const { data: existing } = await supabase
       .from("btc_trading_balances")
       .select("balance_btc, total_deposited")
@@ -204,16 +284,11 @@ Deno.serve(async (req) => {
     }
 
     const newBalance = (existing?.balance_btc || 0) + totalCredited;
-
     console.log(`[btc-meme-deposit] ✅ Verified deposit: ${totalCredited} BTC from ${walletAddress} (tx: ${txid})`);
 
     return new Response(JSON.stringify({
-      success: true,
-      credited: totalCredited,
-      balance: newBalance,
-      txid,
-      blockHeight: txData.status.block_height,
-      alreadyClaimed,
+      success: true, credited: totalCredited, balance: newBalance,
+      txid, blockHeight: txData.status.block_height, alreadyClaimed,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("[btc-meme-deposit] Error:", error);
