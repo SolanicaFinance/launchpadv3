@@ -122,8 +122,9 @@ export default function BitcoinModePage() {
             Bitcoin Meme Tokens
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            The world's first instant Bitcoin meme coin protocol. Trade with <span className="text-foreground font-semibold">instant speed</span>, 
-            backed by <span className="text-foreground font-semibold">Bitcoin security</span>. Every trade is provable, every balance is anchored.
+            Born on <span className="text-foreground font-semibold">Saturn.Trade / Bitcoin Mainnet</span> (OP_RETURN genesis),
+            trades instantly on <span className="text-foreground font-semibold">Saturn Execution Layer</span>,
+            audited on <span className="text-foreground font-semibold">Mainnet</span> via Merkle anchors. Graduates to native Rune at 0.5 BTC.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             {isConnected ? (
