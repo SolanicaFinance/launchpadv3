@@ -210,9 +210,9 @@ function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
 
       {/* Desktop: 3-column grid */}
       <div className="hidden md:grid md:grid-cols-3 gap-4">
-        <BtcPulseColumn title="New Pairs" icon="⚡" tokens={newPairs} loading={loading} />
-        <BtcPulseColumn title="Final Stretch" icon="🔥" tokens={finalStretch} loading={loading} />
-        <BtcPulseColumn title="Graduated" icon="🚀" tokens={graduated} loading={loading} />
+        <BtcPulseColumn title="New Pairs" icon="⚡" tokens={newPairs} loading={loading} btcUsdPrice={btcUsdPrice} />
+        <BtcPulseColumn title="Final Stretch" icon="🔥" tokens={finalStretch} loading={loading} btcUsdPrice={btcUsdPrice} />
+        <BtcPulseColumn title="Graduated" icon="🚀" tokens={graduated} loading={loading} btcUsdPrice={btcUsdPrice} />
       </div>
 
       {/* Mobile: horizontal scroll */}
