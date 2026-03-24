@@ -402,22 +402,19 @@ DEX Fee = trade_amount * 50bps (0.5%)
 ```
 FLOW 1: TRADING FEES (extracted per-trade, never enter the bonding pool)
 ═══════════════════════════════════════════════════════════════════════
-Every buy/sell on the bonding curve deducts fees BEFORE adding BTC to the pool.
+Every buy/sell on the bonding curve deducts the 1% platform fee BEFORE adding BTC to the pool.
 
-Example: User buys with 0.01 BTC, creator fee = 2%:
-  Total fee = 1% platform + 2% creator = 3%
-  Fee deducted: 0.0003 BTC
-  BTC entering pool: 0.0097 BTC
+Example: User buys with 0.01 BTC:
+  Fee deducted: 0.0001 BTC (1%)
+  BTC entering pool: 0.0099 BTC
 
 Fee destination (immediate, per-trade):
 ├── Platform fee (1%)  → Saturn platform wallet (BTC_PLATFORM_ADDRESS)
-├── Creator fee (0-8%) → Creator's wallet (stored in btc_meme_tokens.creator_wallet)
 └── These fees are GONE from the system — they never touch real_btc_reserves
 
 Accumulated over the token's lifetime:
-  If 0.5 BTC enters the pool, total trading volume was ~0.515 BTC (at 3% avg fee)
-  Platform earned: ~0.00515 BTC in platform fees
-  Creator earned:  ~0.0103 BTC in creator fees
+  If 0.5 BTC enters the pool, total trading volume was ~0.505 BTC (at 1% fee)
+  Platform earned: ~0.005 BTC in platform fees
 
 
 FLOW 2: BONDING POOL (real_btc_reserves) — the graduation pot
