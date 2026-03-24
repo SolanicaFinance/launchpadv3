@@ -140,9 +140,37 @@ export default function V2BtcMemeLaunchPage() {
       toast.error("Ticker too long (max 28 characters for Rune names)");
       return;
     }
+    if (!platformAddress) {
+      toast.error("Platform not ready. Please wait and try again.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const imageUrl = await uploadImage();
+
+      const devBuySats = Math.round(form.initialBuyBtc * 1e8);
+      const totalSats = devBuySats + launchFeeSats;
+      const totalBtc = totalSats / 1e8;
+
+      setLaunchStep('paying');
+      toast.info(`Your wallet will prompt you to send ${totalSats.toLocaleString()} sats (${totalBtc.toFixed(8)} BTC) to fund the launch.`);
+
+      let paymentTxId: string;
+      try {
+        paymentTxId = await sendBitcoin(platformAddress, totalSats);
+      } catch (walletErr: any) {
+        if (walletErr?.message?.includes('rejected') || walletErr?.message?.includes('cancel') || walletErr?.message?.includes('denied')) {
+          toast.error("Transaction cancelled by user");
+        } else {
+          toast.error(`Wallet error: ${walletErr?.message || 'Failed to send BTC'}`);
+        }
+        return;
+      }
+
+      toast.success(`Payment sent! TX: ${paymentTxId.slice(0, 12)}...`);
+
+      setLaunchStep('creating');
       const { data, error } = await supabase.functions.invoke("btc-meme-create", {
         body: {
           name: form.name,
@@ -154,16 +182,18 @@ export default function V2BtcMemeLaunchPage() {
           creatorWallet: address,
           initialBuyBtc: form.initialBuyBtc,
           creatorFeeBps: 0,
+          paymentTxId,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`$${data.token.ticker} submitted! Awaiting Bitcoin mainnet confirmation...`);
+      toast.success(`$${data.token.ticker} launched! 🚀 Awaiting Bitcoin mainnet confirmation...`);
       navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");
     } finally {
       setSubmitting(false);
+      setLaunchStep('idle');
     }
   };
 
