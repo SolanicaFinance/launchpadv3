@@ -110,7 +110,7 @@ export default function V2BtcMemeDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Token not found</p>
-        <Button variant="outline" onClick={() => navigate("/v2btc")} className="mt-4">Back to V2 BTC</Button>
+        <Button variant="outline" onClick={() => navigate("/btc")} className="mt-4">Back to BTC</Button>
       </div>
     );
   }
@@ -119,7 +119,7 @@ export default function V2BtcMemeDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-4 space-y-4">
-      <button onClick={() => navigate("/v2btc")} className="text-muted-foreground hover:text-foreground text-sm">← Back to V2 BTC</button>
+      <button onClick={() => navigate("/btc")} className="text-muted-foreground hover:text-foreground text-sm">← Back to BTC</button>
 
       {/* Pending Genesis Banner */}
       {token.status === "pending_genesis" && (
