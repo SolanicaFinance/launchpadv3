@@ -687,7 +687,7 @@ export default function ClaudeLauncherPage() {
     } finally {
       setIsPhantomLaunching(false);
     }
-  }, [phantomWallet, phantomInputMode, phantomToken, phantomMeme, phantomImageFile, phantomTradingFee, uploadPhantomImageIfNeeded, toast, refetch]);
+  }, [phantomWallet, phantomInputMode, phantomToken, phantomMeme, phantomImageFile, uploadPhantomImageIfNeeded, toast, refetch]);
 
   // Tab content renderers
   const renderTokensTab = () => {
