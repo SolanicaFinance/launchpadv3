@@ -269,6 +269,7 @@ export default function V2BitcoinModePage() {
   const [fees, setFees] = useState<FeeEstimates | null>(null);
   const [blockHeight, setBlockHeight] = useState<number | null>(null);
   const { data: allTokens, isLoading } = useBtcMemeTokensAll();
+  const btcUsdPrice = useBtcUsdPrice();
 
   useEffect(() => {
     if (chain !== 'bitcoin') setChain('bitcoin');
