@@ -150,6 +150,7 @@ const App = () => (
             <Sonner />
             <ErrorBoundary>
               <BrowserRouter>
+              <RouteChainSync />
               <TradeSuccessPopup />
               <TokenLaunchPopup />
               
