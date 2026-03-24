@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 /**
  * Multi-wallet BTC hook supporting UniSat, Xverse, Leather, OKX, and Phantom.
