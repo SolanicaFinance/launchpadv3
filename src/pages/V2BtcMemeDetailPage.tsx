@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
-import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance } from "@/hooks/useBtcMemeTokens";
+import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance, useBtcOnChainBalance } from "@/hooks/useBtcMemeTokens";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
 import { BtcMemePriceChart } from "@/components/bitcoin/BtcMemePriceChart";
@@ -50,6 +50,7 @@ export default function V2BtcMemeDetailPage() {
   const { data: trades } = useBtcMemeTrades(id);
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
+  const { data: onChainBtc } = useBtcOnChainBalance(address);
   const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
 
   // Compute dev holdings %
@@ -156,7 +157,9 @@ export default function V2BtcMemeDetailPage() {
   }
 
   const progressPct = Math.min(token.bonding_progress, 100);
-  const btcBalance = myBtcBalance?.balance_btc || 0;
+  const internalBtc = myBtcBalance?.balance_btc || 0;
+  const walletBtc = onChainBtc || 0;
+  const btcBalance = internalBtc + walletBtc;
 
   return (
     <div className="max-w-6xl mx-auto py-4 space-y-4">
@@ -197,7 +200,7 @@ export default function V2BtcMemeDetailPage() {
             )}
             {devHoldingPct !== null && devHoldingPct > 0 && (
               <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold bg-primary/10 text-primary border border-primary/20">
-                <Code className="w-3 h-3" /> Dev {devHoldingPct.toFixed(1)}%
+                <Code className="w-3 h-3" /> Dev {devHoldingPct < 0.1 ? devHoldingPct.toFixed(3) : devHoldingPct.toFixed(1)}%
               </span>
             )}
           </div>

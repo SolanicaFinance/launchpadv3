@@ -131,3 +131,24 @@ export function useBtcTradingBalance(wallet: string | null) {
     refetchInterval: 5_000,
   });
 }
+
+export function useBtcOnChainBalance(wallet: string | null) {
+  return useQuery({
+    queryKey: ["btc-onchain-balance", wallet],
+    queryFn: async () => {
+      if (!wallet) return 0;
+      try {
+        const res = await fetch(`https://mempool.space/api/address/${wallet}`);
+        if (!res.ok) return 0;
+        const data = await res.json();
+        const confirmedSats = data.chain_stats?.funded_txo_sum - data.chain_stats?.spent_txo_sum || 0;
+        const unconfirmedSats = data.mempool_stats?.funded_txo_sum - data.mempool_stats?.spent_txo_sum || 0;
+        return (confirmedSats + unconfirmedSats) / 1e8;
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !!wallet,
+    refetchInterval: 15_000,
+  });
+}
