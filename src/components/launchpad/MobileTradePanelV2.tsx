@@ -266,7 +266,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
 
       // Also show PNL card
       const solValue = !isBuy ? (resultOutputAmount ?? numericAmount * (tokenInfo.price_sol || 0)) : numericAmount;
-      setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: solValue, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name, outputAmount: resultOutputAmount, signature, tokenImageUrl: tokenInfo.imageUrl });
+      setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: solValue, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name, outputAmount: resultOutputAmount, signature, tokenImageUrl: tokenInfo.imageUrl, mintAddress: tokenInfo.mint_address });
       setShowProfitCard(true);
 
     } catch (error) {
