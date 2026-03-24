@@ -106,6 +106,7 @@ export function TradeSuccessPopup() {
         signature: data.signature,
         tokenImageUrl: data.tokenImageUrl,
         chain: data.chain,
+        mintAddress: data.mintAddress,
       }
     : null;
 
