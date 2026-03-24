@@ -385,9 +385,9 @@ export default function V2BtcMemeDetailPage() {
               </button>
             </div>
             {tradeTab !== "holders" && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <Cpu className="w-3 h-3 text-blue-400/60" />
-                <span>L2 Proof Receipts</span>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground" title="Trades execute instantly on Saturn's internal bonding curve. Solana receipts provide an immutable audit trail.">
+                <Cpu className="w-3 h-3 text-muted-foreground/60" />
+                <span>Internal Trades</span>
               </div>
             )}
           </div>
@@ -420,11 +420,11 @@ export default function V2BtcMemeDetailPage() {
                         href={`https://solscan.io/tx/${t.solana_proof_signature}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] hover:bg-blue-500/20 transition-colors cursor-pointer"
-                        title={`View proof on Solscan: ${t.solana_proof_signature}`}
+                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 border border-border text-muted-foreground text-[9px] hover:bg-muted/50 transition-colors cursor-pointer"
+                        title="View Solana receipt (audit trail — not a BTC on-chain transaction)"
                       >
                         <Cpu className="w-2.5 h-2.5" />
-                        TX ↗
+                        receipt ↗
                       </a>
                       <span className="text-muted-foreground/60 text-[10px] w-12 text-right">{timeAgo(t.created_at)}</span>
                     </div>
