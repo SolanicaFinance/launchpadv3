@@ -297,11 +297,27 @@ export default function V2BtcMemeDetailPage() {
                 <div>
                   <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
                     <span>{tradeType === "buy" ? "Amount (BTC)" : `Amount (${token.ticker})`}</span>
-                    <span>
+                    <span className="flex items-center gap-1">
                       Balance: {tradeType === "buy" ? formatBtc(btcBalance) : formatNum(myBalance?.balance || 0)}
                       {tradeType === "buy" && btcBalance === 0 && (
                         <button onClick={() => setShowDeposit(true)} className="ml-1 text-primary hover:text-primary/80 underline">
                           deposit
+                        </button>
+                      )}
+                      {((tradeType === "buy" && btcBalance > 0) || (tradeType === "sell" && myBalance && myBalance.balance > 0)) && (
+                        <button
+                          onClick={() => {
+                            if (tradeType === "buy") {
+                              // Reserve ~6000 sats for tx fees
+                              const maxBtc = Math.max(0, btcBalance - 0.00006);
+                              setAmount(maxBtc > 0 ? maxBtc.toFixed(8).replace(/0+$/, '').replace(/\.$/, '') : "0");
+                            } else {
+                              setAmount(String(Math.floor(myBalance?.balance || 0)));
+                            }
+                          }}
+                          className="text-primary hover:text-primary/80 underline font-semibold"
+                        >
+                          Max
                         </button>
                       )}
                     </span>
