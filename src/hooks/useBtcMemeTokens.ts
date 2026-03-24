@@ -43,6 +43,23 @@ export function useBtcMemeTokens() {
   });
 }
 
+export function useBtcMemeTokensAll() {
+  return useQuery<BtcMemeToken[]>({
+    queryKey: ["btc-meme-tokens-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("btc_meme_tokens")
+        .select("*")
+        .in("status", ["active", "graduated"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []) as unknown as BtcMemeToken[];
+    },
+    refetchInterval: 15_000,
+  });
+}
+
 export function useBtcMemeToken(id: string | undefined) {
   return useQuery<BtcMemeToken | null>({
     queryKey: ["btc-meme-token", id],

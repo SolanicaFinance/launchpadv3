@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useBtcWallet } from '@/hooks/useBtcWallet';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { V2SaturnProtocolExplainer } from '@/components/bitcoin/V2SaturnProtocolExplainer';
 import { BtcNetworkDashboard } from '@/components/bitcoin/BtcNetworkDashboard';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useBtcMemeTokens } from '@/hooks/useBtcMemeTokens';
-import { Rocket, TrendingUp, Zap, Shield, Layers, Cpu } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useBtcMemeTokensAll, type BtcMemeToken } from '@/hooks/useBtcMemeTokens';
+import {
+  Rocket, TrendingUp, Zap, Shield, Layers, Cpu,
+  ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ArrowRight
+} from 'lucide-react';
 import { useChain } from '@/contexts/ChainContext';
 import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { LaunchpadLayout } from '@/components/layout/LaunchpadLayout';
+import { LazySection } from '@/components/ui/LazySection';
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} ₿`;
@@ -16,61 +23,233 @@ function formatBtc(v: number) {
   return `${v.toFixed(8)} ₿`;
 }
 
-function V2BtcMemeTokenFeed() {
-  const { data: tokens, isLoading } = useBtcMemeTokens();
+function formatMcap(v: number) {
+  const usd = v * 70000; // rough BTC→USD
+  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+  if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+  return `$${usd.toFixed(0)}`;
+}
+
+function timeAgo(d: string) {
+  const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
+
+/* ── Premium BTC Token Card (matches Solana PulseTokenRow) ── */
+function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
   const navigate = useNavigate();
+  const pct = Math.min(token.bonding_progress, 100);
+  const isGraduated = token.status === 'graduated';
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" /> TAT Meme Tokens
-        </h3>
-        <span className="text-[10px] text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full font-semibold text-primary">Pure Bitcoin</span>
-      </div>
-      {isLoading ? (
-        <p className="text-xs text-muted-foreground text-center py-6">Loading...</p>
-      ) : !tokens || tokens.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground text-sm">No TAT tokens launched yet. Be the first!</p>
-        </div>
+    <button
+      onClick={() => navigate(`/v2btc/meme/${token.id}`)}
+      className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300
+                 backdrop-blur-sm overflow-hidden w-full text-left"
+      style={{
+        background: "linear-gradient(135deg, hsl(220 25% 8% / 0.95), hsl(225 20% 10% / 0.9))",
+        borderColor: "hsl(200 40% 60% / 0.08)",
+        boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.04), 0 2px 12px -2px rgb(0 0 0 / 0.5)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "hsl(30 90% 55% / 0.25)";
+        e.currentTarget.style.transform = "translateY(-1px) scale(1.012)";
+        e.currentTarget.style.boxShadow = "0 0 30px hsl(30 90% 55% / 0.06), 0 12px 32px -4px rgb(0 0 0 / 0.6), inset 0 0 30px hsl(30 70% 50% / 0.03)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "hsl(200 40% 60% / 0.08)";
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "inset 0 1px 0 0 hsl(0 0% 100% / 0.04), 0 2px 12px -2px rgb(0 0 0 / 0.5)";
+      }}
+    >
+      {/* Background gradient shimmer */}
+      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        style={{ background: `linear-gradient(135deg, hsl(30 90% 55% / ${pct / 300}) 0%, transparent 60%)` }} />
+
+      {token.image_url ? (
+        <img src={token.image_url} alt={token.ticker} className="w-9 h-9 rounded-xl shrink-0 relative z-10 object-cover"
+          style={{ border: "1.5px solid hsl(30 40% 50% / 0.15)" }} />
       ) : (
-        <div className="space-y-2">
-          {tokens.map(token => {
-            const pct = Math.min(token.bonding_progress, 100);
-            return (
-              <button
-                key={token.id}
-                onClick={() => navigate(`/v2btc/meme/${token.id}`)}
-                className="w-full flex items-center justify-between bg-background rounded-xl p-3 hover:bg-muted/50 transition-colors text-left border border-transparent hover:border-border"
-              >
-                <div className="flex items-center gap-3">
-                  {token.image_url ? (
-                    <img src={token.image_url} alt={token.ticker} className="w-9 h-9 rounded-lg object-cover" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">{token.ticker.charAt(0)}</div>
-                  )}
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">${token.ticker}</div>
-                    <div className="text-[10px] text-muted-foreground">{token.name}</div>
-                  </div>
-                </div>
-                <div className="text-right space-y-0.5">
-                  <div className="text-xs font-mono font-bold text-foreground">{formatBtc(token.market_cap_btc)}</div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">{pct.toFixed(0)}%</span>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="w-9 h-9 rounded-xl shrink-0 relative z-10 bg-primary/20 border border-primary/30 flex items-center justify-center text-sm font-bold text-primary">
+          {token.ticker.charAt(0)}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0 relative z-10">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-foreground truncate">{token.ticker}</span>
+          <span className="text-[9px] text-muted-foreground font-mono">{timeAgo(token.created_at)}</span>
+          {!isGraduated && pct > 0 && (
+            <span className="text-[9px] text-muted-foreground font-mono px-1 rounded" style={{ background: "hsl(220 20% 18% / 0.8)" }}>
+              {pct.toFixed(0)}%
+            </span>
+          )}
+          {isGraduated && (
+            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: "hsl(30 90% 55% / 0.15)", color: "hsl(30 90% 55%)" }}>
+              RUNE
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground truncate block">{token.name}</span>
+      </div>
+
+      <div className="text-right shrink-0 relative z-10">
+        <div className="text-[11px] font-bold font-mono" style={{ color: "#F7931A" }}>
+          {formatMcap(token.market_cap_btc)}
+        </div>
+        <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+          {formatBtc(token.price_btc)}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ── Pulse Column ── */
+function BtcPulseColumn({ title, icon, tokens, loading }: {
+  title: string; icon: string; tokens: BtcMemeToken[]; loading: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 px-1 mb-1">
+        <span>{icon}</span>
+        <div className="text-xs font-bold text-foreground/80 uppercase tracking-widest">{title}</div>
+        <div className="flex-1 h-px bg-gradient-to-r from-border/50 to-transparent" />
+      </div>
+      {loading ? (
+        Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 rounded-xl" />
+        ))
+      ) : tokens.length > 0 ? (
+        tokens.map((t) => <BtcPulseTokenRow key={t.id} token={t} />)
+      ) : (
+        <div className="text-center py-8 text-[11px] text-muted-foreground border border-dashed border-border/30 rounded-xl">
+          No tokens yet
         </div>
       )}
     </div>
   );
+}
+
+/* ── Section Header ── */
+function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
+  icon: React.ElementType; title: string; linkTo: string; linkLabel: string;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-primary" />
+        </div>
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">{title}</h2>
+      </div>
+      <Link
+        to={linkTo}
+        className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-semibold
+                   px-3 py-1.5 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+      >
+        {linkLabel}
+        <ArrowRight className="w-3 h-3" />
+      </Link>
+    </div>
+  );
+}
+
+/* ── Live Pulse Section ── */
+function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
+  newPairs: BtcMemeToken[]; finalStretch: BtcMemeToken[]; graduated: BtcMemeToken[]; loading: boolean;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", updateScrollState); ro.disconnect(); };
+  }, [updateScrollState]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const colWidth = el.querySelector(':scope > *')?.getBoundingClientRect().width ?? el.clientWidth;
+    el.scrollBy({ left: dir === "left" ? -colWidth - 12 : colWidth + 12, behavior: "smooth" });
+  };
+
+  const mobileColumns = [
+    { title: "New Pairs", icon: "⚡", tokens: newPairs },
+    { title: "Final Stretch", icon: "🔥", tokens: finalStretch },
+    { title: "Graduated", icon: "🚀", tokens: graduated },
+  ];
+
+  return (
+    <section className="py-6">
+      <SectionHeader icon={Zap} title="BTC Live Pulse" linkTo="/v2btc/meme/launch" linkLabel="Launch Token" />
+
+      {/* Desktop: 3-column grid */}
+      <div className="hidden md:grid md:grid-cols-3 gap-4">
+        <BtcPulseColumn title="New Pairs" icon="⚡" tokens={newPairs} loading={loading} />
+        <BtcPulseColumn title="Final Stretch" icon="🔥" tokens={finalStretch} loading={loading} />
+        <BtcPulseColumn title="Graduated" icon="🚀" tokens={graduated} loading={loading} />
+      </div>
+
+      {/* Mobile: horizontal scroll */}
+      <div className="md:hidden flex items-center">
+        <button
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          className={cn(
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
+            "bg-card/60 backdrop-blur-sm border border-border/40 transition-all",
+            canScrollLeft ? "text-foreground/90 hover:bg-card hover:border-primary/30" : "text-muted-foreground/30 cursor-default",
+          )}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div
+          ref={scrollRef}
+          className="flex-1 flex flex-row gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide mx-1 [&>*]:snap-center [&>*]:min-w-[calc(100%-8px)] [&>*]:flex-shrink-0"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {mobileColumns.map(col => (
+            <div key={col.title} className="min-w-0">
+              <BtcPulseColumn title={col.title} icon={col.icon} tokens={col.tokens} loading={loading} />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          className={cn(
+            "flex-shrink-0 z-20 w-8 h-8 rounded-full flex items-center justify-center",
+            "bg-card/60 backdrop-blur-sm border border-border/40 transition-all",
+            canScrollRight ? "text-foreground/90 hover:bg-card hover:border-primary/30" : "text-muted-foreground/30 cursor-default",
+          )}
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ── Section Divider ── */
+function SectionDivider() {
+  return <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />;
 }
 
 interface FeeEstimates { fastestFee: number; halfHourFee: number; hourFee: number; }
@@ -81,6 +260,7 @@ export default function V2BitcoinModePage() {
   const navigate = useNavigate();
   const [fees, setFees] = useState<FeeEstimates | null>(null);
   const [blockHeight, setBlockHeight] = useState<number | null>(null);
+  const { data: allTokens, isLoading } = useBtcMemeTokensAll();
 
   useEffect(() => {
     if (chain !== 'bitcoin') setChain('bitcoin');
@@ -98,92 +278,198 @@ export default function V2BitcoinModePage() {
     });
   }, []);
 
+  // Categorize tokens into 3 columns
+  const { newPairs, finalStretch, graduated } = useMemo(() => {
+    if (!allTokens) return { newPairs: [], finalStretch: [], graduated: [] };
+
+    const active = allTokens.filter(t => t.status === 'active');
+    const grad = allTokens.filter(t => t.status === 'graduated');
+
+    // Final stretch: bonding progress > 60%
+    const fs = active.filter(t => t.bonding_progress >= 60).sort((a, b) => b.bonding_progress - a.bonding_progress);
+    // New pairs: the rest, sorted by newest
+    const np = active.filter(t => t.bonding_progress < 60).sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return {
+      newPairs: np.slice(0, 8),
+      finalStretch: fs.slice(0, 8),
+      graduated: grad.slice(0, 8),
+    };
+  }, [allTokens]);
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative bg-card border border-border rounded-2xl overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
-        <div className="relative px-8 py-10 text-center space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-            <Cpu className="w-3 h-3" /> TAT Protocol — Transaction-Attributed Tokens
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            TAT Protocol
-          </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            Born on <span className="text-foreground font-semibold">Bitcoin Mainnet</span>, 
-            trades on <span className="text-foreground font-semibold">Fractal Bitcoin</span> (~30s blocks), 
-            audited on <span className="text-foreground font-semibold">Mainnet</span>. 100% Bitcoin-native. No bridges. No alt-chains.
-          </p>
-          <div className="flex items-center justify-center gap-3 pt-2">
-            {isConnected ? (
-              <Button onClick={() => navigate('/v2btc/meme/launch')} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="lg">
-                <Rocket className="w-4 h-4 mr-2" /> Launch TAT Token
-              </Button>
-            ) : (
-              <BtcConnectWalletModal
-                trigger={
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" size="lg">
-                    <Rocket className="w-4 h-4 mr-2" /> Connect Wallet to Launch
-                  </Button>
-                }
+    <LaunchpadLayout hideFooter noPadding>
+      <div className="relative z-10">
+        {/* ═══ Hero Section — Bitcoin Premium ═══ */}
+        <section
+          className="relative overflow-hidden flex items-center justify-center py-8 sm:py-10 md:py-14 lg:py-16"
+          style={{ background: "radial-gradient(ellipse 90% 70% at 50% 35%, hsl(30 60% 8%) 0%, hsl(220 40% 3%) 50%, hsl(0 0% 0%) 100%)" }}
+        >
+          {/* Bitcoin ambient glow */}
+          <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(ellipse, hsl(30 90% 50% / 0.06) 0%, transparent 65%)" }} />
+          <div className="absolute top-[25%] left-[18%] w-[350px] h-[350px] rounded-full pointer-events-none animate-pulse"
+            style={{ background: "radial-gradient(circle, hsl(30 80% 50% / 0.03) 0%, transparent 70%)", animationDuration: "8s" }} />
+
+          {/* Floating particles */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[
+              { x: "8%", y: "18%", size: "2px", dur: "16s", delay: "0s" },
+              { x: "88%", y: "25%", size: "1.5px", dur: "20s", delay: "3s" },
+              { x: "22%", y: "72%", size: "1px", dur: "22s", delay: "6s" },
+              { x: "72%", y: "58%", size: "2px", dur: "18s", delay: "4s" },
+            ].map((p, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-pulse"
+                style={{
+                  left: p.x, top: p.y,
+                  width: p.size, height: p.size,
+                  background: "hsl(30 90% 55% / 0.4)",
+                  animationDuration: p.dur,
+                  animationDelay: p.delay,
+                  boxShadow: "0 0 8px hsl(30 90% 55% / 0.35)",
+                }}
               />
-            )}
+            ))}
           </div>
-        </div>
-        <div className="border-t border-border bg-secondary/20 px-6 py-3">
-          <div className="flex items-center justify-center gap-6 sm:gap-10 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-primary" /> OP_RETURN Genesis</span>
-            <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-primary" /> ~30s Fractal Blocks</span>
-            <span className="flex items-center gap-1.5"><Layers className="w-3 h-3 text-primary" /> Merkle Anchoring</span>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</div>
-          <div className="text-sm font-semibold text-foreground mt-1 flex items-center gap-1.5">
-            {isConnected ? (
-              <><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Connected</>
-            ) : (
-              <><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" /> Not connected</>
-            )}
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none z-[2]" />
+
+          {/* Hero Content */}
+          <div className="relative z-10 w-full max-w-2xl lg:max-w-3xl mx-auto px-4 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[hsl(30_90%_55%/0.1)] border border-[hsl(30_90%_55%/0.2)] text-xs font-semibold mb-4 animate-fade-in"
+              style={{ color: "#F7931A" }}>
+              <Cpu className="w-3 h-3" /> TAT Protocol — Transaction-Attributed Tokens
+            </div>
+
+            <h1
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] font-black tracking-tight mb-2 animate-fade-in"
+              style={{
+                background: "linear-gradient(135deg, #F7931A 0%, #FFD700 50%, #F7931A 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 0 40px hsl(30 90% 55% / 0.2))",
+                animationDelay: "0.1s",
+                animationFillMode: "both",
+              }}
+            >
+              TAT Protocol
+            </h1>
+
+            <p className="text-sm sm:text-base md:text-lg text-foreground/85 max-w-xl mx-auto mb-2 font-semibold animate-fade-in"
+              style={{ animationDelay: "0.15s", animationFillMode: "both", textShadow: "0 2px 20px hsl(0 0% 0% / 0.5)" }}>
+              The first Bitcoin-native meme token protocol
+            </p>
+
+            <p className="text-[11px] sm:text-xs text-muted-foreground/65 max-w-lg mx-auto mb-5 leading-relaxed animate-fade-in"
+              style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
+              Born on <span style={{ color: "#F7931A" }} className="font-semibold">Bitcoin Mainnet</span>,
+              trades on <span style={{ color: "#F7931A" }} className="font-semibold">Fractal Bitcoin</span> (~30s blocks),
+              audited on <span style={{ color: "#F7931A" }} className="font-semibold">Mainnet</span>. Fixed 1% fee. Graduates to native Rune at 0.5 BTC.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex items-center justify-center gap-3 flex-wrap mb-5 animate-fade-in"
+              style={{ animationDelay: "0.25s", animationFillMode: "both" }}>
+              {isConnected ? (
+                <Button
+                  onClick={() => navigate('/v2btc/meme/launch')}
+                  className="relative px-7 py-3 rounded-full font-bold text-sm min-h-[48px] hover:scale-[1.08] transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
+                    color: "hsl(0 0% 5%)",
+                    boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
+                  }}
+                >
+                  <Rocket className="w-4 h-4 mr-2" /> Launch TAT Token
+                </Button>
+              ) : (
+                <BtcConnectWalletModal
+                  trigger={
+                    <Button
+                      className="relative px-7 py-3 rounded-full font-bold text-sm min-h-[48px] hover:scale-[1.08] transition-all duration-300"
+                      style={{
+                        background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
+                        color: "hsl(0 0% 5%)",
+                        boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
+                      }}
+                    >
+                      <Rocket className="w-4 h-4 mr-2" /> Connect Wallet to Launch
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+
+            {/* Feature badges */}
+            <div className="flex items-center justify-center gap-2 flex-wrap mb-4 animate-fade-in"
+              style={{ animationDelay: "0.35s", animationFillMode: "both" }}>
+              {[
+                { icon: Shield, label: "OP_RETURN Genesis" },
+                { icon: Zap, label: "~30s Fractal Blocks" },
+                { icon: Layers, label: "Merkle Anchoring" },
+                { icon: TrendingUp, label: "1% Fixed Fee" },
+              ].map(({ icon: FIcon, label }) => (
+                <div
+                  key={label}
+                  className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-card/15 backdrop-blur-xl border border-border/20
+                             text-[10px] sm:text-[11px] text-muted-foreground/80
+                             transition-all duration-300
+                             hover:border-[hsl(30_90%_55%/0.4)] hover:-translate-y-1 hover:scale-105"
+                >
+                  <FIcon className="w-3 h-3" style={{ color: "#F7931A" }} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* Trust badge */}
+            <div className="flex items-center justify-center mt-3 animate-fade-in"
+              style={{ animationDelay: "0.45s", animationFillMode: "both" }}>
+              <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-card/10 backdrop-blur-md border border-border/10 text-[9px] text-muted-foreground/40">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#F7931A" }} />
+                  {blockHeight ? `Block #${blockHeight.toLocaleString()}` : 'Syncing...'}
+                </span>
+                <span className="w-px h-3 bg-border/20" />
+                <span className="font-mono">{fees ? `${fees.halfHourFee} sat/vB` : '—'}</span>
+              </div>
+            </div>
           </div>
-          {isConnected && address && (
-            <div className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">{address.slice(0, 8)}…{address.slice(-4)}</div>
-          )}
+        </section>
+
+        {/* ═══ Live Pulse Section ═══ */}
+        <SectionDivider />
+        <div className="max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw] mx-auto px-4">
+          <BtcLivePulseSection
+            newPairs={newPairs}
+            finalStretch={finalStretch}
+            graduated={graduated}
+            loading={isLoading}
+          />
         </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Balance</div>
-          <div className="text-sm font-mono font-semibold text-foreground mt-1">
-            {isConnected && balance ? `${(balance.confirmed / 1e8).toFixed(6)} BTC` : '—'}
+
+        {/* ═══ Network Dashboard ═══ */}
+        <SectionDivider />
+        <div className="max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw] mx-auto px-4 py-6">
+          <SectionHeader icon={Cpu} title="Network Stats" linkTo="/v2btc" linkLabel="Live Data" />
+          <BtcNetworkDashboard />
+        </div>
+
+        {/* ═══ TAT Protocol Explainer ═══ */}
+        <SectionDivider />
+        <LazySection>
+          <div className="max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw] mx-auto px-4 py-6 pb-20">
+            <SectionHeader icon={Layers} title="How TAT Protocol Works" linkTo="/v2btc" linkLabel="Learn More" />
+            <V2SaturnProtocolExplainer />
           </div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Block Height</div>
-          <div className="text-sm font-mono font-semibold text-foreground mt-1">{blockHeight?.toLocaleString() || '—'}</div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Fee (sat/vB)</div>
-          <div className="text-sm font-mono font-semibold text-foreground mt-1">{fees ? `${fees.halfHourFee}` : '—'}</div>
-          {fees && <div className="text-[10px] text-muted-foreground mt-0.5">Fast: {fees.fastestFee} · Slow: {fees.hourFee}</div>}
-        </div>
+        </LazySection>
       </div>
-
-      {/* V2 Protocol Explainer */}
-      <V2SaturnProtocolExplainer />
-
-      {/* BTC Network Dashboard */}
-      <BtcNetworkDashboard />
-
-      {/* TAT Meme Tokens Feed */}
-      <V2BtcMemeTokenFeed />
-    </div>
+    </LaunchpadLayout>
   );
 }
