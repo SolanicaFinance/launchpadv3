@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { useBtcMemeTokensAll, type BtcMemeToken } from '@/hooks/useBtcMemeTokens';
 import {
-  Rocket, TrendingUp, Zap, Shield, Layers, Cpu,
+  Rocket, TrendingUp, Zap, Shield, Layers, Cpu, FileText,
   ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ArrowRight
 } from 'lucide-react';
 import { useChain } from '@/contexts/ChainContext';
