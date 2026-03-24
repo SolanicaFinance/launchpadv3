@@ -309,6 +309,16 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                   <span style={{ color: "white", fontFamily: "monospace", fontSize: 14, fontWeight: 700 }}>${data.tokenTicker}</span>
                   <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, fontFamily: "monospace" }}>{data.tokenName}</span>
                 </div>
+
+                {/* Contract Address */}
+                {data.mintAddress && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 8, fontFamily: "monospace", textTransform: "uppercase" as const, letterSpacing: "0.15em" }}>CA</span>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontFamily: "monospace", wordBreak: "break-all" as const }}>
+                      {data.mintAddress.slice(0, 6)}...{data.mintAddress.slice(-6)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
