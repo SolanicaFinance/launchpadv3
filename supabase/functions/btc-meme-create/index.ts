@@ -7,10 +7,11 @@ const corsHeaders = {
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const TOTAL_SUPPLY = 1_000_000_000;
-const INITIAL_VIRTUAL_BTC = 0.0005;
+const INITIAL_VIRTUAL_BTC = 0.3; // 30,000,000 sats per TAT spec
+const INITIAL_VIRTUAL_TOKENS = 1_073_000_000; // Per TAT spec
 const REAL_TOKEN_RESERVES = 800_000_000;
-const GRADUATION_THRESHOLD_BTC = 0.5;
-const PLATFORM_FEE_BPS = 100; // Fixed 1% platform fee, no creator fees
+const GRADUATION_THRESHOLD_BTC = 0.5; // 50,000,000 sats
+const PLATFORM_FEE_BPS = 100; // 1% platform fee per TAT spec
 
 function getSupabase() {
   return createClient(
