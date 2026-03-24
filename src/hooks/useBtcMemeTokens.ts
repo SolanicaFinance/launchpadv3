@@ -65,13 +65,15 @@ export function useBtcMemeToken(id: string | undefined) {
     queryKey: ["btc-meme-token", id],
     queryFn: async () => {
       if (!id) return null;
-      // Try by UUID first
-      const { data, error } = await supabase
-        .from("btc_meme_tokens")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (data) return data as unknown as BtcMemeToken | null;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (isUuid) {
+        const { data, error } = await supabase
+          .from("btc_meme_tokens")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        if (data) return data as unknown as BtcMemeToken | null;
+      }
       // Fallback: try by genesis_txid
       const { data: byTx, error: txErr } = await supabase
         .from("btc_meme_tokens")
