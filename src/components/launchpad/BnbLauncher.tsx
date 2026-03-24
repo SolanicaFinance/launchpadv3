@@ -347,17 +347,10 @@ export function BnbLauncher() {
               <span className="text-muted-foreground">Platform fee</span>
               <span className="font-mono font-semibold">{PLATFORM_FEE_PCT}%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Creator fee</span>
-              <span className="font-mono font-semibold text-primary">{formData.creatorFeePct}%</span>
-            </div>
             <div className="border-t border-border/50 pt-2 flex items-center justify-between">
-              <span className="text-foreground font-medium">Total tax per trade</span>
-              <span className="font-mono font-bold text-yellow-400">{totalTaxPct}%</span>
+              <span className="text-foreground font-medium">Total fee per trade</span>
+              <span className="font-mono font-bold text-yellow-400">{PLATFORM_FEE_PCT}%</span>
             </div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Max total tax: {PLATFORM_FEE_PCT + MAX_CREATOR_FEE_PCT}% ({MAX_CREATOR_FEE_PCT}% creator + {PLATFORM_FEE_PCT}% platform)
-            </p>
           </CardContent>
         </Card>
       </div>
