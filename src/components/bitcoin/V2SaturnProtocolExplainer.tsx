@@ -51,7 +51,7 @@ export function V2SaturnProtocolExplainer() {
           </div>
           <div>
             <h3 className="text-base font-bold text-foreground">TAT Protocol — Graduated Rune Architecture</h3>
-            <p className="text-xs text-muted-foreground">Genesis on Bitcoin L1 · Trades on Saturn Execution Layer · Graduates to Native Rune at 0.5 BTC</p>
+            <p className="text-xs text-muted-foreground">Genesis on Bitcoin L1 · Custodial CPAMM on Saturn · Graduates to Permissionless Rune at 0.5 BTC</p>
           </div>
         </div>
       </div>
