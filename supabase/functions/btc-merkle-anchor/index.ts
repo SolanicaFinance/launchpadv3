@@ -1,5 +1,5 @@
 /**
- * btc-merkle-anchor: Periodic solvency proof.
+ * btc-merkle-anchor: TAT Protocol periodic solvency proof.
  * Builds a Merkle tree of ALL btc_meme_balances, then posts the root
  * to Bitcoin via OP_RETURN.
  *

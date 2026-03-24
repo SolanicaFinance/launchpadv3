@@ -1,6 +1,6 @@
 /**
- * btc-genesis-proof: Posts a Bitcoin OP_RETURN transaction as the
- * "birth certificate" for a BTC meme token.
+ * btc-genesis-proof: TAT Protocol - Posts a Bitcoin OP_RETURN transaction
+ * as the "birth certificate" for a TAT token.
  *
  * OP_RETURN format (≤80 bytes):
  *   SATURN|TICKER|NAME_HASH|IMAGE_HASH_PREFIX|TIMESTAMP
