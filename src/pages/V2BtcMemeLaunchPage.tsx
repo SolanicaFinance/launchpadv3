@@ -188,6 +188,17 @@ export default function V2BtcMemeLaunchPage() {
             <Input id="devbuy" type="number" step="0.00001" min="0" value={form.initialBuyBtc} onChange={(e) => setForm({ ...form, initialBuyBtc: parseFloat(e.target.value) || 0 })} />
             <p className="text-[10px] text-muted-foreground mt-1">Optional initial buy to seed the bonding curve</p>
           </div>
+          <div>
+            <Label htmlFor="creatorfee">Creator Fee (0-8%)</Label>
+            <div className="flex items-center gap-2">
+              <Input id="creatorfee" type="number" step="1" min="0" max="800" value={form.creatorFeeBps / 100} onChange={(e) => {
+                const pct = Math.min(8, Math.max(0, parseFloat(e.target.value) || 0));
+                setForm({ ...form, creatorFeeBps: Math.round(pct * 100) });
+              }} />
+              <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">{form.creatorFeeBps} bps</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Your fee on every trade (0-8%). Extracted per-trade, never enters bonding pool.</p>
+          </div>
         </div>
 
         <div className="bg-muted/20 rounded-lg p-3 space-y-1 text-xs">
