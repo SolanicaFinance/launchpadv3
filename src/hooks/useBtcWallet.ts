@@ -757,6 +757,7 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
     disconnect,
     signPsbt,
     signMessage,
+    sendBitcoin,
     refreshBalance,
-  }), [address, balance, isConnected, isConnecting, activeProvider, availableWallets, connect, disconnect, signPsbt, signMessage, refreshBalance]);
+  }), [address, balance, isConnected, isConnecting, activeProvider, availableWallets, connect, disconnect, signPsbt, signMessage, sendBitcoin, refreshBalance]);
 }
