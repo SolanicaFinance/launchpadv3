@@ -205,8 +205,8 @@ export default function V2BtcMemeDetailPage() {
 
   const progressPct = Math.min(token.bonding_progress, 100);
   const btcBalance = myBtcBalance?.balance_btc || 0;
-  const mcapUsd = token.market_cap_usd || (token.market_cap_btc * btcUsdPrice);
-  const priceUsd = token.price_usd || (token.price_btc * btcUsdPrice);
+  const mcapUsd = token.market_cap_btc * btcUsdPrice;
+  const priceUsd = token.price_btc * btcUsdPrice;
   const volUsd = token.volume_btc * btcUsdPrice;
 
   const stats = [
