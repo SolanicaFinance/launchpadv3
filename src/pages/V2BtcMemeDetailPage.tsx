@@ -107,7 +107,7 @@ export default function V2BtcMemeDetailPage() {
   }, [tokenId, id, queryClient]);
 
   const handleTrade = async () => {
-    if (!address || !id || !amount) return;
+    if (!address || !tokenId || !amount) return;
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       toast.error("Enter a valid amount");
@@ -117,7 +117,7 @@ export default function V2BtcMemeDetailPage() {
     const startMs = Date.now();
     try {
       const { data, error } = await supabase.functions.invoke("btc-meme-swap", {
-        body: { tokenId: id, walletAddress: address, tradeType, amount: numAmount },
+        body: { tokenId, walletAddress: address, tradeType, amount: numAmount },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
