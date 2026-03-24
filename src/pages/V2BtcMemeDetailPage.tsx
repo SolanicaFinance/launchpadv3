@@ -25,9 +25,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 function formatBtc(v: number) {
+  if (v === 0) return '0 BTC';
   if (v >= 1) return `${v.toFixed(4)} BTC`;
   if (v >= 0.001) return `${v.toFixed(6)} BTC`;
-  return `${v.toFixed(8)} BTC`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} BTC`;
+  // For extremely small prices, show significant digits
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} BTC`;
 }
 
 function formatNum(v: number) {

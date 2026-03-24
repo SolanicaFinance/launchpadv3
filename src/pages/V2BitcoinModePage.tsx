@@ -18,16 +18,12 @@ import { LaunchpadLayout } from '@/components/layout/LaunchpadLayout';
 import { LazySection } from '@/components/ui/LazySection';
 
 function formatBtc(v: number) {
+  if (v === 0) return '0 ₿';
   if (v >= 1) return `${v.toFixed(4)} ₿`;
   if (v >= 0.001) return `${v.toFixed(6)} ₿`;
-  return `${v.toFixed(8)} ₿`;
-}
-
-function formatMcap(v: number) {
-  const usd = v * 70000; // rough BTC→USD
-  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
-  if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
-  return `$${usd.toFixed(0)}`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} ₿`;
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} ₿`;
 }
 
 function timeAgo(d: string) {
