@@ -130,7 +130,7 @@ export default function V2BtcMemeLaunchPage() {
 
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
         <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">
-          ₿ Your TAT token will be genesis-stamped on Bitcoin mainnet via OP_RETURN, then trade instantly on Fractal Bitcoin (~30s blocks). Solvency is Merkle-anchored back to mainnet every 10 minutes.
+          ₿ Your TAT token will be genesis-stamped on Bitcoin mainnet via OP_RETURN, then trade instantly on Saturn's execution layer. Proof receipts recorded on-chain. Solvency is Merkle-anchored back to mainnet. Graduates to native Rune at 0.5 BTC.
         </div>
 
         <div className="space-y-3">
