@@ -46,7 +46,7 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
 
   return (
     <button
-      onClick={() => navigate(`/btc/meme/${token.id}`)}
+      onClick={() => navigate(`/btc/meme/${token.genesis_txid || token.id}`)}
       className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300
                  backdrop-blur-sm overflow-hidden w-full text-left"
       style={{
