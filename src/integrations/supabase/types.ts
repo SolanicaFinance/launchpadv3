@@ -12131,6 +12131,15 @@ export type Database = {
         Args: { p_amount: number; p_wallet: string }
         Returns: boolean
       }
+      execute_btc_swap: {
+        Args: {
+          p_amount: number
+          p_token_id: string
+          p_trade_type: string
+          p_wallet_address: string
+        }
+        Returns: Json
+      }
       generate_post_slug: { Args: { title: string }; Returns: string }
       generate_short_id: { Args: never; Returns: string }
       get_active_promotion: {
