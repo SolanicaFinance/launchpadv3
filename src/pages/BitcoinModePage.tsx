@@ -42,7 +42,7 @@ function BtcMemeTokenFeed() {
             return (
               <button
                 key={token.id}
-                onClick={() => navigate(`/btc/meme/${token.id}`)}
+                onClick={() => navigate(`/btc/meme/${token.genesis_txid || token.id}`)}
                 className="w-full flex items-center justify-between bg-background rounded-xl p-3 hover:bg-muted/50 transition-colors text-left border border-transparent hover:border-border"
               >
                 <div className="flex items-center gap-3">

@@ -47,11 +47,21 @@ export default function V2BtcMemeDetailPage() {
   const queryClient = useQueryClient();
   const { isConnected, address } = useBtcWallet();
   const { data: token, isLoading } = useBtcMemeToken(id);
-  const { data: trades } = useBtcMemeTrades(id);
-  const { data: myBalance } = useBtcMemeBalance(id, address);
+
+  // Redirect UUID URLs to genesis_txid URLs once token is loaded and has a genesis tx
+  useEffect(() => {
+    if (token && token.genesis_txid && id === token.id) {
+      navigate(`/btc/meme/${token.genesis_txid}`, { replace: true });
+    }
+  }, [token, id, navigate]);
+
+  // Always use the real token UUID for data queries
+  const tokenId = token?.id;
+  const { data: trades } = useBtcMemeTrades(tokenId);
+  const { data: myBalance } = useBtcMemeBalance(tokenId, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
   const { data: onChainBtc } = useBtcOnChainBalance(address);
-  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(tokenId, token?.total_supply, token?.creator_wallet);
 
   // Compute dev holdings %
   const devHoldingPct = (() => {
@@ -68,36 +78,36 @@ export default function V2BtcMemeDetailPage() {
 
   // Realtime subscription for trades and token updates
   useEffect(() => {
-    if (!id) return;
+    if (!tokenId) return;
 
     const channel = supabase
-      .channel(`btc-meme-${id}`)
+      .channel(`btc-meme-${tokenId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "btc_meme_trades",
-        filter: `token_id=eq.${id}`,
+        filter: `token_id=eq.${tokenId}`,
       }, () => {
-        queryClient.invalidateQueries({ queryKey: ["btc-meme-trades", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-trades", tokenId] });
         queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
         queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
-        queryClient.invalidateQueries({ queryKey: ["btc-meme-balance", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-balance", tokenId] });
       })
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "btc_meme_tokens",
-        filter: `id=eq.${id}`,
+        filter: `id=eq.${tokenId}`,
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [id, queryClient]);
+  }, [tokenId, id, queryClient]);
 
   const handleTrade = async () => {
-    if (!address || !id || !amount) return;
+    if (!address || !tokenId || !amount) return;
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       toast.error("Enter a valid amount");
@@ -107,7 +117,7 @@ export default function V2BtcMemeDetailPage() {
     const startMs = Date.now();
     try {
       const { data, error } = await supabase.functions.invoke("btc-meme-swap", {
-        body: { tokenId: id, walletAddress: address, tradeType, amount: numAmount },
+        body: { tokenId, walletAddress: address, tradeType, amount: numAmount },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
