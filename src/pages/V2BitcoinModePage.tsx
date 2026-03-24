@@ -100,7 +100,13 @@ function BtcPulseTokenRow({ token, btcUsdPrice }: { token: BtcMemeToken; btcUsdP
 
       <div className="text-right shrink-0 relative z-10">
         <div className="text-[11px] font-bold font-mono" style={{ color: "#F7931A" }}>
-          {formatMcap(token.market_cap_btc)}
+          {(() => {
+            const usd = token.market_cap_btc * btcUsdPrice;
+            if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+            if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+            if (usd > 0) return `$${usd.toFixed(0)}`;
+            return formatBtc(token.market_cap_btc);
+          })()}
         </div>
         <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
           {formatBtc(token.price_btc)}
