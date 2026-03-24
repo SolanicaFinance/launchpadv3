@@ -519,8 +519,8 @@ export default function V2BtcMemeDetailPage() {
                   </Button>
                 </a>
               )}
-              {token.website_url && (
-                <a href={token.website_url} target="_blank" rel="noopener noreferrer" className="hidden md:flex">
+              {(token as any).website_url && (
+                <a href={(token as any).website_url} target="_blank" rel="noopener noreferrer" className="hidden md:flex">
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] rounded-lg"><ExternalLink className="h-3.5 w-3.5" /></Button>
                 </a>
               )}
