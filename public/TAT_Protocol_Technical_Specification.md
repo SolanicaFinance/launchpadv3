@@ -24,9 +24,9 @@ This is architecturally analogous to pump.fun → Raydium graduation, but for Bi
 │                                                                 │
 │  PHASE 1: BONDING CURVE (Saturn-Managed)                       │
 │  ┌───────────┐    ┌──────────────┐    ┌───────────────────┐    │
-│  │ Bitcoin    │    │ Saturn       │    │ Solana/Fractal    │    │
+│  │ Bitcoin    │    │ Saturn       │    │ Saturn L2         │    │
 │  │ OP_RETURN  │───▶│ Execution    │───▶│ Proof Receipts    │    │
-│  │ Genesis    │    │ Layer        │    │ (SPL Memo/UTXO)   │    │
+│  │ Genesis    │    │ Layer        │    │ (OP_RETURN)       │    │
 │  └───────────┘    └──────┬───────┘    └───────────────────┘    │
 │                          │                                      │
 │                    Bonding Curve                                │
