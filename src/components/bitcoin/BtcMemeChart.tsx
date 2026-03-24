@@ -23,6 +23,7 @@ interface Trade {
   trade_type: string;
   btc_amount: number;
   token_amount: number;
+  solana_proof_signature?: string | null;
 }
 
 interface BtcMemeChartProps {

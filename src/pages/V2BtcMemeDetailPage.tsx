@@ -259,7 +259,7 @@ export default function V2BtcMemeDetailPage() {
       </div>
 
       {/* Price Chart */}
-      <BtcMemeChart trades={trades || []} currentPrice={token.price_btc} />
+      <BtcMemeChart trades={(trades || []).filter((t: any) => t.solana_proof_signature)} currentPrice={token.price_btc} />
 
       {/* Bonding Progress */}
       <div className="bg-card border border-border rounded-xl p-4">
