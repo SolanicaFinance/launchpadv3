@@ -294,16 +294,6 @@ export function BtcMemeChart({ trades, currentPrice, height = 360 }: BtcMemeChar
             <p className="text-[9px] font-mono text-muted-foreground/50 mt-0.5">Chart will appear after the first trade</p>
           </div>
         </div>
-      ) : bars.length < 2 ? (
-        <div className="flex items-center justify-center gap-2" style={{ height }}>
-          <span className="text-lg">📊</span>
-          <div>
-            <p className="text-[11px] font-mono text-muted-foreground">Not enough data for candles</p>
-            <p className="text-[9px] font-mono text-muted-foreground/50 mt-0.5">
-              Current price: {currentPrice.toFixed(8)} BTC
-            </p>
-          </div>
-        </div>
       ) : (
         <div ref={containerRef} className="w-full overflow-hidden" style={{ height }} />
       )}
