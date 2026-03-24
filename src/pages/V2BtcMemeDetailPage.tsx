@@ -338,7 +338,7 @@ export default function V2BtcMemeDetailPage() {
             {tradeTab !== "holders" && (
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <Cpu className="w-3 h-3 text-blue-400/60" />
-                <span>Fractal Settlement</span>
+                <span>L2 Proof Receipts</span>
               </div>
             )}
           </div>
