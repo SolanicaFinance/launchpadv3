@@ -26,7 +26,6 @@ export default function V2BtcMemeLaunchPage() {
     websiteUrl: "",
     twitterUrl: "",
     initialBuyBtc: 0.0001,
-    creatorFeeBps: 0,
   });
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +86,7 @@ export default function V2BtcMemeLaunchPage() {
           twitterUrl: form.twitterUrl,
           creatorWallet: address,
           initialBuyBtc: form.initialBuyBtc,
-          creatorFeeBps: form.creatorFeeBps,
+          creatorFeeBps: 0,
         },
       });
       if (error) throw error;
@@ -188,17 +187,6 @@ export default function V2BtcMemeLaunchPage() {
             <Input id="devbuy" type="number" step="0.00001" min="0" value={form.initialBuyBtc} onChange={(e) => setForm({ ...form, initialBuyBtc: parseFloat(e.target.value) || 0 })} />
             <p className="text-[10px] text-muted-foreground mt-1">Optional initial buy to seed the bonding curve</p>
           </div>
-          <div>
-            <Label htmlFor="creatorfee">Creator Fee (0-8%)</Label>
-            <div className="flex items-center gap-2">
-              <Input id="creatorfee" type="number" step="1" min="0" max="800" value={form.creatorFeeBps / 100} onChange={(e) => {
-                const pct = Math.min(8, Math.max(0, parseFloat(e.target.value) || 0));
-                setForm({ ...form, creatorFeeBps: Math.round(pct * 100) });
-              }} />
-              <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">{form.creatorFeeBps} bps</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Your fee on every trade (0-8%). Extracted per-trade, never enters bonding pool.</p>
-          </div>
         </div>
 
         <div className="bg-muted/20 rounded-lg p-3 space-y-1 text-xs">
@@ -207,7 +195,7 @@ export default function V2BtcMemeLaunchPage() {
           <div className="flex justify-between"><span className="text-muted-foreground">Total Supply</span><span className="text-foreground">1,000,000,000</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Execution</span><span className="text-foreground">Saturn Layer + L2 Proof Receipts</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Graduation</span><span className="text-foreground">0.5 BTC → Native Rune</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform + 0-8% creator</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Genesis</span><span className="text-foreground">Bitcoin Mainnet OP_RETURN</span></div>
         </div>
 
