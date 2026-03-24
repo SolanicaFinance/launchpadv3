@@ -201,12 +201,12 @@ Memo format: "TAT|<trade_id>|<token_id>|<type>|<btc_amount>|<token_amount>|<pric
 - Provides sub-second finality (~400ms)
 - Costs ~0.000005 SOL per proof
 
-**Option B — Fractal Bitcoin UTXO (V2 Pure Bitcoin):**
+**Option B — Saturn Execution Layer (V2 Pure Bitcoin):**
 ```
 OP_RETURN TAT_TRADE <trade_id> <token_id> <type> <amounts_hash>
 ```
-- Recorded on Fractal Bitcoin (30-second blocks)
-- 100% Bitcoin-native execution layer
+- Recorded on the Saturn Execution Layer
+- 100% Bitcoin-native execution
 - Uses native UTXO model
 
 ### 3.6 Merkle Anchor (Layer 3 Solvency Proof)
