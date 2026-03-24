@@ -47,7 +47,7 @@ export default function BtcMemeDetailPage() {
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
 
-  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply);
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
 
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
