@@ -41,7 +41,7 @@ export function BtcWalletConnect() {
             </span>
             {balance && (
               <span className="text-xs font-mono text-primary">
-                {(balance.confirmed / 1e8).toFixed(6)} ₿
+                {(balance.total / 1e8).toFixed(6)} ₿
               </span>
             )}
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
