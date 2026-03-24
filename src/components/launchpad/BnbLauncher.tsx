@@ -37,14 +37,11 @@ export function BnbLauncher() {
     twitterUrl: '',
     telegramUrl: '',
     initialBuyBnb: '0',
-    creatorFeePct: 3, // default 3% creator fee
   });
 
   const handleInputChange = (field: keyof BnbLaunchFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  const totalTaxPct = PLATFORM_FEE_PCT + formData.creatorFeePct;
   const canLaunch = isConnected && formData.name && formData.ticker;
 
   const handleLaunch = useCallback(async () => {
