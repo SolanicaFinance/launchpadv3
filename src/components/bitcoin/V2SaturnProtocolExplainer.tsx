@@ -26,7 +26,7 @@ const steps = [
     subtitle: 'Execution Verification',
     color: 'text-blue-400',
     bg: 'bg-blue-400/10',
-    description: 'Each trade generates a verifiable proof receipt on the execution layer. V1 Hybrid uses Solana SPL Memo (~400ms finality, ~0.000005 SOL/proof). V2 Pure Bitcoin uses Fractal Bitcoin OP_RETURN (~30s blocks, merge-mined). Both provide cryptographic trade verification.',
+    description: 'Each trade generates a verifiable proof receipt on the Saturn Execution Layer. Trades execute natively on Bitcoin with cryptographic verification via OP_RETURN proofs. The Saturn layer provides instant execution with Bitcoin-grade security — no sidechains, no bridges.',
     technical: 'MEMO: TAT|<trade_id>|<token_id>|<type>|<btc_amount>|<token_amount>|<price>|<timestamp>',
   },
   {
