@@ -54,8 +54,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (token.status === "graduated" || token.status === "migrating" || token.status === "migration_blocked") {
+      return new Response(JSON.stringify({ error: "Token has graduated and is migrating to a native Bitcoin Rune. Trading is closed." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (token.status !== "active") {
-      return new Response(JSON.stringify({ error: "Token is no longer active for trading" }), {
+      return new Response(JSON.stringify({ error: "Token is not active for trading" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
