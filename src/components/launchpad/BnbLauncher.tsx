@@ -325,7 +325,7 @@ export function BnbLauncher() {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-yellow-400 font-bold shrink-0">2.</span>
-              <p>Users buy & sell against the curve — price goes up as more BNB flows in. <strong className="text-foreground">{totalTaxPct}% tax</strong> per trade ({PLATFORM_FEE_PCT}% platform + {formData.creatorFeePct}% to you).</p>
+              <p>Users buy & sell against the curve — price goes up as more BNB flows in. <strong className="text-foreground">{PLATFORM_FEE_PCT}% platform fee</strong> per trade.</p>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-yellow-400 font-bold shrink-0">3.</span>
