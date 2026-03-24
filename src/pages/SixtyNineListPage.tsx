@@ -118,7 +118,7 @@ export default function SixtyNineListPage() {
                   those who've committed to the long game. By holding strong, you climb the ladder to lifetime rewards:{" "}
                   <span className="text-foreground font-semibold">69% of our 1% launchpad fees</span> from every coin swap is 
                   distributed evenly among the top 69, based on the last 60 minutes' profits. Plus, immovable holders have a 
-                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 69 BNB</span>. The mission? 
+                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 6.9 BNB</span>. The mission? 
                   Don't sell — ascend to the top and earn passively from every token launched on Saturn Terminal.{" "}
                   <span className="text-primary font-bold italic">Hold $SATURN, get rich like a Forbes lister.</span>
                 </p>
