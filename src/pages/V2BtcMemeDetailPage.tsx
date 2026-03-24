@@ -298,9 +298,24 @@ export default function V2BtcMemeDetailPage() {
               ))}
             </div>
           )}
-          <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full font-mono font-bold ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-black" : "bg-destructive hover:bg-destructive/90 text-white"}`}>
-            {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
-          </Button>
+          {(() => {
+            const numAmt = parseFloat(amount) || 0;
+            const insufficientBuy = tradeType === "buy" && numAmt > 0 && numAmt > btcBalance;
+            const insufficientSell = tradeType === "sell" && numAmt > 0 && numAmt > (myBalance?.balance || 0);
+            const isInsufficient = insufficientBuy || insufficientSell;
+            return (
+              <>
+                <Button onClick={handleTrade} disabled={trading || !amount || isInsufficient} className={`w-full font-mono font-bold ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-black" : "bg-destructive hover:bg-destructive/90 text-white"} disabled:opacity-50`}>
+                  {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : isInsufficient ? "Insufficient Balance" : tradeType === "buy" ? "Buy" : "Sell"}
+                </Button>
+                {insufficientBuy && (
+                  <p className="text-[10px] text-destructive text-center font-mono">
+                    You need {(numAmt - btcBalance).toFixed(8)} more BTC. Deposit first.
+                  </p>
+                )}
+              </>
+            );
+          })()}
           {myBalance && myBalance.balance > 0 && (
             <div className="bg-white/[0.03] rounded-lg p-2.5 text-xs space-y-1.5 border border-white/[0.06]">
               <div className="flex justify-between font-mono"><span className="text-muted-foreground/50">Your tokens</span><span className="text-foreground/80">{formatNum(myBalance.balance)}</span></div>
