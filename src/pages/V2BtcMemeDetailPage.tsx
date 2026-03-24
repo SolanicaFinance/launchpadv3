@@ -419,12 +419,13 @@ export default function V2BtcMemeDetailPage() {
         </span>
       </div>
       {[
-        { label: 'Price', value: formatBtc(token.price_btc) },
-        { label: 'Market Cap', value: formatBtc(token.market_cap_btc) },
-        { label: 'Volume', value: formatBtc(token.volume_btc) },
+        { label: 'Price', value: priceUsd > 0 ? `${formatUsdCompact(priceUsd)} (${formatBtc(token.price_btc)})` : formatBtc(token.price_btc) },
+        { label: 'Market Cap', value: mcapUsd > 0 ? `${formatUsdCompact(mcapUsd)} (${formatBtc(token.market_cap_btc)})` : formatBtc(token.market_cap_btc) },
+        { label: 'Volume', value: volUsd > 0 ? `${formatUsdCompact(volUsd)} (${formatBtc(token.volume_btc)})` : formatBtc(token.volume_btc) },
         { label: 'Holders', value: token.holder_count.toLocaleString() },
         { label: 'Supply', value: formatNum(token.total_supply) },
         { label: 'Trades', value: token.trade_count.toLocaleString() },
+        { label: 'Bonding', value: `${progressPct < 1 ? progressPct.toFixed(2) : progressPct.toFixed(1)}%` },
       ].map((row, i) => (
         <div key={i} className="trade-detail-row">
           <span className="text-[12px] font-mono text-muted-foreground/50">{row.label}</span>
