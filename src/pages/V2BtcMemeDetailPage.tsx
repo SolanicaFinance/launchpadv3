@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
-import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance } from "@/hooks/useBtcMemeTokens";
+import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance, useBtcOnChainBalance } from "@/hooks/useBtcMemeTokens";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
 import { BtcMemePriceChart } from "@/components/bitcoin/BtcMemePriceChart";
