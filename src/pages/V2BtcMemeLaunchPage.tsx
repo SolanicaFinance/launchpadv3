@@ -91,7 +91,7 @@ export default function V2BtcMemeLaunchPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(`$${data.token.ticker} submitted! Awaiting Bitcoin mainnet confirmation...`);
-      navigate(`/v2btc/meme/${data.token.id}`);
+      navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");
     } finally {
@@ -121,7 +121,7 @@ export default function V2BtcMemeLaunchPage() {
   return (
     <div className="max-w-xl mx-auto py-6 space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/v2btc")} className="text-muted-foreground hover:text-foreground text-sm">
+        <button onClick={() => navigate("/btc")} className="text-muted-foreground hover:text-foreground text-sm">
           ← Back
         </button>
         <h1 className="text-xl font-bold text-foreground">Launch TAT Meme Token</h1>

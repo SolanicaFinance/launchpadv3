@@ -46,7 +46,7 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
 
   return (
     <button
-      onClick={() => navigate(`/v2btc/meme/${token.id}`)}
+      onClick={() => navigate(`/btc/meme/${token.id}`)}
       className="group relative flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300
                  backdrop-blur-sm overflow-hidden w-full text-left"
       style={{
@@ -198,7 +198,7 @@ function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
 
   return (
     <section className="py-6">
-      <SectionHeader icon={Zap} title="BTC Live Pulse" linkTo="/v2btc/meme/launch" linkLabel="Launch Token" />
+      <SectionHeader icon={Zap} title="BTC Live Pulse" linkTo="/btc/meme/launch" linkLabel="Launch Token" />
 
       {/* Desktop: 3-column grid */}
       <div className="hidden md:grid md:grid-cols-3 gap-4">
@@ -377,7 +377,7 @@ export default function V2BitcoinModePage() {
               style={{ animationDelay: "0.25s", animationFillMode: "both" }}>
               {isConnected ? (
                 <Button
-                  onClick={() => navigate('/v2btc/meme/launch')}
+                  onClick={() => navigate('/btc/meme/launch')}
                   className="relative px-7 py-3 rounded-full font-bold text-sm min-h-[48px] hover:scale-[1.08] transition-all duration-300"
                   style={{
                     background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
@@ -457,7 +457,7 @@ export default function V2BitcoinModePage() {
         {/* ═══ Network Dashboard ═══ */}
         <SectionDivider />
         <div className="max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw] mx-auto px-4 py-6">
-          <SectionHeader icon={Cpu} title="Network Stats" linkTo="/v2btc" linkLabel="Live Data" />
+          <SectionHeader icon={Cpu} title="Network Stats" linkTo="/btc" linkLabel="Live Data" />
           <BtcNetworkDashboard />
         </div>
 
@@ -465,7 +465,7 @@ export default function V2BitcoinModePage() {
         <SectionDivider />
         <LazySection>
           <div className="max-w-7xl lg:max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[92vw] mx-auto px-4 py-6 pb-20">
-            <SectionHeader icon={Layers} title="How TAT Protocol Works" linkTo="/v2btc" linkLabel="Learn More" />
+            <SectionHeader icon={Layers} title="How TAT Protocol Works" linkTo="/btc" linkLabel="Learn More" />
             <V2SaturnProtocolExplainer />
           </div>
         </LazySection>
