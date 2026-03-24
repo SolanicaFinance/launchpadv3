@@ -270,7 +270,7 @@ Deno.serve(async (req) => {
           console.log(`[btc-meme-create] Auto-activating paid token ${token.id} after 60s timeout`);
           await supabase.from("btc_meme_tokens").update({
             status: "active",
-            genesis_txid: `auto:${token.id.slice(0, 32)}`,
+            genesis_txid: checkToken.payment_tx_id,
           }).eq("id", token.id);
         } else if (checkToken && !checkToken.payment_tx_id) {
           console.log(`[btc-meme-create] Skipping auto-activate for unpaid token ${token.id}`);
