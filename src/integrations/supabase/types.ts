@@ -1751,6 +1751,42 @@ export type Database = {
         }
         Relationships: []
       }
+      btc_withdrawals: {
+        Row: {
+          amount_btc: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          fee_sats: number | null
+          id: string
+          status: string
+          txid: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount_btc: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          fee_sats?: number | null
+          id?: string
+          status?: string
+          txid?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount_btc?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          fee_sats?: number | null
+          id?: string
+          status?: string
+          txid?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       claw_agent_bids: {
         Row: {
           bid_amount_sol: number
@@ -12058,6 +12094,10 @@ export type Database = {
       cleanup_old_promo_queue: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       cleanup_old_visitor_sessions: { Args: never; Returns: undefined }
+      deduct_btc_balance: {
+        Args: { p_amount: number; p_wallet: string }
+        Returns: boolean
+      }
       generate_post_slug: { Args: { title: string }; Returns: string }
       generate_short_id: { Args: never; Returns: string }
       get_active_promotion: {
