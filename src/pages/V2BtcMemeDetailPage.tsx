@@ -197,7 +197,7 @@ export default function V2BtcMemeDetailPage() {
             )}
             {devHoldingPct !== null && devHoldingPct > 0 && (
               <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold bg-primary/10 text-primary border border-primary/20">
-                <Code className="w-3 h-3" /> Dev {devHoldingPct.toFixed(1)}%
+                <Code className="w-3 h-3" /> Dev {devHoldingPct < 0.1 ? devHoldingPct.toFixed(3) : devHoldingPct.toFixed(1)}%
               </span>
             )}
           </div>
