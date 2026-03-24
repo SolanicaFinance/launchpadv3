@@ -5,13 +5,30 @@ const corsHeaders = {
 
 let cached: { data: Record<string, { price: number; change24h: number }>; timestamp: number } | null = null;
 const CACHE_TTL = 60000;
-const FETCH_TIMEOUT = 6000;
+const STALE_TTL = 600000; // serve stale data up to 10 min
+const FETCH_TIMEOUT = 8000;
 
 async function fetchWithTimeout(url: string, opts: RequestInit = {}): Promise<Response> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
   try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
   finally { clearTimeout(t); }
+}
+
+async function fromBinance() {
+  const r = await fetchWithTimeout(
+    "https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22,%22BNBUSDT%22%5D"
+  );
+  if (!r.ok) return null;
+  const arr = await r.json();
+  if (!Array.isArray(arr) || arr.length < 3) return null;
+  const map: Record<string, string> = { BTCUSDT: "btc", ETHUSDT: "eth", BNBUSDT: "bnb" };
+  const results: Record<string, { price: number; change24h: number }> = {};
+  for (const item of arr) {
+    const key = map[item.symbol];
+    if (key) results[key] = { price: parseFloat(item.lastPrice) || 0, change24h: parseFloat(item.priceChangePercent) || 0 };
+  }
+  return Object.keys(results).length === 3 ? results : null;
 }
 
 async function fromCoinGecko() {
@@ -28,35 +45,44 @@ async function fromCoinGecko() {
   };
 }
 
-async function fromBinance() {
-  const symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"];
-  const results: Record<string, { price: number; change24h: number }> = {};
-  const keys = ["btc", "eth", "bnb"];
-  
-  for (let i = 0; i < symbols.length; i++) {
-    try {
-      const r = await fetchWithTimeout(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbols[i]}`);
-      if (r.ok) {
-        const d = await r.json();
-        results[keys[i]] = { price: parseFloat(d.lastPrice) || 0, change24h: parseFloat(d.priceChangePercent) || 0 };
-      }
-    } catch {}
-  }
-  return Object.keys(results).length === 3 ? results : null;
+async function fromCryptoCompare() {
+  const r = await fetchWithTimeout("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,BNB&tsyms=USD");
+  if (!r.ok) return null;
+  const d = await r.json();
+  const raw = d.RAW;
+  return {
+    btc: { price: raw?.BTC?.USD?.PRICE ?? 0, change24h: raw?.BTC?.USD?.CHANGEPCT24HOUR ?? 0 },
+    eth: { price: raw?.ETH?.USD?.PRICE ?? 0, change24h: raw?.ETH?.USD?.CHANGEPCT24HOUR ?? 0 },
+    bnb: { price: raw?.BNB?.USD?.PRICE ?? 0, change24h: raw?.BNB?.USD?.CHANGEPCT24HOUR ?? 0 },
+  };
 }
 
-async function fromCryptoCompare() {
-  try {
-    const r = await fetchWithTimeout("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,BNB&tsyms=USD");
-    if (!r.ok) return null;
-    const d = await r.json();
-    const raw = d.RAW;
-    return {
-      btc: { price: raw?.BTC?.USD?.PRICE ?? 0, change24h: raw?.BTC?.USD?.CHANGEPCT24HOUR ?? 0 },
-      eth: { price: raw?.ETH?.USD?.PRICE ?? 0, change24h: raw?.ETH?.USD?.CHANGEPCT24HOUR ?? 0 },
-      bnb: { price: raw?.BNB?.USD?.PRICE ?? 0, change24h: raw?.BNB?.USD?.CHANGEPCT24HOUR ?? 0 },
-    };
-  } catch { return null; }
+// Lightweight fallback: Coinbase spot prices (no rate limit issues)
+async function fromCoinbase() {
+  const pairs = [
+    { id: "btc", pair: "BTC-USD" },
+    { id: "eth", pair: "ETH-USD" },
+    { id: "bnb", pair: "BNB-USD" },
+  ];
+  const results: Record<string, { price: number; change24h: number }> = {};
+  const fetches = pairs.map(async ({ id, pair }) => {
+    try {
+      const r = await fetchWithTimeout(`https://api.coinbase.com/v2/prices/${pair}/spot`);
+      if (r.ok) {
+        const d = await r.json();
+        results[id] = { price: parseFloat(d.data?.amount) || 0, change24h: 0 };
+      }
+    } catch {}
+  });
+  await Promise.all(fetches);
+  return results.btc?.price > 0 ? results : null;
+}
+
+function respond(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 Deno.serve(async (req) => {
@@ -65,47 +91,33 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Serve fresh cache
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return new Response(JSON.stringify(cached.data), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(cached.data);
     }
 
-    const sources = [fromBinance, fromCoinGecko, fromCryptoCompare];
+    // Try all sources — run Binance first (single request, most reliable), then fallbacks
+    const sources = [fromBinance, fromCoinGecko, fromCryptoCompare, fromCoinbase];
     for (const source of sources) {
       try {
         const result = await source();
         if (result && result.btc?.price > 0) {
           cached = { data: result, timestamp: Date.now() };
-          console.log("[crypto-prices] Success from", source.name);
-          return new Response(JSON.stringify(result), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+          return respond(result);
         }
       } catch (e) {
         console.log("[crypto-prices]", source.name, "failed:", e);
       }
     }
 
-    if (cached) {
-      return new Response(JSON.stringify(cached.data), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Serve stale cache if within 10 min
+    if (cached && Date.now() - cached.timestamp < STALE_TTL) {
+      return respond(cached.data);
     }
 
-    return new Response(JSON.stringify({ error: "All sources failed" }), {
-      status: 503,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond({ error: "All sources failed" }, 503);
   } catch {
-    if (cached) {
-      return new Response(JSON.stringify(cached.data), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    return new Response(JSON.stringify({ error: "Server error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (cached) return respond(cached.data);
+    return respond({ error: "Server error" }, 500);
   }
 });
