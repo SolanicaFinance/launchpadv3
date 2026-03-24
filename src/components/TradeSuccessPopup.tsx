@@ -96,12 +96,23 @@ export function TradeSuccessPopup() {
     : `Bought ${data.amount || ""} $${data.ticker}`;
   const subtitle = isSell ? "SELL COMPLETED" : "BUY COMPLETED";
 
+  // Parse numeric amount from the amount string if pnlSol not set
+  const parsedAmount = (() => {
+    if (data.pnlSol != null) return data.pnlSol;
+    if (data.amount) {
+      const num = parseFloat(data.amount);
+      if (!isNaN(num)) return num;
+    }
+    return 0;
+  })();
+
   const profitCardData: ProfitCardData | null = data
     ? {
         action: data.type,
-        amountSol: data.pnlSol ?? 0,
+        amountSol: parsedAmount,
         tokenTicker: data.ticker,
         tokenName: data.tokenName || data.ticker,
+        outputAmount: undefined,
         pnlPercent: data.pnlPercent,
         signature: data.signature,
         tokenImageUrl: data.tokenImageUrl,
