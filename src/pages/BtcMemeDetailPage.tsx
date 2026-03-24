@@ -70,12 +70,8 @@ export default function BtcMemeDetailPage() {
           .eq("id", pendingProofTradeId)
           .maybeSingle();
         if (data?.solana_proof_signature) {
-          toast.success("Solana proof recorded!", {
+          toast.success("L2 proof recorded!", {
             description: `Signature: ${truncate(data.solana_proof_signature, 8)}`,
-            action: {
-              label: "View",
-              onClick: () => window.open(`https://solscan.io/tx/${data.solana_proof_signature}`, "_blank"),
-            },
           });
           setPendingProofTradeId(null);
           return;
