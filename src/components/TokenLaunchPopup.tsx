@@ -43,7 +43,7 @@ export function TokenLaunchPopup() {
               <img src={saturnLogo} alt="Saturn" className="h-9 w-9 rounded-lg" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">🪐 Saturn is Live on Binance Chain!</h2>
+              <h2 className="text-lg font-bold text-foreground">Saturn is Live on Binance Chain!</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Our native token is now live. Copy the contract address below to get started.
               </p>
