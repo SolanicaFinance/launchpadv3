@@ -107,7 +107,7 @@ export default function BtcMemeLaunchPage() {
         <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
           <div className="text-5xl">₿</div>
           <h2 className="text-2xl font-bold text-foreground">Connect Wallet to Launch</h2>
-          <p className="text-muted-foreground text-sm">Connect your Bitcoin wallet to create a BTC meme token.</p>
+          <p className="text-muted-foreground text-sm">Connect your Bitcoin wallet to create a TAT Protocol token — 100% Bitcoin-native.</p>
           <BtcConnectWalletModal
             trigger={
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="lg">
