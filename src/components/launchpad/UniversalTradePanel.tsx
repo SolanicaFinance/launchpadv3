@@ -230,7 +230,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       });
 
       // Also show PNL card
-      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
+      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl, mintAddress: token.mint_address });
       setShowProfitCard(true);
 
     } catch (error) {
