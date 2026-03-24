@@ -50,8 +50,8 @@ export function V2SaturnProtocolExplainer() {
             <Shield className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-foreground">TAT Protocol v2 — Pure Bitcoin</h3>
-            <p className="text-xs text-muted-foreground">Born on Mainnet · Trades on Fractal · Audited on Mainnet</p>
+            <h3 className="text-base font-bold text-foreground">TAT Protocol — Pure Bitcoin Edition</h3>
+            <p className="text-xs text-muted-foreground">Born on Mainnet · Trades on Fractal · Audited on Mainnet · Graduates to Rune at 0.5 BTC</p>
           </div>
         </div>
       </div>
@@ -59,9 +59,9 @@ export function V2SaturnProtocolExplainer() {
       {/* Intro */}
       <div className="px-6 py-4 border-b border-border bg-secondary/10">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Saturn's <span className="text-foreground font-semibold">tri-layer settlement architecture</span> is 100% Bitcoin-native. 
-          Tokens are born on Bitcoin mainnet, traded instantly via Fractal Bitcoin (~30s blocks, merge-mined), 
-          and anchored back to mainnet every 10 minutes with Merkle solvency proofs. No bridges. No alt-chains. Pure Bitcoin.
+          The <span className="text-foreground font-semibold">TAT Protocol (Transaction-Attributed Tokens)</span> implements a tri-layer settlement architecture that is 100% Bitcoin-native. 
+          Tokens are genesis-stamped on Bitcoin mainnet, trade instantly via Fractal Bitcoin (~30s blocks, merge-mined), 
+          and are anchored back to mainnet every 10 minutes with Merkle solvency proofs. Fixed 1% platform fee, zero creator tax. Graduation to native Bitcoin Rune at 0.5 BTC.
         </p>
       </div>
 
@@ -104,8 +104,8 @@ export function V2SaturnProtocolExplainer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ~30s Fractal blocks</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% platform fee</span>
-            <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Unisat native</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% fee · No creator tax</span>
+            <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Rune</span>
           </div>
         </div>
       </div>

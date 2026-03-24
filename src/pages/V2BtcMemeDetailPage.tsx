@@ -145,7 +145,7 @@ export default function V2BtcMemeDetailPage() {
             <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${token.status === "active" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" : "bg-primary/20 text-primary"}`}>
               {token.status}
             </span>
-            <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">TAT v2</span>
+            <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">TAT Protocol</span>
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@ export default function V2BtcMemeDetailPage() {
         </div>
         <div className="flex justify-between mt-1">
           <span className="text-[10px] text-muted-foreground">{formatBtc(token.real_btc_reserves || 0)} raised</span>
-          <span className="text-[10px] text-muted-foreground">{formatBtc(token.graduation_threshold_btc || 0.015)} goal</span>
+          <span className="text-[10px] text-muted-foreground">{formatBtc(token.graduation_threshold_btc || 0.5)} goal</span>
         </div>
       </div>
 

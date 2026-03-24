@@ -86,7 +86,6 @@ export default function BtcMemeLaunchPage() {
           websiteUrl: form.websiteUrl,
           twitterUrl: form.twitterUrl,
           creatorWallet: address,
-          creatorFeeBps: 100,
           initialBuyBtc: form.initialBuyBtc,
         },
       });
@@ -108,7 +107,7 @@ export default function BtcMemeLaunchPage() {
         <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
           <div className="text-5xl">₿</div>
           <h2 className="text-2xl font-bold text-foreground">Connect Wallet to Launch</h2>
-          <p className="text-muted-foreground text-sm">Connect your Bitcoin wallet to create a BTC meme token.</p>
+          <p className="text-muted-foreground text-sm">Connect your Bitcoin wallet to create a TAT Protocol token — 100% Bitcoin-native.</p>
           <BtcConnectWalletModal
             trigger={
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="lg">
@@ -127,12 +126,12 @@ export default function BtcMemeLaunchPage() {
         <button onClick={() => navigate("/btc")} className="text-muted-foreground hover:text-foreground text-sm">
           ← Back
         </button>
-        <h1 className="text-xl font-bold text-foreground">Launch BTC Meme Token</h1>
+        <h1 className="text-xl font-bold text-foreground">Launch TAT Token</h1>
       </div>
 
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
         <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 border border-border/50">
-          ₿ Your token will go live once the Bitcoin genesis OP_RETURN transaction is confirmed on the network. Trading begins after confirmation.
+          ₿ Your TAT token will be genesis-stamped on Bitcoin mainnet via OP_RETURN, then trade instantly on Fractal Bitcoin (~30s blocks). Graduates to a native Rune at 0.5 BTC.
         </div>
 
         <div className="space-y-3">
@@ -191,10 +190,11 @@ export default function BtcMemeLaunchPage() {
         </div>
 
         <div className="bg-muted/20 rounded-lg p-3 space-y-1 text-xs">
+          <div className="flex justify-between"><span className="text-muted-foreground">Protocol</span><span className="text-foreground font-semibold">TAT Protocol</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Pool Model</span><span className="text-foreground font-semibold">Bonding Curve (x·y=k)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Total Supply</span><span className="text-foreground">1,000,000,000</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Graduation</span><span className="text-foreground">~0.015 BTC in reserves</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span className="text-foreground">1%</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Graduation</span><span className="text-foreground">0.5 BTC → Native Rune</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform (no creator tax)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Bitcoin Genesis</span><span className="text-foreground">Saturn.Trade OP_RETURN</span></div>
         </div>
 

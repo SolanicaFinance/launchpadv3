@@ -1,5 +1,5 @@
 /**
- * btc-merkle-anchor: Periodic solvency proof.
+ * btc-merkle-anchor: TAT Protocol periodic solvency proof.
  * Builds a Merkle tree of ALL btc_meme_balances, then posts the root
  * to Bitcoin via OP_RETURN.
  *
@@ -96,9 +96,9 @@ Deno.serve(async (req) => {
     console.log(`[btc-merkle-anchor] Merkle root: ${merkleRoot}`);
     console.log(`[btc-merkle-anchor] ${leaves.length} leaves, ${totalAccounts} accounts, ${totalTokens} tokens`);
 
-    // Build OP_RETURN payload: SATURN_ANCHOR|MERKLE_ROOT|TIMESTAMP
+    // Build OP_RETURN payload: TAT_ANCHOR|MERKLE_ROOT|TIMESTAMP
     const timestamp = Math.floor(Date.now() / 1000).toString(36);
-    const payload = `SATURN_ANCHOR|${merkleRoot.slice(0, 48)}|${timestamp}`;
+    const payload = `TAT_ANCHOR|${merkleRoot.slice(0, 48)}|${timestamp}`;
 
     const btcTreasuryWif = Deno.env.get("BTC_PLATFORM_WIF") || Deno.env.get("BTC_TREASURY_WIF");
 

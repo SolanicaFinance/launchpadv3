@@ -9,7 +9,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const TOTAL_SUPPLY = 1_000_000_000;
 const INITIAL_VIRTUAL_BTC = 0.0005;
 const REAL_TOKEN_RESERVES = 800_000_000;
-const GRADUATION_THRESHOLD_BTC = 0.015;
+const GRADUATION_THRESHOLD_BTC = 0.5;
+const PLATFORM_FEE_BPS = 100; // Fixed 1% platform fee, no creator fees
 
 function getSupabase() {
   return createClient(
@@ -23,7 +24,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, creatorFeeBps, initialBuyBtc } = body;
+    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc } = body;
 
     if (!name || !ticker || !creatorWallet) {
       return new Response(JSON.stringify({ error: "name, ticker, and creatorWallet required" }), {
@@ -56,7 +57,6 @@ Deno.serve(async (req) => {
     const virtualTokens = TOTAL_SUPPLY;
     const priceBtc = virtualBtc / virtualTokens;
     const marketCapBtc = priceBtc * TOTAL_SUPPLY;
-    const feeBps = Math.min(Math.max(creatorFeeBps || 100, 0), 500);
 
     const { data: token, error: tokenErr } = await supabase
       .from("btc_meme_tokens")
@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
         market_cap_btc: marketCapBtc,
         graduation_threshold_btc: GRADUATION_THRESHOLD_BTC,
         bonding_progress: 0,
-        platform_fee_bps: 100,
-        creator_fee_bps: feeBps,
+        platform_fee_bps: PLATFORM_FEE_BPS,
+        creator_fee_bps: 0,
         status: "pending_genesis",
       })
       .select("id, ticker, price_btc, market_cap_btc")
@@ -92,8 +92,7 @@ Deno.serve(async (req) => {
         .from("btc_trading_balances")
         .upsert({ wallet_address: creatorWallet, balance_btc: initialBuyBtc, total_deposited: initialBuyBtc }, { onConflict: "wallet_address" });
 
-      const totalFeeBps = 100 + feeBps;
-      const feeAmount = initialBuyBtc * (totalFeeBps / 10000);
+      const feeAmount = initialBuyBtc * (PLATFORM_FEE_BPS / 10000);
       const netBtc = initialBuyBtc - feeAmount;
       const tokensOut = (virtualTokens * netBtc) / (virtualBtc + netBtc);
       const newVirtualBtc = virtualBtc + netBtc;
