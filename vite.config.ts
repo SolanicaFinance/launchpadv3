@@ -9,7 +9,21 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    {
+      name: 'md-charset',
+      configureServer(server: any) {
+        server.middlewares.use((req: any, res: any, next: any) => {
+          if (req.url?.endsWith('.md')) {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          }
+          next();
+        });
+      },
+    },
+  ].filter(Boolean),
   // Silence noisy (but harmless) Rollup warnings coming from some dependencies.
   // This keeps CI logs clean while preserving real warnings/errors.
   build: {
