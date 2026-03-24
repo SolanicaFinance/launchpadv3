@@ -118,7 +118,7 @@ export default function SixtyNineListPage() {
                   those who've committed to the long game. By holding strong, you climb the ladder to lifetime rewards:{" "}
                   <span className="text-foreground font-semibold">69% of our 1% launchpad fees</span> from every coin swap is 
                   distributed evenly among the top 69, based on the last 60 minutes' profits. Plus, immovable holders have a 
-                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 69 BNB</span>. The mission? 
+                  high chance at <span className="text-foreground font-semibold">weekly bonuses of 6.9 BNB</span>. The mission? 
                   Don't sell — ascend to the top and earn passively from every token launched on Saturn Terminal.{" "}
                   <span className="text-primary font-bold italic">Hold $SATURN, get rich like a Forbes lister.</span>
                 </p>
@@ -130,7 +130,7 @@ export default function SixtyNineListPage() {
               {[
                 { value: "69%", label: "Fees Distributed", icon: Trophy },
                 { value: "1%", label: "Per Swap Fee", icon: TrendingUp },
-                { value: "69 BNB", label: "Weekly Bonus Draw", icon: Dice5 },
+                { value: "6.9 BNB", label: "Weekly Bonus Draw", icon: Dice5 },
                 { value: "∞", label: "Lifetime Earnings", icon: Gem },
               ].map(({ value, label, icon: Icon }) => (
                 <div
@@ -246,14 +246,13 @@ export default function SixtyNineListPage() {
               {/* Coming Soon State */}
               <div className="rounded-xl border border-border/20 bg-card/20 p-8 sm:p-12 text-center">
                 <Crown className="h-12 w-12 text-primary/30 mx-auto mb-4" strokeWidth={1.5} />
-                <h3 className="text-lg font-bold text-foreground mb-2">Holders List Coming Soon</h3>
+                <h3 className="text-lg font-bold text-foreground mb-2">$SATURN Token</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed mb-4">
-                  Once <span className="text-primary font-semibold">$SATURN</span> launches, the top 69 holders will appear here automatically. 
-                  The contract address will be added to scan and distribute rewards to qualifying wallets.
+                  <span className="text-primary font-semibold">$SATURN</span> is live! The top 69 holders will appear here automatically. 
+                  Rewards are distributed to qualifying wallets.
                 </p>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/5 border border-primary/15 text-primary text-xs font-semibold">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Token launch imminent — stay tuned
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/5 border border-primary/15 text-primary text-xs font-semibold font-mono">
+                  CA: 0x27a51c96b84c6d9f24d5d054c396ae0e1c96ffff
                 </div>
               </div>
             </div>
