@@ -243,53 +243,55 @@ Deno.serve(async (req) => {
       devBuyResult = { tokensReceived: tokensOut, priceAfterBuy: newPrice, marketCapAfterBuy: newMcap };
     }
 
-    // Fire Bitcoin genesis proof asynchronously
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    // Only fire separate genesis proof if OP_RETURN wasn't embedded in payment tx
+    if (!genesisEmbedded) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-    // Fire genesis proof with 60s auto-activation fallback
-    const genesisPromise = fetch(`${supabaseUrl}/functions/v1/btc-genesis-proof`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseAnonKey}`,
-      },
-      body: JSON.stringify({
-        tokenId: token.id,
-        ticker: ticker.toUpperCase().trim(),
-        name: name.trim(),
-        imageUrl: imageUrl || null,
-        creatorWallet,
-      }),
-    }).catch(err => console.warn("[btc-meme-create] Genesis proof fire-and-forget error:", err));
+      fetch(`${supabaseUrl}/functions/v1/btc-genesis-proof`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          tokenId: token.id,
+          ticker: ticker.toUpperCase().trim(),
+          name: name.trim(),
+          imageUrl: imageUrl || null,
+          creatorWallet,
+        }),
+      }).catch(err => console.warn("[btc-meme-create] Genesis proof fire-and-forget error:", err));
 
-    // Auto-activate fallback: only if payment was received (payment_tx_id exists)
-    setTimeout(async () => {
-      try {
-        const { data: checkToken } = await supabase
-          .from("btc_meme_tokens")
-          .select("status, payment_tx_id")
-          .eq("id", token.id)
-          .maybeSingle();
-        if (checkToken && checkToken.status === "pending_genesis" && checkToken.payment_tx_id) {
-          console.log(`[btc-meme-create] Auto-activating paid token ${token.id} after 60s timeout`);
-          await supabase.from("btc_meme_tokens").update({
-            status: "active",
-            genesis_txid: checkToken.payment_tx_id,
-          }).eq("id", token.id);
-        } else if (checkToken && !checkToken.payment_tx_id) {
-          console.log(`[btc-meme-create] Skipping auto-activate for unpaid token ${token.id}`);
+      // Auto-activate fallback for non-embedded genesis
+      setTimeout(async () => {
+        try {
+          const { data: checkToken } = await supabase
+            .from("btc_meme_tokens")
+            .select("status, payment_tx_id")
+            .eq("id", token.id)
+            .maybeSingle();
+          if (checkToken && checkToken.status === "pending_genesis" && checkToken.payment_tx_id) {
+            console.log(`[btc-meme-create] Auto-activating paid token ${token.id} after 60s timeout`);
+            await supabase.from("btc_meme_tokens").update({
+              status: "active",
+              genesis_txid: checkToken.payment_tx_id,
+            }).eq("id", token.id);
+          }
+        } catch (e) {
+          console.warn("[btc-meme-create] Auto-activate fallback error:", e);
         }
-      } catch (e) {
-        console.warn("[btc-meme-create] Auto-activate fallback error:", e);
-      }
-    }, 60_000);
+      }, 60_000);
+    } else {
+      console.log(`[btc-meme-create] Genesis embedded in payment tx ${paymentTxId} — token ${token.id} is immediately active`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       token: { id: token.id, ticker: token.ticker, priceBtc: devBuyResult?.priceAfterBuy || token.price_btc, marketCapBtc: devBuyResult?.marketCapAfterBuy || token.market_cap_btc },
       devBuy: devBuyResult,
-      genesisProofPending: true,
+      genesisEmbedded: !!genesisEmbedded,
+      genesisTxid: genesisEmbedded ? paymentTxId : null,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("[btc-meme-create] Error:", error);
