@@ -73,9 +73,17 @@ Deno.serve(async (req) => {
 
     if (tradeType === "buy") {
       btcAmount = amount;
-      const { data: bal } = await supabase.from("btc_trading_balances").select("balance_btc").eq("wallet_address", walletAddress).maybeSingle();
-      if (!bal || bal.balance_btc < btcAmount) {
-        return new Response(JSON.stringify({ error: "Insufficient BTC balance", available: bal?.balance_btc || 0 }), {
+      const { data: bal } = await supabase.from("btc_trading_balances").select("balance_btc, total_deposited").eq("wallet_address", walletAddress).maybeSingle();
+      
+      // Security: reject if wallet has never made a real deposit
+      if (!bal || bal.total_deposited <= 0) {
+        return new Response(JSON.stringify({ error: "No verified BTC deposit found. Please deposit BTC first." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      if (bal.balance_btc < btcAmount) {
+        return new Response(JSON.stringify({ error: "Insufficient BTC balance", available: bal.balance_btc || 0 }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
