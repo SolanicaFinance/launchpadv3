@@ -17,7 +17,7 @@ function LaunchpadRedirect() {
   return <Navigate to={`/trade/${mintAddress}`} replace />;
 }
 import { PrivyProviderWrapper } from "@/providers/PrivyProviderWrapper";
-import { ChainProvider } from "@/contexts/ChainContext";
+import { ChainProvider, useChain } from "@/contexts/ChainContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RuntimeConfigBootstrap } from "@/components/RuntimeConfigBootstrap";
 import { EvmWalletProvider } from "@/providers/EvmWalletProvider";
