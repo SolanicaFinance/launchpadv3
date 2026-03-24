@@ -1,5 +1,9 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useBtcWalletInternal, UseBtcWalletReturn } from '@/hooks/useBtcWallet';
+import type { UseBtcWalletReturn } from '@/hooks/useBtcWallet';
+
+// We import the internal hook dynamically to avoid circular deps
+// The internal function is exported as useBtcWalletInternal from the hook file
+import { useBtcWalletInternal } from '@/hooks/useBtcWallet';
 
 const BtcWalletContext = createContext<UseBtcWalletReturn | null>(null);
 
@@ -12,10 +16,10 @@ export function BtcWalletProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useBtcWalletContext(): UseBtcWalletReturn {
+export function useBtcWallet(): UseBtcWalletReturn {
   const context = useContext(BtcWalletContext);
   if (!context) {
-    throw new Error('useBtcWalletContext must be used within a BtcWalletProvider');
+    throw new Error('useBtcWallet must be used within a BtcWalletProvider');
   }
   return context;
 }
