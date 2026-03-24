@@ -179,17 +179,19 @@ export function GlobalTradeNotifier() {
   // Subscribe to fun_tokens for new coin launches
   useEffect(() => {
     console.log("[GlobalTradeNotifier] Subscribing to fun_tokens launches...");
+    let errorCount = 0;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
-      .channel("global-launch-notifier-v1")
+    channel = supabase
+      .channel("global-launch-notifier-v2")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "fun_tokens" },
         (payload) => {
           const token = payload.new as any;
           if (!token) return;
+          errorCount = 0;
 
-          // Skip punch tokens
           if (token.launchpad_type === "punch") return;
 
           console.log("[GlobalTradeNotifier] New launch:", token.ticker, token.name);
@@ -222,10 +224,19 @@ export function GlobalTradeNotifier() {
       )
       .subscribe((status) => {
         console.log("[GlobalTradeNotifier] Launches status:", status);
+        if (status === "CHANNEL_ERROR") {
+          errorCount++;
+          if (errorCount >= 3) {
+            console.warn("[GlobalTradeNotifier] Launches channel failed 3 times, stopping retries");
+            if (channel) supabase.removeChannel(channel);
+          }
+        } else if (status === "SUBSCRIBED") {
+          errorCount = 0;
+        }
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
