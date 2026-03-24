@@ -276,7 +276,7 @@ export default function V2BtcMemeDetailPage() {
         {/* Left Column: Trade Panel + Deposit */}
         <div className="space-y-4">
           {/* Trade Panel */}
-          <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <div className="bg-card border border-border rounded-xl p-4 pb-5 space-y-3">
             <h3 className="text-sm font-bold text-foreground">Trade</h3>
             {token.status === "pending_genesis" ? (
               <div className="text-center py-6 space-y-2">
