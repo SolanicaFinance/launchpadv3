@@ -235,7 +235,7 @@ function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
         >
           {mobileColumns.map(col => (
             <div key={col.title} className="min-w-0">
-              <BtcPulseColumn title={col.title} icon={col.icon} tokens={col.tokens} loading={loading} />
+              <BtcPulseColumn title={col.title} icon={col.icon} tokens={col.tokens} loading={loading} btcUsdPrice={btcUsdPrice} />
             </div>
           ))}
         </div>
