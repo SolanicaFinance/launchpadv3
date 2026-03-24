@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -35,6 +35,9 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
       .catch(() => {});
   }, []);
 
+  // Track which txids we've already shown credit toasts for
+  const creditedToastRef = useRef<Set<string>>(new Set());
+
   // Scan for deposits from this wallet
   const scanDeposits = useCallback(async (silent = false) => {
     if (!walletAddress || !depositAddress) return;
@@ -45,16 +48,15 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
       });
       if (error) throw error;
       if (data?.deposits) {
-        const prev = deposits;
         setDeposits(data.deposits);
 
-        // Check if any new deposit got confirmed/credited
-        const newlyConfirmed = data.deposits.filter(
-          (d: DetectedDeposit) => d.confirmed && d.credited &&
-          !prev.find(p => p.txid === d.txid && p.credited)
+        // Only toast for newly credited deposits we haven't toasted before
+        const newlyConfirmed = (data.deposits as DetectedDeposit[]).filter(
+          (d) => d.confirmed && d.credited && !creditedToastRef.current.has(d.txid)
         );
         if (newlyConfirmed.length > 0) {
           const total = newlyConfirmed.reduce((s: number, d: DetectedDeposit) => s + d.amountBtc, 0);
+          newlyConfirmed.forEach(d => creditedToastRef.current.add(d.txid));
           toast.success(`${total.toFixed(8)} BTC confirmed & credited!`);
           queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
         }
@@ -65,15 +67,16 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
     } finally {
       setScanning(false);
     }
-  }, [walletAddress, depositAddress, deposits, queryClient]);
+  }, [walletAddress, depositAddress, queryClient]);
 
-  // Initial scan + auto-poll every 30s
+  // Initial scan + auto-poll every 60s
   useEffect(() => {
     if (!walletAddress || !depositAddress) return;
+    // Seed the creditedToastRef with already-credited deposits to avoid re-toasting
     scanDeposits(true);
-    const interval = setInterval(() => scanDeposits(true), 30000);
+    const interval = setInterval(() => scanDeposits(true), 60000);
     return () => clearInterval(interval);
-  }, [walletAddress, depositAddress]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [walletAddress, depositAddress, scanDeposits]);
 
   const copyDepositAddress = () => {
     if (!depositAddress) return;
