@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-TAT (Transaction-Attributed Tokens) implements a **hybrid lifecycle model** where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion. This creates a two-phase token lifecycle:
+TAT (Transaction-Attributed Tokens) implements a **graduated lifecycle model** where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion. This creates a two-phase token lifecycle:
 
 - **Phase 1 (Pre-Graduation)**: Virtual bonding curve on Saturn's execution layer, with Bitcoin OP_RETURN genesis proof
 - **Phase 2 (Post-Graduation)**: Native Rune etched on Bitcoin L1, visible in all compatible wallets (UniSat, Xverse, Leather, OKX)
