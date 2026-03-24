@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowUpFromLine, ExternalLink } from "lucide-react";
+import { Loader2, ArrowUpFromLine, ExternalLink, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface BtcWithdrawPanelProps {
@@ -15,6 +15,7 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
   const [amount, setAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [lastTxid, setLastTxid] = useState<string | null>(null);
+  const [confirmStep, setConfirmStep] = useState(false);
   const queryClient = useQueryClient();
 
   const handleWithdraw = async () => {
@@ -32,8 +33,15 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
       return;
     }
 
+    // Two-step confirmation
+    if (!confirmStep) {
+      setConfirmStep(true);
+      return;
+    }
+
     setWithdrawing(true);
     setLastTxid(null);
+    setConfirmStep(false);
     try {
       const { data, error } = await supabase.functions.invoke("btc-withdraw", {
         body: { walletAddress, amountBtc: numAmount },
@@ -46,7 +54,7 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
 
       setLastTxid(data.txid);
       toast.success("Withdrawal sent!", {
-        description: `${numAmount} BTC → your wallet. TX will confirm in ~10-30 min.`,
+        description: `${numAmount} BTC → your wallet. Confirms in ~10-30 min.`,
       });
       setAmount("");
       queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
@@ -58,10 +66,14 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
     }
   };
 
+  const cancelConfirm = () => {
+    setConfirmStep(false);
+  };
+
   const setMax = () => {
-    // Reserve a small buffer for network fees on the platform side
     const max = Math.max(0, currentBalance - 0.00001);
     setAmount(max > 0 ? max.toFixed(8).replace(/0+$/, "").replace(/\.$/, "") : "0");
+    setConfirmStep(false);
   };
 
   if (currentBalance <= 0) return null;
@@ -91,19 +103,47 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
           min="0"
           placeholder="0.0005"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => { setAmount(e.target.value); setConfirmStep(false); }}
           className="font-mono"
+          disabled={withdrawing}
         />
       </div>
 
-      <Button
-        onClick={handleWithdraw}
-        disabled={withdrawing || !amount}
-        className="w-full bg-destructive hover:bg-destructive/90 text-white"
-        size="sm"
-      >
-        {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw to Wallet"}
-      </Button>
+      {confirmStep ? (
+        <div className="space-y-2">
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-center">
+            <ShieldCheck className="w-5 h-5 text-destructive mx-auto mb-1" />
+            <p className="text-xs font-semibold text-destructive">
+              Confirm withdrawal of {parseFloat(amount).toFixed(8)} BTC?
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              This will send real BTC to your wallet. This action cannot be undone.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={cancelConfirm} variant="outline" size="sm" disabled={withdrawing}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleWithdraw}
+              disabled={withdrawing}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              size="sm"
+            >
+              {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Send"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          onClick={handleWithdraw}
+          disabled={withdrawing || !amount}
+          className="w-full bg-destructive hover:bg-destructive/90 text-white"
+          size="sm"
+        >
+          {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw to Wallet"}
+        </Button>
+      )}
 
       {lastTxid && (
         <a
@@ -118,7 +158,7 @@ export function BtcWithdrawPanel({ walletAddress, currentBalance }: BtcWithdrawP
       )}
 
       <p className="text-[9px] text-muted-foreground text-center">
-        Real BTC sent to your wallet. Min: 5,000 sats. Confirms in ~10-30 min.
+        Real BTC on-chain withdrawal. Min: 5,000 sats · Max: 3/hr · 60s cooldown
       </p>
     </div>
   );
