@@ -132,7 +132,7 @@ function BtcPulseColumn({ title, icon, tokens, loading }: {
           <Skeleton key={i} className="h-14 rounded-xl" />
         ))
       ) : tokens.length > 0 ? (
-        tokens.map((t) => <BtcPulseTokenRow key={t.id} token={t} />)
+        tokens.map((t) => <BtcPulseTokenRow key={t.id} token={t} btcUsdPrice={btcUsdPrice} />)
       ) : (
         <div className="text-center py-8 text-[11px] text-muted-foreground border border-dashed border-border/30 rounded-xl">
           No tokens yet
