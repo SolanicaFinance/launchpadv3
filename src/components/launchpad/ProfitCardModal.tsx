@@ -19,6 +19,7 @@ export interface ProfitCardData {
   signature?: string;
   tokenImageUrl?: string;
   chain?: 'solana' | 'bnb' | 'btc';
+  mintAddress?: string;
 }
 
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
