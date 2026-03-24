@@ -68,6 +68,7 @@ const TAB_CONFIG = [
   { value: "meteorite", label: "Meteorite", icon: Rocket },
   { value: "mev", label: "MEV", icon: Zap },
   { value: "ai-collab", label: "AI Collab", icon: Brain },
+  { value: "token-send", label: "Token Send", icon: Send },
 ] as const;
 
 export default function AdminPanelPage() {
