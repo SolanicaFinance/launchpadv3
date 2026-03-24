@@ -163,7 +163,7 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
                 }}
               >
                 <div className="relative flex-shrink-0">
-                  <div className="h-9 w-9 rounded-xl overflow-hidden border border-border/70 bg-card/60">
+                  <div className="h-9 w-9 rounded-xl overflow-hidden border border-border/70 bg-card/60 flex items-center justify-center">
                     <OptimizedTokenImage
                       src={r.imageUrl}
                       fallbackSrc={imageFallbacks}
