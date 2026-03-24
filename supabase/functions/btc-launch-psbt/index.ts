@@ -13,6 +13,11 @@
 
 import { Buffer } from "node:buffer";
 
+const MEMPOOL_API_BASES = [
+  "https://mempool.space/api",
+  "https://mempool.emzy.de/api",
+];
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -61,8 +66,20 @@ async function handleBuild(body: any) {
   console.log(`[btc-launch-psbt] OP_RETURN payload (${encoder.encode(payload).length} bytes): ${payload}`);
 
   // Fetch UTXOs for sender
-  const utxoRes = await fetch(`https://mempool.space/api/address/${senderAddress}/utxo`);
-  if (!utxoRes.ok) throw new Error(`Failed to fetch UTXOs for ${senderAddress}`);
+  const utxoRes = await fetchFromMempool(`/address/${encodeURIComponent(senderAddress)}/utxo`);
+  if (!utxoRes.ok) {
+    const errText = await safeReadText(utxoRes);
+    return jsonRes(
+      {
+        error:
+          utxoRes.status >= 400 && utxoRes.status < 500
+            ? `Could not read UTXOs for this wallet address. Please reconnect your BTC wallet and try again.`
+            : "Bitcoin network lookup is temporarily unavailable. Please try again in a moment.",
+        details: errText || `UTXO lookup failed with status ${utxoRes.status}`,
+      },
+      utxoRes.status >= 400 && utxoRes.status < 500 ? 400 : 502,
+    );
+  }
   const utxos = await utxoRes.json();
 
   if (!utxos || utxos.length === 0) {
@@ -70,8 +87,8 @@ async function handleBuild(body: any) {
   }
 
   // Fetch fee rate
-  const feeRes = await fetch("https://mempool.space/api/v1/fees/recommended");
-  const fees = await feeRes.json();
+  const feeRes = await fetchFromMempool("/v1/fees/recommended");
+  const fees = feeRes.ok ? await feeRes.json() : {};
   const feeRate = fees.halfHourFee || 10;
 
   // Sort UTXOs by value descending, pick enough to cover totalSats + estimated fee
@@ -128,8 +145,12 @@ async function handleBuild(body: any) {
       });
     } else {
       // For legacy (p2pkh), we need the full previous tx
-      const prevTxRes = await fetch(`https://mempool.space/api/tx/${utxo.txid}/hex`);
-      const prevTxHex = await prevTxRes.text();
+        const prevTxRes = await fetchFromMempool(`/tx/${utxo.txid}/hex`);
+        if (!prevTxRes.ok) {
+          const errText = await safeReadText(prevTxRes);
+          return jsonRes({ error: "Failed to load previous transaction data.", details: errText }, 502);
+        }
+        const prevTxHex = await prevTxRes.text();
       psbt.addInput({
         hash: utxo.txid,
         index: utxo.vout,
@@ -190,7 +211,7 @@ async function handleBroadcast(body: any) {
     console.log(`[btc-launch-psbt] Broadcasting tx (${rawTx.length / 2} bytes)`);
 
     // Broadcast via mempool.space
-    const broadcastRes = await fetch("https://mempool.space/api/tx", {
+    const broadcastRes = await fetchFromMempool("/tx", {
       method: "POST",
       body: rawTx,
     });
@@ -227,4 +248,36 @@ function jsonRes(data: any, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function fetchFromMempool(path: string, init?: RequestInit): Promise<Response> {
+  let lastResponse: Response | null = null;
+  let lastError: unknown = null;
+
+  for (const base of MEMPOOL_API_BASES) {
+    try {
+      const response = await fetch(`${base}${path}`, init);
+      if (response.ok) return response;
+      if (response.status < 500) return response;
+      lastResponse = response;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastResponse) return lastResponse;
+
+  throw new Error(
+    lastError instanceof Error
+      ? `Mempool API request failed: ${lastError.message}`
+      : "Mempool API request failed",
+  );
+}
+
+async function safeReadText(response: Response) {
+  try {
+    return await response.text();
+  } catch {
+    return "";
+  }
 }
