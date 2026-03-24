@@ -72,6 +72,9 @@ export default function V2BtcMemeDetailPage() {
       const executionMs = Date.now() - startMs;
       const trade = data.trade;
 
+      // Use genesis_txid as CA pre-graduation, rune_id post-graduation
+      const tokenCA = token?.genesis_txid || id;
+
       showTradeSuccess({
         type: tradeType,
         ticker: token?.ticker || "",
@@ -82,7 +85,7 @@ export default function V2BtcMemeDetailPage() {
         tokenImageUrl: token?.image_url || undefined,
         chain: "btc",
         executionMs,
-        mintAddress: id,
+        mintAddress: tokenCA,
       });
       setAmount("");
     } catch (e: any) {
@@ -147,6 +150,22 @@ export default function V2BtcMemeDetailPage() {
             </span>
             <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">TAT Protocol</span>
           </div>
+          {/* CA: Genesis TX pre-graduation, Rune ID post-graduation */}
+          {token.genesis_txid && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">
+                {token.graduated_at ? 'RUNE' : 'GENESIS TX'}
+              </span>
+              <a
+                href={`https://mempool.space/tx/${token.genesis_txid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-mono text-primary/70 hover:text-primary transition-colors"
+              >
+                {truncate(token.genesis_txid, 8)} ↗
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

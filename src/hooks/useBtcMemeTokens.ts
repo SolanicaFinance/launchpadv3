@@ -22,6 +22,8 @@ export interface BtcMemeToken {
   virtual_token_reserves: number;
   graduation_threshold_btc: number;
   total_supply: number;
+  genesis_txid: string | null;
+  graduated_at: string | null;
 }
 
 export function useBtcMemeTokens() {
