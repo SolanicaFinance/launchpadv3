@@ -45,14 +45,17 @@ function formatTokens(n: number) {
 }
 
 export default function V2BtcMemeLaunchPage() {
-  const { isConnected, address } = useBtcWallet();
+  const { isConnected, address, sendBitcoin } = useBtcWallet();
   const navigate = useNavigate();
   const btcPrice = useBtcUsdPrice();
   const [submitting, setSubmitting] = useState(false);
+  const [launchStep, setLaunchStep] = useState<'idle' | 'paying' | 'creating'>('idle');
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [platformAddress, setPlatformAddress] = useState<string | null>(null);
+  const [launchFeeSats, setLaunchFeeSats] = useState(10_000);
   const [form, setForm] = useState({
     name: "",
     ticker: "",
@@ -62,6 +65,26 @@ export default function V2BtcMemeLaunchPage() {
     twitterUrl: "",
     initialBuyBtc: 0.0001,
   });
+
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const res = await fetch(`https://${projectId}.supabase.co/functions/v1/btc-meme-create`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPlatformAddress(data.platformAddress);
+          setLaunchFeeSats(data.launchFeeSats || 10_000);
+        }
+      } catch (e) {
+        console.warn('[V2BtcMemeLaunchPage] Failed to fetch platform info:', e);
+      }
+    };
+    fetchInfo();
+  }, []);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
