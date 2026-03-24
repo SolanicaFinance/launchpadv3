@@ -378,7 +378,7 @@ export default function V2BitcoinModePage() {
               {isConnected ? (
                 <Button
                   onClick={() => navigate('/btc/meme/launch')}
-                  className="relative px-7 py-3 rounded-full font-bold text-sm min-h-[48px] hover:scale-[1.08] transition-all duration-300"
+                  className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300"
                   style={{
                     background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
                     color: "hsl(0 0% 5%)",
