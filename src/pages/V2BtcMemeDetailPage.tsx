@@ -298,7 +298,7 @@ export default function V2BtcMemeDetailPage() {
               ))}
             </div>
           )}
-          <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full font-mono font-bold ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
+          <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full font-mono font-bold ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-black" : "bg-destructive hover:bg-destructive/90 text-white"}`}>
             {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
           </Button>
           {myBalance && myBalance.balance > 0 && (
