@@ -26,7 +26,6 @@ export default function V2BtcMemeLaunchPage() {
     websiteUrl: "",
     twitterUrl: "",
     initialBuyBtc: 0.0001,
-    creatorFeeBps: 0,
   });
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
