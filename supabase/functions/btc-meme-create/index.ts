@@ -39,19 +39,84 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Rune naming validation ──
+    // Rune names must be A-Z only (1-28 chars). Validate ticker conforms.
+    const cleanTicker = ticker.toUpperCase().trim().replace(/[^A-Z]/g, "");
+    if (cleanTicker.length === 0) {
+      return new Response(JSON.stringify({ error: "Ticker must contain at least one letter (A-Z only for Rune compatibility)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (cleanTicker !== ticker.toUpperCase().trim()) {
+      return new Response(JSON.stringify({ error: "Ticker must be letters only (A-Z) for Bitcoin Rune compatibility. No numbers or special characters." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (cleanTicker.length > 28) {
+      return new Response(JSON.stringify({ error: "Rune names can be max 28 characters" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabase = getSupabase();
 
+    // Check for duplicate ticker in our DB (active or graduated — both block reuse)
     const { data: existing } = await supabase
       .from("btc_meme_tokens")
-      .select("id")
-      .eq("ticker", ticker.toUpperCase())
-      .eq("status", "active")
+      .select("id, status")
+      .eq("ticker", cleanTicker)
+      .in("status", ["active", "pending_genesis", "graduated"])
       .maybeSingle();
 
     if (existing) {
-      return new Response(JSON.stringify({ error: `Ticker $${ticker.toUpperCase()} already exists` }), {
+      return new Response(JSON.stringify({ error: `Ticker $${cleanTicker} already exists` }), {
         status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Also check the fallback name ({TICKER}SAT) isn't taken
+    const fallbackTicker = cleanTicker + "SAT";
+    if (fallbackTicker.length <= 28) {
+      const { data: fallbackExists } = await supabase
+        .from("btc_meme_tokens")
+        .select("id")
+        .eq("ticker", fallbackTicker)
+        .in("status", ["active", "pending_genesis", "graduated"])
+        .maybeSingle();
+
+      if (fallbackExists) {
+        return new Response(JSON.stringify({ error: `Fallback Rune name ${fallbackTicker} already exists. Choose a different ticker.` }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ── Check Rune name availability on Bitcoin mainnet via Xverse API ──
+    const XVERSE_API = "https://api.xverse.app";
+    const runeNamesToCheck = [cleanTicker, fallbackTicker].filter(n => n.length <= 28);
+    
+    for (const candidateName of runeNamesToCheck) {
+      try {
+        const runeRes = await fetch(`${XVERSE_API}/v1/runes/${encodeURIComponent(candidateName)}`);
+        if (runeRes.ok) {
+          const runeData = await runeRes.json();
+          if (runeData && runeData.name) {
+            // This Rune already exists on Bitcoin mainnet
+            if (candidateName === cleanTicker) {
+              return new Response(JSON.stringify({ 
+                error: `Rune name "${candidateName}" already exists on Bitcoin. Choose a different ticker.`,
+                onChainConflict: true,
+              }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            // Fallback name taken — warn but don't block (primary name still works)
+            console.warn(`[btc-meme-create] Fallback Rune "${candidateName}" exists on-chain, primary "${cleanTicker}" will be used.`);
+          }
+        }
+        // 404 = name available, which is good
+      } catch (e) {
+        console.warn("[btc-meme-create] Rune name availability check failed:", e);
+        // Don't block launch if API is down
+      }
     }
 
     const virtualBtc = INITIAL_VIRTUAL_BTC;
