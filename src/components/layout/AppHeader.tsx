@@ -159,12 +159,14 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
                            focus:bg-card/40 focus:shadow-[0_0_12px_hsl(84_81%_44%/0.08)]"
               />
               {showDropdown && (
-                <GlobalSearchDropdown
-                  results={searchResults}
-                  isLoading={searchLoading}
-                  query={debouncedQuery}
-                  onClose={closeDropdown}
-                />
+                <div className="absolute left-0 top-full mt-2 w-[min(720px,calc(100vw-2rem))] z-[60]">
+                  <GlobalSearchDropdown
+                    results={searchResults}
+                    isLoading={searchLoading}
+                    query={debouncedQuery}
+                    onClose={closeDropdown}
+                  />
+                </div>
               )}
             </div>
 
