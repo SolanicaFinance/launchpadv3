@@ -1,39 +1,56 @@
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-  LAMPORTS_PER_SOL,
-} from "npm:@solana/web3.js@1.98.0";
-import {
-  getAssociatedTokenAddress,
-  createTransferInstruction,
-  createAssociatedTokenAccountInstruction,
-  getAccount,
-  getMint,
-} from "npm:@solana/spl-token@0.4.14";
-import bs58 from "npm:bs58@6.0.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const ADMIN_PASSWORD = "saturn135@";
+const BSC_RPC = "https://bsc-dataseed1.binance.org";
 
-function parseKeypair(privateKey: string): InstanceType<typeof Keypair> {
-  try {
-    if (privateKey.startsWith("[")) {
-      const keyArray = JSON.parse(privateKey);
-      return Keypair.fromSecretKey(new Uint8Array(keyArray));
-    }
-    return Keypair.fromSecretKey(bs58.decode(privateKey));
-  } catch {
-    throw new Error("Invalid private key format");
-  }
+// Minimal ABI for ERC-20 transfer + balanceOf + decimals
+const ERC20_TRANSFER_SIG = "0xa9059cbb"; // transfer(address,uint256)
+const ERC20_BALANCE_SIG = "0x70a08231"; // balanceOf(address)
+const ERC20_DECIMALS_SIG = "0x313ce567"; // decimals()
+
+function padAddress(addr: string): string {
+  return addr.toLowerCase().replace("0x", "").padStart(64, "0");
 }
+
+function padUint256(hex: string): string {
+  return hex.replace("0x", "").padStart(64, "0");
+}
+
+function toHex(n: bigint): string {
+  return "0x" + n.toString(16);
+}
+
+async function rpcCall(method: string, params: unknown[]): Promise<unknown> {
+  const res = await fetch(BSC_RPC, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(`RPC error: ${JSON.stringify(json.error)}`);
+  return json.result;
+}
+
+async function getDecimals(tokenAddress: string): Promise<number> {
+  const result = await rpcCall("eth_call", [
+    { to: tokenAddress, data: ERC20_DECIMALS_SIG },
+    "latest",
+  ]) as string;
+  return parseInt(result, 16);
+}
+
+async function getTokenBalance(tokenAddress: string, wallet: string): Promise<bigint> {
+  const data = ERC20_BALANCE_SIG + padAddress(wallet);
+  const result = await rpcCall("eth_call", [
+    { to: tokenAddress, data },
+    "latest",
+  ]) as string;
+  return BigInt(result);
+}
+
+// Minimal secp256k1 + RLP + keccak via Web Crypto is complex,
+// so we use the ethers-compatible approach with raw signing via npm
+import { Wallet, JsonRpcProvider, Contract, parseUnits, formatUnits } from "npm:ethers@6.13.4";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -41,7 +58,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { adminPassword, privateKey, mintAddress, toAddress, amount } = await req.json();
+    const { adminPassword, privateKey, tokenAddress, toAddress, amount } = await req.json();
 
     if (adminPassword !== ADMIN_PASSWORD) {
       return new Response(
@@ -50,147 +67,80 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!privateKey || !mintAddress || !toAddress || !amount || Number(amount) <= 0) {
+    if (!privateKey || !tokenAddress || !toAddress || !amount || Number(amount) <= 0) {
       return new Response(
-        JSON.stringify({ error: "privateKey, mintAddress, toAddress, and amount (>0) are required" }),
+        JSON.stringify({ error: "privateKey, tokenAddress, toAddress, and amount (>0) are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const heliusRpcUrl = Deno.env.get("HELIUS_RPC_URL");
-    if (!heliusRpcUrl) {
-      return new Response(
-        JSON.stringify({ error: "HELIUS_RPC_URL not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const provider = new JsonRpcProvider(BSC_RPC, 56);
+    const wallet = new Wallet(privateKey.trim(), provider);
+    const fromAddress = wallet.address;
 
-    const keypair = parseKeypair(privateKey);
-    const fromAddress = keypair.publicKey.toBase58();
-    const connection = new Connection(heliusRpcUrl, "confirmed");
+    console.log(`[admin-send-token] From: ${fromAddress}, Token: ${tokenAddress}, To: ${toAddress}`);
 
-    let mintPubkey: InstanceType<typeof PublicKey>;
-    let toPubkey: InstanceType<typeof PublicKey>;
-    try {
-      mintPubkey = new PublicKey(mintAddress);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid mint address" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    try {
-      toPubkey = new PublicKey(toAddress);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid destination address" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Get token info
+    const erc20 = new Contract(tokenAddress, [
+      "function decimals() view returns (uint8)",
+      "function balanceOf(address) view returns (uint256)",
+      "function symbol() view returns (string)",
+      "function transfer(address to, uint256 amount) returns (bool)",
+    ], wallet);
 
-    // Get mint info for decimals
-    const mintInfo = await getMint(connection, mintPubkey);
-    const decimals = mintInfo.decimals;
-    const rawAmount = BigInt(Math.round(Number(amount) * Math.pow(10, decimals)));
+    const [decimals, balance, symbol] = await Promise.all([
+      erc20.decimals(),
+      erc20.balanceOf(fromAddress),
+      erc20.symbol().catch(() => "???"),
+    ]);
 
-    console.log(`[admin-send-token] Mint: ${mintAddress}, Decimals: ${decimals}, Amount: ${amount}, Raw: ${rawAmount}`);
+    const rawAmount = parseUnits(String(amount), decimals);
+    const balanceFormatted = formatUnits(balance, decimals);
 
-    // Get source ATA
-    const sourceAta = await getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
-    
-    // Check source balance
-    let sourceAccount;
-    try {
-      sourceAccount = await getAccount(connection, sourceAta);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Source wallet has no token account for this mint", fromAddress }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    console.log(`[admin-send-token] ${symbol} decimals=${decimals}, balance=${balanceFormatted}, sending=${amount}`);
 
-    const sourceBalance = sourceAccount.amount;
-    console.log(`[admin-send-token] Source balance: ${sourceBalance}, need: ${rawAmount}`);
-
-    if (sourceBalance < rawAmount) {
+    if (balance < rawAmount) {
       return new Response(
         JSON.stringify({
-          error: `Insufficient token balance. Have ${Number(sourceBalance) / Math.pow(10, decimals)}, need ${amount}`,
+          error: `Insufficient ${symbol} balance. Have ${balanceFormatted}, need ${amount}`,
           fromAddress,
-          balance: Number(sourceBalance) / Math.pow(10, decimals),
+          balance: balanceFormatted,
+          symbol,
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get or create destination ATA
-    const destAta = await getAssociatedTokenAddress(mintPubkey, toPubkey);
-    
-    const tx = new Transaction();
-
-    // Check if dest ATA exists, create if not
-    try {
-      await getAccount(connection, destAta);
-    } catch {
-      console.log(`[admin-send-token] Creating destination ATA...`);
-      tx.add(
-        createAssociatedTokenAccountInstruction(
-          keypair.publicKey, // payer
-          destAta,
-          toPubkey,
-          mintPubkey
-        )
-      );
-    }
-
-    // Add transfer instruction
-    tx.add(
-      createTransferInstruction(
-        sourceAta,
-        destAta,
-        keypair.publicKey,
-        rawAmount
-      )
-    );
-
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = keypair.publicKey;
-    tx.sign(keypair);
-
-    const signature = await connection.sendRawTransaction(tx.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: "confirmed",
-    });
-
-    console.log(`[admin-send-token] ✅ TX sent: ${signature}`);
-
-    const confirmation = await connection.confirmTransaction(
-      { signature, blockhash, lastValidBlockHeight },
-      "confirmed"
-    );
-
-    if (confirmation.value?.err) {
-      const errMsg = `TX failed on-chain: ${JSON.stringify(confirmation.value.err)}`;
-      console.error(`[admin-send-token] ❌ ${errMsg}`);
+    // Check BNB for gas
+    const bnbBalance = await provider.getBalance(fromAddress);
+    if (bnbBalance < BigInt(1e15)) { // < 0.001 BNB
       return new Response(
-        JSON.stringify({ error: errMsg, signature, fromAddress }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: `Insufficient BNB for gas. Have ${formatUnits(bnbBalance, 18)} BNB`,
+          fromAddress,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[admin-send-token] ✅ TX confirmed: ${signature}`);
+    // Execute transfer
+    const tx = await erc20.transfer(toAddress, rawAmount);
+    console.log(`[admin-send-token] ✅ TX sent: ${tx.hash}`);
+
+    const receipt = await tx.wait(1);
+    console.log(`[admin-send-token] ✅ TX confirmed in block ${receipt.blockNumber}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        signature,
+        txHash: tx.hash,
         fromAddress,
         toAddress,
-        mintAddress,
+        tokenAddress,
+        symbol,
         amount: Number(amount),
-        decimals,
-        solscanUrl: `https://solscan.io/tx/${signature}`,
+        decimals: Number(decimals),
+        bscscanUrl: `https://bscscan.com/tx/${tx.hash}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

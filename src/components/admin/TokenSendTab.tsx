@@ -10,20 +10,21 @@ const ADMIN_PASSWORD = "saturn135@";
 
 interface SendResult {
   success: boolean;
-  signature?: string;
+  txHash?: string;
   error?: string;
   fromAddress?: string;
   toAddress?: string;
-  mintAddress?: string;
+  tokenAddress?: string;
+  symbol?: string;
   amount?: number;
   decimals?: number;
-  solscanUrl?: string;
-  balance?: number;
+  bscscanUrl?: string;
+  balance?: string;
 }
 
 export function TokenSendTab() {
   const [privateKey, setPrivateKey] = useState("");
-  const [mintAddress, setMintAddress] = useState("");
+  const [tokenAddress, setTokenAddress] = useState("");
   const [toAddress, setToAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [sending, setSending] = useState(false);
@@ -31,7 +32,7 @@ export function TokenSendTab() {
   const [showKey, setShowKey] = useState(false);
 
   const handleSend = async () => {
-    if (!privateKey || !mintAddress || !toAddress || !amount) {
+    if (!privateKey || !tokenAddress || !toAddress || !amount) {
       toast.error("All fields are required");
       return;
     }
@@ -52,7 +53,7 @@ export function TokenSendTab() {
         body: JSON.stringify({
           adminPassword: ADMIN_PASSWORD,
           privateKey: privateKey.trim(),
-          mintAddress: mintAddress.trim(),
+          tokenAddress: tokenAddress.trim(),
           toAddress: toAddress.trim(),
           amount: numAmount,
         }),
@@ -61,11 +62,11 @@ export function TokenSendTab() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setResult({ success: false, error: data.error || "Unknown error" });
+        setResult({ success: false, error: data.error || "Unknown error", balance: data.balance, symbol: data.symbol });
         toast.error(data.error || "Send failed");
       } else {
         setResult(data);
-        toast.success(`Sent ${numAmount} tokens → ${toAddress.slice(0, 8)}...`);
+        toast.success(`Sent ${numAmount} ${data.symbol || "tokens"} → ${toAddress.slice(0, 8)}...`);
       }
     } catch (err: any) {
       setResult({ success: false, error: err.message });
@@ -81,22 +82,22 @@ export function TokenSendTab() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm font-mono uppercase tracking-wider">
             <Send className="h-4 w-4 text-primary" />
-            Send SPL Token
+            Send BEP-20 Token (BSC)
           </CardTitle>
-          <p className="text-xs text-muted-foreground font-mono">
-            Transfer SPL tokens from any wallet using a private key. Supports any mint address.
+          <p className="text-xs text-muted-foreground font-mono leading-relaxed">
+            Transfer ERC-20/BEP-20 tokens on BNB Chain using a private key. Auto-detects decimals & symbol.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
-              Private Key (base58 or JSON array)
+              Private Key (hex)
             </Label>
             <div className="relative mt-1">
               <Input
                 value={privateKey}
                 onChange={(e) => setPrivateKey(e.target.value)}
-                placeholder="Enter sender private key..."
+                placeholder="0x... or raw hex private key"
                 type={showKey ? "text" : "password"}
                 className="font-mono text-xs pr-10 bg-background border-border/40 rounded-sm"
               />
@@ -112,12 +113,12 @@ export function TokenSendTab() {
 
           <div>
             <Label className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
-              Token Mint Address
+              Token Contract Address
             </Label>
             <Input
-              value={mintAddress}
-              onChange={(e) => setMintAddress(e.target.value)}
-              placeholder="Token mint address..."
+              value={tokenAddress}
+              onChange={(e) => setTokenAddress(e.target.value)}
+              placeholder="0x... BEP-20 contract address"
               className="font-mono text-xs mt-1 bg-background border-border/40 rounded-sm"
             />
           </div>
@@ -129,7 +130,7 @@ export function TokenSendTab() {
             <Input
               value={toAddress}
               onChange={(e) => setToAddress(e.target.value)}
-              placeholder="Recipient wallet address..."
+              placeholder="0x... recipient address"
               className="font-mono text-xs mt-1 bg-background border-border/40 rounded-sm"
             />
           </div>
@@ -151,18 +152,18 @@ export function TokenSendTab() {
 
           <Button
             onClick={handleSend}
-            disabled={sending || !privateKey || !mintAddress || !toAddress || !amount}
+            disabled={sending || !privateKey || !tokenAddress || !toAddress || !amount}
             className="w-full h-10 font-mono uppercase tracking-wider text-xs font-bold rounded-sm"
           >
             {sending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Sending Tokens...
+                Sending on BSC...
               </>
             ) : (
               <>
                 <Send className="h-4 w-4 mr-2" />
-                Execute Token Transfer
+                Execute BSC Token Transfer
               </>
             )}
           </Button>
@@ -187,31 +188,31 @@ export function TokenSendTab() {
               <p className="text-destructive/80 break-all">{result.error}</p>
             )}
 
-            {result.success && result.signature && (
+            {result.success && result.txHash && (
               <div className="space-y-1">
                 <p className="text-muted-foreground">
-                  <span className="text-foreground">From:</span> {result.fromAddress?.slice(0, 8)}...{result.fromAddress?.slice(-4)}
+                  <span className="text-foreground">From:</span> {result.fromAddress?.slice(0, 10)}...{result.fromAddress?.slice(-4)}
                 </p>
                 <p className="text-muted-foreground">
-                  <span className="text-foreground">To:</span> {result.toAddress?.slice(0, 8)}...{result.toAddress?.slice(-4)}
+                  <span className="text-foreground">To:</span> {result.toAddress?.slice(0, 10)}...{result.toAddress?.slice(-4)}
                 </p>
                 <p className="text-muted-foreground">
-                  <span className="text-foreground">Mint:</span> {result.mintAddress?.slice(0, 8)}...{result.mintAddress?.slice(-4)}
+                  <span className="text-foreground">Token:</span> {result.symbol} ({result.tokenAddress?.slice(0, 10)}...)
                 </p>
                 <p className="text-muted-foreground">
                   <span className="text-foreground">Amount:</span> {result.amount} (decimals: {result.decimals})
                 </p>
                 <p className="text-muted-foreground break-all">
-                  <span className="text-foreground">Sig:</span> {result.signature.slice(0, 20)}...{result.signature.slice(-8)}
+                  <span className="text-foreground">TX:</span> {result.txHash.slice(0, 20)}...{result.txHash.slice(-8)}
                 </p>
-                {result.solscanUrl && (
+                {result.bscscanUrl && (
                   <a
-                    href={result.solscanUrl}
+                    href={result.bscscanUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline mt-1"
                   >
-                    View on Solscan <ExternalLink className="h-3 w-3" />
+                    View on BscScan <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
