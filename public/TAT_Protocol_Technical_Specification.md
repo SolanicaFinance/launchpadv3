@@ -461,7 +461,6 @@ It is the ONLY pool of BTC at graduation time.
 | Source | Amount (approx) | Destination | When |
 |--------|----------------|-------------|------|
 | Platform fees (1%) | ~0.005 BTC | Saturn treasury wallet | Per-trade (immediate) |
-| Creator fees (0-8%) | ~0.005-0.04 BTC | Creator's BTC wallet | Per-trade (immediate) |
 | Etching + distribution | ~0.002 BTC | Bitcoin miners | At graduation |
 | Name commitment | ~0.00003 BTC | Bitcoin miners | At token genesis (paid by platform treasury) |
 | Remaining pool (~99.5%) | ~0.498 BTC | Locked LP (burned, permanent) | At graduation |
