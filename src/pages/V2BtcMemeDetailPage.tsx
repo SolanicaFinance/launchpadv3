@@ -109,6 +109,26 @@ export default function V2BtcMemeDetailPage() {
     return () => { supabase.removeChannel(channel); };
   }, [tokenId, id, queryClient]);
 
+  // Poll for Solana proof signature after trade
+  const pollForSolanaProof = async (tradeId: string) => {
+    for (let i = 0; i < 15; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const { data: row } = await supabase
+        .from("btc_meme_trades")
+        .select("solana_proof_signature")
+        .eq("id", tradeId)
+        .maybeSingle();
+      if (row?.solana_proof_signature) {
+        // Update the trade success store with the proof
+        const store = useTradeSuccessStore.getState();
+        if (store.isVisible && store.data) {
+          store.show({ ...store.data, solanaProofSignature: row.solana_proof_signature });
+        }
+        return;
+      }
+    }
+  };
+
   const handleTrade = async () => {
     if (!address || !tokenId || !amount) return;
     const numAmount = parseFloat(amount);
