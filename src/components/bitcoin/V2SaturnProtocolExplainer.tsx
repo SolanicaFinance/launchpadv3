@@ -17,7 +17,7 @@ const steps = [
     subtitle: 'Instant Execution on Saturn Layer',
     color: 'text-yellow-400',
     bg: 'bg-yellow-400/10',
-    description: 'Trades execute using x·y=k bonding curve denominated in satoshis. Virtual reserves (0.3 BTC + 1.073B tokens) provide initial liquidity. 800M tokens available for purchase. Fees deducted BEFORE entering the pool — 1% platform fee + 0-8% creator fee.',
+    description: 'Trades execute using x·y=k bonding curve denominated in satoshis. Virtual reserves (0.3 BTC + 1.073B tokens) provide initial liquidity. 800M tokens available for purchase. Fees deducted BEFORE entering the pool — configurable 0-8% creator fee.',
     technical: 'x·y=k | Δy = (y·Δx)/(x+Δx) | Graduation at real_btc_reserves ≥ 0.5 BTC',
   },
   {
