@@ -543,7 +543,7 @@ btc_meme_tokens (
     total_supply, bonding_progress,
     graduation_threshold_btc, genesis_txid,
     graduated_at, price_btc, market_cap_btc,
-    creator_fee_bps, platform_fee_bps,
+    platform_fee_bps,
     last_anchor_txid, last_anchor_at
 )
 
