@@ -167,8 +167,8 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 }
 
 /* ── Live Pulse Section ── */
-function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
-  newPairs: BtcMemeToken[]; finalStretch: BtcMemeToken[]; graduated: BtcMemeToken[]; loading: boolean;
+function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading, btcUsdPrice }: {
+  newPairs: BtcMemeToken[]; finalStretch: BtcMemeToken[]; graduated: BtcMemeToken[]; loading: boolean; btcUsdPrice: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
