@@ -1,4 +1,5 @@
-import { useBtcWallet, BtcWalletProvider } from '@/hooks/useBtcWallet';
+import { useBtcWallet } from '@/contexts/BtcWalletContext';
+import { BtcWalletProvider } from '@/hooks/useBtcWallet';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

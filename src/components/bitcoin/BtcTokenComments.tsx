@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useBtcWallet } from '@/hooks/useBtcWallet';
+import { useBtcWallet } from '@/contexts/BtcWalletContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useBtcWallet } from '@/hooks/useBtcWallet';
+import { useBtcWallet } from '@/contexts/BtcWalletContext';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { RugShieldPanel } from '@/components/bitcoin/RugShieldPanel';
 import { Button } from '@/components/ui/button';

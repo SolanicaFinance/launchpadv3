@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useBtcWallet } from '@/hooks/useBtcWallet';
+import { useBtcWallet } from '@/contexts/BtcWalletContext';
 
 interface RiskAnalysis {
   address: string;
