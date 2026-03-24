@@ -48,6 +48,7 @@ function formatTokens(n: number) {
 export default function BtcMemeLaunchPage() {
   const { isConnected, address } = useBtcWallet();
   const navigate = useNavigate();
+  const btcPrice = useBtcUsdPrice();
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
