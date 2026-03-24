@@ -1,0 +1,1 @@
+ALTER TABLE public.btc_meme_tokens ADD COLUMN IF NOT EXISTS payment_tx_id text DEFAULT NULL;
