@@ -7,12 +7,30 @@ const corsHeaders = {
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const MEMPOOL_API = "https://mempool.space/api";
+const FETCH_TIMEOUT = 10000;
 
 function getSupabase() {
   return createClient(
     Deno.env.get("SUPABASE_URL") || "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
   );
+}
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function respond(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 interface MempoolTxOutput {
@@ -34,39 +52,40 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { walletAddress, txid, action } = body;
+    const body = await req.json().catch(() => ({}));
+    const { walletAddress, txid, action } = body as { walletAddress?: string; txid?: string; action?: string };
 
     const platformAddress = Deno.env.get("BTC_PLATFORM_DEPOSIT_ADDRESS") || Deno.env.get("BTC_PLATFORM_ADDRESS");
 
     // --- Action: get deposit address ---
     if (!walletAddress && !txid && !action) {
       if (!platformAddress) {
-        return new Response(JSON.stringify({ error: "Platform deposit address not configured" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return respond({ error: "Platform deposit address not configured" }, 500);
       }
-      return new Response(JSON.stringify({ depositAddress: platformAddress }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond({ depositAddress: platformAddress });
     }
 
-    // --- Action: scan-deposits — auto-detect incoming txs from connected wallet ---
+    // --- Action: scan-deposits ---
     if (action === "scan-deposits") {
       if (!walletAddress || !platformAddress) {
-        return new Response(JSON.stringify({ error: "walletAddress required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return respond({ error: "walletAddress required" }, 400);
       }
 
       const supabase = getSupabase();
 
-      // Fetch recent txs to the platform deposit address
-      const txsRes = await fetch(`${MEMPOOL_API}/address/${platformAddress}/txs`);
-      if (!txsRes.ok) throw new Error(`mempool.space address txs returned ${txsRes.status}`);
-      const allTxs: MempoolTx[] = await txsRes.json();
+      let allTxs: MempoolTx[] = [];
+      try {
+        const txsRes = await fetchWithTimeout(`${MEMPOOL_API}/address/${platformAddress}/txs`);
+        if (!txsRes.ok) {
+          console.error(`[btc-meme-deposit] mempool.space returned ${txsRes.status}`);
+          return respond({ deposits: [], depositAddress: platformAddress, warning: "mempool.space unavailable" });
+        }
+        allTxs = await txsRes.json();
+      } catch (e) {
+        console.error("[btc-meme-deposit] mempool.space fetch failed:", e);
+        return respond({ deposits: [], depositAddress: platformAddress, warning: "mempool.space timeout" });
+      }
 
-      // Filter: only txs where at least one input is from the connected wallet
       const userDeposits: {
         txid: string;
         amountBtc: number;
@@ -79,7 +98,6 @@ Deno.serve(async (req) => {
         const senderAddresses = tx.vin.map(v => v.prevout?.scriptpubkey_address).filter(Boolean);
         if (!senderAddresses.includes(walletAddress)) continue;
 
-        // Sum outputs going to platform address
         let totalSats = 0;
         const vouts: number[] = [];
         for (let i = 0; i < tx.vout.length; i++) {
@@ -90,14 +108,13 @@ Deno.serve(async (req) => {
         }
         if (totalSats === 0) continue;
 
-        // Check if already credited in ledger
         const { data: ledgerRows } = await supabase
           .from("btc_deposit_ledger")
           .select("vout")
           .eq("txid", tx.txid)
           .eq("wallet_address", walletAddress);
 
-        const creditedVouts = new Set((ledgerRows || []).map(r => r.vout));
+        const creditedVouts = new Set((ledgerRows || []).map((r: { vout: number }) => r.vout));
         const allCredited = vouts.every(v => creditedVouts.has(v));
 
         // Auto-credit if confirmed and not yet credited
@@ -122,7 +139,6 @@ Deno.serve(async (req) => {
           }
 
           if (credited > 0) {
-            // Credit trading balance
             const { data: existing } = await supabase
               .from("btc_trading_balances")
               .select("balance_btc, total_deposited")
@@ -151,23 +167,16 @@ Deno.serve(async (req) => {
           amountBtc: totalSats / 1e8,
           confirmed: tx.status.confirmed,
           blockHeight: tx.status.block_height || null,
-          credited: allCredited || tx.status.confirmed, // will be credited after this call
+          credited: allCredited || tx.status.confirmed,
         });
       }
 
-      return new Response(JSON.stringify({ deposits: userDeposits, depositAddress: platformAddress }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond({ deposits: userDeposits, depositAddress: platformAddress });
     }
 
-    // All deposits are now auto-detected via scan-deposits action
-    return new Response(JSON.stringify({ error: "Use action: 'scan-deposits' with walletAddress for automatic deposit detection." }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond({ error: "Use action: 'scan-deposits' with walletAddress for automatic deposit detection." }, 400);
   } catch (error) {
     console.error("[btc-meme-deposit] Error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond({ error: error instanceof Error ? error.message : "Internal error" }, 500);
   }
 });
