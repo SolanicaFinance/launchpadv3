@@ -59,9 +59,9 @@ export function V2SaturnProtocolExplainer() {
       {/* Intro */}
       <div className="px-6 py-4 border-b border-border bg-secondary/10">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Saturn's <span className="text-foreground font-semibold">tri-layer settlement architecture</span> is 100% Bitcoin-native. 
-          Tokens are born on Bitcoin mainnet, traded instantly via Fractal Bitcoin (~30s blocks, merge-mined), 
-          and anchored back to mainnet every 10 minutes with Merkle solvency proofs. No bridges. No alt-chains. Pure Bitcoin.
+          The <span className="text-foreground font-semibold">TAT Protocol (Transaction-Attributed Tokens)</span> implements a tri-layer settlement architecture that is 100% Bitcoin-native. 
+          Tokens are genesis-stamped on Bitcoin mainnet, trade instantly via Fractal Bitcoin (~30s blocks, merge-mined), 
+          and are anchored back to mainnet every 10 minutes with Merkle solvency proofs. Fixed 1% platform fee, zero creator tax. Graduation to native Bitcoin Rune at 0.5 BTC.
         </p>
       </div>
 
