@@ -159,12 +159,14 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
                            focus:bg-card/40 focus:shadow-[0_0_12px_hsl(84_81%_44%/0.08)]"
               />
               {showDropdown && (
-                <GlobalSearchDropdown
-                  results={searchResults}
-                  isLoading={searchLoading}
-                  query={debouncedQuery}
-                  onClose={closeDropdown}
-                />
+                <div className="absolute left-0 top-full mt-2 w-[min(720px,calc(100vw-2rem))] z-[60]">
+                  <GlobalSearchDropdown
+                    results={searchResults}
+                    isLoading={searchLoading}
+                    query={debouncedQuery}
+                    onClose={closeDropdown}
+                  />
+                </div>
               )}
             </div>
 
@@ -260,14 +262,16 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
       {/* ── Mobile full-screen search overlay ── */}
       {mobileSearchOpen && (
         <div
-          className="fixed inset-0 z-50 flex flex-col md:hidden"
+          className="fixed inset-0 z-[70] flex flex-col md:hidden animate-fade-in"
           style={{
-            background: "hsl(0 0% 0% / 0.85)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
+            background: "hsl(0 0% 0% / 0.95)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            paddingTop: "env(safe-area-inset-top, 0px)",
           }}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
+          {/* Sticky search bar */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none text-muted-foreground/60" />
               <input
@@ -285,20 +289,20 @@ export function AppHeader({ onMobileMenuOpen }: TopBarProps) {
               />
             </div>
             <button
-              onClick={() => { setMobileSearchOpen(false); setShowDropdown(false); }}
-              className="flex items-center justify-center h-12 w-12 rounded-xl text-muted-foreground hover:text-foreground transition-colors bg-card/20"
+              onClick={() => { setMobileSearchOpen(false); setShowDropdown(false); setSearch(""); }}
+              className="flex-shrink-0 h-12 px-4 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors bg-card/20"
             >
-              <X className="h-5 w-5" />
+              Cancel
             </button>
           </div>
           {/* Mobile search results */}
           {debouncedQuery.length >= 2 && (
-            <div className="flex-1 overflow-y-auto px-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+            <div className="flex-1 overflow-y-auto pb-[max(env(safe-area-inset-bottom),12px)]">
               <GlobalSearchDropdown
                 results={searchResults}
                 isLoading={searchLoading}
                 query={debouncedQuery}
-                onClose={() => setMobileSearchOpen(false)}
+                onClose={() => { setMobileSearchOpen(false); setSearch(""); }}
                 inline
               />
             </div>
