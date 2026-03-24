@@ -313,10 +313,27 @@ export default function V2BtcMemeLaunchPage() {
           </div>
           <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Genesis</span><span className="text-foreground">Bitcoin Mainnet OP_RETURN</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Launch Fee</span>
+            <span className="text-foreground">{launchFeeSats.toLocaleString()} sats{btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((launchFeeSats / 1e8) * btcPrice)})</span>}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Cost</span>
+            <span className="text-foreground font-semibold">
+              {formatSats(form.initialBuyBtc + launchFeeSats / 1e8)}
+              {btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((form.initialBuyBtc + launchFeeSats / 1e8) * btcPrice)})</span>}
+            </span>
+          </div>
         </div>
 
         <Button onClick={handleLaunch} disabled={submitting || uploading || !form.name || !form.ticker} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="lg">
-          {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> {uploading ? "Uploading..." : "Launching..."}</> : <><Rocket className="w-4 h-4 mr-2" /> Launch TAT Token</>}
+          {submitting ? (
+            <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 
+              {uploading ? "Uploading..." : launchStep === 'paying' ? "Confirm in wallet..." : launchStep === 'creating' ? "Creating token..." : "Launching..."}
+            </>
+          ) : (
+            <><Rocket className="w-4 h-4 mr-2" /> Launch TAT Token ({formatSats(form.initialBuyBtc + launchFeeSats / 1e8)})</>
+          )}
         </Button>
       </div>
     </div>
