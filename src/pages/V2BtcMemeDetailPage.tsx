@@ -3,14 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/hooks/useBtcWallet";
 import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance } from "@/hooks/useBtcMemeTokens";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
+import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
+import { BtcMemePriceChart } from "@/components/bitcoin/BtcMemePriceChart";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, ExternalLink, Cpu } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, Cpu, TrendingUp } from "lucide-react";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
 import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
+import { useQueryClient } from "@tanstack/react-query";
 
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
@@ -41,6 +44,7 @@ function truncate(s: string, n = 6) {
 export default function V2BtcMemeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isConnected, address } = useBtcWallet();
   const { data: token, isLoading } = useBtcMemeToken(id);
   const { data: trades } = useBtcMemeTrades(id);
@@ -52,6 +56,37 @@ export default function V2BtcMemeDetailPage() {
   const [amount, setAmount] = useState("");
   const [trading, setTrading] = useState(false);
   const [tradeTab, setTradeTab] = useState<"all" | "my" | "holders">("all");
+  const [showDeposit, setShowDeposit] = useState(false);
+
+  // Realtime subscription for trades and token updates
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`btc-meme-${id}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "btc_meme_trades",
+        filter: `token_id=eq.${id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-trades", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
+        queryClient.invalidateQueries({ queryKey: ["btc-trading-balance"] });
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-balance", id] });
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "btc_meme_tokens",
+        filter: `id=eq.${id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["btc-meme-token", id] });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [id, queryClient]);
 
   const handleTrade = async () => {
     if (!address || !id || !amount) return;
@@ -71,8 +106,6 @@ export default function V2BtcMemeDetailPage() {
 
       const executionMs = Date.now() - startMs;
       const trade = data.trade;
-
-      // Use genesis_txid as CA pre-graduation, rune_id post-graduation
       const tokenCA = token?.genesis_txid || id;
 
       showTradeSuccess({
@@ -116,6 +149,7 @@ export default function V2BtcMemeDetailPage() {
   }
 
   const progressPct = Math.min(token.bonding_progress, 100);
+  const btcBalance = myBtcBalance?.balance_btc || 0;
 
   return (
     <div className="max-w-6xl mx-auto py-4 space-y-4">
@@ -127,7 +161,7 @@ export default function V2BtcMemeDetailPage() {
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
           <div>
             <p className="text-sm font-semibold text-foreground">Awaiting Bitcoin Mainnet Confirmation</p>
-            <p className="text-xs text-muted-foreground">Your token's genesis OP_RETURN transaction is being confirmed on Bitcoin mainnet.</p>
+            <p className="text-xs text-muted-foreground">Your token's genesis OP_RETURN transaction is being confirmed. Trading will auto-activate within 60 seconds.</p>
           </div>
         </div>
       )}
@@ -150,7 +184,6 @@ export default function V2BtcMemeDetailPage() {
             </span>
             <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">TAT Protocol</span>
           </div>
-          {/* CA: Genesis TX pre-graduation, Rune ID post-graduation */}
           {token.genesis_txid && (
             <div className="flex items-center gap-1.5 mt-1">
               <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">
@@ -189,6 +222,19 @@ export default function V2BtcMemeDetailPage() {
         </div>
       </div>
 
+      {/* Price Chart */}
+      {trades && trades.length >= 2 && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-bold text-foreground">Price Chart</h3>
+          </div>
+          <div className="h-48">
+            <BtcMemePriceChart trades={trades} currentPrice={token.price_btc} />
+          </div>
+        </div>
+      )}
+
       {/* Bonding Progress */}
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex justify-between items-center mb-2">
@@ -205,58 +251,73 @@ export default function V2BtcMemeDetailPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Trade Panel */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-bold text-foreground">Trade</h3>
-          {token.status === "pending_genesis" ? (
-            <div className="text-center py-6 space-y-2">
-              <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
-              <p className="text-xs text-muted-foreground">Trading disabled until Bitcoin mainnet genesis is confirmed</p>
-            </div>
-          ) : !isConnected ? (
-            <div className="text-center py-4 space-y-2">
-              <p className="text-xs text-muted-foreground">Connect wallet to trade</p>
-              <BtcConnectWalletModal
-                trigger={<Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">Connect Wallet</Button>}
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex gap-1 bg-muted/30 rounded-lg p-0.5">
-                <button onClick={() => setTradeType("buy")} className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${tradeType === "buy" ? "bg-[hsl(var(--success))] text-white" : "text-muted-foreground"}`}>Buy</button>
-                <button onClick={() => setTradeType("sell")} className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${tradeType === "sell" ? "bg-destructive text-white" : "text-muted-foreground"}`}>Sell</button>
+        {/* Left Column: Trade Panel + Deposit */}
+        <div className="space-y-4">
+          {/* Trade Panel */}
+          <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+            <h3 className="text-sm font-bold text-foreground">Trade</h3>
+            {token.status === "pending_genesis" ? (
+              <div className="text-center py-6 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+                <p className="text-xs text-muted-foreground">Trading disabled until Bitcoin mainnet genesis is confirmed</p>
               </div>
-              <div>
-                <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                  <span>{tradeType === "buy" ? "Amount (BTC)" : `Amount (${token.ticker})`}</span>
-                  <span>Balance: {tradeType === "buy" ? formatBtc(myBtcBalance?.balance_btc || 0) : formatNum(myBalance?.balance || 0)}</span>
-                </div>
-                <Input type="number" step="any" min="0" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} className="font-mono" />
+            ) : !isConnected ? (
+              <div className="text-center py-4 space-y-2">
+                <p className="text-xs text-muted-foreground">Connect wallet to trade</p>
+                <BtcConnectWalletModal
+                  trigger={<Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">Connect Wallet</Button>}
+                />
               </div>
-              {tradeType === "buy" && (
-                <div className="grid grid-cols-4 gap-1">
-                  {[0.00005, 0.0001, 0.0005, 0.001].map((v) => (
-                    <button key={v} onClick={() => setAmount(String(v))} className="text-[10px] py-1 rounded bg-muted/50 hover:bg-muted text-foreground font-mono">{v} ₿</button>
-                  ))}
+            ) : (
+              <>
+                <div className="flex gap-1 bg-muted/30 rounded-lg p-0.5">
+                  <button onClick={() => setTradeType("buy")} className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${tradeType === "buy" ? "bg-[hsl(var(--success))] text-white" : "text-muted-foreground"}`}>Buy</button>
+                  <button onClick={() => setTradeType("sell")} className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${tradeType === "sell" ? "bg-destructive text-white" : "text-muted-foreground"}`}>Sell</button>
                 </div>
-              )}
-              {tradeType === "sell" && myBalance?.balance && (
-                <div className="grid grid-cols-4 gap-1">
-                  {[25, 50, 75, 100].map((pct) => (
-                    <button key={pct} onClick={() => setAmount(String(Math.floor((myBalance.balance * pct) / 100)))} className="text-[10px] py-1 rounded bg-muted/50 hover:bg-muted text-foreground font-mono">{pct}%</button>
-                  ))}
+                <div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                    <span>{tradeType === "buy" ? "Amount (BTC)" : `Amount (${token.ticker})`}</span>
+                    <span>
+                      Balance: {tradeType === "buy" ? formatBtc(btcBalance) : formatNum(myBalance?.balance || 0)}
+                      {tradeType === "buy" && btcBalance === 0 && (
+                        <button onClick={() => setShowDeposit(true)} className="ml-1 text-primary hover:text-primary/80 underline">
+                          deposit
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                  <Input type="number" step="any" min="0" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} className="font-mono" />
                 </div>
-              )}
-              <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
-                {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
-              </Button>
-              {myBalance && myBalance.balance > 0 && (
-                <div className="bg-muted/20 rounded-lg p-2 text-xs space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Your tokens</span><span className="font-mono">{formatNum(myBalance.balance)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Avg buy price</span><span className="font-mono">{formatBtc(myBalance.avg_buy_price_btc || 0)}</span></div>
-                </div>
-              )}
-            </>
+                {tradeType === "buy" && (
+                  <div className="grid grid-cols-4 gap-1">
+                    {[0.00005, 0.0001, 0.0005, 0.001].map((v) => (
+                      <button key={v} onClick={() => setAmount(String(v))} className="text-[10px] py-1 rounded bg-muted/50 hover:bg-muted text-foreground font-mono">{v} ₿</button>
+                    ))}
+                  </div>
+                )}
+                {tradeType === "sell" && myBalance?.balance && (
+                  <div className="grid grid-cols-4 gap-1">
+                    {[25, 50, 75, 100].map((pct) => (
+                      <button key={pct} onClick={() => setAmount(String(Math.floor((myBalance.balance * pct) / 100)))} className="text-[10px] py-1 rounded bg-muted/50 hover:bg-muted text-foreground font-mono">{pct}%</button>
+                    ))}
+                  </div>
+                )}
+                <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
+                  {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
+                </Button>
+                {myBalance && myBalance.balance > 0 && (
+                  <div className="bg-muted/20 rounded-lg p-2 text-xs space-y-1">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Your tokens</span><span className="font-mono">{formatNum(myBalance.balance)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Avg buy price</span><span className="font-mono">{formatBtc(myBalance.avg_buy_price_btc || 0)}</span></div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Deposit Panel */}
+          {isConnected && address && (showDeposit || btcBalance === 0) && (
+            <BtcDepositPanel walletAddress={address} currentBalance={btcBalance} />
           )}
         </div>
 
