@@ -432,7 +432,7 @@ export default function V2BitcoinModePage() {
                 </>
               )}
               <a
-                href="/TAT_Protocol_Technical_Specification.md"
+                href="/btc/whitepaper"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-xs min-h-[36px] 

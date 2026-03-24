@@ -87,6 +87,7 @@ const BtcMemeDetailPage = lazyWithRetry(() => import("./pages/BtcMemeDetailPage"
 const V2BitcoinModePage = lazyWithRetry(() => import("./pages/V2BitcoinModePage"));
 const V2BtcMemeLaunchPage = lazyWithRetry(() => import("./pages/V2BtcMemeLaunchPage"));
 const V2BtcMemeDetailPage = lazyWithRetry(() => import("./pages/V2BtcMemeDetailPage"));
+const TATWhitepaperPage = lazyWithRetry(() => import("./pages/TATWhitepaperPage"));
 
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
@@ -243,6 +244,7 @@ const App = () => (
                      <Route path="/btc" element={<V2BitcoinModePage />} />
                      <Route path="/btc/meme/launch" element={<LaunchpadLayout><V2BtcMemeLaunchPage /></LaunchpadLayout>} />
                      <Route path="/btc/meme/:id" element={<LaunchpadLayout><V2BtcMemeDetailPage /></LaunchpadLayout>} />
+                     <Route path="/btc/whitepaper" element={<TATWhitepaperPage />} />
                      <Route path="/v2btc" element={<Navigate to="/btc" replace />} />
                      <Route path="/v2btc/meme/launch" element={<Navigate to="/btc/meme/launch" replace />} />
                      <Route path="/v2btc/meme/:id" element={<Navigate to="/btc" replace />} />
