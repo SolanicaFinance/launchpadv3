@@ -3,9 +3,10 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import saturnLogo from '@/assets/saturn-logo.png';
 
 const TOKEN_CA = '0x27a51c96b84c6d9f24d5d054c396ae0e1c96ffff';
-const POPUP_KEY = 'saturn-launch-popup-dismissed-v2';
+const POPUP_KEY = 'saturn-launch-popup-dismissed-v3';
 
 export function TokenLaunchPopup() {
   const [open, setOpen] = useState(false);
@@ -39,10 +40,10 @@ export function TokenLaunchPopup() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
           <div className="relative flex flex-col items-center text-center gap-3">
             <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <span className="text-3xl">🪐</span>
+              <img src={saturnLogo} alt="Saturn" className="h-9 w-9 rounded-lg" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">🪐 Saturn is Live on Binance Chain!</h2>
+              <h2 className="text-lg font-bold text-foreground">Saturn is Live on Binance Chain!</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Our native token is now live. Copy the contract address below to get started.
               </p>
