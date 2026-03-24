@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc } = body;
+    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps } = body;
 
     if (!name || !ticker || !creatorWallet) {
       return new Response(JSON.stringify({ error: "name, ticker, and creatorWallet required" }), {
