@@ -126,7 +126,7 @@ export default function BtcMemeLaunchPage() {
         <button onClick={() => navigate("/btc")} className="text-muted-foreground hover:text-foreground text-sm">
           ← Back
         </button>
-        <h1 className="text-xl font-bold text-foreground">Launch BTC Meme Token</h1>
+        <h1 className="text-xl font-bold text-foreground">Launch TAT Token</h1>
       </div>
 
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
