@@ -676,6 +676,54 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
     }
   }, [activeProvider, address]);
 
+  const sendBitcoin = useCallback(async (toAddress: string, satoshis: number): Promise<string> => {
+    if (!activeProvider) throw new Error('No wallet connected');
+    const provider = getInjectedProvider(activeProvider);
+    if (!provider) throw new Error('Wallet provider not found');
+
+    console.log(`[BTC sendBitcoin] Sending ${satoshis} sats to ${toAddress} via ${activeProvider}`);
+
+    // UniSat: native sendBitcoin API
+    if (activeProvider === 'unisat' && typeof provider.sendBitcoin === 'function') {
+      const txid = await provider.sendBitcoin(toAddress, satoshis);
+      if (typeof txid === 'string' && txid.length >= 64) return txid;
+      throw new Error('UniSat sendBitcoin returned invalid txid');
+    }
+
+    // Xverse / Leather / OKX / Phantom: use request('sendTransfer', ...) 
+    if (typeof provider.request === 'function') {
+      try {
+        const result = await requestProviderMethod(provider, 'sendTransfer', {
+          recipients: [{ address: toAddress, amount: satoshis }],
+        });
+        const txid = typeof result === 'string' ? result : result?.txid || result?.txId || result?.result;
+        if (typeof txid === 'string' && txid.length >= 64) return txid;
+      } catch (e) {
+        console.warn('[BTC sendBitcoin] sendTransfer failed, trying sendBitcoin request:', e);
+      }
+
+      // Fallback: some wallets use 'sendBitcoin' via request
+      try {
+        const result = await requestProviderMethod(provider, 'sendBitcoin', {
+          toAddress,
+          satoshis,
+        });
+        const txid = typeof result === 'string' ? result : result?.txid || result?.txId || result?.result;
+        if (typeof txid === 'string' && txid.length >= 64) return txid;
+      } catch (e2) {
+        console.warn('[BTC sendBitcoin] sendBitcoin request also failed:', e2);
+      }
+    }
+
+    // Direct sendBitcoin method (some providers expose it directly)
+    if (typeof provider.sendBitcoin === 'function') {
+      const txid = await provider.sendBitcoin(toAddress, satoshis);
+      if (typeof txid === 'string' && txid.length >= 64) return txid;
+    }
+
+    throw new Error(`${activeProvider} does not support sending BTC. Please use UniSat or a compatible wallet.`);
+  }, [activeProvider]);
+
   // NOTE: removed duplicate auto-reconnect effect — handled by the effect at line ~447
 
   useEffect(() => {
