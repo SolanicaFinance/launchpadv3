@@ -117,7 +117,7 @@ export default function BtcMemeDetailPage() {
         mintAddress: id, // for navigation
       });
 
-      // Poll for Solana proof asynchronously
+      // Poll for L2 proof asynchronously
       if (data.proofPending && data.tradeId) {
         setPendingProofTradeId(data.tradeId);
       }
