@@ -258,20 +258,22 @@ Deno.serve(async (req) => {
       }),
     }).catch(err => console.warn("[btc-meme-create] Genesis proof fire-and-forget error:", err));
 
-    // Auto-activate fallback: if genesis doesn't complete within 60s, activate anyway
+    // Auto-activate fallback: only if payment was received (payment_tx_id exists)
     setTimeout(async () => {
       try {
         const { data: checkToken } = await supabase
           .from("btc_meme_tokens")
-          .select("status")
+          .select("status, payment_tx_id")
           .eq("id", token.id)
           .maybeSingle();
-        if (checkToken && checkToken.status === "pending_genesis") {
-          console.log(`[btc-meme-create] Auto-activating token ${token.id} after 60s timeout`);
+        if (checkToken && checkToken.status === "pending_genesis" && checkToken.payment_tx_id) {
+          console.log(`[btc-meme-create] Auto-activating paid token ${token.id} after 60s timeout`);
           await supabase.from("btc_meme_tokens").update({
             status: "active",
             genesis_txid: `auto:${token.id.slice(0, 32)}`,
           }).eq("id", token.id);
+        } else if (checkToken && !checkToken.payment_tx_id) {
+          console.log(`[btc-meme-create] Skipping auto-activate for unpaid token ${token.id}`);
         }
       } catch (e) {
         console.warn("[btc-meme-create] Auto-activate fallback error:", e);
