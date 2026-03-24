@@ -416,23 +416,16 @@ export default function V2BtcMemeDetailPage() {
                         {t.trade_type === "buy" ? "+" : "-"}{formatNum(t.token_amount)}
                       </span>
                       <span className="font-mono text-muted-foreground text-[10px]">{formatBtc(t.btc_amount)}</span>
-                      {t.solana_proof_signature ? (
-                        <a
-                          href={`https://solscan.io/tx/${t.solana_proof_signature}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] hover:bg-blue-500/20 transition-colors cursor-pointer"
-                          title={`View proof on Solscan: ${t.solana_proof_signature}`}
-                        >
-                          <Cpu className="w-2.5 h-2.5" />
-                          verified ↗
-                        </a>
-                      ) : (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground/40 text-[9px]">
-                          <Cpu className="w-2.5 h-2.5" />
-                          pending
-                        </span>
-                      )}
+                      <a
+                        href={`https://solscan.io/tx/${t.solana_proof_signature}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] hover:bg-blue-500/20 transition-colors cursor-pointer"
+                        title={`View proof on Solscan: ${t.solana_proof_signature}`}
+                      >
+                        <Cpu className="w-2.5 h-2.5" />
+                        TX ↗
+                      </a>
                       <span className="text-muted-foreground/60 text-[10px] w-12 text-right">{timeAgo(t.created_at)}</span>
                     </div>
                   </div>
