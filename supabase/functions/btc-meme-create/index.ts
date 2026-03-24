@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       .from("btc_meme_tokens")
       .insert({
         name: name.trim(),
-        ticker: ticker.toUpperCase().trim(),
+        ticker: cleanTicker,
         description: description?.trim() || null,
         image_url: imageUrl || null,
         website_url: websiteUrl || null,
