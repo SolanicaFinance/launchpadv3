@@ -376,43 +376,66 @@ export default function V2BitcoinModePage() {
             <div className="flex items-center justify-center gap-3 flex-wrap mb-5 animate-fade-in"
               style={{ animationDelay: "0.25s", animationFillMode: "both" }}>
               {isConnected ? (
-                <Button
-                  onClick={() => navigate('/btc/meme/launch')}
-                  className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300"
-                  style={{
-                    background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
-                    color: "hsl(0 0% 5%)",
-                    boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
-                  }}
-                >
-                  <Rocket className="w-4 h-4 mr-2" /> Launch TAT Token
-                </Button>
+                <>
+                  <Button
+                    onClick={() => navigate('/btc/meme/launch')}
+                    className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
+                      color: "hsl(0 0% 5%)",
+                      boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
+                    }}
+                  >
+                    <Rocket className="w-3.5 h-3.5 mr-1.5" /> Launch
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/btc/meme/launch')}
+                    className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300
+                               border border-primary/30 hover:border-primary/60 bg-card/20 backdrop-blur-sm text-foreground"
+                    style={{ boxShadow: "0 4px 16px hsl(0 0% 0% / 0.3)" }}
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" /> Trade
+                  </Button>
+                </>
               ) : (
-                <BtcConnectWalletModal
-                  trigger={
-                    <Button
-                      className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300"
-                      style={{
-                        background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
-                        color: "hsl(0 0% 5%)",
-                        boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
-                      }}
-                    >
-                      <Rocket className="w-4 h-4 mr-2" /> Connect Wallet to Launch
-                    </Button>
-                  }
-                />
+                <>
+                  <BtcConnectWalletModal
+                    trigger={
+                      <Button
+                        className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300"
+                        style={{
+                          background: "linear-gradient(135deg, #F7931A 0%, #FFD700 60%, #F7931A 100%)",
+                          color: "hsl(0 0% 5%)",
+                          boxShadow: "0 0 24px hsl(30 90% 55% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.3)",
+                        }}
+                      >
+                        <Rocket className="w-3.5 h-3.5 mr-1.5" /> Launch
+                      </Button>
+                    }
+                  />
+                  <BtcConnectWalletModal
+                    trigger={
+                      <Button
+                        className="relative px-5 py-2 rounded-full font-bold text-xs min-h-[36px] hover:scale-[1.05] transition-all duration-300
+                                   border border-primary/30 hover:border-primary/60 bg-card/20 backdrop-blur-sm text-foreground"
+                        style={{ boxShadow: "0 4px 16px hsl(0 0% 0% / 0.3)" }}
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" /> Trade
+                      </Button>
+                    }
+                  />
+                </>
               )}
               <a
                 href="/TAT_Protocol_Technical_Specification.md"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs min-h-[36px] 
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-xs min-h-[36px] 
                            border border-primary/30 hover:border-primary/60 bg-card/20 backdrop-blur-sm
                            text-foreground hover:scale-[1.05] transition-all duration-300"
                 style={{ boxShadow: "0 4px 16px hsl(0 0% 0% / 0.3)" }}
               >
-                <FileText className="w-4 h-4" style={{ color: "#F7931A" }} /> Whitepaper
+                <FileText className="w-3.5 h-3.5" style={{ color: "#F7931A" }} /> Whitepaper
               </a>
             </div>
 
