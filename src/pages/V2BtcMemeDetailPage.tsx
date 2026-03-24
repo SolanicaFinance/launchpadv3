@@ -385,9 +385,9 @@ export default function V2BtcMemeDetailPage() {
               </button>
             </div>
             {tradeTab !== "holders" && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <Cpu className="w-3 h-3 text-blue-400/60" />
-                <span>L2 Proof Receipts</span>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground" title="Trades execute instantly on Saturn's internal bonding curve. Solana receipts provide an immutable audit trail.">
+                <Cpu className="w-3 h-3 text-muted-foreground/60" />
+                <span>Internal Trades</span>
               </div>
             )}
           </div>
