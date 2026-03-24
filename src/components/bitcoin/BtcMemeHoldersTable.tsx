@@ -1,5 +1,5 @@
 import { BtcMemeHolder } from "@/hooks/useBtcMemeHolders";
-import { Loader2, Crown, Code } from "lucide-react";
+import { Loader2, Crown, Code, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
