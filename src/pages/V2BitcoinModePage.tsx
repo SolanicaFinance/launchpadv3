@@ -86,7 +86,7 @@ function BtcPulseTokenRow({ token, btcUsdPrice }: { token: BtcMemeToken; btcUsdP
           )}
           {!isGraduated && pct > 0 && pct < 50 && (
             <span className="text-[9px] text-muted-foreground font-mono px-1 rounded" style={{ background: "hsl(220 20% 18% / 0.8)" }}>
-              {pct.toFixed(0)}%
+              {pct < 1 ? pct.toFixed(2) : pct.toFixed(0)}%
             </span>
           )}
           {isGraduated && (
