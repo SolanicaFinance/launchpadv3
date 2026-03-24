@@ -133,7 +133,7 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
           <p className="text-[11px] text-muted-foreground">Try a different name, ticker, or address</p>
         </div>
       ) : (
-        <div className={cn("overflow-y-auto custom-scrollbar", inline ? "max-h-[min(64dvh,460px)]" : "max-h-[410px]")}>
+        <div className={cn("overflow-y-auto custom-scrollbar", inline ? "max-h-none" : "max-h-[min(64dvh,460px)]")}>
           {grouped.map((r, i) => {
             const change = r.priceChange24h;
             const isPositive = change !== null && change >= 0;
