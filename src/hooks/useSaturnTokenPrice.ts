@@ -41,7 +41,9 @@ export function useSaturnTokenPrice() {
           )[0];
           
           const price = parseFloat(pair.priceUsd || '0');
-          const change24h = pair.priceChange?.h24 || 0;
+          // Only trust 24h change when pair has tracked liquidity
+          const hasReliableData = pair.liquidity?.usd != null && pair.liquidity.usd > 0;
+          const change24h = hasReliableData ? (pair.priceChange?.h24 || 0) : 0;
           
           const newData = { price, change24h };
           setPriceData(newData);
