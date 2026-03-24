@@ -11,6 +11,8 @@
  *   www.Saturn.Trade|TICKER|NAME_SHORT|CREATOR_PREFIX|TIMESTAMP
  */
 
+import { Buffer } from "node:buffer";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
