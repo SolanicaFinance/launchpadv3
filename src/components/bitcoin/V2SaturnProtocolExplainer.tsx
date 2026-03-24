@@ -1,4 +1,4 @@
-import { Shield, Zap, Layers, Hash, Clock, ArrowRight, Lock, Cpu } from 'lucide-react';
+import { Shield, Zap, Layers, Hash, Clock, ArrowRight, Lock, Cpu, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const steps = [
