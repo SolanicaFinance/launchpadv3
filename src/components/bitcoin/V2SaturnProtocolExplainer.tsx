@@ -137,7 +137,7 @@ export function V2SaturnProtocolExplainer() {
             <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Native Rune</span>
           </div>
           <a
-            href="/TAT_Protocol_Technical_Specification.md"
+            href="/btc/whitepaper"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors
