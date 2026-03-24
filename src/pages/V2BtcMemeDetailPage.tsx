@@ -595,7 +595,7 @@ export default function V2BtcMemeDetailPage() {
                 <div className="trade-bonding-fill" style={{ width: `${Math.max(Math.min(progressPct, 100), 1)}%` }} />
               </div>
             </div>
-            <span className="text-sm font-mono font-bold text-primary shrink-0 hidden md:inline">{progressPct.toFixed(1)}%</span>
+            <span className="text-sm font-mono font-bold text-primary shrink-0 hidden md:inline">{progressPct < 1 ? progressPct.toFixed(2) : progressPct.toFixed(1)}%</span>
             <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">{formatBtc(token.real_btc_reserves || 0)} / {formatBtc(token.graduation_threshold_btc || 0.5)}</span>
           </div>
         )}
