@@ -183,8 +183,8 @@ CREATE TABLE btc_meme_trades (
     pool_virtual_btc NUMERIC,          -- Pool state snapshot
     pool_virtual_tokens NUMERIC,
     pool_real_btc NUMERIC,
-    solana_proof_signature TEXT,        -- Layer 2 proof receipt
-    solana_proof_memo TEXT,            -- Proof memo content
+    l2_proof_signature TEXT,            -- Layer 2 proof receipt
+    l2_proof_memo TEXT,                 -- Proof memo content
     created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
