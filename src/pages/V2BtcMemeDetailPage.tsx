@@ -5,6 +5,7 @@ import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBala
 import { useBtcUsdPrice } from "@/hooks/useBtcUsdPrice";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
+import { BtcWithdrawPanel } from "@/components/bitcoin/BtcWithdrawPanel";
 import { BtcMemeChart } from "@/components/bitcoin/BtcMemeChart";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -367,6 +368,11 @@ export default function V2BtcMemeDetailPage() {
           {/* Deposit Panel */}
           {isConnected && address && (showDeposit || btcBalance === 0) && (
             <BtcDepositPanel walletAddress={address} currentBalance={btcBalance} />
+          )}
+
+          {/* Withdraw Panel */}
+          {isConnected && address && btcBalance > 0 && (
+            <BtcWithdrawPanel walletAddress={address} currentBalance={btcBalance} />
           )}
         </div>
 
