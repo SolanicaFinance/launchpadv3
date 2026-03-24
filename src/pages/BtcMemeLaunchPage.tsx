@@ -317,10 +317,27 @@ export default function BtcMemeLaunchPage() {
           </div>
           <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform (no creator tax)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Bitcoin Genesis</span><span className="text-foreground">Saturn.Trade OP_RETURN</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Launch Fee</span>
+            <span className="text-foreground">{launchFeeSats.toLocaleString()} sats{btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((launchFeeSats / 1e8) * btcPrice)})</span>}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Cost</span>
+            <span className="text-foreground font-semibold">
+              {formatSats(form.initialBuyBtc + launchFeeSats / 1e8)}
+              {btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((form.initialBuyBtc + launchFeeSats / 1e8) * btcPrice)})</span>}
+            </span>
+          </div>
         </div>
 
         <Button onClick={handleLaunch} disabled={submitting || uploading || !form.name || !form.ticker} className="w-full bg-[hsl(30,100%,50%)] hover:bg-[hsl(30,100%,45%)] text-white" size="lg">
-          {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> {uploading ? "Uploading..." : "Launching..."}</> : <><Rocket className="w-4 h-4 mr-2" /> Launch Token</>}
+          {submitting ? (
+            <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 
+              {uploading ? "Uploading..." : launchStep === 'paying' ? "Confirm in wallet..." : launchStep === 'creating' ? "Creating token..." : "Launching..."}
+            </>
+          ) : (
+            <><Rocket className="w-4 h-4 mr-2" /> Launch Token ({formatSats(form.initialBuyBtc + launchFeeSats / 1e8)})</>
+          )}
         </Button>
       </div>
     </div>
