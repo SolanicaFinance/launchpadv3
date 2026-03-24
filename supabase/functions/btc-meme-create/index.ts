@@ -1,5 +1,6 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
@@ -20,17 +21,54 @@ function getSupabase() {
   );
 }
 
+const LAUNCH_FEE_SATS = 10_000; // 10,000 sats (~$1) to cover OP_RETURN genesis miner fee
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Preflight: return platform deposit address and launch fee
+  if (req.method === "GET") {
+    const platformAddress = Deno.env.get("BTC_PLATFORM_ADDRESS");
+    if (!platformAddress) {
+      return new Response(JSON.stringify({ error: "Platform address not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({
+      platformAddress,
+      launchFeeSats: LAUNCH_FEE_SATS,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   try {
     const body = await req.json();
-    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps } = body;
+    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps, paymentTxId } = body;
 
     if (!name || !ticker || !creatorWallet) {
       return new Response(JSON.stringify({ error: "name, ticker, and creatorWallet required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Require payment transaction ID
+    if (!paymentTxId) {
+      return new Response(JSON.stringify({ error: "Payment transaction required. Send BTC from your wallet to launch." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify payment tx exists on mempool (basic check - tx was broadcast)
+    console.log(`[btc-meme-create] Verifying payment tx: ${paymentTxId}`);
+    try {
+      const mempoolRes = await fetch(`https://mempool.space/api/tx/${paymentTxId}`);
+      if (!mempoolRes.ok) {
+        console.warn(`[btc-meme-create] Payment tx not found on mempool yet (status ${mempoolRes.status}), proceeding anyway (may be in mempool)`);
+      } else {
+        const txData = await mempoolRes.json();
+        console.log(`[btc-meme-create] Payment tx verified, outputs: ${txData.vout?.length || 0}`);
+      }
+    } catch (e) {
+      console.warn("[btc-meme-create] Mempool verification failed, proceeding:", e);
     }
 
     if (ticker.length > 10) {

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
@@ -46,14 +46,17 @@ function formatTokens(n: number) {
 }
 
 export default function BtcMemeLaunchPage() {
-  const { isConnected, address } = useBtcWallet();
+  const { isConnected, address, sendBitcoin } = useBtcWallet();
   const navigate = useNavigate();
   const btcPrice = useBtcUsdPrice();
   const [submitting, setSubmitting] = useState(false);
+  const [launchStep, setLaunchStep] = useState<'idle' | 'paying' | 'creating'>('idle');
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [platformAddress, setPlatformAddress] = useState<string | null>(null);
+  const [launchFeeSats, setLaunchFeeSats] = useState(10_000);
   const [form, setForm] = useState({
     name: "",
     ticker: "",
@@ -63,6 +66,27 @@ export default function BtcMemeLaunchPage() {
     twitterUrl: "",
     initialBuyBtc: 0.0001,
   });
+
+  // Fetch platform address on mount
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const res = await fetch(`https://${projectId}.supabase.co/functions/v1/btc-meme-create`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPlatformAddress(data.platformAddress);
+          setLaunchFeeSats(data.launchFeeSats || 10_000);
+        }
+      } catch (e) {
+        console.warn('[BtcMemeLaunchPage] Failed to fetch platform info:', e);
+      }
+    };
+    fetchInfo();
+  }, []);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,7 +133,6 @@ export default function BtcMemeLaunchPage() {
       toast.error("Name and ticker are required");
       return;
     }
-    // Validate ticker for Rune compatibility (A-Z only)
     const cleanTicker = form.ticker.toUpperCase().trim();
     if (!/^[A-Z]+$/.test(cleanTicker)) {
       toast.error("Ticker must be letters only (A-Z) for Bitcoin Rune compatibility");
@@ -119,10 +142,41 @@ export default function BtcMemeLaunchPage() {
       toast.error("Ticker too long (max 28 characters for Rune names)");
       return;
     }
+    if (!platformAddress) {
+      toast.error("Platform not ready. Please wait and try again.");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Step 1: Upload image
       const imageUrl = await uploadImage();
 
+      // Step 2: Calculate total BTC needed (dev buy + launch fee)
+      const devBuySats = Math.round(form.initialBuyBtc * 1e8);
+      const totalSats = devBuySats + launchFeeSats;
+      const totalBtc = totalSats / 1e8;
+
+      // Step 3: Prompt wallet to send BTC
+      setLaunchStep('paying');
+      toast.info(`Your wallet will prompt you to send ${(totalSats).toLocaleString()} sats (${totalBtc.toFixed(8)} BTC) to fund the launch.`);
+
+      let paymentTxId: string;
+      try {
+        paymentTxId = await sendBitcoin(platformAddress, totalSats);
+      } catch (walletErr: any) {
+        if (walletErr?.message?.includes('rejected') || walletErr?.message?.includes('cancel') || walletErr?.message?.includes('denied')) {
+          toast.error("Transaction cancelled by user");
+        } else {
+          toast.error(`Wallet error: ${walletErr?.message || 'Failed to send BTC'}`);
+        }
+        return;
+      }
+
+      toast.success(`Payment sent! TX: ${paymentTxId.slice(0, 12)}...`);
+
+      // Step 4: Create the token with payment proof
+      setLaunchStep('creating');
       const { data, error } = await supabase.functions.invoke("btc-meme-create", {
         body: {
           name: form.name,
@@ -133,17 +187,19 @@ export default function BtcMemeLaunchPage() {
           twitterUrl: form.twitterUrl,
           creatorWallet: address,
           initialBuyBtc: form.initialBuyBtc,
+          paymentTxId,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`$${data.token.ticker} submitted! Awaiting Bitcoin network confirmation...`);
+      toast.success(`$${data.token.ticker} launched! 🚀 Awaiting Bitcoin network confirmation...`);
       navigate(`/btc/meme/${data.token.id}`);
     } catch (e: any) {
       toast.error(e.message || "Launch failed");
     } finally {
       setSubmitting(false);
+      setLaunchStep('idle');
     }
   };
 
@@ -261,10 +317,27 @@ export default function BtcMemeLaunchPage() {
           </div>
           <div className="flex justify-between"><span className="text-muted-foreground">Fee</span><span className="text-foreground">1% platform (no creator tax)</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Bitcoin Genesis</span><span className="text-foreground">Saturn.Trade OP_RETURN</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Launch Fee</span>
+            <span className="text-foreground">{launchFeeSats.toLocaleString()} sats{btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((launchFeeSats / 1e8) * btcPrice)})</span>}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Cost</span>
+            <span className="text-foreground font-semibold">
+              {formatSats(form.initialBuyBtc + launchFeeSats / 1e8)}
+              {btcPrice > 0 && <span className="text-muted-foreground"> ({formatUsd((form.initialBuyBtc + launchFeeSats / 1e8) * btcPrice)})</span>}
+            </span>
+          </div>
         </div>
 
         <Button onClick={handleLaunch} disabled={submitting || uploading || !form.name || !form.ticker} className="w-full bg-[hsl(30,100%,50%)] hover:bg-[hsl(30,100%,45%)] text-white" size="lg">
-          {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> {uploading ? "Uploading..." : "Launching..."}</> : <><Rocket className="w-4 h-4 mr-2" /> Launch Token</>}
+          {submitting ? (
+            <><Loader2 className="w-4 h-4 animate-spin mr-2" /> 
+              {uploading ? "Uploading..." : launchStep === 'paying' ? "Confirm in wallet..." : launchStep === 'creating' ? "Creating token..." : "Launching..."}
+            </>
+          ) : (
+            <><Rocket className="w-4 h-4 mr-2" /> Launch Token ({formatSats(form.initialBuyBtc + launchFeeSats / 1e8)})</>
+          )}
         </Button>
       </div>
     </div>
