@@ -441,7 +441,7 @@ export function MobileTradePanelV2({ bondingToken, externalToken, userTokenBalan
               isBuy={isBuy}
               safetyChecks={safetyChecks}
               onGeneratePnl={() => {
-                setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: numericAmount, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name });
+                setProfitCardData({ action: isBuy ? "buy" : "sell", amountSol: numericAmount, tokenTicker: tokenInfo.ticker, tokenName: tokenInfo.name, mintAddress: tokenInfo.mint_address });
                 setShowProfitCard(true);
               }}
             />
