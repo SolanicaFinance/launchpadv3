@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // TAT Protocol: Fixed 1% platform fee only, no creator fees
-    const totalFeeBps = token.platform_fee_bps;
+    // TAT Protocol: platform fee (1%) + creator fee (0-8%) per spec
+    const totalFeeBps = token.platform_fee_bps + (token.creator_fee_bps || 0);
     let btcAmount: number, tokenAmount: number, feeAmount: number;
     let newVirtualBtc: number, newVirtualTokens: number, newRealBtc: number, newRealTokens: number;
 
