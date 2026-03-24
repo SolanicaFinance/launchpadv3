@@ -505,7 +505,7 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
     };
   }, []);
 
-  // Auto-reconnect from localStorage on mount
+  // Auto-reconnect from localStorage on mount and retry while providers inject
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const wasConnected = localStorage.getItem(BTC_WALLET_KEY);
@@ -516,14 +516,14 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
     let cancelled = false;
 
     const tryReconnect = async () => {
-      // Wait a bit for extensions to inject
-      await new Promise(r => setTimeout(r, 1500));
-      if (cancelled) return;
+      reconnectAttemptsRef.current += 1;
 
       try {
         const provider = getInjectedProvider(savedProvider);
         if (!provider) {
-          console.log('[BTC Auto-reconnect] Provider not found:', savedProvider);
+          if (reconnectAttemptsRef.current >= 12) {
+            console.log('[BTC Auto-reconnect] Provider not found after retries:', savedProvider);
+          }
           return;
         }
 
@@ -536,18 +536,29 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
           setActiveProvider(savedProvider);
           const bal = await getBalance(savedProvider);
           if (bal && !cancelled) setBalance(bal);
-        } else {
+          return;
+        }
+
+        if (reconnectAttemptsRef.current >= 12) {
           console.log('[BTC Auto-reconnect] No address returned, clearing saved state');
           localStorage.removeItem(BTC_WALLET_KEY);
           localStorage.removeItem(BTC_PROVIDER_KEY);
         }
       } catch (e) {
-        console.warn('[BTC Auto-reconnect] Failed:', e);
+        if (reconnectAttemptsRef.current >= 12) {
+          console.warn('[BTC Auto-reconnect] Failed:', e);
+        }
       }
     };
 
-    tryReconnect();
-    return () => { cancelled = true; };
+    const initialTimer = window.setTimeout(tryReconnect, 400);
+    const retryTimers = [1000, 1800, 2800, 4000, 5500, 7500, 10000, 13000].map((ms) => window.setTimeout(tryReconnect, ms));
+
+    return () => {
+      cancelled = true;
+      clearTimeout(initialTimer);
+      retryTimers.forEach(clearTimeout);
+    };
   }, []);
 
   const refreshBalance = useCallback(async () => {
