@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, Cpu, TrendingUp } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, Cpu, TrendingUp, Crown, Code } from "lucide-react";
 import { showTradeSuccess } from "@/stores/tradeSuccessStore";
 import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
 import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
@@ -50,7 +50,14 @@ export default function V2BtcMemeDetailPage() {
   const { data: trades } = useBtcMemeTrades(id);
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
-  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply);
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
+
+  // Compute dev holdings %
+  const devHoldingPct = (() => {
+    if (!holders || !token) return null;
+    const devHolder = holders.find(h => h.is_creator);
+    return devHolder ? devHolder.percentage : 0;
+  })();
 
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -183,6 +190,16 @@ export default function V2BtcMemeDetailPage() {
               {token.status}
             </span>
             <span className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">TAT Protocol</span>
+            {token.bonding_progress >= 50 && token.status !== "graduated" && (
+              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: "hsl(45 90% 50% / 0.15)", color: "hsl(45 90% 50%)" }}>
+                <Crown className="w-3 h-3" /> KOTH
+              </span>
+            )}
+            {devHoldingPct !== null && devHoldingPct > 0 && (
+              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold bg-primary/10 text-primary border border-primary/20">
+                <Code className="w-3 h-3" /> Dev {devHoldingPct.toFixed(1)}%
+              </span>
+            )}
           </div>
           {token.genesis_txid && (
             <div className="flex items-center gap-1.5 mt-1">
@@ -344,7 +361,7 @@ export default function V2BtcMemeDetailPage() {
           </div>
 
           {tradeTab === "holders" ? (
-            <BtcMemeHoldersTable holders={holders || []} isLoading={holdersLoading} ticker={token.ticker} currentPriceBtc={token.price_btc} />
+            <BtcMemeHoldersTable holders={holders || []} isLoading={holdersLoading} ticker={token.ticker} currentPriceBtc={token.price_btc} creatorWallet={token.creator_wallet} />
           ) : (
             <div className="space-y-0.5 max-h-96 overflow-y-auto">
               {displayTrades.length === 0 ? (
