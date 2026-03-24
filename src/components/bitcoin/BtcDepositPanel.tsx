@@ -1,13 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowDownToLine, Copy, Check, ExternalLink, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-// Platform deposit address — users send BTC here and then submit the txid
-const PLATFORM_DEPOSIT_ADDRESS = "bc1qsaturnplatformaddressplaceholder";
 
 interface BtcDepositPanelProps {
   walletAddress: string;
@@ -18,7 +15,17 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
   const [txid, setTxid] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [depositAddress, setDepositAddress] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Fetch platform deposit address on mount
+  useEffect(() => {
+    supabase.functions.invoke("btc-meme-deposit", { body: {} })
+      .then(({ data }) => {
+        if (data?.depositAddress) setDepositAddress(data.depositAddress);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleVerifyDeposit = async () => {
     const cleanTxid = txid.trim();
@@ -46,7 +53,8 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
   };
 
   const copyDepositAddress = () => {
-    navigator.clipboard.writeText(PLATFORM_DEPOSIT_ADDRESS);
+    if (!depositAddress) return;
+    navigator.clipboard.writeText(depositAddress);
     setCopied(true);
     toast.success("Deposit address copied");
     setTimeout(() => setCopied(false), 2000);
@@ -59,7 +67,7 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
         <h3 className="text-sm font-bold text-foreground">Deposit BTC</h3>
       </div>
 
-      {/* Step 1: Send BTC to platform address */}
+      {/* Current balance + deposit address */}
       <div className="bg-muted/20 rounded-lg p-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground uppercase">Your Balance</span>
@@ -68,16 +76,20 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
 
         <div className="border-t border-border/50 pt-2">
           <span className="text-[10px] text-muted-foreground uppercase">Step 1: Send BTC to this address</span>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[10px] font-mono text-primary truncate flex-1">{PLATFORM_DEPOSIT_ADDRESS}</span>
-            <button onClick={copyDepositAddress} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-              {copied ? <Check className="w-3 h-3 text-[hsl(var(--chart-2))]" /> : <Copy className="w-3 h-3" />}
-            </button>
-          </div>
+          {depositAddress ? (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[10px] font-mono text-primary truncate flex-1">{depositAddress}</span>
+              <button onClick={copyDepositAddress} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                {copied ? <Check className="w-3 h-3 text-[hsl(var(--chart-2))]" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
+          ) : (
+            <div className="text-[10px] text-muted-foreground mt-1">Loading deposit address...</div>
+          )}
         </div>
       </div>
 
-      {/* Step 2: Submit txid for verification */}
+      {/* Step 2: Submit txid */}
       <div>
         <div className="text-[10px] text-muted-foreground mb-1">Step 2: Paste your transaction ID</div>
         <Input
@@ -89,13 +101,8 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
           maxLength={64}
         />
         <p className="text-[9px] text-muted-foreground mt-1">
-          Find your txid in your wallet's transaction history or on{" "}
-          <a
-            href="https://mempool.space"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline inline-flex items-center gap-0.5"
-          >
+          Find your txid in your wallet history or on{" "}
+          <a href="https://mempool.space" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">
             mempool.space <ExternalLink className="w-2.5 h-2.5" />
           </a>
         </p>
@@ -117,7 +124,7 @@ export function BtcDepositPanel({ walletAddress, currentBalance }: BtcDepositPan
       <div className="flex items-start gap-1.5 bg-muted/10 rounded p-2">
         <ShieldCheck className="w-3 h-3 text-[hsl(var(--chart-2))] shrink-0 mt-0.5" />
         <p className="text-[9px] text-muted-foreground leading-tight">
-          Deposits are verified on-chain via mempool.space. Requires at least 1 confirmation. Each transaction can only be claimed once.
+          Deposits are verified on-chain via mempool.space. Requires ≥1 confirmation. Each tx can only be claimed once.
         </p>
       </div>
     </div>
