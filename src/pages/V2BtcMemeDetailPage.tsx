@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowUpRight, ArrowDownRight, Users, BarChart3, Cpu, TrendingUp, Crown, Code } from "lucide-react";
-import { showTradeSuccess } from "@/stores/tradeSuccessStore";
+import { showTradeSuccess, useTradeSuccessStore } from "@/stores/tradeSuccessStore";
 import { useBtcMemeHolders } from "@/hooks/useBtcMemeHolders";
 import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 import { useQueryClient } from "@tanstack/react-query";
