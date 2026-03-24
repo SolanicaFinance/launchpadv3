@@ -249,7 +249,7 @@ export default function V2BtcMemeDetailPage() {
       ) : (
         <>
           <div className="flex gap-1 bg-white/[0.03] rounded-lg p-0.5 border border-white/[0.06]">
-            <button onClick={() => setTradeType("buy")} className={`flex-1 py-2 rounded-md text-xs font-mono font-semibold transition-all ${tradeType === "buy" ? "bg-[hsl(var(--success))] text-white shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}>Buy</button>
+            <button onClick={() => setTradeType("buy")} className={`flex-1 py-2 rounded-md text-xs font-mono font-semibold transition-all ${tradeType === "buy" ? "bg-[hsl(var(--success))] text-black shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}>Buy</button>
             <button onClick={() => setTradeType("sell")} className={`flex-1 py-2 rounded-md text-xs font-mono font-semibold transition-all ${tradeType === "sell" ? "bg-destructive text-white shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}>Sell</button>
           </div>
           <div>
