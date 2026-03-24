@@ -367,9 +367,9 @@ export default function V2BitcoinModePage() {
 
             <p className="text-[11px] sm:text-xs text-muted-foreground/65 max-w-lg mx-auto mb-5 leading-relaxed animate-fade-in"
               style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
-              Born on <span style={{ color: "#F7931A" }} className="font-semibold">Bitcoin Mainnet</span>,
-              trades on <span style={{ color: "#F7931A" }} className="font-semibold">Fractal Bitcoin</span> (~30s blocks),
-              audited on <span style={{ color: "#F7931A" }} className="font-semibold">Mainnet</span>. Fixed 1% fee. Graduates to native Rune at 0.5 BTC.
+              Born on <span style={{ color: "#F7931A" }} className="font-semibold">Bitcoin Mainnet</span> (OP_RETURN genesis),
+              trades instantly on <span style={{ color: "#F7931A" }} className="font-semibold">Saturn Execution Layer</span>,
+              audited on <span style={{ color: "#F7931A" }} className="font-semibold">Mainnet</span> via Merkle anchors. 1% fee + 0-8% creator tax. Graduates to native Rune at 0.5 BTC.
             </p>
 
             {/* CTA Buttons */}
