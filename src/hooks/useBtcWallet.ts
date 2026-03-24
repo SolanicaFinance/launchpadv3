@@ -698,3 +698,6 @@ export function useBtcWalletInternal(): UseBtcWalletReturn {
     refreshBalance,
   }), [address, balance, isConnected, isConnecting, activeProvider, availableWallets, connect, disconnect, signPsbt, signMessage, refreshBalance]);
 }
+
+// Context-consuming wrapper — all components should use this
+export { useBtcWalletContext as useBtcWallet } from '@/contexts/BtcWalletContext';
