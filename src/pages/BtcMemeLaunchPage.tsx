@@ -109,6 +109,16 @@ export default function BtcMemeLaunchPage() {
       toast.error("Name and ticker are required");
       return;
     }
+    // Validate ticker for Rune compatibility (A-Z only)
+    const cleanTicker = form.ticker.toUpperCase().trim();
+    if (!/^[A-Z]+$/.test(cleanTicker)) {
+      toast.error("Ticker must be letters only (A-Z) for Bitcoin Rune compatibility");
+      return;
+    }
+    if (cleanTicker.length > 28) {
+      toast.error("Ticker too long (max 28 characters for Rune names)");
+      return;
+    }
     setSubmitting(true);
     try {
       const imageUrl = await uploadImage();
