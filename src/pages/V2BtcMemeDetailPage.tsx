@@ -181,7 +181,7 @@ export default function V2BtcMemeDetailPage() {
         </div>
         <div className="flex justify-between mt-1">
           <span className="text-[10px] text-muted-foreground">{formatBtc(token.real_btc_reserves || 0)} raised</span>
-          <span className="text-[10px] text-muted-foreground">{formatBtc(token.graduation_threshold_btc || 0.015)} goal</span>
+          <span className="text-[10px] text-muted-foreground">{formatBtc(token.graduation_threshold_btc || 0.5)} goal</span>
         </div>
       </div>
 
