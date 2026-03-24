@@ -25,9 +25,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 function formatBtc(v: number) {
+  if (v === 0) return '0 BTC';
   if (v >= 1) return `${v.toFixed(4)} BTC`;
   if (v >= 0.001) return `${v.toFixed(6)} BTC`;
-  return `${v.toFixed(8)} BTC`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} BTC`;
+  // For extremely small prices, show significant digits
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} BTC`;
 }
 
 function formatNum(v: number) {
@@ -415,12 +419,13 @@ export default function V2BtcMemeDetailPage() {
         </span>
       </div>
       {[
-        { label: 'Price', value: formatBtc(token.price_btc) },
-        { label: 'Market Cap', value: formatBtc(token.market_cap_btc) },
-        { label: 'Volume', value: formatBtc(token.volume_btc) },
+        { label: 'Price', value: priceUsd > 0 ? `${formatUsdCompact(priceUsd)} (${formatBtc(token.price_btc)})` : formatBtc(token.price_btc) },
+        { label: 'Market Cap', value: mcapUsd > 0 ? `${formatUsdCompact(mcapUsd)} (${formatBtc(token.market_cap_btc)})` : formatBtc(token.market_cap_btc) },
+        { label: 'Volume', value: volUsd > 0 ? `${formatUsdCompact(volUsd)} (${formatBtc(token.volume_btc)})` : formatBtc(token.volume_btc) },
         { label: 'Holders', value: token.holder_count.toLocaleString() },
         { label: 'Supply', value: formatNum(token.total_supply) },
         { label: 'Trades', value: token.trade_count.toLocaleString() },
+        { label: 'Bonding', value: `${progressPct < 1 ? progressPct.toFixed(2) : progressPct.toFixed(1)}%` },
       ].map((row, i) => (
         <div key={i} className="trade-detail-row">
           <span className="text-[12px] font-mono text-muted-foreground/50">{row.label}</span>
@@ -590,7 +595,7 @@ export default function V2BtcMemeDetailPage() {
                 <div className="trade-bonding-fill" style={{ width: `${Math.max(Math.min(progressPct, 100), 1)}%` }} />
               </div>
             </div>
-            <span className="text-sm font-mono font-bold text-primary shrink-0 hidden md:inline">{progressPct.toFixed(1)}%</span>
+            <span className="text-sm font-mono font-bold text-primary shrink-0 hidden md:inline">{progressPct < 1 ? progressPct.toFixed(2) : progressPct.toFixed(1)}%</span>
             <span className="text-[12px] font-mono text-muted-foreground/50 shrink-0">{formatBtc(token.real_btc_reserves || 0)} / {formatBtc(token.graduation_threshold_btc || 0.5)}</span>
           </div>
         )}

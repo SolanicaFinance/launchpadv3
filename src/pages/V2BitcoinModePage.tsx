@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useBtcWallet } from '@/contexts/BtcWalletContext';
+import { useBtcUsdPrice } from '@/hooks/useBtcUsdPrice';
 import { BtcConnectWalletModal } from '@/components/bitcoin/BtcConnectWalletModal';
 import { V2SaturnProtocolExplainer } from '@/components/bitcoin/V2SaturnProtocolExplainer';
 import { BtcNetworkDashboard } from '@/components/bitcoin/BtcNetworkDashboard';
@@ -18,16 +19,12 @@ import { LaunchpadLayout } from '@/components/layout/LaunchpadLayout';
 import { LazySection } from '@/components/ui/LazySection';
 
 function formatBtc(v: number) {
+  if (v === 0) return '0 ₿';
   if (v >= 1) return `${v.toFixed(4)} ₿`;
   if (v >= 0.001) return `${v.toFixed(6)} ₿`;
-  return `${v.toFixed(8)} ₿`;
-}
-
-function formatMcap(v: number) {
-  const usd = v * 70000; // rough BTC→USD
-  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
-  if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
-  return `$${usd.toFixed(0)}`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} ₿`;
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} ₿`;
 }
 
 function timeAgo(d: string) {
@@ -39,7 +36,7 @@ function timeAgo(d: string) {
 }
 
 /* ── Premium BTC Token Card ── */
-function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
+function BtcPulseTokenRow({ token, btcUsdPrice }: { token: BtcMemeToken; btcUsdPrice: number }) {
   const navigate = useNavigate();
   const pct = Math.min(token.bonding_progress, 100);
   const isGraduated = token.status === 'graduated';
@@ -89,7 +86,7 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
           )}
           {!isGraduated && pct > 0 && pct < 50 && (
             <span className="text-[9px] text-muted-foreground font-mono px-1 rounded" style={{ background: "hsl(220 20% 18% / 0.8)" }}>
-              {pct.toFixed(0)}%
+              {pct < 1 ? pct.toFixed(2) : pct.toFixed(0)}%
             </span>
           )}
           {isGraduated && (
@@ -103,7 +100,13 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
 
       <div className="text-right shrink-0 relative z-10">
         <div className="text-[11px] font-bold font-mono" style={{ color: "#F7931A" }}>
-          {formatMcap(token.market_cap_btc)}
+          {(() => {
+            const usd = token.market_cap_btc * btcUsdPrice;
+            if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+            if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+            if (usd > 0) return `$${usd.toFixed(0)}`;
+            return formatBtc(token.market_cap_btc);
+          })()}
         </div>
         <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
           {formatBtc(token.price_btc)}
@@ -114,8 +117,8 @@ function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
 }
 
 /* ── Pulse Column ── */
-function BtcPulseColumn({ title, icon, tokens, loading }: {
-  title: string; icon: string; tokens: BtcMemeToken[]; loading: boolean;
+function BtcPulseColumn({ title, icon, tokens, loading, btcUsdPrice }: {
+  title: string; icon: string; tokens: BtcMemeToken[]; loading: boolean; btcUsdPrice: number;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -129,7 +132,7 @@ function BtcPulseColumn({ title, icon, tokens, loading }: {
           <Skeleton key={i} className="h-14 rounded-xl" />
         ))
       ) : tokens.length > 0 ? (
-        tokens.map((t) => <BtcPulseTokenRow key={t.id} token={t} />)
+        tokens.map((t) => <BtcPulseTokenRow key={t.id} token={t} btcUsdPrice={btcUsdPrice} />)
       ) : (
         <div className="text-center py-8 text-[11px] text-muted-foreground border border-dashed border-border/30 rounded-xl">
           No tokens yet
@@ -164,8 +167,8 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }: {
 }
 
 /* ── Live Pulse Section ── */
-function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
-  newPairs: BtcMemeToken[]; finalStretch: BtcMemeToken[]; graduated: BtcMemeToken[]; loading: boolean;
+function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading, btcUsdPrice }: {
+  newPairs: BtcMemeToken[]; finalStretch: BtcMemeToken[]; graduated: BtcMemeToken[]; loading: boolean; btcUsdPrice: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -207,9 +210,9 @@ function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
 
       {/* Desktop: 3-column grid */}
       <div className="hidden md:grid md:grid-cols-3 gap-4">
-        <BtcPulseColumn title="New Pairs" icon="⚡" tokens={newPairs} loading={loading} />
-        <BtcPulseColumn title="Final Stretch" icon="🔥" tokens={finalStretch} loading={loading} />
-        <BtcPulseColumn title="Graduated" icon="🚀" tokens={graduated} loading={loading} />
+        <BtcPulseColumn title="New Pairs" icon="⚡" tokens={newPairs} loading={loading} btcUsdPrice={btcUsdPrice} />
+        <BtcPulseColumn title="Final Stretch" icon="🔥" tokens={finalStretch} loading={loading} btcUsdPrice={btcUsdPrice} />
+        <BtcPulseColumn title="Graduated" icon="🚀" tokens={graduated} loading={loading} btcUsdPrice={btcUsdPrice} />
       </div>
 
       {/* Mobile: horizontal scroll */}
@@ -232,7 +235,7 @@ function BtcLivePulseSection({ newPairs, finalStretch, graduated, loading }: {
         >
           {mobileColumns.map(col => (
             <div key={col.title} className="min-w-0">
-              <BtcPulseColumn title={col.title} icon={col.icon} tokens={col.tokens} loading={loading} />
+              <BtcPulseColumn title={col.title} icon={col.icon} tokens={col.tokens} loading={loading} btcUsdPrice={btcUsdPrice} />
             </div>
           ))}
         </div>
@@ -266,6 +269,7 @@ export default function V2BitcoinModePage() {
   const [fees, setFees] = useState<FeeEstimates | null>(null);
   const [blockHeight, setBlockHeight] = useState<number | null>(null);
   const { data: allTokens, isLoading } = useBtcMemeTokensAll();
+  const btcUsdPrice = useBtcUsdPrice();
 
   useEffect(() => {
     if (chain !== 'bitcoin') setChain('bitcoin');
@@ -500,6 +504,7 @@ export default function V2BitcoinModePage() {
             finalStretch={finalStretch}
             graduated={graduated}
             loading={isLoading}
+            btcUsdPrice={btcUsdPrice}
           />
         </div>
 
