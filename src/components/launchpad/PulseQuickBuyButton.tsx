@@ -298,6 +298,7 @@ const BnbQuickBuy = memo(function BnbQuickBuy({
           amount: `${balance.toFixed(2)} ${ticker}`,
           signature: result.txHash,
           tokenImageUrl,
+          chain: 'bnb',
         });
 
         // Optimistic: flip back to buy
