@@ -72,6 +72,9 @@ export default function V2BtcMemeDetailPage() {
       const executionMs = Date.now() - startMs;
       const trade = data.trade;
 
+      // Use genesis_txid as CA pre-graduation, rune_id post-graduation
+      const tokenCA = token?.genesis_txid || id;
+
       showTradeSuccess({
         type: tradeType,
         ticker: token?.ticker || "",
@@ -82,7 +85,7 @@ export default function V2BtcMemeDetailPage() {
         tokenImageUrl: token?.image_url || undefined,
         chain: "btc",
         executionMs,
-        mintAddress: id,
+        mintAddress: tokenCA,
       });
       setAmount("");
     } catch (e: any) {
