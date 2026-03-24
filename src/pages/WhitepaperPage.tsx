@@ -452,7 +452,7 @@ export default function WhitepaperPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
                     { label: "Platform Fee", value: "1% (to treasury)" },
-                    { label: "Creator Fee", value: "Up to 8% (configurable)" },
+                    
                     { label: "Treasury Wallet", value: "0xf621…1E37" },
                     { label: "Distribution", value: "Automatic per-trade" },
                   ].map((item) => (

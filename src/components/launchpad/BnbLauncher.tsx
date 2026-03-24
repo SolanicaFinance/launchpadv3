@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+
 import { Badge } from '@/components/ui/badge';
 import { Rocket, Image as ImageIcon, Globe, Twitter, AlertCircle, Loader2, Coins, Shield, TrendingUp, Zap, Info } from 'lucide-react';
 import { EvmWalletCard } from './EvmWalletCard';
@@ -21,11 +21,9 @@ interface BnbLaunchFormData {
   twitterUrl: string;
   telegramUrl: string;
   initialBuyBnb: string;
-  creatorFeePct: number; // 0-8%
 }
 
 const PLATFORM_FEE_PCT = 1; // 1% always
-const MAX_CREATOR_FEE_PCT = 8;
 
 export function BnbLauncher() {
   const { isConnected, address, balance, connect } = useEvmWallet();
@@ -39,14 +37,11 @@ export function BnbLauncher() {
     twitterUrl: '',
     telegramUrl: '',
     initialBuyBnb: '0',
-    creatorFeePct: 3, // default 3% creator fee
   });
 
   const handleInputChange = (field: keyof BnbLaunchFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  const totalTaxPct = PLATFORM_FEE_PCT + formData.creatorFeePct;
   const canLaunch = isConnected && formData.name && formData.ticker;
 
   const handleLaunch = useCallback(async () => {
@@ -64,7 +59,7 @@ export function BnbLauncher() {
           ticker: formData.ticker.toUpperCase(),
           creatorWallet: address,
           initialBuyBnb: formData.initialBuyBnb !== '0' ? formData.initialBuyBnb : undefined,
-          creatorFeeBps: formData.creatorFeePct * 100, // Convert % to bps
+          creatorFeeBps: 0,
           description: formData.description || null,
           imageUrl: formData.imageUrl || null,
           websiteUrl: formData.websiteUrl || null,
@@ -87,7 +82,7 @@ export function BnbLauncher() {
       setFormData({
         name: '', ticker: '', description: '', imageUrl: '',
         websiteUrl: '', twitterUrl: '', telegramUrl: '',
-        initialBuyBnb: '0', creatorFeePct: 3,
+        initialBuyBnb: '0',
       });
     } catch (error) {
       console.error('BNB launch error:', error);
@@ -251,36 +246,6 @@ export function BnbLauncher() {
               </div>
             </div>
 
-            {/* Creator Fee */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-1.5">
-                  Creator Fee
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </Label>
-                <span className="text-sm font-semibold text-primary">{formData.creatorFeePct}%</span>
-              </div>
-              <Slider
-                value={[formData.creatorFeePct]}
-                onValueChange={([v]) => handleInputChange('creatorFeePct', v)}
-                min={0}
-                max={MAX_CREATOR_FEE_PCT}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex items-start gap-2 p-2.5 bg-yellow-500/5 border border-yellow-500/15 rounded-lg">
-                <Info className="h-3.5 w-3.5 text-yellow-400 mt-0.5 shrink-0" />
-                <div className="text-xs text-muted-foreground space-y-0.5">
-                  <p>
-                    <span className="text-foreground font-medium">Total token tax: {totalTaxPct}%</span>
-                    {' '}({PLATFORM_FEE_PCT}% platform + {formData.creatorFeePct}% creator)
-                  </p>
-                  <p>
-                    Creator fee is sent to your connected wallet on every trade.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Initial Buy */}
             <div className="space-y-2">
@@ -332,7 +297,7 @@ export function BnbLauncher() {
                 ) : (
                   <>
                     <Rocket className="mr-2 h-5 w-5" />
-                    Launch Token ({totalTaxPct}% tax)
+                    Launch Token ({PLATFORM_FEE_PCT}% fee)
                   </>
                 )}
               </Button>
@@ -360,7 +325,7 @@ export function BnbLauncher() {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-yellow-400 font-bold shrink-0">2.</span>
-              <p>Users buy & sell against the curve — price goes up as more BNB flows in. <strong className="text-foreground">{totalTaxPct}% tax</strong> per trade ({PLATFORM_FEE_PCT}% platform + {formData.creatorFeePct}% to you).</p>
+              <p>Users buy & sell against the curve — price goes up as more BNB flows in. <strong className="text-foreground">{PLATFORM_FEE_PCT}% platform fee</strong> per trade.</p>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-yellow-400 font-bold shrink-0">3.</span>
@@ -382,17 +347,10 @@ export function BnbLauncher() {
               <span className="text-muted-foreground">Platform fee</span>
               <span className="font-mono font-semibold">{PLATFORM_FEE_PCT}%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Creator fee</span>
-              <span className="font-mono font-semibold text-primary">{formData.creatorFeePct}%</span>
-            </div>
             <div className="border-t border-border/50 pt-2 flex items-center justify-between">
-              <span className="text-foreground font-medium">Total tax per trade</span>
-              <span className="font-mono font-bold text-yellow-400">{totalTaxPct}%</span>
+              <span className="text-foreground font-medium">Total fee per trade</span>
+              <span className="font-mono font-bold text-yellow-400">{PLATFORM_FEE_PCT}%</span>
             </div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Max total tax: {PLATFORM_FEE_PCT + MAX_CREATOR_FEE_PCT}% ({MAX_CREATOR_FEE_PCT}% creator + {PLATFORM_FEE_PCT}% platform)
-            </p>
           </CardContent>
         </Card>
       </div>

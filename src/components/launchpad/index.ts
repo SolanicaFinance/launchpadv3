@@ -21,7 +21,7 @@ export { JupiterSwapWidget } from './JupiterSwapWidget';
 export { EmbeddedWalletCard } from './EmbeddedWalletCard';
 export { ChainSwitcher } from './ChainSwitcher';
 export { BaseLauncher } from './BaseLauncher';
-export { FeeSlider } from './FeeSlider';
+
 export { EvmWalletCard } from './EvmWalletCard';
 export { JustLaunched } from './JustLaunched';
 export { CodexChart } from './CodexChart';

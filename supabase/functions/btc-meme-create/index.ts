@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         graduation_threshold_btc: GRADUATION_THRESHOLD_BTC,
         bonding_progress: 0,
         platform_fee_bps: PLATFORM_FEE_BPS,
-        creator_fee_bps: Math.min(800, Math.max(0, Math.round(creatorFeeBps || 0))),
+        creator_fee_bps: 0,
         status: "pending_genesis",
       })
       .select("id, ticker, price_btc, market_cap_btc")

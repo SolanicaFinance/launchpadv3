@@ -98,7 +98,6 @@ where:
 | `real_token_reserves` | 800,000,000 | Tokens available for purchase |
 | `graduation_threshold` | 0.5 BTC (50,000,000 sats) | BTC needed to trigger graduation |
 | `platform_fee_bps` | 100 (1%) | Platform trading fee |
-| `creator_fee_bps` | 0-800 (0-8%) | Creator-configurable tax |
 
 **Price Formula:**
 ```
@@ -386,9 +385,7 @@ Once the Rune is etched and distributed:
 
 **Pre-Graduation (Bonding Curve):**
 ```
-Total Fee = Platform Fee + Creator Fee
-Platform Fee = trade_amount * 100bps (1%)
-Creator Fee  = trade_amount * creator_fee_bps (0-8%, set at creation)
+Total Fee = Platform Fee = trade_amount * 100bps (1%)
 ```
 
 **Post-Graduation (Rune Trading on Saturn):**
@@ -405,22 +402,19 @@ DEX Fee = trade_amount * 50bps (0.5%)
 ```
 FLOW 1: TRADING FEES (extracted per-trade, never enter the bonding pool)
 ═══════════════════════════════════════════════════════════════════════
-Every buy/sell on the bonding curve deducts fees BEFORE adding BTC to the pool.
+Every buy/sell on the bonding curve deducts the 1% platform fee BEFORE adding BTC to the pool.
 
-Example: User buys with 0.01 BTC, creator fee = 2%:
-  Total fee = 1% platform + 2% creator = 3%
-  Fee deducted: 0.0003 BTC
-  BTC entering pool: 0.0097 BTC
+Example: User buys with 0.01 BTC:
+  Fee deducted: 0.0001 BTC (1%)
+  BTC entering pool: 0.0099 BTC
 
 Fee destination (immediate, per-trade):
 ├── Platform fee (1%)  → Saturn platform wallet (BTC_PLATFORM_ADDRESS)
-├── Creator fee (0-8%) → Creator's wallet (stored in btc_meme_tokens.creator_wallet)
 └── These fees are GONE from the system — they never touch real_btc_reserves
 
 Accumulated over the token's lifetime:
-  If 0.5 BTC enters the pool, total trading volume was ~0.515 BTC (at 3% avg fee)
-  Platform earned: ~0.00515 BTC in platform fees
-  Creator earned:  ~0.0103 BTC in creator fees
+  If 0.5 BTC enters the pool, total trading volume was ~0.505 BTC (at 1% fee)
+  Platform earned: ~0.005 BTC in platform fees
 
 
 FLOW 2: BONDING POOL (real_btc_reserves) — the graduation pot
@@ -467,7 +461,6 @@ It is the ONLY pool of BTC at graduation time.
 | Source | Amount (approx) | Destination | When |
 |--------|----------------|-------------|------|
 | Platform fees (1%) | ~0.005 BTC | Saturn treasury wallet | Per-trade (immediate) |
-| Creator fees (0-8%) | ~0.005-0.04 BTC | Creator's BTC wallet | Per-trade (immediate) |
 | Etching + distribution | ~0.002 BTC | Bitcoin miners | At graduation |
 | Name commitment | ~0.00003 BTC | Bitcoin miners | At token genesis (paid by platform treasury) |
 | Remaining pool (~99.5%) | ~0.498 BTC | Locked LP (burned, permanent) | At graduation |
@@ -550,7 +543,7 @@ btc_meme_tokens (
     total_supply, bonding_progress,
     graduation_threshold_btc, genesis_txid,
     graduated_at, price_btc, market_cap_btc,
-    creator_fee_bps, platform_fee_bps,
+    platform_fee_bps,
     last_anchor_txid, last_anchor_at
 )
 
@@ -607,7 +600,7 @@ btc_tokens (
 | Wallet visibility (pre-grad) | Platform only | Universal | Universal | Platform only |
 | Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal |
 | State verifiability | Merkle anchors | Full on-chain | Full on-chain | Full on-chain |
-| Trading fees | 1% + creator tax | Miner fees | Miner fees | 1% |
+| Trading fees | 1% platform fee | Miner fees | Miner fees | 1% |
 | Throughput | ~65,000 TPS | ~7 TPS | ~7 TPS | ~65,000 TPS |
 | Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Platform slot |
 

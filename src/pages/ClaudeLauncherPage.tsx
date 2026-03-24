@@ -165,7 +165,7 @@ export default function ClaudeLauncherPage() {
   const [isPhantomGenerating, setIsPhantomGenerating] = useState(false);
   const [phantomDescribePrompt, setPhantomDescribePrompt] = useState("");
   const [phantomInputMode, setPhantomInputMode] = useState<"random" | "describe" | "custom">("random");
-  const [phantomTradingFee, setPhantomTradingFee] = useState(100); // 100 bps = 1% creator fee default
+  
   
   const { 
     generateBanner, 
@@ -558,8 +558,8 @@ export default function ClaudeLauncherPage() {
           telegramUrl: tokenData.telegramUrl,
           discordUrl: tokenData.discordUrl,
           phantomWallet: phantomWallet.address,
-          tradingFeeBps: phantomTradingFee + 100, // creator fee + 1% platform base
-          creatorFeeBps: phantomTradingFee, // creator portion only
+          tradingFeeBps: 100, // 1% platform fee only
+          creatorFeeBps: 0,
         },
       });
 
@@ -687,7 +687,7 @@ export default function ClaudeLauncherPage() {
     } finally {
       setIsPhantomLaunching(false);
     }
-  }, [phantomWallet, phantomInputMode, phantomToken, phantomMeme, phantomImageFile, phantomTradingFee, uploadPhantomImageIfNeeded, toast, refetch]);
+  }, [phantomWallet, phantomInputMode, phantomToken, phantomMeme, phantomImageFile, uploadPhantomImageIfNeeded, toast, refetch]);
 
   // Tab content renderers
   const renderTokensTab = () => {
@@ -1218,14 +1218,6 @@ export default function ClaudeLauncherPage() {
                         ))}
                       </div>
 
-                      {/* Trading Fee */}
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between text-[10px] text-[hsl(220,10%,45%)] mb-1">
-                          <span>Creator Fee: <span className="text-purple-400 font-semibold">{(phantomTradingFee / 100).toFixed(1)}%</span></span>
-                          <span className="text-[9px]">Total: {((phantomTradingFee + 100) / 100).toFixed(1)}% (incl. 1% platform)</span>
-                        </div>
-                        <Slider value={[phantomTradingFee]} onValueChange={(v) => setPhantomTradingFee(v[0])} min={10} max={1000} step={10} className="w-full" />
-                      </div>
 
                       {phantomInputMode === "random" && (
                         <Button onClick={handlePhantomRandomize} disabled={isPhantomGenerating} size="sm" className="w-full bg-purple-600/80 hover:bg-purple-600 text-white h-8 text-xs mb-3">
