@@ -130,7 +130,7 @@ export default function SixtyNineListPage() {
               {[
                 { value: "69%", label: "Fees Distributed", icon: Trophy },
                 { value: "1%", label: "Per Swap Fee", icon: TrendingUp },
-                { value: "69 BNB", label: "Weekly Bonus Draw", icon: Dice5 },
+                { value: "6.9 BNB", label: "Weekly Bonus Draw", icon: Dice5 },
                 { value: "∞", label: "Lifetime Earnings", icon: Gem },
               ].map(({ value, label, icon: Icon }) => (
                 <div
