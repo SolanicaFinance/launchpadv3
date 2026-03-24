@@ -385,9 +385,7 @@ Once the Rune is etched and distributed:
 
 **Pre-Graduation (Bonding Curve):**
 ```
-Total Fee = Platform Fee + Creator Fee
-Platform Fee = trade_amount * 100bps (1%)
-Creator Fee  = trade_amount * creator_fee_bps (0-8%, set at creation)
+Total Fee = Platform Fee = trade_amount * 100bps (1%)
 ```
 
 **Post-Graduation (Rune Trading on Saturn):**
