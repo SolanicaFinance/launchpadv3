@@ -198,6 +198,19 @@ Deno.serve(async (req) => {
 
     let devBuyResult = null;
     if (initialBuyBtc && initialBuyBtc > 0) {
+      // Register the genesis payment as a confirmed deposit in the ledger
+      // so execute_btc_swap recognizes this wallet as having a real deposit
+      await supabase.from("btc_deposit_ledger").insert({
+        wallet_address: creatorWallet,
+        amount_btc: initialBuyBtc,
+        txid: paymentTxId,
+        vout: 0,
+        confirmed: true,
+        block_height: null, // will be confirmed later
+      }).then(({ error }) => {
+        if (error && error.code !== "23505") console.warn("[btc-meme-create] Deposit ledger insert warning:", error);
+      });
+
       await supabase
         .from("btc_trading_balances")
         .upsert({ wallet_address: creatorWallet, balance_btc: initialBuyBtc, total_deposited: initialBuyBtc }, { onConflict: "wallet_address" });
