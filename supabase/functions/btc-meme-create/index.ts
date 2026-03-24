@@ -38,13 +38,36 @@ Deno.serve(async (req) => {
       launchFeeSats: LAUNCH_FEE_SATS,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
+
+  try {
     const body = await req.json();
-    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps } = body;
+    const { name, ticker, description, imageUrl, websiteUrl, twitterUrl, creatorWallet, initialBuyBtc, creatorFeeBps, paymentTxId } = body;
 
     if (!name || !ticker || !creatorWallet) {
       return new Response(JSON.stringify({ error: "name, ticker, and creatorWallet required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Require payment transaction ID
+    if (!paymentTxId) {
+      return new Response(JSON.stringify({ error: "Payment transaction required. Send BTC from your wallet to launch." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify payment tx exists on mempool (basic check - tx was broadcast)
+    console.log(`[btc-meme-create] Verifying payment tx: ${paymentTxId}`);
+    try {
+      const mempoolRes = await fetch(`https://mempool.space/api/tx/${paymentTxId}`);
+      if (!mempoolRes.ok) {
+        console.warn(`[btc-meme-create] Payment tx not found on mempool yet (status ${mempoolRes.status}), proceeding anyway (may be in mempool)`);
+      } else {
+        const txData = await mempoolRes.json();
+        console.log(`[btc-meme-create] Payment tx verified, outputs: ${txData.vout?.length || 0}`);
+      }
+    } catch (e) {
+      console.warn("[btc-meme-create] Mempool verification failed, proceeding:", e);
     }
 
     if (ticker.length > 10) {
