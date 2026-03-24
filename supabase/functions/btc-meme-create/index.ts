@@ -57,7 +57,6 @@ Deno.serve(async (req) => {
     const virtualTokens = TOTAL_SUPPLY;
     const priceBtc = virtualBtc / virtualTokens;
     const marketCapBtc = priceBtc * TOTAL_SUPPLY;
-    const feeBps = Math.min(Math.max(creatorFeeBps || 100, 0), 500);
 
     const { data: token, error: tokenErr } = await supabase
       .from("btc_meme_tokens")
@@ -78,8 +77,8 @@ Deno.serve(async (req) => {
         market_cap_btc: marketCapBtc,
         graduation_threshold_btc: GRADUATION_THRESHOLD_BTC,
         bonding_progress: 0,
-        platform_fee_bps: 100,
-        creator_fee_bps: feeBps,
+        platform_fee_bps: PLATFORM_FEE_BPS,
+        creator_fee_bps: 0,
         status: "pending_genesis",
       })
       .select("id, ticker, price_btc, market_cap_btc")
