@@ -82,7 +82,7 @@ export function BnbLauncher() {
       setFormData({
         name: '', ticker: '', description: '', imageUrl: '',
         websiteUrl: '', twitterUrl: '', telegramUrl: '',
-        initialBuyBnb: '0', creatorFeePct: 3,
+        initialBuyBnb: '0',
       });
     } catch (error) {
       console.error('BNB launch error:', error);
