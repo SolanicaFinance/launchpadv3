@@ -21,11 +21,9 @@ interface BnbLaunchFormData {
   twitterUrl: string;
   telegramUrl: string;
   initialBuyBnb: string;
-  creatorFeePct: number; // 0-8%
 }
 
 const PLATFORM_FEE_PCT = 1; // 1% always
-const MAX_CREATOR_FEE_PCT = 8;
 
 export function BnbLauncher() {
   const { isConnected, address, balance, connect } = useEvmWallet();
