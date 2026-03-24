@@ -47,11 +47,21 @@ export default function V2BtcMemeDetailPage() {
   const queryClient = useQueryClient();
   const { isConnected, address } = useBtcWallet();
   const { data: token, isLoading } = useBtcMemeToken(id);
-  const { data: trades } = useBtcMemeTrades(id);
-  const { data: myBalance } = useBtcMemeBalance(id, address);
+
+  // Redirect UUID URLs to genesis_txid URLs once token is loaded and has a genesis tx
+  useEffect(() => {
+    if (token && token.genesis_txid && id === token.id) {
+      navigate(`/btc/meme/${token.genesis_txid}`, { replace: true });
+    }
+  }, [token, id, navigate]);
+
+  // Always use the real token UUID for data queries
+  const tokenId = token?.id;
+  const { data: trades } = useBtcMemeTrades(tokenId);
+  const { data: myBalance } = useBtcMemeBalance(tokenId, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
   const { data: onChainBtc } = useBtcOnChainBalance(address);
-  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
+  const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(tokenId, token?.total_supply, token?.creator_wallet);
 
   // Compute dev holdings %
   const devHoldingPct = (() => {
