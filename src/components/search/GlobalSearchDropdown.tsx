@@ -100,12 +100,14 @@ export function GlobalSearchDropdown({ results, isLoading, query, onClose, inlin
     <div
       ref={ref}
       className={cn(
-        "z-50 overflow-hidden rounded-2xl border border-border/70 bg-background/90 shadow-xl backdrop-blur-2xl animate-fade-in",
-        inline ? "relative mt-2 w-full" : "absolute left-0 right-0 top-full mt-1.5"
+        "z-50 overflow-hidden border border-border/70 bg-background/95 backdrop-blur-2xl animate-fade-in",
+        inline
+          ? "relative w-full rounded-none border-x-0"
+          : "rounded-2xl shadow-2xl shadow-black/40"
       )}
       style={{
         WebkitBackdropFilter: "blur(24px)",
-        maxHeight: inline ? "min(70dvh, 520px)" : "460px",
+        maxHeight: inline ? "none" : "min(70dvh, 520px)",
       }}
     >
       <div className="px-3.5 sm:px-4 py-2.5 flex items-center justify-between border-b border-border/50">
