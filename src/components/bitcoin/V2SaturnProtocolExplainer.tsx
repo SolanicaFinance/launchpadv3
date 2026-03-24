@@ -8,35 +8,35 @@ const steps = [
     subtitle: 'Token Birth on Bitcoin Mainnet',
     color: 'text-orange-400',
     bg: 'bg-orange-400/10',
-    description: 'Every token is born with an immutable Bitcoin mainnet transaction. An OP_RETURN output encodes the token\'s identity — ticker, name, image hash (SHA-256), creator address, and timestamp — directly into the Bitcoin blockchain.',
-    technical: 'OP_RETURN: www.Saturn.Trade|TICKER|NAME|IMG_SHA256|CREATOR|UNIX_TS',
+    description: 'Every TAT token\'s existence is permanently recorded on Bitcoin Mainnet via an OP_RETURN transaction at creation time. The payload encodes protocol prefix (TAT\\x01), token ID, ticker, supply, creator pubkey hash, and timestamp — all within Bitcoin\'s 80-byte OP_RETURN limit (~63 bytes actual).',
+    technical: 'OP_RETURN TAT\\x01 <version> <token_id> <ticker> <supply> <creator_pubkey_hash> <timestamp>',
   },
   {
     icon: Zap,
-    title: 'Instant Bonding Curve AMM',
-    subtitle: '~30s Settlement on Fractal',
+    title: 'Constant-Product AMM (CPAMM)',
+    subtitle: 'Instant Execution on Saturn Layer',
     color: 'text-yellow-400',
     bg: 'bg-yellow-400/10',
-    description: 'Trades execute using a constant-product AMM (x·y=k) denominated in satoshis. Virtual reserves provide initial liquidity. Settlement occurs on Fractal Bitcoin with ~30-second block times via merge-mined security.',
-    technical: 'price = virtualBtcReserves / virtualTokenReserves · Δy = (y·Δx)/(x+Δx)',
+    description: 'Trades execute using x·y=k bonding curve denominated in satoshis. Virtual reserves (0.3 BTC + 1.073B tokens) provide initial liquidity. 800M tokens available for purchase. Fees deducted BEFORE entering the pool — 1% platform fee + 0-8% creator fee.',
+    technical: 'x·y=k | Δy = (y·Δx)/(x+Δx) | Graduation at real_btc_reserves ≥ 0.5 BTC',
   },
   {
     icon: Cpu,
-    title: 'Fractal Bitcoin Settlement',
-    subtitle: 'Native UTXO Trade Receipts',
+    title: 'Layer 2 Proof Receipts',
+    subtitle: 'Execution Verification',
     color: 'text-blue-400',
     bg: 'bg-blue-400/10',
-    description: 'Every trade settles as a native UTXO transfer on Fractal Bitcoin (~30s blocks, merge-mined security). Fully verifiable via the Fractal explorer and compatible with Unisat/Xverse wallets — no bridges, no wrapping, pure Bitcoin.',
-    technical: 'FRACTAL TX: TAT|BUY|TICKER|AMOUNT|PRICE|WALLET|UTXO_REF',
+    description: 'Each trade generates a verifiable proof receipt on the execution layer. V1 Hybrid uses Solana SPL Memo (~400ms finality, ~0.000005 SOL/proof). V2 Pure Bitcoin uses Fractal Bitcoin OP_RETURN (~30s blocks, merge-mined). Both provide cryptographic trade verification.',
+    technical: 'MEMO: TAT|<trade_id>|<token_id>|<type>|<btc_amount>|<token_amount>|<price>|<timestamp>',
   },
   {
     icon: Hash,
-    title: 'Merkle Anchoring',
-    subtitle: 'Solvency Proofs on Mainnet',
+    title: 'Merkle Solvency Anchoring',
+    subtitle: 'State Proofs on Bitcoin Mainnet',
     color: 'text-green-400',
     bg: 'bg-green-400/10',
-    description: 'A Merkle tree of all system balances is computed and its root hash is anchored to Bitcoin mainnet via OP_RETURN every 10 minutes. Anyone can independently verify the platform\'s solvency by reconstructing the tree.',
-    technical: 'MERKLE_ROOT = SHA256(SHA256(account₁) || SHA256(account₂) || ...)',
+    description: 'Periodically, the entire protocol state is anchored to Bitcoin Mainnet. A SHA-256 Merkle tree of all balances produces a root hash recorded via OP_RETURN. Anyone can independently verify platform solvency by reconstructing the tree against the published root.',
+    technical: 'OP_RETURN TAT_ANCHOR <merkle_root_32B> <epoch_4B> <token_count_4B> <account_count_4B>',
   },
 ];
 
@@ -50,18 +50,19 @@ export function V2SaturnProtocolExplainer() {
             <Shield className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-foreground">TAT Protocol — Pure Bitcoin Edition</h3>
-            <p className="text-xs text-muted-foreground">Born on Mainnet · Trades on Fractal · Audited on Mainnet · Graduates to Rune at 0.5 BTC</p>
+            <h3 className="text-base font-bold text-foreground">TAT Protocol — Graduated Rune Architecture</h3>
+            <p className="text-xs text-muted-foreground">Genesis on Bitcoin L1 · Trades on Saturn Execution Layer · Graduates to Native Rune at 0.5 BTC</p>
           </div>
         </div>
       </div>
 
-      {/* Intro */}
+      {/* Intro — matches PDF Section 1 Executive Summary */}
       <div className="px-6 py-4 border-b border-border bg-secondary/10">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          The <span className="text-foreground font-semibold">TAT Protocol (Transaction-Attributed Tokens)</span> implements a tri-layer settlement architecture that is 100% Bitcoin-native. 
-          Tokens are genesis-stamped on Bitcoin mainnet, trade instantly via Fractal Bitcoin (~30s blocks, merge-mined), 
-          and are anchored back to mainnet every 10 minutes with Merkle solvency proofs. Fixed 1% platform fee, zero creator tax. Graduation to native Bitcoin Rune at 0.5 BTC.
+          <span className="text-foreground font-semibold">TAT (Transaction-Attributed Tokens)</span> implements a hybrid lifecycle model where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion.
+          Phase 1: Virtual bonding curve on Saturn's execution layer, with Bitcoin OP_RETURN genesis proof.
+          Phase 2: Native Rune etched on Bitcoin L1, visible in all compatible wallets (UniSat, Xverse, Leather, OKX).
+          Architecturally analogous to pump.fun → Raydium graduation, but for Bitcoin-native assets.
         </p>
       </div>
 
@@ -99,13 +100,42 @@ export function V2SaturnProtocolExplainer() {
         ))}
       </div>
 
+      {/* Graduation Section — from PDF Section 4 */}
+      <div className="px-6 py-5 border-t border-border bg-secondary/10">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-orange-400/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Layers className="w-5 h-5 text-orange-400" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <h4 className="text-sm font-bold text-foreground">Graduation → Native Bitcoin Rune</h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              When real_btc_reserves ≥ 0.5 BTC: trading locks → balance snapshot & Merkle anchor → Rune etched on Bitcoin L1 → Runes distributed to all holders proportionally → remaining ~0.498 BTC permanently locked as LP (tokens burned). Post-graduation: native Rune visible in UniSat, Xverse, Leather, OKX, and tradable on Magic Eden + Saturn DEX.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
+              <div className="bg-background rounded-lg px-2 py-1.5 border border-border">
+                <span className="text-muted-foreground">Etching cost</span>
+                <span className="block font-mono text-foreground">~3,000 sats</span>
+              </div>
+              <div className="bg-background rounded-lg px-2 py-1.5 border border-border">
+                <span className="text-muted-foreground">LP locked</span>
+                <span className="block font-mono text-foreground">~99.5% of pool</span>
+              </div>
+              <div className="bg-background rounded-lg px-2 py-1.5 border border-border">
+                <span className="text-muted-foreground">DEX fee</span>
+                <span className="block font-mono text-foreground">0.5% post-grad</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
       <div className="px-6 py-4 bg-secondary/20 border-t border-border">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ~30s Fractal blocks</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% fee · No creator tax</span>
-            <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Rune</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant execution</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% platform + 0-8% creator</span>
+            <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Native Rune</span>
           </div>
         </div>
       </div>
