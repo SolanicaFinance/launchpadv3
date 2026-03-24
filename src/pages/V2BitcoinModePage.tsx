@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { useBtcMemeTokensAll, type BtcMemeToken } from '@/hooks/useBtcMemeTokens';
 import {
-  Rocket, TrendingUp, Zap, Shield, Layers, Cpu,
+  Rocket, TrendingUp, Zap, Shield, Layers, Cpu, FileText,
   ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ArrowRight
 } from 'lucide-react';
 import { useChain } from '@/contexts/ChainContext';
@@ -403,6 +403,17 @@ export default function V2BitcoinModePage() {
                   }
                 />
               )}
+              <a
+                href="/TAT_Protocol_Technical_Specification.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm min-h-[48px] 
+                           border border-primary/30 hover:border-primary/60 bg-card/20 backdrop-blur-sm
+                           text-foreground hover:scale-[1.05] transition-all duration-300"
+                style={{ boxShadow: "0 4px 16px hsl(0 0% 0% / 0.3)" }}
+              >
+                <FileText className="w-4 h-4" style={{ color: "#F7931A" }} /> Whitepaper
+              </a>
             </div>
 
             {/* Feature badges */}

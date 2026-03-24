@@ -1,4 +1,4 @@
-import { Shield, Zap, Layers, Hash, Clock, ArrowRight, Lock, Cpu } from 'lucide-react';
+import { Shield, Zap, Layers, Hash, Clock, ArrowRight, Lock, Cpu, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const steps = [
@@ -137,6 +137,15 @@ export function V2SaturnProtocolExplainer() {
             <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> 1% platform + 0-8% creator</span>
             <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 0.5 BTC → Native Rune</span>
           </div>
+          <a
+            href="/TAT_Protocol_Technical_Specification.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors
+                       px-3 py-1.5 rounded-lg border border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+          >
+            <FileText className="w-3 h-3" /> Full Whitepaper
+          </a>
         </div>
       </div>
     </div>
