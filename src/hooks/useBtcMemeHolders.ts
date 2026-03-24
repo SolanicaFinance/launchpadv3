@@ -8,11 +8,12 @@ export interface BtcMemeHolder {
   total_sold: number;
   avg_buy_price_btc: number;
   percentage: number;
+  is_creator?: boolean;
 }
 
-export function useBtcMemeHolders(tokenId: string | undefined, totalSupply: number = 1_000_000_000) {
+export function useBtcMemeHolders(tokenId: string | undefined, totalSupply: number = 1_000_000_000, creatorWallet?: string) {
   return useQuery<BtcMemeHolder[]>({
-    queryKey: ["btc-meme-holders", tokenId],
+    queryKey: ["btc-meme-holders", tokenId, creatorWallet],
     queryFn: async () => {
       if (!tokenId) return [];
       const { data, error } = await supabase
@@ -29,6 +30,7 @@ export function useBtcMemeHolders(tokenId: string | undefined, totalSupply: numb
         total_sold: h.total_sold ?? 0,
         avg_buy_price_btc: h.avg_buy_price_btc ?? 0,
         percentage: totalSupply > 0 ? (h.balance / totalSupply) * 100 : 0,
+        is_creator: creatorWallet ? h.wallet_address === creatorWallet : false,
       }));
     },
     enabled: !!tokenId,
