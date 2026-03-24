@@ -3,9 +3,10 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import saturnLogo from '@/assets/saturn-logo.png';
 
 const TOKEN_CA = '0x27a51c96b84c6d9f24d5d054c396ae0e1c96ffff';
-const POPUP_KEY = 'saturn-launch-popup-dismissed-v2';
+const POPUP_KEY = 'saturn-launch-popup-dismissed-v3';
 
 export function TokenLaunchPopup() {
   const [open, setOpen] = useState(false);
