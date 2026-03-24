@@ -98,7 +98,6 @@ where:
 | `real_token_reserves` | 800,000,000 | Tokens available for purchase |
 | `graduation_threshold` | 0.5 BTC (50,000,000 sats) | BTC needed to trigger graduation |
 | `platform_fee_bps` | 100 (1%) | Platform trading fee |
-| `creator_fee_bps` | 0-800 (0-8%) | Creator-configurable tax |
 
 **Price Formula:**
 ```
