@@ -14,7 +14,7 @@ const steps = [
   {
     icon: Zap,
     title: 'Instant Bonding Curve AMM',
-    subtitle: 'Sub-second Trading at Solana Speed',
+    subtitle: 'Sub-second Trading on Saturn',
     color: 'text-yellow-400',
     bg: 'bg-yellow-400/10',
     description: 'Trades execute instantly using a constant-product AMM (x·y=k) denominated in satoshis. Virtual reserves provide initial liquidity. No blockchain confirmations needed — balances update in real-time.',
@@ -22,12 +22,12 @@ const steps = [
   },
   {
     icon: Layers,
-    title: 'Solana Memo Receipts',
-    subtitle: 'Immutable Trade Proofs',
+    title: 'L2 Proof Receipts',
+    subtitle: 'Immutable Trade Verification',
     color: 'text-blue-400',
     bg: 'bg-blue-400/10',
-    description: 'Every trade is recorded as a Solana memo transaction, creating an immutable receipt on the fastest L1. These receipts are cryptographically linked to the Bitcoin genesis, creating a dual-chain audit trail.',
-    technical: 'MEMO: www.Saturn.Trade|BUY|TICKER|AMOUNT|PRICE|WALLET|TXID',
+    description: 'Every trade generates a cryptographic proof receipt on the Saturn Execution Layer, creating an immutable verification trail linked to the Bitcoin genesis stamp.',
+    technical: 'OP_RETURN TAT_TRADE|TICKER|AMOUNT|PRICE|WALLET|TXID',
   },
   {
     icon: Hash,
