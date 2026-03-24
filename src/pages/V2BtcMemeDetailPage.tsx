@@ -50,6 +50,7 @@ export default function V2BtcMemeDetailPage() {
   const { data: trades } = useBtcMemeTrades(id);
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
+  const { data: onChainBtc } = useBtcOnChainBalance(address);
   const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
 
   // Compute dev holdings %
