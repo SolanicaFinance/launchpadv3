@@ -197,6 +197,7 @@ export function TradePanelWithSwap({ token, userBalance = 0 }: TradePanelWithSwa
         tokenTicker: token.ticker,
         tokenName: token.name,
         signature: result.signature,
+        mintAddress: token.mint_address,
       });
       setShowProfitCard(true);
 

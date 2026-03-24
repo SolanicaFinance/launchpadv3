@@ -230,7 +230,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
       });
 
       // Also show PNL card
-      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl });
+      setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: isBuy ? numericAmount : (result.outputAmount ?? numericAmount * (token.price_sol || 0)), tokenTicker: token.ticker, tokenName: token.name, outputAmount: result.outputAmount, signature: result.signature, tokenImageUrl: token.imageUrl, mintAddress: token.mint_address });
       setShowProfitCard(true);
 
     } catch (error) {
@@ -434,7 +434,7 @@ export function UniversalTradePanel({ token, userTokenBalance: externalTokenBala
         <div className="flex items-center justify-between py-2.5 border-t border-white/[0.06]">
           <span className="text-[11px] font-mono text-foreground/50">Share your P&L</span>
           <button
-            onClick={() => { setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: numericAmount || 0, tokenTicker: token.ticker, tokenName: token.name }); setShowProfitCard(true); }}
+            onClick={() => { setProfitCardData({ action: isBuy ? 'buy' : 'sell', amountSol: numericAmount || 0, tokenTicker: token.ticker, tokenName: token.name, mintAddress: token.mint_address }); setShowProfitCard(true); }}
             className="text-[11px] font-mono font-bold text-primary/80 hover:text-primary flex items-center gap-1.5 transition-colors bg-primary/6 px-3 py-1.5 rounded-lg hover:bg-primary/10">
             🪐 Generate PNL Card
           </button>
