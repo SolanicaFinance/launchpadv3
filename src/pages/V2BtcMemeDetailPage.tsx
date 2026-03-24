@@ -325,6 +325,11 @@ export default function V2BtcMemeDetailPage() {
                     </span>
                   </div>
                   <Input type="number" step="any" min="0" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} className="font-mono" />
+                  {amount && btcUsdPrice > 0 && tradeType === "buy" && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 text-right font-mono">
+                      ≈ ${(parseFloat(amount) * btcUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                    </p>
+                  )}
                 </div>
                 {tradeType === "buy" && (
                   <div className="grid grid-cols-4 gap-1">
@@ -340,7 +345,7 @@ export default function V2BtcMemeDetailPage() {
                     ))}
                   </div>
                 )}
-                <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
+                <Button onClick={handleTrade} disabled={trading || !amount} className={`w-full mb-2 ${tradeType === "buy" ? "bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90" : "bg-destructive hover:bg-destructive/90"} text-white`}>
                   {trading ? <Loader2 className="w-4 h-4 animate-spin" /> : tradeType === "buy" ? "Buy" : "Sell"}
                 </Button>
                 {myBalance && myBalance.balance > 0 && (
