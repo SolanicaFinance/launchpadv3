@@ -185,7 +185,8 @@ export default function V2BtcMemeLaunchPage() {
           </div>
           <div>
             <Label htmlFor="ticker">Ticker *</Label>
-            <Input id="ticker" placeholder="BTCDOGE" maxLength={10} value={form.ticker} onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase() })} />
+            <Input id="ticker" placeholder="BTCDOGE" maxLength={28} value={form.ticker} onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase().replace(/[^A-Z]/g, "") })} />
+            <p className="text-[10px] text-muted-foreground mt-0.5">A-Z only · Will become the Rune name on graduation</p>
           </div>
           <div>
             <Label htmlFor="desc">Description</Label>
