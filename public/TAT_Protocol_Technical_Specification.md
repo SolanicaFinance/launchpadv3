@@ -600,7 +600,7 @@ btc_tokens (
 | Wallet visibility (pre-grad) | Platform only | Universal | Universal | Platform only |
 | Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal |
 | State verifiability | Merkle anchors | Full on-chain | Full on-chain | Full on-chain |
-| Trading fees | 1% + creator tax | Miner fees | Miner fees | 1% |
+| Trading fees | 1% platform fee | Miner fees | Miner fees | 1% |
 | Throughput | ~65,000 TPS | ~7 TPS | ~7 TPS | ~65,000 TPS |
 | Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Platform slot |
 

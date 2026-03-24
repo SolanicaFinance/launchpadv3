@@ -1218,14 +1218,6 @@ export default function ClaudeLauncherPage() {
                         ))}
                       </div>
 
-                      {/* Trading Fee */}
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between text-[10px] text-[hsl(220,10%,45%)] mb-1">
-                          <span>Creator Fee: <span className="text-purple-400 font-semibold">{(phantomTradingFee / 100).toFixed(1)}%</span></span>
-                          <span className="text-[9px]">Total: {((phantomTradingFee + 100) / 100).toFixed(1)}% (incl. 1% platform)</span>
-                        </div>
-                        <Slider value={[phantomTradingFee]} onValueChange={(v) => setPhantomTradingFee(v[0])} min={10} max={1000} step={10} className="w-full" />
-                      </div>
 
                       {phantomInputMode === "random" && (
                         <Button onClick={handlePhantomRandomize} disabled={isPhantomGenerating} size="sm" className="w-full bg-purple-600/80 hover:bg-purple-600 text-white h-8 text-xs mb-3">

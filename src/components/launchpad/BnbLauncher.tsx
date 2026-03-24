@@ -297,7 +297,7 @@ export function BnbLauncher() {
                 ) : (
                   <>
                     <Rocket className="mr-2 h-5 w-5" />
-                    Launch Token ({totalTaxPct}% tax)
+                    Launch Token ({PLATFORM_FEE_PCT}% fee)
                   </>
                 )}
               </Button>
