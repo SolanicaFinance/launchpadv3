@@ -1398,6 +1398,7 @@ export type Database = {
           market_cap_btc: number
           market_cap_usd: number | null
           name: string
+          payment_tx_id: string | null
           platform_fee_bps: number
           price_btc: number
           price_usd: number | null
@@ -1432,6 +1433,7 @@ export type Database = {
           market_cap_btc?: number
           market_cap_usd?: number | null
           name: string
+          payment_tx_id?: string | null
           platform_fee_bps?: number
           price_btc?: number
           price_usd?: number | null
@@ -1466,6 +1468,7 @@ export type Database = {
           market_cap_btc?: number
           market_cap_usd?: number | null
           name?: string
+          payment_tx_id?: string | null
           platform_fee_bps?: number
           price_btc?: number
           price_usd?: number | null
