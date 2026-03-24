@@ -48,118 +48,131 @@ export function GlobalTradeNotifier() {
   // Subscribe to alpha_trades
   useEffect(() => {
     console.log("[GlobalTradeNotifier] Subscribing to alpha_trades...");
+    let errorCount = 0;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
-      .channel("global-trade-notifier-v4")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "alpha_trades" },
-        (payload) => {
-          const trade = payload.new as any;
-          if (!trade) return;
-          console.log("[GlobalTradeNotifier] Trade received:", trade.trade_type, trade.token_ticker);
+    const subscribe = () => {
+      channel = supabase
+        .channel("global-trade-notifier-v5")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "alpha_trades" },
+          (payload) => {
+            const trade = payload.new as any;
+            if (!trade) return;
+            errorCount = 0; // reset on successful message
+            console.log("[GlobalTradeNotifier] Trade received:", trade.trade_type, trade.token_ticker);
 
-          const isBuy = trade.trade_type === "buy";
+            const isBuy = trade.trade_type === "buy";
 
-          try {
-            if (isBuy) playBuyRef.current();
-            else playSellRef.current();
-          } catch (e) {
-            console.warn("[GlobalTradeNotifier] Sound error:", e);
-          }
+            try {
+              if (isBuy) playBuyRef.current();
+              else playSellRef.current();
+            } catch (e) {
+              console.warn("[GlobalTradeNotifier] Sound error:", e);
+            }
 
-          let marketCapUsd: number | null = null;
-          if (trade.price_sol && trade.price_sol > 0 && solPriceRef.current > 0) {
-            marketCapUsd = trade.price_sol * TOTAL_SUPPLY * solPriceRef.current;
-          } else if (trade.price_usd && trade.price_usd > 0) {
-            marketCapUsd = trade.price_usd * TOTAL_SUPPLY;
-          }
+            let marketCapUsd: number | null = null;
+            if (trade.price_sol && trade.price_sol > 0 && solPriceRef.current > 0) {
+              marketCapUsd = trade.price_sol * TOTAL_SUPPLY * solPriceRef.current;
+            } else if (trade.price_usd && trade.price_usd > 0) {
+              marketCapUsd = trade.price_usd * TOTAL_SUPPLY;
+            }
 
-          const notify = (tokenImageUrl: string | null) => {
-            showTradeNotification({
-              traderName: trade.trader_display_name || shortenAddr(trade.wallet_address),
-              traderAvatar: trade.trader_avatar_url || null,
-              tokenTicker: trade.token_ticker || trade.token_name || shortenAddr(trade.token_mint),
-              tokenMint: trade.token_mint,
-              tradeType: isBuy ? "buy" : "sell",
-              amountSol: trade.amount_sol || 0,
-              marketCapUsd,
-              chain: trade.chain || "solana",
-              tokenImageUrl,
+            const notify = (tokenImageUrl: string | null) => {
+              showTradeNotification({
+                traderName: trade.trader_display_name || shortenAddr(trade.wallet_address),
+                traderAvatar: trade.trader_avatar_url || null,
+                tokenTicker: trade.token_ticker || trade.token_name || shortenAddr(trade.token_mint),
+                tokenMint: trade.token_mint,
+                tradeType: isBuy ? "buy" : "sell",
+                amountSol: trade.amount_sol || 0,
+                marketCapUsd,
+                chain: trade.chain || "solana",
+                tokenImageUrl,
+              });
+            };
+
+            const mint = trade.token_mint as string | undefined;
+            if (!mint) {
+              notify(null);
+              return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(tokenImageCacheRef.current, mint)) {
+              notify(tokenImageCacheRef.current[mint]);
+              return;
+            }
+
+            (async () => {
+              let imageUrl: string | null = null;
+
+              const { data: funToken } = await supabase
+                .from("fun_tokens")
+                .select("image_url")
+                .eq("mint_address", mint)
+                .not("image_url", "is", null)
+                .limit(1)
+                .maybeSingle();
+
+              if (funToken?.image_url) {
+                imageUrl = funToken.image_url;
+              }
+
+              if (!imageUrl) {
+                const { data: tokenRow } = await supabase
+                  .from("tokens")
+                  .select("image_url")
+                  .eq("mint_address", mint)
+                  .not("image_url", "is", null)
+                  .limit(1)
+                  .maybeSingle();
+
+                if (tokenRow?.image_url) {
+                  imageUrl = tokenRow.image_url;
+                }
+              }
+
+              if (!imageUrl) {
+                const { data: clawRow } = await supabase
+                  .from("claw_tokens")
+                  .select("image_url")
+                  .eq("mint_address", mint)
+                  .not("image_url", "is", null)
+                  .limit(1)
+                  .maybeSingle();
+
+                if (clawRow?.image_url) {
+                  imageUrl = clawRow.image_url;
+                }
+              }
+
+              tokenImageCacheRef.current[mint] = imageUrl;
+              notify(imageUrl);
+            })().catch(() => {
+              tokenImageCacheRef.current[mint] = null;
+              notify(null);
             });
-          };
-
-          const mint = trade.token_mint as string | undefined;
-          if (!mint) {
-            notify(null);
-            return;
           }
-
-          if (Object.prototype.hasOwnProperty.call(tokenImageCacheRef.current, mint)) {
-            notify(tokenImageCacheRef.current[mint]);
-            return;
+        )
+        .subscribe((status) => {
+          console.log("[GlobalTradeNotifier] Trades status:", status);
+          if (status === "CHANNEL_ERROR") {
+            errorCount++;
+            if (errorCount >= 3) {
+              console.warn("[GlobalTradeNotifier] Trades channel failed 3 times, stopping retries");
+              if (channel) supabase.removeChannel(channel);
+            }
+          } else if (status === "SUBSCRIBED") {
+            errorCount = 0;
           }
+        });
+    };
 
-          (async () => {
-            let imageUrl: string | null = null;
-
-            // Check fun_tokens
-            const { data: funToken } = await supabase
-              .from("fun_tokens")
-              .select("image_url")
-              .eq("mint_address", mint)
-              .not("image_url", "is", null)
-              .limit(1)
-              .maybeSingle();
-
-            if (funToken?.image_url) {
-              imageUrl = funToken.image_url;
-            }
-
-            // Check tokens table
-            if (!imageUrl) {
-              const { data: tokenRow } = await supabase
-                .from("tokens")
-                .select("image_url")
-                .eq("mint_address", mint)
-                .not("image_url", "is", null)
-                .limit(1)
-                .maybeSingle();
-
-              if (tokenRow?.image_url) {
-                imageUrl = tokenRow.image_url;
-              }
-            }
-
-            // Check claw_tokens table
-            if (!imageUrl) {
-              const { data: clawRow } = await supabase
-                .from("claw_tokens")
-                .select("image_url")
-                .eq("mint_address", mint)
-                .not("image_url", "is", null)
-                .limit(1)
-                .maybeSingle();
-
-              if (clawRow?.image_url) {
-                imageUrl = clawRow.image_url;
-              }
-            }
-
-            tokenImageCacheRef.current[mint] = imageUrl;
-            notify(imageUrl);
-          })().catch(() => {
-            tokenImageCacheRef.current[mint] = null;
-            notify(null);
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log("[GlobalTradeNotifier] Trades status:", status);
-      });
+    subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
