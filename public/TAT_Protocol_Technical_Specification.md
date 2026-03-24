@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-TAT (Transaction-Attributed Tokens) implements a **hybrid lifecycle model** where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion. This creates a two-phase token lifecycle:
+TAT (Transaction-Attributed Tokens) implements a **graduated lifecycle model** where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion. This creates a two-phase token lifecycle:
 
 - **Phase 1 (Pre-Graduation)**: Virtual bonding curve on Saturn's execution layer, with Bitcoin OP_RETURN genesis proof
 - **Phase 2 (Post-Graduation)**: Native Rune etched on Bitcoin L1, visible in all compatible wallets (UniSat, Xverse, Leather, OKX)
@@ -183,31 +183,24 @@ CREATE TABLE btc_meme_trades (
     pool_virtual_btc NUMERIC,          -- Pool state snapshot
     pool_virtual_tokens NUMERIC,
     pool_real_btc NUMERIC,
-    solana_proof_signature TEXT,        -- Layer 2 proof receipt
-    solana_proof_memo TEXT,            -- Proof memo content
+    l2_proof_signature TEXT,            -- Layer 2 proof receipt
+    l2_proof_memo TEXT,                 -- Proof memo content
     created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
 ### 3.5 Layer 2 Proof Receipts (Execution Verification)
 
-Each trade generates a verifiable proof on the execution layer.
+Each trade generates a verifiable proof on the Saturn Execution Layer.
 
-**Option A — Solana SPL Memo (V1 Hybrid):**
-```
-Memo format: "TAT|<trade_id>|<token_id>|<type>|<btc_amount>|<token_amount>|<price>|<timestamp>"
-```
-- Recorded as a Solana SPL Memo transaction
-- Provides sub-second finality (~400ms)
-- Costs ~0.000005 SOL per proof
-
-**Option B — Saturn Execution Layer (V2 Pure Bitcoin):**
+**Saturn Execution Layer Proof Receipt:**
 ```
 OP_RETURN TAT_TRADE <trade_id> <token_id> <type> <amounts_hash>
 ```
-- Recorded on the Saturn Execution Layer
-- 100% Bitcoin-native execution
+- Recorded natively on Bitcoin via the Saturn Execution Layer
+- 100% Bitcoin-native execution — no sidechains, no bridges
 - Uses native UTXO model
+- Cryptographic trade verification anchored to Bitcoin
 
 ### 3.6 Merkle Anchor (Layer 3 Solvency Proof)
 
@@ -299,7 +292,7 @@ Step 5: Seed Liquidity (Rune DEX Pool)
   - Pool pairs: RUNE/BTC on Saturn's Rune DEX
   - Initial price = final bonding curve price (ensures no price gap)
   - LP tokens are burned (no one can withdraw the liquidity — locked forever)
-  - This is analogous to Meteora DAMM LP lock on Solana graduation
+  - This is analogous to how pump.fun tokens lock LP on Raydium graduation
 
 Step 6: Activate Post-Graduation Trading
   - Update token status to 'graduated'
@@ -479,7 +472,7 @@ It is the ONLY pool of BTC at graduation time.
 | Name commitment | ~0.00003 BTC | Bitcoin miners | At token genesis (paid by platform treasury) |
 | Remaining pool (~99.5%) | ~0.498 BTC | Locked LP (burned, permanent) | At graduation |
 
-**Key insight**: Nobody "gets" the bonding pool BTC. It becomes permanent, unwithdrawable liquidity for the graduated Rune — exactly like how pump.fun tokens lock LP on Raydium graduation, or how Saturn's Solana tokens lock LP on Meteora DAMM.
+**Key insight**: Nobody "gets" the bonding pool BTC. It becomes permanent, unwithdrawable liquidity for the graduated Rune — exactly like how pump.fun tokens lock LP on Raydium graduation.
 
 ### 5.3 Post-Graduation Revenue
 
@@ -571,7 +564,7 @@ btc_meme_balances (
 btc_meme_trades (
     id, token_id, wallet_address, trade_type,
     btc_amount, token_amount, price_btc, fee_btc,
-    solana_proof_signature, solana_proof_memo,
+    l2_proof_signature, l2_proof_memo,
     bonding_progress, market_cap_btc
 )
 
@@ -609,14 +602,14 @@ btc_tokens (
 
 | Feature | TAT | BRC-20 | Runes | pump.fun |
 |---------|-------------|--------|-------|----------|
-| Genesis chain | Bitcoin L1 | Bitcoin L1 | Bitcoin L1 | Solana |
+| Genesis chain | Bitcoin L1 | Bitcoin L1 | Bitcoin L1 | Other |
 | Trading speed | Instant (off-chain) | ~10min (on-chain) | ~10min (on-chain) | Instant (on-chain) |
 | Wallet visibility (pre-grad) | Platform only | Universal | Universal | Platform only |
-| Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal (Raydium) |
+| Wallet visibility (post-grad) | Universal (Rune) | Universal | Universal | Universal |
 | State verifiability | Merkle anchors | Full on-chain | Full on-chain | Full on-chain |
 | Trading fees | 1% + creator tax | Miner fees | Miner fees | 1% |
 | Throughput | ~65,000 TPS | ~7 TPS | ~7 TPS | ~65,000 TPS |
-| Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Solana slot |
+| Settlement finality | Bitcoin epoch | Bitcoin block | Bitcoin block | Platform slot |
 
 ---
 

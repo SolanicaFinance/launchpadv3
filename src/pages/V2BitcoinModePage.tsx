@@ -38,7 +38,7 @@ function timeAgo(d: string) {
   return `${Math.floor(s / 86400)}d`;
 }
 
-/* ── Premium BTC Token Card (matches Solana PulseTokenRow) ── */
+/* ── Premium BTC Token Card ── */
 function BtcPulseTokenRow({ token }: { token: BtcMemeToken }) {
   const navigate = useNavigate();
   const pct = Math.min(token.bonding_progress, 100);

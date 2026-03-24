@@ -59,10 +59,10 @@ export function V2SaturnProtocolExplainer() {
       {/* Intro — matches PDF Section 1 Executive Summary */}
       <div className="px-6 py-4 border-b border-border bg-secondary/10">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          <span className="text-foreground font-semibold">TAT (Transaction-Attributed Tokens)</span> implements a hybrid lifecycle model where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion.
+          <span className="text-foreground font-semibold">TAT (Transaction-Attributed Tokens)</span> implements a graduated lifecycle model where tokens are born as platform-managed assets with Bitcoin-grade provenance, then graduate to native Bitcoin Runes upon reaching bonding curve completion.
           Phase 1: Virtual bonding curve on Saturn's execution layer, with Bitcoin OP_RETURN genesis proof.
           Phase 2: Native Rune etched on Bitcoin L1, visible in all compatible wallets (UniSat, Xverse, Leather, OKX).
-          Architecturally analogous to pump.fun → Raydium graduation, but for Bitcoin-native assets.
+          Architecturally: born on Bitcoin, traded on Saturn, graduated to native Rune.
         </p>
       </div>
 

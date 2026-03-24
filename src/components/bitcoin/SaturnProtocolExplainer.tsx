@@ -14,7 +14,7 @@ const steps = [
   {
     icon: Zap,
     title: 'Instant Bonding Curve AMM',
-    subtitle: 'Sub-second Trading at Solana Speed',
+    subtitle: 'Sub-second Trading on Saturn',
     color: 'text-yellow-400',
     bg: 'bg-yellow-400/10',
     description: 'Trades execute instantly using a constant-product AMM (x·y=k) denominated in satoshis. Virtual reserves provide initial liquidity. No blockchain confirmations needed — balances update in real-time.',
@@ -22,12 +22,12 @@ const steps = [
   },
   {
     icon: Layers,
-    title: 'Solana Memo Receipts',
-    subtitle: 'Immutable Trade Proofs',
+    title: 'L2 Proof Receipts',
+    subtitle: 'Immutable Trade Verification',
     color: 'text-blue-400',
     bg: 'bg-blue-400/10',
-    description: 'Every trade is recorded as a Solana memo transaction, creating an immutable receipt on the fastest L1. These receipts are cryptographically linked to the Bitcoin genesis, creating a dual-chain audit trail.',
-    technical: 'MEMO: www.Saturn.Trade|BUY|TICKER|AMOUNT|PRICE|WALLET|TXID',
+    description: 'Every trade generates a cryptographic proof receipt on the Saturn Execution Layer, creating an immutable verification trail linked to the Bitcoin genesis stamp.',
+    technical: 'OP_RETURN TAT_TRADE|TICKER|AMOUNT|PRICE|WALLET|TXID',
   },
   {
     icon: Hash,
@@ -59,9 +59,9 @@ export function SaturnProtocolExplainer() {
       {/* Intro */}
       <div className="px-6 py-4 border-b border-border bg-secondary/10">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Saturn pioneered a <span className="text-foreground font-semibold">hybrid settlement architecture</span> that combines 
-          Bitcoin's security with Solana's speed. Tokens are born on Bitcoin, traded instantly via internal bonding curves, 
-          verified through Solana memo receipts, and anchored back to Bitcoin every 10 minutes with Merkle solvency proofs.
+          Saturn pioneered a <span className="text-foreground font-semibold">Bitcoin-native settlement architecture</span> that delivers 
+          instant trading backed by Bitcoin security. Tokens are born on Bitcoin via OP_RETURN genesis, traded instantly via internal bonding curves, 
+          verified through L2 proof receipts on the Saturn Execution Layer, and anchored back to Bitcoin every epoch with Merkle solvency proofs.
         </p>
       </div>
 
