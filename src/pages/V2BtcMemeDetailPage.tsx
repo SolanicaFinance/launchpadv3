@@ -4,7 +4,7 @@ import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance, useBtcOnChainBalance } from "@/hooks/useBtcMemeTokens";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { BtcDepositPanel } from "@/components/bitcoin/BtcDepositPanel";
-import { BtcMemePriceChart } from "@/components/bitcoin/BtcMemePriceChart";
+import { BtcMemeChart } from "@/components/bitcoin/BtcMemeChart";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
