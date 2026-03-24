@@ -176,9 +176,8 @@ export default function V2BtcMemeDetailPage() {
   }
 
   const progressPct = Math.min(token.bonding_progress, 100);
-  const internalBtc = myBtcBalance?.balance_btc || 0;
-  const walletBtc = onChainBtc || 0;
-  const btcBalance = internalBtc + walletBtc;
+  // Trading balance is ONLY the internal platform balance — NOT the on-chain wallet balance
+  const btcBalance = myBtcBalance?.balance_btc || 0;
 
   return (
     <div className="max-w-6xl mx-auto py-4 space-y-4">
