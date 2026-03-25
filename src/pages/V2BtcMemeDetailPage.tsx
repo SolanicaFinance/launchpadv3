@@ -625,22 +625,22 @@ export default function V2BtcMemeDetailPage() {
         <div className="md:hidden flex flex-col gap-3">
           {mobileTab === 'trade' && (
             <>
-              <TradeSection />
-              <DepositWithdrawSection />
-              <TradeHistorySection />
+              {tradeSection}
+              {depositWithdrawSection}
+              {tradeHistorySection}
             </>
           )}
           {mobileTab === 'chart' && (
             <>
               <ChartSection chartHeight={360} />
-              <TradeHistorySection />
+              {tradeHistorySection}
             </>
           )}
           {mobileTab === 'info' && (
             <>
-              <TokenDetailsSection />
-              <ContractSection />
-              <DescriptionSection />
+              {tokenDetailsSection}
+              {contractSection}
+              {descriptionSection}
             </>
           )}
         </div>
@@ -649,15 +649,15 @@ export default function V2BtcMemeDetailPage() {
         <div className="hidden md:grid lg:hidden grid-cols-12 gap-4">
           <div className="col-span-7 flex flex-col gap-4">
             <ChartSection chartHeight={440} />
-            <TradeHistorySection />
-            <TokenDetailsSection />
-            <ContractSection />
-            <DescriptionSection />
+            {tradeHistorySection}
+            {tokenDetailsSection}
+            {contractSection}
+            {descriptionSection}
           </div>
           <div className="col-span-5 flex flex-col gap-4">
             <div className="sticky top-4 flex flex-col gap-4">
-              <TradeSection />
-              <DepositWithdrawSection />
+              {tradeSection}
+              {depositWithdrawSection}
             </div>
           </div>
         </div>
@@ -666,14 +666,14 @@ export default function V2BtcMemeDetailPage() {
         <div className="hidden lg:grid grid-cols-12 gap-4 flex-1">
           <div className="col-span-9 flex flex-col gap-4">
             <ChartSection chartHeight={420} />
-            <TradeHistorySection />
+            {tradeHistorySection}
           </div>
           <div className="col-span-3 flex flex-col gap-4">
-            <TradeSection />
-            <DepositWithdrawSection />
-            <TokenDetailsSection />
-            <ContractSection />
-            <DescriptionSection />
+            {tradeSection}
+            {depositWithdrawSection}
+            {tokenDetailsSection}
+            {contractSection}
+            {descriptionSection}
           </div>
         </div>
 
