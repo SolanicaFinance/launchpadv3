@@ -111,6 +111,9 @@ export async function notifySolLaunch(params: {
 <a href="https://saturntrade.lovable.app/token/${params.mintAddress}">Trade on Saturn</a>`;
 
   await sendTelegramNotification(text);
+
+  // Also post to CAPTCHA.social for launches
+  await postToCaptcha(`🚀 NEW LAUNCH: $${params.ticker} (${params.name}) on Solana!\n\nCA: ${params.mintAddress}\n\nTrade now → saturntrade.lovable.app/token/${params.mintAddress}`);
 }
 
 // ── BNB trade notification ──
