@@ -70,6 +70,7 @@ const TAB_CONFIG = [
   { value: "mev", label: "MEV", icon: Zap },
   { value: "ai-collab", label: "AI Collab", icon: Brain },
   { value: "token-send", label: "Token Send", icon: Send },
+  { value: "mentioner", label: "Mentioner", icon: AtSign },
 ] as const;
 
 export default function AdminPanelPage() {
