@@ -334,7 +334,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const DepositWithdrawSection = () => (
+  const depositWithdrawSection = (
     <>
       {isConnected && address && (showDeposit || btcBalance === 0) && (
         <BtcDepositPanel walletAddress={address} currentBalance={btcBalance} />
