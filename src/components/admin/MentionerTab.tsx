@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Plus, Users, Trash2, Search,
   CheckCircle, XCircle, Clock, Send, RefreshCw,
-  Wifi, DollarSign, ShoppingCart,
+  Wifi, DollarSign, ShoppingCart, ExternalLink,
 } from "lucide-react";
 
 interface BotAccount {
