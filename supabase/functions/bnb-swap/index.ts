@@ -1388,6 +1388,18 @@ Deno.serve(async (req) => {
       console.error("[bnb-swap] Failed to record trade:", recordErr);
     }
 
+    // Send Telegram notification
+    await notifyBnbTrade({
+      tradeType: body.action as "buy" | "sell",
+      ticker: bnbTokenTicker || "",
+      tokenName: bnbTokenName || "",
+      amountBnb: parseFloat(body.amount) || 0,
+      estimatedOutput: parseFloat(estimatedOutput) || 0,
+      walletAddress: walletAddress || "",
+      txHash: txHash!,
+      tokenAddress: body.tokenAddress,
+    });
+
     return new Response(
       JSON.stringify({
         success: true,

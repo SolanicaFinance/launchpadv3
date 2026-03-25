@@ -491,6 +491,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Send Telegram launch notification
+    if (mintAddress) {
+      await notifySolLaunch({
+        name: String(name),
+        ticker: String(ticker).toUpperCase(),
+        creatorWallet: creatorWallet,
+        mintAddress,
+      });
+    }
+
     // Return Vercel's response directly - it has all the data we need
     return new Response(
       JSON.stringify({

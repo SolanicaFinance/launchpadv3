@@ -205,6 +205,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Send Telegram notification
+    await notifySolTrade({
+      tradeType: isBuy ? "buy" : "sell",
+      ticker: tokenTicker,
+      tokenName,
+      amountSol: Number(amount),
+      estimatedOutput: swapResult.estimatedOutput || 0,
+      walletAddress: resolvedWalletAddress || "",
+      signature,
+      mintAddress,
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
