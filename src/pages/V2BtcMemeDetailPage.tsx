@@ -266,7 +266,7 @@ export default function V2BtcMemeDetailPage() {
             <div className="flex justify-between text-[10px] text-muted-foreground/50 font-mono mb-1.5">
               <span>{tradeType === "buy" ? "Amount (BTC)" : `Amount (${token.ticker})`}</span>
               <span className="flex items-center gap-1">
-                Bal: {tradeType === "buy" ? formatBtc(btcBalance) : formatNum(myBalance?.balance || 0)}
+                Bal: {tradeType === "buy" ? formatBtc(btcBalance) : (myBalance?.balance || 0).toLocaleString()}
                 {tradeType === "buy" && btcBalance === 0 && (
                   <button onClick={() => setShowDeposit(true)} className="ml-1 text-primary hover:text-primary/80 underline">deposit</button>
                 )}
