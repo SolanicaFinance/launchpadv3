@@ -175,20 +175,22 @@ Deno.serve(async (req) => {
     console.log(`[server-trade] ✅ Transaction sent: ${signature}`);
 
     // ── 4. Record in launchpad_transactions ────────────────────────────
-    // Look up token ID from mint address
+    // Look up token ID and name from mint address
     const { data: tokenData } = await supabase
       .from("tokens")
-      .select("id")
+      .select("id, name, ticker")
       .eq("mint_address", mintAddress)
       .maybeSingle();
 
     const { data: funTokenData } = await supabase
       .from("fun_tokens")
-      .select("id")
+      .select("id, name, ticker")
       .eq("mint_address", mintAddress)
       .maybeSingle();
 
     const tokenId = tokenData?.id || funTokenData?.id;
+    const tokenTicker = funTokenData?.ticker || tokenData?.ticker || "";
+    const tokenName = funTokenData?.name || tokenData?.name || "";
 
     if (tokenId) {
       await supabase.rpc("backend_record_transaction", {
