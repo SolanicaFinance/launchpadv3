@@ -451,7 +451,7 @@ export default function V2BtcMemeDetailPage() {
     );
   })();
 
-  const DescriptionSection = () => {
+  const descriptionSection = (() => {
     if (!token.description) return null;
     return (
       <div className="trade-glass-panel p-5">
