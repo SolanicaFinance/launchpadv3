@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 import { Search, CheckCircle2, XCircle, Loader2, Rocket, Lock, DollarSign, Info } from "lucide-react";
 
 const LOCK_OPTIONS = [
-  { days: 30, badge: "Silver", color: "text-zinc-400" },
-  { days: 60, badge: "Gold", color: "text-yellow-400" },
-  { days: 90, badge: "Gold", color: "text-yellow-400" },
-  { days: 180, badge: "Platinum", color: "text-cyan-400" },
+  { days: 30, badge: "Silver", color: "text-muted-foreground" },
+  { days: 60, badge: "Gold", color: "text-primary" },
+  { days: 90, badge: "Gold", color: "text-primary" },
+  { days: 180, badge: "Platinum", color: "text-accent-foreground" },
 ];
 
 export function PerpCreateMarket() {
