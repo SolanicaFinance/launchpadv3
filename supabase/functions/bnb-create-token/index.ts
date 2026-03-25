@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { notifyBnbLaunch } from "../_shared/telegram-notify.ts";
 import {
   createWalletClient,
   createPublicClient,
@@ -486,6 +487,17 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[BNB] ✅ Complete! Token ID: ${tokenId}`);
+
+    // Send Telegram launch notification
+    if (tokenAddress) {
+      await notifyBnbLaunch({
+        name: body.name,
+        ticker: body.ticker,
+        creatorWallet: body.creatorWallet,
+        tokenAddress,
+        txHash,
+      });
+    }
 
     return new Response(
       JSON.stringify({

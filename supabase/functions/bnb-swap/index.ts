@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { notifyBnbTrade } from "../_shared/telegram-notify.ts";
 import {
   createPublicClient,
   http,
@@ -1386,6 +1387,18 @@ Deno.serve(async (req) => {
     } catch (recordErr) {
       console.error("[bnb-swap] Failed to record trade:", recordErr);
     }
+
+    // Send Telegram notification
+    await notifyBnbTrade({
+      tradeType: body.action as "buy" | "sell",
+      ticker: bnbTokenTicker || "",
+      tokenName: bnbTokenName || "",
+      amountBnb: parseFloat(body.amount) || 0,
+      estimatedOutput: parseFloat(estimatedOutput) || 0,
+      walletAddress: walletAddress || "",
+      txHash: txHash!,
+      tokenAddress: body.tokenAddress,
+    });
 
     return new Response(
       JSON.stringify({

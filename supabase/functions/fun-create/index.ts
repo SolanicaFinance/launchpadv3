@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { notifySolLaunch } from "../_shared/telegram-notify.ts";
 
 const VERSION = "v1.3.0";
 const DEPLOYED_AT = new Date().toISOString();
@@ -487,6 +488,16 @@ Deno.serve(async (req) => {
         p_success: true,
       }).catch((err: Error) => {
         console.warn(`[fun-create][${VERSION}] Failed to complete lock`, { error: err.message });
+      });
+    }
+
+    // Send Telegram launch notification
+    if (mintAddress) {
+      await notifySolLaunch({
+        name: String(name),
+        ticker: String(ticker).toUpperCase(),
+        creatorWallet: creatorWallet,
+        mintAddress,
       });
     }
 

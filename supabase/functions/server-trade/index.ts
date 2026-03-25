@@ -4,6 +4,7 @@ import {
   findSolanaEmbeddedWallet,
   signAndSendTransaction,
 } from "../_shared/privy-server-wallet.ts";
+import { notifySolTrade } from "../_shared/telegram-notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -174,20 +175,22 @@ Deno.serve(async (req) => {
     console.log(`[server-trade] ✅ Transaction sent: ${signature}`);
 
     // ── 4. Record in launchpad_transactions ────────────────────────────
-    // Look up token ID from mint address
+    // Look up token ID and name from mint address
     const { data: tokenData } = await supabase
       .from("tokens")
-      .select("id")
+      .select("id, name, ticker")
       .eq("mint_address", mintAddress)
       .maybeSingle();
 
     const { data: funTokenData } = await supabase
       .from("fun_tokens")
-      .select("id")
+      .select("id, name, ticker")
       .eq("mint_address", mintAddress)
       .maybeSingle();
 
     const tokenId = tokenData?.id || funTokenData?.id;
+    const tokenTicker = funTokenData?.ticker || tokenData?.ticker || "";
+    const tokenName = funTokenData?.name || tokenData?.name || "";
 
     if (tokenId) {
       await supabase.rpc("backend_record_transaction", {
@@ -201,6 +204,18 @@ Deno.serve(async (req) => {
         p_user_profile_id: resolvedProfileId,
       });
     }
+
+    // Send Telegram notification
+    await notifySolTrade({
+      tradeType: isBuy ? "buy" : "sell",
+      ticker: tokenTicker,
+      tokenName,
+      amountSol: Number(amount),
+      estimatedOutput: swapResult.estimatedOutput || 0,
+      walletAddress: resolvedWalletAddress || "",
+      signature,
+      mintAddress,
+    });
 
     return new Response(
       JSON.stringify({
