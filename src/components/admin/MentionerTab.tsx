@@ -153,13 +153,14 @@ export function MentionerTab() {
   );
 
   const fetchData = useCallback(async () => {
-    try {
-      const [accResult, campResult] = await Promise.all([
-        callBotAdmin("list_accounts"),
-        callMentioner("list_campaigns"),
-      ]);
+    const [accountsResult, campaignsResult] = await Promise.allSettled([
+      callBotAdmin("list_accounts"),
+      callMentioner("list_campaigns"),
+    ]);
+
+    if (accountsResult.status === "fulfilled") {
       setAccounts(
-        (accResult.accounts || []).map((a: any) => ({
+        (accountsResult.value.accounts || []).map((a: any) => ({
           id: a.id,
           name: a.name,
           username: a.username,
@@ -169,12 +170,17 @@ export function MentionerTab() {
           socks5_urls: a.socks5_urls || [],
         }))
       );
-      setCampaigns(campResult.campaigns || []);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
+    } else {
+      console.error("Fetch accounts error:", accountsResult.reason);
     }
+
+    if (campaignsResult.status === "fulfilled") {
+      setCampaigns(campaignsResult.value.campaigns || []);
+    } else {
+      console.error("Fetch campaigns error:", campaignsResult.reason);
+    }
+
+    setLoading(false);
   }, []);
 
   const fetchProxyStatus = useCallback(async () => {
@@ -214,9 +220,10 @@ export function MentionerTab() {
       toast({ title: "Select an account and enter source URL", variant: "destructive" });
       return;
     }
+
     try {
       const username = extractUsername(formSourceUrl);
-      await callMentioner("create_campaign", {
+      const result = await callMentioner("create_campaign", {
         campaign: {
           account_id: formAccountId,
           source_username: username,
@@ -225,10 +232,20 @@ export function MentionerTab() {
           pitch_template: formPitch || null,
         },
       });
-      toast({ title: "Campaign created" });
+
+      const newCampaign = result.campaign;
+      setCampaigns((current) => [newCampaign, ...current.filter((campaign) => campaign.id !== newCampaign.id)]);
+      setSelectedCampaign(newCampaign.id);
       setShowForm(false);
       setFormSourceUrl("");
-      await fetchData();
+
+      try {
+        await fetchData();
+      } catch (refreshError) {
+        console.error("Post-create refresh error:", refreshError);
+      }
+
+      toast({ title: "Campaign created and saved" });
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     }
