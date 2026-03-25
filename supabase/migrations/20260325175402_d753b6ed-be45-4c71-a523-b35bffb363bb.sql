@@ -1,0 +1,1 @@
+ALTER TABLE public.mentioner_targets ADD COLUMN IF NOT EXISTS tweet_url text;

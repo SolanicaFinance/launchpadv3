@@ -5891,6 +5891,7 @@ export type Database = {
           sent_at: string | null
           status: string
           tweet_id: string | null
+          tweet_url: string | null
           username: string
         }
         Insert: {
@@ -5903,6 +5904,7 @@ export type Database = {
           sent_at?: string | null
           status?: string
           tweet_id?: string | null
+          tweet_url?: string | null
           username: string
         }
         Update: {
@@ -5915,6 +5917,7 @@ export type Database = {
           sent_at?: string | null
           status?: string
           tweet_id?: string | null
+          tweet_url?: string | null
           username?: string
         }
         Relationships: [

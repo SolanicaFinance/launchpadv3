@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Plus, Users, Trash2, Search,
   CheckCircle, XCircle, Clock, Send, RefreshCw,
-  Wifi, DollarSign, ShoppingCart,
+  Wifi, DollarSign, ShoppingCart, ExternalLink,
 } from "lucide-react";
 
 interface BotAccount {
@@ -64,6 +64,8 @@ interface Target {
   sent_at: string | null;
   reply_text: string | null;
   error_message: string | null;
+  tweet_id: string | null;
+  tweet_url: string | null;
   created_at: string;
 }
 
@@ -671,6 +673,7 @@ export function MentionerTab() {
                     <TableRow>
                       <TableHead>Username</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Post</TableHead>
                       <TableHead>Reply</TableHead>
                       <TableHead>Sent At</TableHead>
                       <TableHead className="text-right">Action</TableHead>
@@ -680,24 +683,51 @@ export function MentionerTab() {
                     {targets.map(t => (
                       <TableRow key={t.id}>
                         <TableCell>
-                          <div>
-                            <span className="font-medium">@{t.username}</span>
-                            {t.display_name && (
-                              <span className="block text-xs text-muted-foreground">{t.display_name}</span>
-                            )}
+                          <div className="flex items-center gap-1">
+                            <div>
+                              <span className="font-medium">@{t.username}</span>
+                              {t.display_name && (
+                                <span className="block text-xs text-muted-foreground">{t.display_name}</span>
+                              )}
+                            </div>
+                            <a
+                              href={`https://x.com/${t.username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-foreground ml-1"
+                              title="View profile"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : t.status === "unverified" ? "secondary" : "outline"}
+                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : t.status === "retrying" ? "secondary" : t.status === "unverified" ? "secondary" : "outline"}
                             className="text-xs"
                           >
                             {t.status === "sent" && <CheckCircle className="h-3 w-3 mr-1" />}
                             {t.status === "failed" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                            {t.status === "retrying" && <RefreshCw className="h-3 w-3 mr-1 animate-spin" />}
                             {t.status === "unverified" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {t.tweet_url || t.tweet_id ? (
+                            <a
+                              href={t.tweet_url || `https://x.com/i/status/${t.tweet_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs"
+                              title="View posted tweet"
+                            >
+                              <ExternalLink className="h-3 w-3" /> View
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell className="max-w-[200px]">
                           {t.reply_text ? (
@@ -710,7 +740,7 @@ export function MentionerTab() {
                           {t.sent_at ? new Date(t.sent_at).toLocaleString() : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {(t.status === "pending" || t.status === "unverified" || t.status === "failed") && (
+                          {(t.status === "pending" || t.status === "unverified" || t.status === "failed" || t.status === "retrying") && (
                             <Button
                               variant="ghost"
                               size="icon"
