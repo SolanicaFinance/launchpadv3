@@ -463,7 +463,7 @@ export default function V2BtcMemeDetailPage() {
         )}
       </div>
     );
-  };
+  })();
 
   return (
     <div className="trade-page-bg -mx-4 -mt-4 px-4 pt-4 md:mx-0 md:mt-0 md:pl-6 md:pr-4 md:pt-4 md:rounded-xl lg:px-6 lg:pt-6">
