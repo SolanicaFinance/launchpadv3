@@ -430,7 +430,7 @@ Saturn Terminal
               className="text-sm sm:text-base md:text-lg text-foreground/85 max-w-xl mx-auto mb-2 font-semibold animate-fade-in"
               style={{ animationDelay: "0.15s", animationFillMode: "both", textShadow: "0 2px 20px hsl(0 0% 0% / 0.5)" }}
             >
-              The fastest trading terminal on SOL, BNB and BTC. www.Saturn.Trade
+              The fastest trading terminal on SOL, BNB and BTC.
             </p>
 
             {/* Description — key phrases highlighted */}
