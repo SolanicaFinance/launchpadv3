@@ -58,7 +58,13 @@ function formatUsdCompact(v: number) {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
   if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
   if (v >= 1) return `$${v.toFixed(2)}`;
-  if (v > 0) return `$${v.toFixed(4)}`;
+  if (v >= 0.01) return `$${v.toFixed(4)}`;
+  if (v >= 0.0001) return `$${v.toFixed(6)}`;
+  if (v > 0) {
+    // For very small prices, show significant digits without scientific notation
+    const s = v.toFixed(12).replace(/0+$/, '');
+    return `$${s}`;
+  }
   return '$0';
 }
 
