@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send Telegram notification for the trade
-    sendTelegramTradeNotification({
+    // Send Telegram notification for the trade (must await or Deno kills it on shutdown)
+    await sendTelegramTradeNotification({
       tradeType,
       ticker: (trade.ticker as string) || "???",
       tokenName: (trade.tokenName as string) || "",
@@ -136,7 +136,7 @@ function fireAndForget(url: string, body: Record<string, unknown>) {
 }
 
 /** Send trade notification to Telegram group */
-function sendTelegramTradeNotification(params: {
+async function sendTelegramTradeNotification(params: {
   tradeType: string;
   ticker: string;
   tokenName: string;
@@ -167,14 +167,22 @@ function sendTelegramTradeNotification(params: {
 
 <a href="https://saturntrade.lovable.app/btc/meme">Trade on Saturn</a>`;
 
-  fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    }),
-  }).catch(err => console.warn("[btc-meme-swap] Telegram error:", err));
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error("[btc-meme-swap] Telegram send failed:", res.status, errBody);
+    }
+  } catch (err) {
+    console.error("[btc-meme-swap] Telegram error:", err);
+  }
 }
