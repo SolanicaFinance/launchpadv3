@@ -345,7 +345,7 @@ export default function V2BtcMemeDetailPage() {
     </>
   );
 
-  const TradeHistorySection = () => (
+  const tradeHistorySection = (
     <div className="trade-glass-panel p-4 flex-1 min-h-0 overflow-hidden flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-2">
