@@ -616,7 +616,36 @@ export function MentionerTab() {
         </CardContent>
       </Card>
 
-      {/* Targets List */}
+      {/* Test Pitches Preview */}
+      {testPitches.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">
+              🧪 Test Pitches Preview
+              <Badge variant="outline" className="ml-2">{testPitches.length} messages</Badge>
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setTestPitches([])}>
+              Clear
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[500px] overflow-y-auto space-y-2">
+              {testPitches.map((p, i) => (
+                <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="outline" className="text-[10px]">#{i + 1}</Badge>
+                    <span className="text-xs font-medium text-primary">@{p.username}</span>
+                  </div>
+                  <p className="text-sm text-foreground/90">{p.message}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{p.message.length} chars</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {selectedCampaign && activeCampaign && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
