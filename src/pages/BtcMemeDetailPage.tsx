@@ -62,6 +62,7 @@ export default function BtcMemeDetailPage() {
   const { data: trades } = useBtcMemeTrades(id);
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
+  const btcUsdPrice = useBtcUsdPrice();
 
   const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
 
