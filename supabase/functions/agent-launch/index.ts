@@ -45,7 +45,7 @@ async function sendTelegramAlert(token: {
 }) {
   try {
     const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
-    const chatId = Deno.env.get("TELEGRAM_CHANNEL_ID");
+    const chatId = Deno.env.get("TELEGRAM_CHAT_ID") || Deno.env.get("TELEGRAM_CHANNEL_ID");
     
     if (!botToken || !chatId) {
       console.log("[agent-launch] Telegram not configured, skipping alert");
