@@ -64,6 +64,8 @@ interface Target {
   sent_at: string | null;
   reply_text: string | null;
   error_message: string | null;
+  tweet_id: string | null;
+  tweet_url: string | null;
   created_at: string;
 }
 
