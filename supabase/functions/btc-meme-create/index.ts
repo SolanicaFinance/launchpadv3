@@ -300,6 +300,14 @@ Deno.serve(async (req) => {
       console.log(`[btc-meme-create] Genesis embedded in payment tx ${paymentTxId} — token ${token.id} is immediately active`);
     }
 
+    // Send Telegram + CAPTCHA launch notification
+    await notifyBtcLaunch({
+      name: name.trim(),
+      ticker: cleanTicker,
+      creatorWallet,
+      tokenId: token.id,
+    });
+
     return new Response(JSON.stringify({
       success: true,
       token: { id: token.id, ticker: token.ticker, priceBtc: devBuyResult?.priceAfterBuy || token.price_btc, marketCapBtc: devBuyResult?.marketCapAfterBuy || token.market_cap_btc },
