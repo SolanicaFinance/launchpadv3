@@ -4,6 +4,7 @@ import {
   findSolanaEmbeddedWallet,
   signAndSendTransaction,
 } from "../_shared/privy-server-wallet.ts";
+import { notifySolTrade } from "../_shared/telegram-notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
