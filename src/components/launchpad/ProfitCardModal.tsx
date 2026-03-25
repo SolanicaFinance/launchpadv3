@@ -255,7 +255,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                           lineHeight: 1.1,
                         }}
                       >
-                        {data.amountSol.toFixed(4)}
+                      {data.amountSol.toFixed(amountDecimals)}
                         <span style={{ fontSize: 18, marginLeft: 4, color: "rgba(255,255,255,0.4)" }}>{currencyLabel}</span>
                       </div>
                     )}
