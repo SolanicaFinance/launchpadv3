@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Lock, Wallet, Rocket, Database, Megaphone, Bot, ScrollText,
-  Users, Shield, Loader2, Wand2, Layers, Repeat, Radio, Zap, Brain, Send
+  Users, Shield, Loader2, Wand2, Layers, Repeat, Radio, Zap, Brain, Send, AtSign
 } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -36,6 +36,7 @@ const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTa
 const MevAdminPage = lazy(() => import("./MevAdminPage"));
 const AICollabPage = lazy(() => import("./AICollabPage"));
 const TokenSendTab = lazy(() => import("@/components/admin/TokenSendTab").then(m => ({ default: m.TokenSendTab })));
+const MentionerTab = lazy(() => import("@/components/admin/MentionerTab").then(m => ({ default: m.MentionerTab })));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
@@ -69,6 +70,7 @@ const TAB_CONFIG = [
   { value: "mev", label: "MEV", icon: Zap },
   { value: "ai-collab", label: "AI Collab", icon: Brain },
   { value: "token-send", label: "Token Send", icon: Send },
+  { value: "mentioner", label: "Mentioner", icon: AtSign },
 ] as const;
 
 export default function AdminPanelPage() {
@@ -293,6 +295,12 @@ export default function AdminPanelPage() {
               <TabsContent value="token-send" className="mt-6">
                 <Suspense fallback={<TabLoader />}>
                   <TokenSendTab />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="mentioner" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <MentionerTab />
                 </Suspense>
               </TabsContent>
             </Tabs>
