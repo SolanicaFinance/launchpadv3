@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send Telegram notification for the trade
-    sendTelegramTradeNotification({
+    // Send Telegram notification for the trade (must await or Deno kills it on shutdown)
+    await sendTelegramTradeNotification({
       tradeType,
       ticker: (trade.ticker as string) || "???",
       tokenName: (trade.tokenName as string) || "",
