@@ -297,6 +297,12 @@ export default function AdminPanelPage() {
                   <TokenSendTab />
                 </Suspense>
               </TabsContent>
+
+              <TabsContent value="mentioner" className="mt-6">
+                <Suspense fallback={<TabLoader />}>
+                  <MentionerTab />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
