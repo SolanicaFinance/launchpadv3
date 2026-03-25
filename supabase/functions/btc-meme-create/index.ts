@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { notifyBtcLaunch } from "../_shared/telegram-notify.ts";
 
 const TOTAL_SUPPLY = 1_000_000_000;
 const INITIAL_VIRTUAL_BTC = 0.3; // 30,000,000 sats per TAT spec
