@@ -408,7 +408,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const TokenDetailsSection = () => (
+  const tokenDetailsSection = (
     <div className="trade-glass-panel p-5 space-y-2">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
