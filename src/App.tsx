@@ -230,6 +230,8 @@ const App = () => (
                      <Route path="/panel" element={<PanelPage />} />
                      <Route path="/merch" element={<MerchStorePage />} />
                      <Route path="/leverage" element={<LeveragePage />} />
+                     <Route path="/perps" element={<PerpsPage />} />
+                     <Route path="/perps/trade/:tokenAddress" element={<PerpsPage />} />
                      <Route path="/meteorite" element={<MeteoritePage />} />
                      <Route path="/dexlist" element={<DexListPage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
