@@ -5806,6 +5806,80 @@ export type Database = {
         }
         Relationships: []
       }
+      mentioner_proxies: {
+        Row: {
+          campaign_id: string | null
+          city: string | null
+          country: string
+          created_at: string
+          expires_at: string
+          failure_count: number
+          id: string
+          ip_port: string
+          is_active: boolean
+          isp: string | null
+          last_failure_at: string | null
+          last_used_at: string | null
+          nsocks_history_id: string | null
+          nsocks_proxy_id: string
+          ping: number | null
+          price: number | null
+          purchased_at: string
+          region: string | null
+          socks_auth: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          expires_at?: string
+          failure_count?: number
+          id?: string
+          ip_port: string
+          is_active?: boolean
+          isp?: string | null
+          last_failure_at?: string | null
+          last_used_at?: string | null
+          nsocks_history_id?: string | null
+          nsocks_proxy_id: string
+          ping?: number | null
+          price?: number | null
+          purchased_at?: string
+          region?: string | null
+          socks_auth?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          expires_at?: string
+          failure_count?: number
+          id?: string
+          ip_port?: string
+          is_active?: boolean
+          isp?: string | null
+          last_failure_at?: string | null
+          last_used_at?: string | null
+          nsocks_history_id?: string | null
+          nsocks_proxy_id?: string
+          ping?: number | null
+          price?: number | null
+          purchased_at?: string
+          region?: string | null
+          socks_auth?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentioner_proxies_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "mentioner_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentioner_targets: {
         Row: {
           campaign_id: string
