@@ -36,6 +36,7 @@ const MeteoriteAdminTab = lazy(() => import("@/components/admin/MeteoriteAdminTa
 const MevAdminPage = lazy(() => import("./MevAdminPage"));
 const AICollabPage = lazy(() => import("./AICollabPage"));
 const TokenSendTab = lazy(() => import("@/components/admin/TokenSendTab").then(m => ({ default: m.TokenSendTab })));
+const MentionerTab = lazy(() => import("@/components/admin/MentionerTab").then(m => ({ default: m.MentionerTab })));
 
 import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { BRAND } from "@/config/branding";
