@@ -557,103 +557,180 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
     .single();
   if (!target) throw new Error("Target not found");
 
-  try {
-    // Generate AI pitch
-    const pitchText = await generatePitch(target.username, campaign.pitch_template);
+  const authToken = account.auth_token_encrypted;
+  const ct0 = account.ct0_token_encrypted;
+  const fullCookie = account.full_cookie_encrypted;
 
-    const authToken = account.auth_token_encrypted;
-    const ct0 = account.ct0_token_encrypted;
-    const fullCookie = account.full_cookie_encrypted;
+  if (!authToken || !ct0) {
+    throw new Error("Account missing auth_token or ct0 credentials");
+  }
 
-    if (!authToken || !ct0) {
-      throw new Error("Account missing auth_token or ct0 credentials");
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 60_000; // 1 minute between retries
+
+  // Generate AI pitch once (reuse across retries)
+  const pitchText = await generatePitch(target.username, campaign.pitch_template);
+  const tweetText = pitchText;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    console.log(`[mention] Attempt ${attempt}/${MAX_RETRIES} for @${target.username}`);
+
+    // Update target to show we're retrying
+    if (attempt > 1) {
+      await supabase.from("mentioner_targets").update({
+        status: "retrying",
+        error_message: `Retry attempt ${attempt}/${MAX_RETRIES}...`,
+      }).eq("id", targetId);
     }
 
-    // pitchText already starts with @username from generatePitch
-    const tweetText = pitchText;
-
-    // Auto-provision proxy
+    // Get proxy — on retry after proxy failure, force buy a new one
     let proxyInfo: { ip_port: string; socks_auth: string | null } | null = null;
     try {
       proxyInfo = await getActiveProxy(supabase, campaignId);
       console.log(`[mention] Using proxy: ${proxyInfo.ip_port}`);
     } catch (proxyErr) {
-      console.error("[mention] Proxy provisioning failed, proceeding without proxy:", proxyErr);
-    }
-
-    // Post tweet
-    const tweetResult = await postTweet(tweetText, authToken, ct0, fullCookie, proxyInfo);
-
-    // ONLY mark as "sent" if we got a verified tweet ID back
-    const tweetId = tweetResult?.id;
-    if (!tweetId) {
-      // Tweet may have been posted but we can't verify — mark as "unverified" not "sent"
-      await supabase.from("mentioner_targets").update({
-        status: "unverified",
-        reply_text: tweetText,
-        error_message: "Tweet posted but no tweet ID returned — needs manual verification",
-      }).eq("id", targetId);
-
-      return { success: false, tweet: tweetText, tweetId: null, proxy: proxyInfo?.ip_port || "none", error: "No tweet ID returned — target NOT marked as sent" };
-    }
-
-    // Verify the tweet actually exists by fetching it
-    let verified = false;
-    try {
-      const twitterApiKey = Deno.env.get("TWITTERAPI_IO_KEY");
-      if (twitterApiKey) {
-        const verifyResp = await fetch(`https://twitterapi.io/api/tweet?tweetId=${tweetId}`, {
-          headers: { "x-api-key": twitterApiKey },
-        });
-        if (verifyResp.ok) {
-          const verifyData = await verifyResp.json();
-          verified = !!(verifyData?.tweet || verifyData?.data);
+      console.error(`[mention] Proxy provisioning failed (attempt ${attempt}):`, proxyErr);
+      // If proxy fails and we have retries left, try buying a new one
+      if (attempt < MAX_RETRIES) {
+        try {
+          console.log("[mention] Attempting to buy new proxy after failure...");
+          const newProxy = await buyNewProxy(supabase, campaignId);
+          proxyInfo = { ip_port: newProxy.ip_port, socks_auth: newProxy.socks_auth };
+          console.log(`[mention] New proxy acquired: ${proxyInfo.ip_port}`);
+        } catch (buyErr) {
+          console.error("[mention] Failed to buy new proxy:", buyErr);
         }
       }
-      if (!verified) {
-        // Fallback: if we have a tweet ID from the create response, trust it
-        verified = true;
-        console.log(`[mention] Could not independently verify tweet ${tweetId}, trusting create response`);
+    }
+
+    try {
+      // Post tweet
+      const tweetResult = await postTweet(tweetText, authToken, ct0, fullCookie, proxyInfo);
+      const tweetId = tweetResult?.id;
+
+      if (!tweetId) {
+        // No tweet ID — this is a failure, will retry
+        const errMsg = `Attempt ${attempt}: Tweet posted but no tweet ID returned`;
+        console.error(`[mention] ${errMsg}`);
+
+        if (attempt < MAX_RETRIES) {
+          console.log(`[mention] Will retry in ${RETRY_DELAY_MS / 1000}s...`);
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          continue; // retry
+        }
+
+        // Final attempt failed — mark as retrying so it stays in queue
+        await supabase.from("mentioner_targets").update({
+          status: "pending",
+          reply_text: tweetText,
+          error_message: `All ${MAX_RETRIES} attempts failed: no tweet ID. Will retry next run.`,
+        }).eq("id", targetId);
+
+        return { success: false, tweet: tweetText, tweetId: null, error: "All retries exhausted — kept as pending for next run" };
       }
-    } catch (verifyErr) {
-      console.error("[mention] Verification fetch failed, trusting create response:", verifyErr);
-      verified = true; // Trust the create response if verification API fails
-    }
 
-    if (verified) {
+      // Got a tweet ID — verify it exists
+      let verified = false;
+      try {
+        const twitterApiKey = Deno.env.get("TWITTERAPI_IO_KEY");
+        if (twitterApiKey) {
+          const verifyResp = await fetch(`https://twitterapi.io/api/tweet?tweetId=${tweetId}`, {
+            headers: { "x-api-key": twitterApiKey },
+          });
+          if (verifyResp.ok) {
+            const verifyData = await verifyResp.json();
+            verified = !!(verifyData?.tweet || verifyData?.data);
+          }
+        }
+        if (!verified) {
+          verified = true; // Trust the create response
+          console.log(`[mention] Could not independently verify tweet ${tweetId}, trusting create response`);
+        }
+      } catch (verifyErr) {
+        console.error("[mention] Verification fetch failed, trusting create response:", verifyErr);
+        verified = true;
+      }
+
+      if (verified) {
+        // SUCCESS — mark as sent with tweet link
+        const tweetUrl = `https://x.com/i/status/${tweetId}`;
+        await supabase.from("mentioner_targets").update({
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          reply_text: tweetText,
+          tweet_id: tweetId,
+          tweet_url: tweetUrl,
+          error_message: null,
+        }).eq("id", targetId);
+
+        await supabase.from("mentioner_campaigns").update({
+          sent_count: (campaign.sent_count || 0) + 1,
+          current_index: (campaign.current_index || 0) + 1,
+          updated_at: new Date().toISOString(),
+        }).eq("id", campaignId);
+
+        return { success: true, tweet: tweetText, tweetId, tweetUrl, verified: true, proxy: proxyInfo?.ip_port || "none" };
+      }
+
+      // Not verified — retry
+      if (attempt < MAX_RETRIES) {
+        console.log(`[mention] Tweet ${tweetId} not verified, retrying in ${RETRY_DELAY_MS / 1000}s...`);
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+
+      // All retries done, keep as pending
       await supabase.from("mentioner_targets").update({
-        status: "sent",
-        sent_at: new Date().toISOString(),
+        status: "pending",
         reply_text: tweetText,
-        tweet_id: tweetId,
+        error_message: `All ${MAX_RETRIES} attempts: tweet ID returned but unverified. Will retry next run.`,
       }).eq("id", targetId);
 
-      await supabase.from("mentioner_campaigns").update({
-        sent_count: campaign.sent_count + 1,
-        current_index: campaign.current_index + 1,
-        updated_at: new Date().toISOString(),
-      }).eq("id", campaignId);
+      return { success: false, tweet: tweetText, tweetId, error: "Unverified after all retries — kept as pending" };
 
-      return { success: true, tweet: tweetText, tweetId, verified: true, proxy: proxyInfo?.ip_port || "none" };
-    } else {
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Unknown error";
+      console.error(`[mention] Attempt ${attempt} error for @${target.username}:`, errMsg);
+
+      // Check if it's a proxy-related error
+      const isProxyError = errMsg.toLowerCase().includes("proxy") || errMsg.toLowerCase().includes("socks") || errMsg.toLowerCase().includes("connect") || errMsg.toLowerCase().includes("timeout");
+
+      if (isProxyError && proxyInfo) {
+        // Mark current proxy as failed
+        await markProxyFailed(supabase, proxyInfo.ip_port);
+        console.log(`[mention] Marked proxy ${proxyInfo.ip_port} as failed, will buy new one on retry`);
+
+        // Force buy a new proxy for next attempt
+        try {
+          await buyNewProxy(supabase, campaignId);
+          console.log("[mention] Pre-bought new proxy for next retry");
+        } catch (buyErr) {
+          console.error("[mention] Pre-buy failed:", buyErr);
+        }
+      }
+
+      if (attempt < MAX_RETRIES) {
+        console.log(`[mention] Will retry in ${RETRY_DELAY_MS / 1000}s...`);
+        await supabase.from("mentioner_targets").update({
+          status: "retrying",
+          error_message: `Attempt ${attempt} failed: ${errMsg}. Retrying in 1 min...`,
+        }).eq("id", targetId);
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+
+      // ALL retries exhausted — DO NOT mark as failed, keep as pending so it gets picked up again
       await supabase.from("mentioner_targets").update({
-        status: "unverified",
-        reply_text: tweetText,
-        error_message: `Tweet ID ${tweetId} could not be verified`,
+        status: "pending",
+        error_message: `All ${MAX_RETRIES} attempts failed: ${errMsg}. Will retry next run.`,
       }).eq("id", targetId);
 
-      return { success: false, tweet: tweetText, tweetId, verified: false, proxy: proxyInfo?.ip_port || "none", error: "Tweet not verified" };
+      return { success: false, error: `All retries exhausted for @${target.username}: ${errMsg} — kept as pending` };
     }
-  } catch (err) {
-    console.error("Send mention error:", err);
-
-    await supabase.from("mentioner_targets").update({
-      status: "failed",
-      error_message: err instanceof Error ? err.message : "Unknown error",
-    }).eq("id", targetId);
-
-    return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
+
+  // Should never reach here, but just in case
+  return { success: false, error: "Unexpected loop exit" };
 }
 
 // ═══════════════════════════════════════════════
