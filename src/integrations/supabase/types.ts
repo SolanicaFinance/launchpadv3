@@ -7297,6 +7297,402 @@ export type Database = {
         }
         Relationships: []
       }
+      perp_fee_claims: {
+        Row: {
+          amount_usd: number
+          claimed_at: string
+          id: string
+          market_id: string
+          tx_hash: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount_usd: number
+          claimed_at?: string
+          id?: string
+          market_id: string
+          tx_hash?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount_usd?: number
+          claimed_at?: string
+          id?: string
+          market_id?: string
+          tx_hash?: string | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_fee_claims_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "perp_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perp_markets: {
+        Row: {
+          chain: string
+          created_at: string
+          created_by_admin: boolean
+          creator_fee_share_pct: number
+          creator_wallet: string
+          dex_base_token: string | null
+          dex_pair_address: string | null
+          dex_quote_token: string | null
+          fee_pct: number
+          id: string
+          insurance_balance_usd: number
+          insurance_floor_pct: number
+          is_featured: boolean
+          last_price_updated_at: string | null
+          last_price_usd: number | null
+          liquidity_usd: number | null
+          lock_duration_days: number | null
+          lock_expires_at: string | null
+          market_cap_usd: number | null
+          max_leverage: number
+          max_open_interest_usd: number
+          max_position_usd: number
+          min_collateral_usd: number
+          min_fee_usd: number
+          spread_pct: number
+          status: Database["public"]["Enums"]["perp_market_status"]
+          token_address: string
+          token_decimals: number | null
+          token_image_url: string | null
+          token_name: string
+          token_symbol: string
+          total_fees_claimed_usd: number
+          total_fees_earned_usd: number
+          total_long_oi_usd: number
+          total_short_oi_usd: number
+          total_trades: number
+          total_volume_usd: number
+          updated_at: string
+          vault_balance_usd: number
+        }
+        Insert: {
+          chain?: string
+          created_at?: string
+          created_by_admin?: boolean
+          creator_fee_share_pct?: number
+          creator_wallet: string
+          dex_base_token?: string | null
+          dex_pair_address?: string | null
+          dex_quote_token?: string | null
+          fee_pct?: number
+          id?: string
+          insurance_balance_usd?: number
+          insurance_floor_pct?: number
+          is_featured?: boolean
+          last_price_updated_at?: string | null
+          last_price_usd?: number | null
+          liquidity_usd?: number | null
+          lock_duration_days?: number | null
+          lock_expires_at?: string | null
+          market_cap_usd?: number | null
+          max_leverage?: number
+          max_open_interest_usd?: number
+          max_position_usd?: number
+          min_collateral_usd?: number
+          min_fee_usd?: number
+          spread_pct?: number
+          status?: Database["public"]["Enums"]["perp_market_status"]
+          token_address: string
+          token_decimals?: number | null
+          token_image_url?: string | null
+          token_name: string
+          token_symbol: string
+          total_fees_claimed_usd?: number
+          total_fees_earned_usd?: number
+          total_long_oi_usd?: number
+          total_short_oi_usd?: number
+          total_trades?: number
+          total_volume_usd?: number
+          updated_at?: string
+          vault_balance_usd?: number
+        }
+        Update: {
+          chain?: string
+          created_at?: string
+          created_by_admin?: boolean
+          creator_fee_share_pct?: number
+          creator_wallet?: string
+          dex_base_token?: string | null
+          dex_pair_address?: string | null
+          dex_quote_token?: string | null
+          fee_pct?: number
+          id?: string
+          insurance_balance_usd?: number
+          insurance_floor_pct?: number
+          is_featured?: boolean
+          last_price_updated_at?: string | null
+          last_price_usd?: number | null
+          liquidity_usd?: number | null
+          lock_duration_days?: number | null
+          lock_expires_at?: string | null
+          market_cap_usd?: number | null
+          max_leverage?: number
+          max_open_interest_usd?: number
+          max_position_usd?: number
+          min_collateral_usd?: number
+          min_fee_usd?: number
+          spread_pct?: number
+          status?: Database["public"]["Enums"]["perp_market_status"]
+          token_address?: string
+          token_decimals?: number | null
+          token_image_url?: string | null
+          token_name?: string
+          token_symbol?: string
+          total_fees_claimed_usd?: number
+          total_fees_earned_usd?: number
+          total_long_oi_usd?: number
+          total_short_oi_usd?: number
+          total_trades?: number
+          total_volume_usd?: number
+          updated_at?: string
+          vault_balance_usd?: number
+        }
+        Relationships: []
+      }
+      perp_positions: {
+        Row: {
+          close_price: number | null
+          closed_at: string | null
+          collateral_usd: number
+          entry_price: number
+          fee_paid_usd: number
+          id: string
+          leverage: number
+          liquidation_price: number | null
+          market_id: string
+          opened_at: string
+          realized_pnl_usd: number | null
+          side: Database["public"]["Enums"]["perp_position_side"]
+          size_usd: number
+          status: Database["public"]["Enums"]["perp_position_status"]
+          stop_loss_price: number | null
+          take_profit_price: number | null
+          wallet_address: string
+        }
+        Insert: {
+          close_price?: number | null
+          closed_at?: string | null
+          collateral_usd: number
+          entry_price: number
+          fee_paid_usd?: number
+          id?: string
+          leverage?: number
+          liquidation_price?: number | null
+          market_id: string
+          opened_at?: string
+          realized_pnl_usd?: number | null
+          side: Database["public"]["Enums"]["perp_position_side"]
+          size_usd: number
+          status?: Database["public"]["Enums"]["perp_position_status"]
+          stop_loss_price?: number | null
+          take_profit_price?: number | null
+          wallet_address: string
+        }
+        Update: {
+          close_price?: number | null
+          closed_at?: string | null
+          collateral_usd?: number
+          entry_price?: number
+          fee_paid_usd?: number
+          id?: string
+          leverage?: number
+          liquidation_price?: number | null
+          market_id?: string
+          opened_at?: string
+          realized_pnl_usd?: number | null
+          side?: Database["public"]["Enums"]["perp_position_side"]
+          size_usd?: number
+          status?: Database["public"]["Enums"]["perp_position_status"]
+          stop_loss_price?: number | null
+          take_profit_price?: number | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_positions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "perp_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perp_price_cache: {
+        Row: {
+          chain: string
+          id: string
+          liquidity: number | null
+          market_cap: number | null
+          price_change_24h: number | null
+          price_usd: number
+          source: string
+          token_address: string
+          updated_at: string
+          volume_24h: number | null
+        }
+        Insert: {
+          chain?: string
+          id?: string
+          liquidity?: number | null
+          market_cap?: number | null
+          price_change_24h?: number | null
+          price_usd: number
+          source?: string
+          token_address: string
+          updated_at?: string
+          volume_24h?: number | null
+        }
+        Update: {
+          chain?: string
+          id?: string
+          liquidity?: number | null
+          market_cap?: number | null
+          price_change_24h?: number | null
+          price_usd?: number
+          source?: string
+          token_address?: string
+          updated_at?: string
+          volume_24h?: number | null
+        }
+        Relationships: []
+      }
+      perp_trader_balances: {
+        Row: {
+          balance_usd: number
+          id: string
+          total_deposited_usd: number
+          total_pnl_usd: number
+          total_withdrawn_usd: number
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          balance_usd?: number
+          id?: string
+          total_deposited_usd?: number
+          total_pnl_usd?: number
+          total_withdrawn_usd?: number
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          balance_usd?: number
+          id?: string
+          total_deposited_usd?: number
+          total_pnl_usd?: number
+          total_withdrawn_usd?: number
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      perp_trades: {
+        Row: {
+          action: string
+          collateral_usd: number
+          created_at: string
+          fee_usd: number
+          id: string
+          market_id: string
+          pnl_usd: number | null
+          position_id: string | null
+          price: number
+          side: Database["public"]["Enums"]["perp_position_side"]
+          size_usd: number
+          wallet_address: string
+        }
+        Insert: {
+          action?: string
+          collateral_usd: number
+          created_at?: string
+          fee_usd?: number
+          id?: string
+          market_id: string
+          pnl_usd?: number | null
+          position_id?: string | null
+          price: number
+          side: Database["public"]["Enums"]["perp_position_side"]
+          size_usd: number
+          wallet_address: string
+        }
+        Update: {
+          action?: string
+          collateral_usd?: number
+          created_at?: string
+          fee_usd?: number
+          id?: string
+          market_id?: string
+          pnl_usd?: number | null
+          position_id?: string | null
+          price?: number
+          side?: Database["public"]["Enums"]["perp_position_side"]
+          size_usd?: number
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_trades_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "perp_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perp_trades_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "perp_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perp_vault_deposits: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          deposit_type: string
+          id: string
+          market_id: string
+          tx_hash: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          deposit_type?: string
+          id?: string
+          market_id: string
+          tx_hash?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          deposit_type?: string
+          id?: string
+          market_id?: string
+          tx_hash?: string | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perp_vault_deposits_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "perp_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pool_state_cache: {
         Row: {
           bonding_progress: number | null
@@ -12349,6 +12745,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      perp_market_status: "pending" | "active" | "paused" | "closed"
+      perp_order_status: "pending" | "filled" | "cancelled" | "failed"
+      perp_order_type: "market" | "limit"
+      perp_position_side: "long" | "short"
+      perp_position_status: "open" | "closed" | "liquidated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -12477,6 +12878,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      perp_market_status: ["pending", "active", "paused", "closed"],
+      perp_order_status: ["pending", "filled", "cancelled", "failed"],
+      perp_order_type: ["market", "limit"],
+      perp_position_side: ["long", "short"],
+      perp_position_status: ["open", "closed", "liquidated"],
     },
   },
 } as const
