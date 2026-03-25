@@ -315,7 +315,7 @@ export default function BtcMemeDetailPage() {
 
               {myBalance && myBalance.balance > 0 && (
                 <div className="bg-muted/20 rounded-lg p-2 text-xs space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Your tokens</span><span className="font-mono">{formatNum(myBalance.balance)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Your tokens</span><span className="font-mono">{myBalance.balance.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Avg buy price</span><span className="font-mono">{formatBtc(myBalance.avg_buy_price_btc || 0)}</span></div>
                 </div>
               )}
