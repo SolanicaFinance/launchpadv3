@@ -149,7 +149,7 @@ export function MentionerTab() {
   const [formSourceUrl, setFormSourceUrl] = useState("");
   const [formInterval, setFormInterval] = useState("3");
   const [formPitch, setFormPitch] = useState(
-    "Saturn Terminal is a recently launched Trading Terminal product. It supports trading on Solana, BNB Chain, and has launched Bitcoin meme trading with its own protocol called TAT. The platform has a token called CLAW. The team is looking for investors and collaborators."
+    "Saturn Terminal is a recently launched Trading Terminal product. It supports trading on Solana, BNB Chain, and has launched Bitcoin meme trading with its own protocol called TAT (Trade Anything Terminal). The platform token is $SATURN on $BNB. The team is looking for investors and collaborators."
   );
 
   const fetchData = useCallback(async () => {
