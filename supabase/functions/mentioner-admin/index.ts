@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
         const pitches: Array<{ username: string; message: string }> = [];
         for (const username of usernames.slice(0, numPitches)) {
           const pitch = await generatePitch(username, campaign?.pitch_template);
-          pitches.push({ username, message: `@${username} ${pitch}` });
+          pitches.push({ username, message: pitch }); // pitch already includes @username
           // Small delay to avoid rate limiting
           await new Promise(r => setTimeout(r, 300));
         }
