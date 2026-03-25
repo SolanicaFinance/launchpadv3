@@ -88,7 +88,7 @@ const V2BitcoinModePage = lazyWithRetry(() => import("./pages/V2BitcoinModePage"
 const V2BtcMemeLaunchPage = lazyWithRetry(() => import("./pages/V2BtcMemeLaunchPage"));
 const V2BtcMemeDetailPage = lazyWithRetry(() => import("./pages/V2BtcMemeDetailPage"));
 const TATWhitepaperPage = lazyWithRetry(() => import("./pages/TATWhitepaperPage"));
-
+const PerpsPage = lazyWithRetry(() => import("./pages/PerpsPage"));
 
 const HomePage = lazyWithRetry(() => import("./pages/HomePage"));
 
@@ -230,6 +230,8 @@ const App = () => (
                      <Route path="/panel" element={<PanelPage />} />
                      <Route path="/merch" element={<MerchStorePage />} />
                      <Route path="/leverage" element={<LeveragePage />} />
+                     <Route path="/perps" element={<PerpsPage />} />
+                     <Route path="/perps/trade/:tokenAddress" element={<PerpsPage />} />
                      <Route path="/meteorite" element={<MeteoritePage />} />
                      <Route path="/dexlist" element={<DexListPage />} />
                      <Route path="/banner-maker" element={<BannerMakerPage />} />
