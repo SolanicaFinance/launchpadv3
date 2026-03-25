@@ -136,7 +136,7 @@ function fireAndForget(url: string, body: Record<string, unknown>) {
 }
 
 /** Send trade notification to Telegram group */
-function sendTelegramTradeNotification(params: {
+async function sendTelegramTradeNotification(params: {
   tradeType: string;
   ticker: string;
   tokenName: string;
