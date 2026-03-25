@@ -1,10 +1,12 @@
 /**
- * Shared Telegram notification helper for all trade/launch edge functions.
- * Uses TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID env vars.
+ * Shared Telegram + CAPTCHA.social notification helper for all trade/launch edge functions.
+ * Uses TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID env vars for Telegram.
+ * Uses CAPTCHA_SOCIAL_API_KEY for captcha.social auto-posting.
  */
 
 const BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN";
 const CHAT_ID_KEY = "TELEGRAM_CHAT_ID";
+const CAPTCHA_API_BASE = "https://proficient-magpie-162.convex.site/api/v1";
 
 function shortWallet(addr?: string): string {
   if (!addr) return "Unknown";
