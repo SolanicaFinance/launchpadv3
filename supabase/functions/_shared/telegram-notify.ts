@@ -163,4 +163,7 @@ export async function notifyBnbLaunch(params: {
 <a href="https://saturntrade.lovable.app/trade/${params.tokenAddress}">Trade on Saturn</a>`;
 
   await sendTelegramNotification(text);
+
+  // Also post to CAPTCHA.social for launches
+  await postToCaptcha(`🚀 NEW LAUNCH: $${params.ticker} (${params.name}) on BNB Chain!\n\nCA: ${params.tokenAddress}\n\nTrade now → saturntrade.lovable.app/trade/${params.tokenAddress}`);
 }
