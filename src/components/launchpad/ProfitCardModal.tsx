@@ -41,9 +41,11 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
 
   if (!data) return null;
 
-  const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL';
-  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : data.chain === 'btc' ? BTC_LOGO : SOL_LOGO;
+  const isBtc = data.chain === 'btc';
+  const currencyLabel = data.chain === 'bnb' ? 'BNB' : isBtc ? 'BTC' : 'SOL';
+  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : isBtc ? BTC_LOGO : SOL_LOGO;
   const walletAddress = data.chain === 'bnb' ? evmAddress : solanaAddress;
+  const amountDecimals = isBtc ? 8 : 4;
 
   const isBuy = data.action === "buy";
   const hasPnl = data.pnlPercent !== undefined && data.pnlPercent !== null;
