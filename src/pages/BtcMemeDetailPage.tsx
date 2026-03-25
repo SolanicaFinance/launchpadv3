@@ -16,7 +16,22 @@ import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
   if (v >= 0.001) return `${v.toFixed(6)} BTC`;
-  return `${v.toFixed(8)} BTC`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} BTC`;
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} BTC`;
+}
+
+function formatUsdCompact(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
+  if (v >= 1) return `$${v.toFixed(2)}`;
+  if (v >= 0.01) return `$${v.toFixed(4)}`;
+  if (v >= 0.0001) return `$${v.toFixed(6)}`;
+  if (v > 0) {
+    const s = v.toFixed(12).replace(/0+$/, '');
+    return `$${s}`;
+  }
+  return '$0';
 }
 
 function formatNum(v: number) {
