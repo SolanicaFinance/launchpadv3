@@ -5758,6 +5758,98 @@ export type Database = {
           },
         ]
       }
+      mentioner_campaigns: {
+        Row: {
+          account_id: string
+          created_at: string
+          current_index: number
+          id: string
+          interval_minutes: number
+          is_active: boolean
+          pitch_template: string | null
+          sent_count: number
+          socks5_url: string | null
+          source_url: string | null
+          source_username: string
+          total_targets: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          current_index?: number
+          id?: string
+          interval_minutes?: number
+          is_active?: boolean
+          pitch_template?: string | null
+          sent_count?: number
+          socks5_url?: string | null
+          source_url?: string | null
+          source_username: string
+          total_targets?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          current_index?: number
+          id?: string
+          interval_minutes?: number
+          is_active?: boolean
+          pitch_template?: string | null
+          sent_count?: number
+          socks5_url?: string | null
+          source_url?: string | null
+          source_username?: string
+          total_targets?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentioner_targets: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          display_name: string | null
+          error_message: string | null
+          id: string
+          reply_text: string | null
+          sent_at: string | null
+          status: string
+          username: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          display_name?: string | null
+          error_message?: string | null
+          id?: string
+          reply_text?: string | null
+          sent_at?: string | null
+          status?: string
+          username: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          display_name?: string | null
+          error_message?: string | null
+          id?: string
+          reply_text?: string | null
+          sent_at?: string | null
+          status?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentioner_targets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "mentioner_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merch_orders: {
         Row: {
           buyer_email: string
