@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBtcWallet } from "@/contexts/BtcWalletContext";
 import { useBtcMemeToken, useBtcMemeTrades, useBtcMemeBalance, useBtcTradingBalance } from "@/hooks/useBtcMemeTokens";
+import { useBtcUsdPrice } from "@/hooks/useBtcUsdPrice";
 import { BtcConnectWalletModal } from "@/components/bitcoin/BtcConnectWalletModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +16,22 @@ import { BtcMemeHoldersTable } from "@/components/bitcoin/BtcMemeHoldersTable";
 function formatBtc(v: number) {
   if (v >= 1) return `${v.toFixed(4)} BTC`;
   if (v >= 0.001) return `${v.toFixed(6)} BTC`;
-  return `${v.toFixed(8)} BTC`;
+  if (v >= 0.00000001) return `${v.toFixed(8)} BTC`;
+  const s = v.toFixed(12).replace(/0+$/, '');
+  return `${s} BTC`;
+}
+
+function formatUsdCompact(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
+  if (v >= 1) return `$${v.toFixed(2)}`;
+  if (v >= 0.01) return `$${v.toFixed(4)}`;
+  if (v >= 0.0001) return `$${v.toFixed(6)}`;
+  if (v > 0) {
+    const s = v.toFixed(12).replace(/0+$/, '');
+    return `$${s}`;
+  }
+  return '$0';
 }
 
 function formatNum(v: number) {
@@ -46,6 +62,7 @@ export default function BtcMemeDetailPage() {
   const { data: trades } = useBtcMemeTrades(id);
   const { data: myBalance } = useBtcMemeBalance(id, address);
   const { data: myBtcBalance } = useBtcTradingBalance(address);
+  const btcUsdPrice = useBtcUsdPrice();
 
   const { data: holders, isLoading: holdersLoading } = useBtcMemeHolders(id, token?.total_supply, token?.creator_wallet);
 
@@ -192,11 +209,17 @@ export default function BtcMemeDetailPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase">Price</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.price_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.price_btc * btcUsdPrice) : formatBtc(token.price_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.price_btc)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase">Market Cap</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.market_cap_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.market_cap_btc * btcUsdPrice) : formatBtc(token.market_cap_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.market_cap_btc)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase flex items-center gap-1"><Users className="w-3 h-3" /> Holders</div>
@@ -204,7 +227,10 @@ export default function BtcMemeDetailPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Volume</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.volume_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.volume_btc * btcUsdPrice) : formatBtc(token.volume_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.volume_btc)}</div>
         </div>
       </div>
 

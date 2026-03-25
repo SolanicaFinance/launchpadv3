@@ -188,7 +188,11 @@ export function BtcMemeChart({ trades, currentPrice, height = 420 }: BtcMemeChar
       localization: {
         priceFormatter: (price: number): string => {
           if (price === 0) return "0";
-          if (price < 0.00000001) return price.toExponential(2);
+          if (price < 0.00000001) {
+            // Show significant digits without scientific notation
+            const s = price.toFixed(12).replace(/0+$/, '');
+            return s;
+          }
           if (price < 0.000001) return price.toFixed(10);
           if (price < 0.01) return price.toFixed(8);
           return price.toFixed(8);
