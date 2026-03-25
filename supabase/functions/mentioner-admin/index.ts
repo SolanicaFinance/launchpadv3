@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
         const pitches: Array<{ username: string; message: string }> = [];
         for (const username of usernames.slice(0, numPitches)) {
           const pitch = await generatePitch(username, campaign?.pitch_template);
-          pitches.push({ username, message: `@${username} ${pitch}` });
+          pitches.push({ username, message: pitch }); // pitch already includes @username
           // Small delay to avoid rate limiting
           await new Promise(r => setTimeout(r, 300));
         }
@@ -569,7 +569,8 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
       throw new Error("Account missing auth_token or ct0 credentials");
     }
 
-    const tweetText = `@${target.username} ${pitchText}`;
+    // pitchText already starts with @username from generatePitch
+    const tweetText = pitchText;
 
     // Auto-provision proxy
     let proxyInfo: { ip_port: string; socks_auth: string | null } | null = null;
@@ -662,11 +663,11 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
 async function generatePitch(targetUsername: string, template?: string | null): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
-    return `Hi, shooting in the dark here — we recently launched Saturn Terminal, a full Trading Terminal for Solana, BNB, and Bitcoin. We have a unique BTC meme trading protocol called TAT. Would love to explore if you'd be interested in collaborating or investing. DM us if curious!`;
+    return `@${targetUsername} hey! We just launched Saturn Terminal on $BNB — a trading terminal that also supports Solana and our own BTC meme trading protocol TAT. Would love to connect if you're open to it, DM us!`;
   }
 
   const baseContext = template || 
-    `Saturn Terminal is a recently launched Trading Terminal product. It supports trading on Solana, BNB Chain, and has launched Bitcoin meme trading with its own protocol called TAT (Trade Anything Terminal). The platform has a token called CLAW. The team is looking for investors and collaborators.`;
+    `Saturn Terminal is a recently launched Trading Terminal on BNB Chain ($BNB). It also supports trading on Solana, and has launched Bitcoin meme trading with its own protocol called TAT (Trade Anything Terminal). The platform token is $SATURN on BNB Chain. The team is looking for investors, partners, and collaborators.`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -679,39 +680,63 @@ async function generatePitch(targetUsername: string, template?: string | null): 
       messages: [
         {
           role: "system",
-          content: `You write short, professional but friendly pitch messages for X (Twitter). The message will be sent as a mention/reply to crypto influencers. Rules:
-- DO NOT start with @username (it will be prepended automatically)
-- Start with a greeting like "Hi", "Hey", "Hello" etc
-- Keep it between 200-280 characters (Twitter limit minus the @tag)
-- Mention Saturn Terminal as the product name
-- Mention it supports Solana, BNB trading and Bitcoin meme trading with TAT protocol  
-- Ask about investing or collaborating
-- End with something like "Shoot a DM if interested" or similar
-- Be unique each time, vary the wording significantly
-- Sound human, not robotic
+          content: `You write short, warm and friendly outreach messages for X (Twitter). These are genuine, human-sounding messages to crypto people — NOT cold sales pitches. Rules:
+
+FORMATTING:
+- The message MUST start with "@${targetUsername}" — this is critical, it's how X treats it as a mention
+- The cashtag $BNB MUST appear in the first 2 sentences naturally
+- Keep total length between 180-270 characters INCLUDING the @tag
+- Do NOT add any other @mentions
+
+CONTENT:
+- Mention Saturn Terminal as the product — a trading terminal built on $BNB
+- Briefly mention it also supports Solana trading and BTC meme trading via TAT protocol
+- The platform token is $SATURN (NOT $CLAW) — mention it naturally if it fits, don't force it
+- Suggest connecting, collaborating, or chatting — keep it casual
+- End with something inviting like "DM us if you're curious" or "would love to chat"
+
+TONE:
+- Friendly, casual, approachable — like messaging someone you respect
+- NOT corporate, NOT salesy, NOT desperate
+- Sound like a real person, not a bot
+- Vary greetings: "hey", "yo", "what's up", "hey there", etc.
+- Do NOT use "excited", "thrilled", "amazing", "incredible"
+- Max 1 emoji, and only if it feels natural (often none is better)
 - Do NOT use hashtags
-- Do NOT use emojis excessively (max 1-2)`,
+
+UNIQUENESS:
+- Every single message must be completely different in structure and wording
+- Never reuse the same opening, closing, or sentence patterns
+- Vary sentence length, rhythm, and structure significantly`,
         },
         {
           role: "user",
-          content: `Generate a unique pitch message for @${targetUsername}. Context about the project: ${baseContext}`,
+          content: `Write a unique outreach message for @${targetUsername}. Project context: ${baseContext}`,
         },
       ],
+      temperature: 0.9,
     }),
   });
 
   if (!resp.ok) {
     console.error("AI pitch generation failed:", resp.status);
-    return `Hi, shooting in the dark — we recently launched Saturn Terminal, a Trading Terminal for Solana, BNB & Bitcoin. We built our own BTC meme trading protocol called TAT. Would love to explore a collaboration. DM us if interested!`;
+    return `@${targetUsername} hey! We just launched Saturn Terminal on $BNB — a trading terminal with Solana support and our own BTC meme protocol TAT. Would love to connect, DM us if you're curious!`;
   }
 
   const data = await resp.json();
-  const content = data.choices?.[0]?.message?.content?.trim();
+  let content = data.choices?.[0]?.message?.content?.trim();
   if (!content) {
-    return `Hey there! We just launched Saturn Terminal — a full trading platform for Solana, BNB, and Bitcoin memes via our TAT protocol. Looking for partners and backers. Interested? Shoot us a DM!`;
+    return `@${targetUsername} yo, Saturn Terminal just went live on $BNB — full trading terminal with Solana + BTC meme trading via TAT. Looking for cool people to build with, hit us up!`;
   }
 
-  return content.replace(/^@\w+[\s,]*/, "").trim();
+  // Ensure message starts with @username
+  content = content.replace(/^["']|["']$/g, "").trim();
+  if (!content.startsWith(`@${targetUsername}`)) {
+    content = content.replace(/^@\w+[\s,]*/, "").trim();
+    content = `@${targetUsername} ${content}`;
+  }
+
+  return content;
 }
 
 // ═══════════════════════════════════════════════
