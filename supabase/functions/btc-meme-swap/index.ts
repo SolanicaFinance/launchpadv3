@@ -134,3 +134,47 @@ function fireAndForget(url: string, body: Record<string, unknown>) {
     body: JSON.stringify(body),
   }).catch(err => console.warn("[btc-meme-swap] Fire-and-forget error:", err));
 }
+
+/** Send trade notification to Telegram group */
+function sendTelegramTradeNotification(params: {
+  tradeType: string;
+  ticker: string;
+  tokenName: string;
+  btcAmount: number;
+  tokenAmount: number;
+  priceBtc: number;
+  marketCapBtc: number;
+  walletAddress: string;
+  bondingProgress: number;
+}) {
+  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
+  const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
+  if (!botToken || !chatId) return;
+
+  const isBuy = params.tradeType === "buy";
+  const emoji = isBuy ? "🟢" : "🔴";
+  const action = isBuy ? "BUY" : "SELL";
+  const shortWallet = `${params.walletAddress.slice(0, 4)}...${params.walletAddress.slice(-4)}`;
+  const mcapStr = params.marketCapBtc < 0.01
+    ? `${(params.marketCapBtc * 1e8).toFixed(0)} sats`
+    : `${params.marketCapBtc.toFixed(4)} BTC`;
+
+  const text = `${emoji} <b>${action}</b> $${params.ticker}
+
+💰 ${params.btcAmount.toFixed(8)} BTC → ${params.tokenAmount.toLocaleString()} ${params.ticker}
+📊 MCap: ${mcapStr} | Progress: ${params.bondingProgress.toFixed(1)}%
+👤 ${shortWallet}
+
+<a href="https://saturntrade.lovable.app/btc/meme">Trade on Saturn</a>`;
+
+  fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+    }),
+  }).catch(err => console.warn("[btc-meme-swap] Telegram error:", err));
+}
