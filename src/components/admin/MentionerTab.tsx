@@ -137,6 +137,10 @@ export function MentionerTab() {
   const [todayPurchases, setTodayPurchases] = useState(0);
   const [buyingProxy, setBuyingProxy] = useState(false);
 
+  // Test pitches state
+  const [testPitches, setTestPitches] = useState<Array<{ username: string; message: string }>>([]);
+  const [generatingPitches, setGeneratingPitches] = useState(false);
+
   // New campaign form
   const [showForm, setShowForm] = useState(false);
   const [formAccountId, setFormAccountId] = useState("");
