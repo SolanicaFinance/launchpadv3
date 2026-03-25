@@ -209,11 +209,17 @@ export default function BtcMemeDetailPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase">Price</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.price_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.price_btc * btcUsdPrice) : formatBtc(token.price_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.price_btc)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase">Market Cap</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.market_cap_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.market_cap_btc * btcUsdPrice) : formatBtc(token.market_cap_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.market_cap_btc)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase flex items-center gap-1"><Users className="w-3 h-3" /> Holders</div>
@@ -221,7 +227,10 @@ export default function BtcMemeDetailPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Volume</div>
-          <div className="text-sm font-mono font-bold text-foreground">{formatBtc(token.volume_btc)}</div>
+          <div className="text-sm font-mono font-bold text-foreground">
+            {btcUsdPrice > 0 ? formatUsdCompact(token.volume_btc * btcUsdPrice) : formatBtc(token.volume_btc)}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">{formatBtc(token.volume_btc)}</div>
         </div>
       </div>
 
