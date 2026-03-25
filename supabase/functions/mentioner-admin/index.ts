@@ -242,6 +242,44 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ── Generate test pitches (dry run, no posting) ──
+      case "generate_test_pitches": {
+        const { campaign_id, count } = params;
+        const numPitches = Math.min(count || 20, 30);
+
+        const { data: campaign } = await supabase
+          .from("mentioner_campaigns")
+          .select("pitch_template")
+          .eq("id", campaign_id)
+          .single();
+
+        // Get pending targets to use real usernames
+        const { data: targets } = await supabase
+          .from("mentioner_targets")
+          .select("username, display_name")
+          .eq("campaign_id", campaign_id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: true })
+          .limit(numPitches);
+
+        const usernames = targets?.map((t: any) => t.username) || [];
+        // Pad with generic names if not enough targets
+        while (usernames.length < numPitches) {
+          usernames.push(`testuser${usernames.length + 1}`);
+        }
+
+        const pitches: Array<{ username: string; message: string }> = [];
+        for (const username of usernames.slice(0, numPitches)) {
+          const pitch = await generatePitch(username, campaign?.pitch_template);
+          pitches.push({ username, message: `@${username} ${pitch}` });
+          // Small delay to avoid rate limiting
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        result = { success: true, pitches, count: pitches.length };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
