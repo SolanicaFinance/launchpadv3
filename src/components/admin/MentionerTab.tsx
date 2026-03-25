@@ -581,6 +581,15 @@ export function MentionerTab() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => generateTestPitches(c.id, 20)}
+                            disabled={generatingPitches || c.total_targets === 0}
+                            title="Test: generate 20 sample pitches"
+                          >
+                            {generatingPitches ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-xs font-bold">AI</span>}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => processNext(c.id)}
                             disabled={sending || c.total_targets === 0}
                             title="Send next mention"
