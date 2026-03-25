@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { notifySolLaunch } from "../_shared/telegram-notify.ts";
 
 const VERSION = "v1.3.0";
 const DEPLOYED_AT = new Date().toISOString();
