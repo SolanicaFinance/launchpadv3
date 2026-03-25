@@ -1,0 +1,136 @@
+/**
+ * Shared Telegram notification helper for all trade/launch edge functions.
+ * Uses TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID env vars.
+ */
+
+const BOT_TOKEN_KEY = "TELEGRAM_BOT_TOKEN";
+const CHAT_ID_KEY = "TELEGRAM_CHAT_ID";
+
+function shortWallet(addr?: string): string {
+  if (!addr) return "Unknown";
+  return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+}
+
+export async function sendTelegramNotification(text: string): Promise<void> {
+  const botToken = Deno.env.get(BOT_TOKEN_KEY);
+  const chatId = Deno.env.get(CHAT_ID_KEY);
+  if (!botToken || !chatId) {
+    console.warn("[telegram-notify] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
+    return;
+  }
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error("[telegram-notify] Send failed:", res.status, errBody);
+    }
+  } catch (err) {
+    console.error("[telegram-notify] Error:", err);
+  }
+}
+
+// ── SOL trade notification ──
+export async function notifySolTrade(params: {
+  tradeType: "buy" | "sell";
+  ticker: string;
+  tokenName: string;
+  amountSol: number;
+  estimatedOutput: number;
+  walletAddress: string;
+  signature: string;
+  mintAddress: string;
+}) {
+  const isBuy = params.tradeType === "buy";
+  const emoji = isBuy ? "🟢" : "🔴";
+  const action = isBuy ? "BUY" : "SELL";
+  const sw = shortWallet(params.walletAddress);
+
+  const text = `${emoji} <b>${action}</b> $${params.ticker || params.tokenName || "SOL Token"}
+
+💰 ${params.amountSol.toFixed(4)} SOL${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} tokens` : ""}
+👤 ${sw}
+🔗 <a href="https://solscan.io/tx/${params.signature}">View TX</a>
+
+<a href="https://saturntrade.lovable.app/token/${params.mintAddress}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+}
+
+// ── SOL token launch notification ──
+export async function notifySolLaunch(params: {
+  name: string;
+  ticker: string;
+  creatorWallet: string;
+  mintAddress: string;
+}) {
+  const sw = shortWallet(params.creatorWallet);
+
+  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name})
+
+🪙 Chain: Solana
+👤 Creator: ${sw}
+📋 CA: <code>${params.mintAddress}</code>
+
+<a href="https://saturntrade.lovable.app/token/${params.mintAddress}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+}
+
+// ── BNB trade notification ──
+export async function notifyBnbTrade(params: {
+  tradeType: "buy" | "sell";
+  ticker: string;
+  tokenName: string;
+  amountBnb: number;
+  estimatedOutput: number;
+  walletAddress: string;
+  txHash: string;
+  tokenAddress: string;
+}) {
+  const isBuy = params.tradeType === "buy";
+  const emoji = isBuy ? "🟢" : "🔴";
+  const action = isBuy ? "BUY" : "SELL";
+  const sw = shortWallet(params.walletAddress);
+
+  const text = `${emoji} <b>${action}</b> $${params.ticker || params.tokenName || "BNB Token"}
+
+💰 ${params.amountBnb.toFixed(4)} BNB${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} tokens` : ""}
+🔗 <a href="https://bscscan.com/tx/${params.txHash}">View TX</a>
+👤 ${sw}
+
+<a href="https://saturntrade.lovable.app/trade/${params.tokenAddress}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+}
+
+// ── BNB token launch notification ──
+export async function notifyBnbLaunch(params: {
+  name: string;
+  ticker: string;
+  creatorWallet: string;
+  tokenAddress: string;
+  txHash: string;
+}) {
+  const sw = shortWallet(params.creatorWallet);
+
+  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name})
+
+🪙 Chain: BNB
+👤 Creator: ${sw}
+📋 CA: <code>${params.tokenAddress}</code>
+🔗 <a href="https://bscscan.com/tx/${params.txHash}">View TX</a>
+
+<a href="https://saturntrade.lovable.app/trade/${params.tokenAddress}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+}
