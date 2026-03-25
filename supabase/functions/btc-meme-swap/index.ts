@@ -86,6 +86,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Send Telegram notification for the trade
+    sendTelegramTradeNotification({
+      tradeType,
+      ticker: (trade.ticker as string) || "???",
+      tokenName: (trade.tokenName as string) || "",
+      btcAmount: trade.btcAmount as number,
+      tokenAmount: trade.tokenAmount as number,
+      priceBtc: trade.priceBtc as number,
+      marketCapBtc: trade.marketCapBtc as number,
+      walletAddress,
+      bondingProgress: trade.bondingProgress as number,
+    });
+
     return new Response(JSON.stringify({
       success: true,
       trade: {
