@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { notifyBtcLaunch } from "../_shared/telegram-notify.ts";
 
 const TOTAL_SUPPLY = 1_000_000_000;
 const INITIAL_VIRTUAL_BTC = 0.3; // 30,000,000 sats per TAT spec
@@ -298,6 +299,14 @@ Deno.serve(async (req) => {
     } else {
       console.log(`[btc-meme-create] Genesis embedded in payment tx ${paymentTxId} — token ${token.id} is immediately active`);
     }
+
+    // Send Telegram + CAPTCHA launch notification
+    await notifyBtcLaunch({
+      name: name.trim(),
+      ticker: cleanTicker,
+      creatorWallet,
+      tokenId: token.id,
+    });
 
     return new Response(JSON.stringify({
       success: true,

@@ -5,12 +5,25 @@ const corsHeaders = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { notifyBtcTrade } from "../_shared/telegram-notify.ts";
 
 function getSupabase() {
   return createClient(
     Deno.env.get("SUPABASE_URL") || "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
   );
+}
+
+/** Simple in-memory throttle: one notification per token per 30s */
+const lastNotifyTime = new Map<string, number>();
+const THROTTLE_MS = 30_000;
+
+function shouldNotify(tokenId: string): boolean {
+  const now = Date.now();
+  const last = lastNotifyTime.get(tokenId) || 0;
+  if (now - last < THROTTLE_MS) return false;
+  lastNotifyTime.set(tokenId, now);
+  return true;
 }
 
 Deno.serve(async (req) => {
@@ -34,9 +47,6 @@ Deno.serve(async (req) => {
 
     const supabase = getSupabase();
 
-    // Execute the atomic swap — all validation, locking, balance updates,
-    // and pool state changes happen inside a single Postgres transaction.
-    // SELECT ... FOR UPDATE on the token row serializes concurrent trades.
     const { data: result, error: rpcErr } = await supabase.rpc("execute_btc_swap", {
       p_token_id: tokenId,
       p_wallet_address: walletAddress,
@@ -45,7 +55,6 @@ Deno.serve(async (req) => {
     });
 
     if (rpcErr) {
-      // Postgres RAISE EXCEPTION messages come through as the error message
       const msg = rpcErr.message || "Swap failed";
       const status = msg.includes("not found") ? 404 : 400;
       return new Response(JSON.stringify({ error: msg }), {
@@ -53,10 +62,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // result is the jsonb returned by execute_btc_swap
     const trade = result as Record<string, unknown>;
 
-    // Fire Solana proof asynchronously (don't block the trade response)
     if (trade.isGraduated) {
       fireAndForget(`${Deno.env.get("SUPABASE_URL")}/functions/v1/btc-meme-graduate`, { tokenId });
       console.log(`[btc-meme-swap] 🎓 Token ${trade.ticker} graduated! Migration initiated.`);
@@ -86,18 +93,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send Telegram notification for the trade (must await or Deno kills it on shutdown)
-    await sendTelegramTradeNotification({
-      tradeType,
-      ticker: (trade.ticker as string) || "???",
-      tokenName: (trade.tokenName as string) || "",
-      btcAmount: trade.btcAmount as number,
-      tokenAmount: trade.tokenAmount as number,
-      priceBtc: trade.priceBtc as number,
-      marketCapBtc: trade.marketCapBtc as number,
-      walletAddress,
-      bondingProgress: trade.bondingProgress as number,
-    });
+    // Throttled Telegram notification — skip if another was sent for this token within 30s
+    if (shouldNotify(tokenId)) {
+      await notifyBtcTrade({
+        tradeType,
+        ticker: (trade.ticker as string) || "???",
+        tokenName: (trade.tokenName as string) || "",
+        btcAmount: trade.btcAmount as number,
+        tokenAmount: trade.tokenAmount as number,
+        priceBtc: trade.priceBtc as number,
+        realBtcReserves: (trade.realBtcReserves as number) ?? 0,
+        walletAddress,
+        bondingProgress: trade.bondingProgress as number,
+        tokenId,
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
@@ -133,56 +143,4 @@ function fireAndForget(url: string, body: Record<string, unknown>) {
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
     body: JSON.stringify(body),
   }).catch(err => console.warn("[btc-meme-swap] Fire-and-forget error:", err));
-}
-
-/** Send trade notification to Telegram group */
-async function sendTelegramTradeNotification(params: {
-  tradeType: string;
-  ticker: string;
-  tokenName: string;
-  btcAmount: number;
-  tokenAmount: number;
-  priceBtc: number;
-  marketCapBtc: number;
-  walletAddress: string;
-  bondingProgress: number;
-}) {
-  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
-  const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
-  if (!botToken || !chatId) return;
-
-  const isBuy = params.tradeType === "buy";
-  const emoji = isBuy ? "🟢" : "🔴";
-  const action = isBuy ? "BUY" : "SELL";
-  const shortWallet = `${params.walletAddress.slice(0, 4)}...${params.walletAddress.slice(-4)}`;
-  const mcapStr = params.marketCapBtc < 0.01
-    ? `${(params.marketCapBtc * 1e8).toFixed(0)} sats`
-    : `${params.marketCapBtc.toFixed(4)} BTC`;
-
-  const text = `${emoji} <b>${action}</b> $${params.ticker}
-
-💰 ${params.btcAmount.toFixed(8)} BTC → ${params.tokenAmount.toLocaleString()} ${params.ticker}
-📊 MCap: ${mcapStr} | Progress: ${params.bondingProgress.toFixed(1)}%
-👤 ${shortWallet}
-
-<a href="https://saturntrade.lovable.app/btc/meme">Trade on Saturn</a>`;
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
-    });
-    if (!res.ok) {
-      const errBody = await res.text();
-      console.error("[btc-meme-swap] Telegram send failed:", res.status, errBody);
-    }
-  } catch (err) {
-    console.error("[btc-meme-swap] Telegram error:", err);
-  }
 }

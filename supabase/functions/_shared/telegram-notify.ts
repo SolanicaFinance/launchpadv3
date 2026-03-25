@@ -38,6 +38,7 @@ export async function sendTelegramNotification(text: string): Promise<void> {
     }
   } catch (err) {
     console.error("[telegram-notify] Error:", err);
+  }
 }
 
 /** Post to captcha.social (fire-and-forget style, errors are logged not thrown) */
@@ -64,7 +65,6 @@ async function postToCaptcha(content: string): Promise<void> {
     console.error("[captcha-notify] Error:", err);
   }
 }
-}
 
 // ── SOL trade notification ──
 export async function notifySolTrade(params: {
@@ -81,10 +81,11 @@ export async function notifySolTrade(params: {
   const emoji = isBuy ? "🟢" : "🔴";
   const action = isBuy ? "BUY" : "SELL";
   const sw = shortWallet(params.walletAddress);
+  const label = params.ticker || params.tokenName || "SOL Token";
 
-  const text = `${emoji} <b>${action}</b> $${params.ticker || params.tokenName || "SOL Token"}
+  const text = `${emoji} <b>${action}</b> $${label} 🟣 SOL
 
-💰 ${params.amountSol.toFixed(4)} SOL${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} tokens` : ""}
+💰 ${params.amountSol.toFixed(4)} SOL${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} ${params.ticker || "tokens"}` : ""}
 👤 ${sw}
 🔗 <a href="https://solscan.io/tx/${params.signature}">View TX</a>
 
@@ -102,7 +103,7 @@ export async function notifySolLaunch(params: {
 }) {
   const sw = shortWallet(params.creatorWallet);
 
-  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name})
+  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name}) 🟣 SOL
 
 🪙 Chain: Solana
 👤 Creator: ${sw}
@@ -112,7 +113,6 @@ export async function notifySolLaunch(params: {
 
   await sendTelegramNotification(text);
 
-  // Also post to CAPTCHA.social for launches
   await postToCaptcha(`🚀 NEW LAUNCH: $${params.ticker} (${params.name}) on Solana!\n\nCA: ${params.mintAddress}\n\nTrade now → saturntrade.lovable.app/token/${params.mintAddress}`);
 }
 
@@ -131,10 +131,11 @@ export async function notifyBnbTrade(params: {
   const emoji = isBuy ? "🟢" : "🔴";
   const action = isBuy ? "BUY" : "SELL";
   const sw = shortWallet(params.walletAddress);
+  const label = params.ticker || params.tokenName || "BNB Token";
 
-  const text = `${emoji} <b>${action}</b> $${params.ticker || params.tokenName || "BNB Token"}
+  const text = `${emoji} <b>${action}</b> $${label} 🟡 BNB
 
-💰 ${params.amountBnb.toFixed(4)} BNB${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} tokens` : ""}
+💰 ${params.amountBnb.toFixed(4)} BNB${params.estimatedOutput ? ` → ${params.estimatedOutput.toLocaleString()} ${params.ticker || "tokens"}` : ""}
 🔗 <a href="https://bscscan.com/tx/${params.txHash}">View TX</a>
 👤 ${sw}
 
@@ -153,7 +154,7 @@ export async function notifyBnbLaunch(params: {
 }) {
   const sw = shortWallet(params.creatorWallet);
 
-  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name})
+  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name}) 🟡 BNB
 
 🪙 Chain: BNB
 👤 Creator: ${sw}
@@ -164,6 +165,61 @@ export async function notifyBnbLaunch(params: {
 
   await sendTelegramNotification(text);
 
-  // Also post to CAPTCHA.social for launches
   await postToCaptcha(`🚀 NEW LAUNCH: $${params.ticker} (${params.name}) on BNB Chain!\n\nCA: ${params.tokenAddress}\n\nTrade now → saturntrade.lovable.app/trade/${params.tokenAddress}`);
+}
+
+// ── BTC trade notification (with throttling) ──
+export async function notifyBtcTrade(params: {
+  tradeType: "buy" | "sell";
+  ticker: string;
+  tokenName: string;
+  btcAmount: number;
+  tokenAmount: number;
+  priceBtc: number;
+  realBtcReserves: number;
+  walletAddress: string;
+  bondingProgress: number;
+  tokenId: string;
+}) {
+  const isBuy = params.tradeType === "buy";
+  const emoji = isBuy ? "🟢" : "🔴";
+  const action = isBuy ? "BUY" : "SELL";
+  const sw = shortWallet(params.walletAddress);
+  const label = params.ticker || params.tokenName || "BTC Token";
+
+  // Show real BTC reserves (actual sats deposited) instead of virtual mcap
+  const poolStr = params.realBtcReserves < 0.001
+    ? `${(params.realBtcReserves * 1e8).toFixed(0)} sats`
+    : `${params.realBtcReserves.toFixed(6)} BTC`;
+
+  const text = `${emoji} <b>${action}</b> $${label} 🟠 BTC
+
+💰 ${params.btcAmount.toFixed(8)} BTC → ${params.tokenAmount.toLocaleString()} ${params.ticker}
+📊 Pool: ${poolStr} | Progress: ${params.bondingProgress.toFixed(1)}%
+👤 ${sw}
+
+<a href="https://saturntrade.lovable.app/btc/meme/${params.tokenId}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+}
+
+// ── BTC token launch notification ──
+export async function notifyBtcLaunch(params: {
+  name: string;
+  ticker: string;
+  creatorWallet: string;
+  tokenId: string;
+}) {
+  const sw = shortWallet(params.creatorWallet);
+
+  const text = `🚀 <b>NEW LAUNCH</b> $${params.ticker} (${params.name}) 🟠 BTC
+
+🪙 Chain: Bitcoin (TAT Protocol)
+👤 Creator: ${sw}
+
+<a href="https://saturntrade.lovable.app/btc/meme/${params.tokenId}">Trade on Saturn</a>`;
+
+  await sendTelegramNotification(text);
+
+  await postToCaptcha(`🚀 NEW LAUNCH: $${params.ticker} (${params.name}) on Bitcoin (TAT Protocol)!\n\nTrade now → saturntrade.lovable.app/btc/meme/${params.tokenId}`);
 }
