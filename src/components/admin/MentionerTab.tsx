@@ -495,7 +495,7 @@ export function MentionerTab() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">
               Targets from @{activeCampaign.source_username}
-              <Badge variant="outline" className="ml-2">{targets.length} accounts</Badge>
+                          <Badge variant="outline" className="ml-2">{targets.length} accounts</Badge>
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => fetchTargets(selectedCampaign)}>
               <RefreshCw className="h-3 w-3 mr-1" /> Refresh
