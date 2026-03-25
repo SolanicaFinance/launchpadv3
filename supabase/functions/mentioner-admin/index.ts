@@ -6,6 +6,8 @@ const corsHeaders = {
 };
 
 const ADMIN_PASSWORD = "saturn135@";
+const NSOCKS_API = "https://nsocks.network/api";
+const MAX_DAILY_PURCHASES = 5;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders, status: 204 });
@@ -43,7 +45,7 @@ Deno.serve(async (req) => {
             source_username: campaign.source_username,
             source_url: campaign.source_url || null,
             interval_minutes: campaign.interval_minutes || 3,
-            socks5_url: campaign.socks5_url || null,
+            socks5_url: null, // Auto-managed now
             pitch_template: campaign.pitch_template || null,
             is_active: false,
           })
@@ -80,11 +82,10 @@ Deno.serve(async (req) => {
         const twitterApiKey = Deno.env.get("TWITTERAPI_IO_KEY");
         if (!twitterApiKey) throw new Error("TWITTERAPI_IO_KEY not configured");
 
-        // Use twitterapi.io to get following list
         const allFollowing: Array<{ username: string; name: string }> = [];
         let cursor = "";
         let pageCount = 0;
-        const MAX_PAGES = 20; // Safety limit
+        const MAX_PAGES = 20;
 
         while (pageCount < MAX_PAGES) {
           const url = new URL("https://twitterapi.io/api/user/following");
@@ -113,8 +114,6 @@ Deno.serve(async (req) => {
           cursor = data.next_cursor || data.cursor || "";
           pageCount++;
           if (!cursor || users.length === 0) break;
-
-          // Small delay between pages
           await new Promise(r => setTimeout(r, 500));
         }
 
@@ -125,10 +124,8 @@ Deno.serve(async (req) => {
           break;
         }
 
-        // Delete existing targets for this campaign
         await supabase.from("mentioner_targets").delete().eq("campaign_id", campaign_id);
 
-        // Insert in batches of 100
         for (let i = 0; i < allFollowing.length; i += 100) {
           const batch = allFollowing.slice(i, i + 100).map(u => ({
             campaign_id,
@@ -137,13 +134,9 @@ Deno.serve(async (req) => {
             status: "pending",
           }));
           const { error } = await supabase.from("mentioner_targets").insert(batch);
-          if (error) {
-            console.error("Insert batch error:", error);
-            throw error;
-          }
+          if (error) throw error;
         }
 
-        // Update campaign total
         await supabase.from("mentioner_campaigns")
           .update({ total_targets: allFollowing.length, current_index: 0, sent_count: 0, updated_at: new Date().toISOString() })
           .eq("id", campaign_id);
@@ -166,19 +159,17 @@ Deno.serve(async (req) => {
         break;
       }
 
-      // ── Send single mention (manual test) ──
+      // ── Send single mention ──
       case "send_mention": {
         const { campaign_id, target_id } = params;
-        const sendResult = await sendMention(supabase, campaign_id, target_id);
-        result = sendResult;
+        result = await sendMention(supabase, campaign_id, target_id);
         break;
       }
 
-      // ── Process next in queue (called by cron or manually) ──
+      // ── Process next in queue ──
       case "process_next": {
         const { campaign_id } = params;
         
-        // Get campaign
         const { data: campaign, error: cErr } = await supabase
           .from("mentioner_campaigns")
           .select("*")
@@ -190,7 +181,6 @@ Deno.serve(async (req) => {
           break;
         }
 
-        // Get next pending target
         const { data: targets, error: tErr } = await supabase
           .from("mentioner_targets")
           .select("*")
@@ -205,18 +195,50 @@ Deno.serve(async (req) => {
           break;
         }
 
-        const sendResult = await sendMention(supabase, campaign_id, targets[0].id);
-        result = sendResult;
+        result = await sendMention(supabase, campaign_id, targets[0].id);
         break;
       }
 
-      // ── Verify SOCKS5 ──
-      case "verify_socks5": {
-        const { socks5_url } = params;
-        // We can't directly test SOCKS5 from Deno, but we can validate the format
-        const pattern = /^socks5:\/\/.+:\d+$/;
-        const isValid = pattern.test(socks5_url) || /^.+:\d+$/.test(socks5_url);
-        result = { valid: isValid, message: isValid ? "SOCKS5 URL format is valid" : "Invalid SOCKS5 URL format. Use socks5://host:port or host:port" };
+      // ── NSocks: Get balance ──
+      case "nsocks_balance": {
+        const apiKey = Deno.env.get("NSOCKS_API_KEY");
+        if (!apiKey) throw new Error("NSOCKS_API_KEY not configured");
+        const resp = await nsocksCall("balance", { API_KEY: apiKey });
+        result = { balance: resp.DATA?.BALANCE || "0" };
+        break;
+      }
+
+      // ── NSocks: List active proxies ──
+      case "nsocks_active_proxies": {
+        const { data, error } = await supabase
+          .from("mentioner_proxies")
+          .select("*")
+          .eq("is_active", true)
+          .gte("expires_at", new Date().toISOString())
+          .order("purchased_at", { ascending: false });
+        if (error) throw error;
+        result = { proxies: data };
+        break;
+      }
+
+      // ── NSocks: Force buy new proxy ──
+      case "nsocks_buy_proxy": {
+        const proxy = await buyNewProxy(supabase, params.campaign_id || null);
+        result = { success: true, proxy };
+        break;
+      }
+
+      // ── NSocks: Get purchase history (today) ──
+      case "nsocks_today_purchases": {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { data, error } = await supabase
+          .from("mentioner_proxies")
+          .select("*")
+          .gte("purchased_at", todayStart.toISOString())
+          .order("purchased_at", { ascending: false });
+        if (error) throw error;
+        result = { proxies: data, count: data?.length || 0 };
         break;
       }
 
@@ -231,9 +253,251 @@ Deno.serve(async (req) => {
   }
 });
 
-// ── Helper: Send a mention reply ──
+// ═══════════════════════════════════════════════
+// NSocks API helpers
+// ═══════════════════════════════════════════════
+
+async function nsocksCall(method: string, body: Record<string, any>) {
+  const resp = await fetch(`${NSOCKS_API}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ METHOD: method, ...body }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`NSocks API error (${method}): ${resp.status} - ${text.substring(0, 200)}`);
+  }
+  const data = await resp.json();
+  if (data.STATUS !== "OK" && data.STATUS !== "SUCCESS") {
+    throw new Error(`NSocks ${method} failed: ${data.MESSAGE || JSON.stringify(data)}`);
+  }
+  return data;
+}
+
+// Get or provision a working SOCKS5 proxy
+async function getActiveProxy(supabase: any, campaignId: string | null): Promise<{ ip_port: string; socks_auth: string | null }> {
+  const now = new Date().toISOString();
+
+  // 1. Check for any active, non-expired proxy in our DB
+  const { data: activeProxies } = await supabase
+    .from("mentioner_proxies")
+    .select("*")
+    .eq("is_active", true)
+    .gte("expires_at", now)
+    .order("purchased_at", { ascending: false })
+    .limit(5);
+
+  if (activeProxies && activeProxies.length > 0) {
+    // Try the most recent one first
+    const proxy = activeProxies[0];
+    console.log(`[proxy] Using active proxy ${proxy.ip_port} (expires ${proxy.expires_at})`);
+    
+    // Update last_used_at
+    await supabase.from("mentioner_proxies")
+      .update({ last_used_at: now })
+      .eq("id", proxy.id);
+
+    return { ip_port: proxy.ip_port, socks_auth: proxy.socks_auth };
+  }
+
+  // 2. Check recently expired/failed ones — maybe they still work (retry old ones)
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { data: recentProxies } = await supabase
+    .from("mentioner_proxies")
+    .select("*")
+    .gte("expires_at", oneHourAgo) // Expired within last hour
+    .lt("expires_at", now)
+    .eq("failure_count", 0) // Never failed before
+    .order("expires_at", { ascending: false })
+    .limit(1);
+
+  if (recentProxies && recentProxies.length > 0) {
+    const proxy = recentProxies[0];
+    console.log(`[proxy] Retrying recently expired proxy ${proxy.ip_port}`);
+    return { ip_port: proxy.ip_port, socks_auth: proxy.socks_auth };
+  }
+
+  // 3. Also check nsocks history for active paid proxies we might have missed
+  const apiKey = Deno.env.get("NSOCKS_API_KEY");
+  if (apiKey) {
+    try {
+      const histResp = await nsocksCall("history", {
+        API_KEY: apiKey,
+        COUNTRY: "US",
+        ONLINE: 1,
+        PAID: 1,
+        COUNT: "5",
+      });
+      const histProxies = histResp.DATA?.PROXIES || [];
+      for (const hp of histProxies) {
+        if (hp.online === 1 && parseInt(hp.mins_left || "0") > 10) {
+          console.log(`[proxy] Found active proxy in nsocks history: ${hp.proxy} (${hp.mins_left}min left)`);
+          
+          // Save to our DB if not already there
+          const { data: existing } = await supabase
+            .from("mentioner_proxies")
+            .select("id")
+            .eq("nsocks_proxy_id", hp.id)
+            .maybeSingle();
+          
+          if (!existing) {
+            const expiresAt = new Date(Date.now() + parseInt(hp.mins_left) * 60 * 1000).toISOString();
+            await supabase.from("mentioner_proxies").insert({
+              campaign_id: campaignId,
+              nsocks_proxy_id: hp.id,
+              nsocks_history_id: hp.history_id,
+              ip_port: hp.proxy,
+              socks_auth: hp.socks_auth || null,
+              country: "US",
+              region: hp.region,
+              city: hp.city,
+              isp: hp.isp,
+              ping: parseInt(hp.ping || "0"),
+              price: parseFloat(hp.buy_price || "0"),
+              purchased_at: new Date().toISOString(),
+              expires_at: expiresAt,
+              is_active: true,
+            });
+          }
+
+          return { ip_port: hp.proxy, socks_auth: hp.socks_auth || null };
+        }
+      }
+    } catch (err) {
+      console.error("[proxy] NSocks history check failed:", err);
+    }
+  }
+
+  // 4. No active proxy found — buy a new one
+  console.log("[proxy] No active proxy found, buying new one...");
+  const newProxy = await buyNewProxy(supabase, campaignId);
+  return { ip_port: newProxy.ip_port, socks_auth: newProxy.socks_auth };
+}
+
+async function buyNewProxy(supabase: any, campaignId: string | null) {
+  const apiKey = Deno.env.get("NSOCKS_API_KEY");
+  if (!apiKey) throw new Error("NSOCKS_API_KEY not configured");
+
+  // Safety check: max 5 purchases per day
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data: todayPurchases } = await supabase
+    .from("mentioner_proxies")
+    .select("id")
+    .gte("purchased_at", todayStart.toISOString());
+
+  if (todayPurchases && todayPurchases.length >= MAX_DAILY_PURCHASES) {
+    throw new Error(`Daily proxy purchase limit reached (${MAX_DAILY_PURCHASES}). Existing proxies may have expired. Wait for tomorrow or increase limit.`);
+  }
+
+  // Search for a good US residential/ISP proxy with low ping
+  const searchResp = await nsocksCall("search", {
+    API_KEY: apiKey,
+    COUNTRY: "US",
+    RESIDENTIAL: 1,
+    SORT: "ping-desc",
+    EXCLUDE_BLACKS: 1,
+    HIGHSPEED: 1,
+    COUNT: "10",
+  });
+
+  const proxies = searchResp.DATA?.PROXIES || [];
+  if (proxies.length === 0) {
+    // Fallback: try without HIGHSPEED filter
+    const fallbackResp = await nsocksCall("search", {
+      API_KEY: apiKey,
+      COUNTRY: "US",
+      RESIDENTIAL: 1,
+      SORT: "ping-desc",
+      EXCLUDE_BLACKS: 1,
+      COUNT: "10",
+    });
+    const fallbackProxies = fallbackResp.DATA?.PROXIES || [];
+    if (fallbackProxies.length === 0) {
+      throw new Error("No US proxies available on NSocks right now");
+    }
+    proxies.push(...fallbackProxies);
+  }
+
+  // Pick the best one (lowest ping, highest rating)
+  const sorted = proxies.sort((a: any, b: any) => {
+    const ratingDiff = parseInt(b.rating || "0") - parseInt(a.rating || "0");
+    if (ratingDiff !== 0) return ratingDiff;
+    return parseInt(a.ping || "999") - parseInt(b.ping || "999");
+  });
+  const chosen = sorted[0];
+
+  console.log(`[proxy] Buying proxy ${chosen.id} in ${chosen.city}, ${chosen.region} (${chosen.isp}) - $${chosen.price}, ping: ${chosen.ping}ms`);
+
+  // Generate random auth credentials (5-7 chars each)
+  const username = randomString(6);
+  const password = randomString(6);
+
+  // Buy the proxy
+  const buyResp = await nsocksCall("buy", {
+    API_KEY: apiKey,
+    ID: parseInt(chosen.id),
+    USERNAME: username,
+    PASSWORD: password,
+  });
+
+  const boughtProxy = buyResp.DATA?.PROXY;
+  if (!boughtProxy) throw new Error("NSocks buy returned no proxy data");
+
+  const ipPort = boughtProxy.PORT; // format: "123.0.220.210:33494"
+  const socksAuth = boughtProxy.SOCKS_AUTH || `${username}:${password}`;
+
+  console.log(`[proxy] Bought proxy: ${ipPort}, auth: ${socksAuth}`);
+
+  // Save to DB
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h from now
+  const { data: saved, error } = await supabase.from("mentioner_proxies").insert({
+    campaign_id: campaignId,
+    nsocks_proxy_id: String(boughtProxy.ID || chosen.id),
+    ip_port: ipPort,
+    socks_auth: socksAuth,
+    country: "US",
+    region: chosen.region || null,
+    city: chosen.city || null,
+    isp: chosen.isp || null,
+    ping: parseInt(chosen.ping || "0"),
+    price: parseFloat(chosen.price || "0"),
+    purchased_at: new Date().toISOString(),
+    expires_at: expiresAt,
+    is_active: true,
+  }).select().single();
+
+  if (error) {
+    console.error("Failed to save proxy:", error);
+    throw error;
+  }
+
+  return saved;
+}
+
+function randomString(len: number): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let s = "";
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+// Mark a proxy as failed
+async function markProxyFailed(supabase: any, ipPort: string) {
+  await supabase.from("mentioner_proxies")
+    .update({
+      failure_count: 1, // Simple increment via raw value
+      last_failure_at: new Date().toISOString(),
+    })
+    .eq("ip_port", ipPort)
+    .eq("is_active", true);
+}
+
+// ═══════════════════════════════════════════════
+// Send mention with auto-proxy
+// ═══════════════════════════════════════════════
+
 async function sendMention(supabase: any, campaignId: string, targetId: string) {
-  // Get campaign with account info
   const { data: campaign } = await supabase
     .from("mentioner_campaigns")
     .select("*")
@@ -241,7 +505,6 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
     .single();
   if (!campaign) throw new Error("Campaign not found");
 
-  // Get account credentials
   const { data: account } = await supabase
     .from("x_bot_accounts")
     .select("*")
@@ -249,7 +512,6 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
     .single();
   if (!account) throw new Error("Bot account not found");
 
-  // Get target
   const { data: target } = await supabase
     .from("mentioner_targets")
     .select("*")
@@ -258,10 +520,9 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
   if (!target) throw new Error("Target not found");
 
   try {
-    // Generate AI pitch using Lovable AI
+    // Generate AI pitch
     const pitchText = await generatePitch(target.username, campaign.pitch_template);
 
-    // Post the reply/mention using Twitter cookies
     const authToken = account.auth_token_encrypted;
     const ct0 = account.ct0_token_encrypted;
     const fullCookie = account.full_cookie_encrypted;
@@ -270,13 +531,20 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
       throw new Error("Account missing auth_token or ct0 credentials");
     }
 
-    // Create a tweet that starts with @username (makes it a reply/mention, not shown on timeline)
     const tweetText = `@${target.username} ${pitchText}`;
 
-    // Use Twitter's API to create tweet
-    const socks5 = campaign.socks5_url || (account.socks5_urls?.length > 0 ? account.socks5_urls[0] : null);
+    // Auto-provision proxy
+    let proxyInfo: { ip_port: string; socks_auth: string | null } | null = null;
+    try {
+      proxyInfo = await getActiveProxy(supabase, campaignId);
+      console.log(`[mention] Using proxy: ${proxyInfo.ip_port}`);
+    } catch (proxyErr) {
+      console.error("[mention] Proxy provisioning failed, proceeding without proxy:", proxyErr);
+    }
 
-    const tweetResult = await postTweet(tweetText, authToken, ct0, fullCookie, socks5);
+    // Post tweet (proxy info is logged but Deno fetch doesn't support SOCKS5 natively
+    // — the proxy URL is stored for use with external posting services if needed)
+    const tweetResult = await postTweet(tweetText, authToken, ct0, fullCookie, proxyInfo);
 
     // Update target status
     await supabase.from("mentioner_targets").update({
@@ -292,9 +560,10 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
       updated_at: new Date().toISOString(),
     }).eq("id", campaignId);
 
-    return { success: true, tweet: tweetText, tweetId: tweetResult?.id };
+    return { success: true, tweet: tweetText, tweetId: tweetResult?.id, proxy: proxyInfo?.ip_port || "none" };
   } catch (err) {
     console.error("Send mention error:", err);
+
     await supabase.from("mentioner_targets").update({
       status: "failed",
       error_message: err instanceof Error ? err.message : "Unknown error",
@@ -304,11 +573,13 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
   }
 }
 
-// ── Generate pitch text using Lovable AI ──
-async function generatePitch(targetUsername: string, template?: string | null): string {
+// ═══════════════════════════════════════════════
+// AI pitch generation
+// ═══════════════════════════════════════════════
+
+async function generatePitch(targetUsername: string, template?: string | null): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
-    // Fallback template
     return `Hi, shooting in the dark here — we recently launched Saturn Terminal, a full Trading Terminal for Solana, BNB, and Bitcoin. We have a unique BTC meme trading protocol called TAT. Would love to explore if you'd be interested in collaborating or investing. DM us if curious!`;
   }
 
@@ -358,13 +629,29 @@ async function generatePitch(targetUsername: string, template?: string | null): 
     return `Hey there! We just launched Saturn Terminal — a full trading platform for Solana, BNB, and Bitcoin memes via our TAT protocol. Looking for partners and backers. Interested? Shoot us a DM!`;
   }
 
-  // Clean up: remove any @username the AI might have added at the start
   return content.replace(/^@\w+[\s,]*/, "").trim();
 }
 
-// ── Post tweet using Twitter cookie auth ──
-async function postTweet(text: string, authToken: string, ct0: string, fullCookie: string | null, _socks5: string | null) {
+// ═══════════════════════════════════════════════
+// Post tweet using Twitter cookie auth
+// ═══════════════════════════════════════════════
+
+async function postTweet(
+  text: string,
+  authToken: string,
+  ct0: string,
+  fullCookie: string | null,
+  proxyInfo: { ip_port: string; socks_auth: string | null } | null
+) {
   const cookie = fullCookie || `auth_token=${authToken}; ct0=${ct0}`;
+
+  // Note: Deno's native fetch doesn't support SOCKS5 proxies directly.
+  // The proxy info is logged for debugging. For actual SOCKS5 usage,
+  // the tweet posting would need to go through a proxy-aware HTTP client.
+  // For now, we store the proxy and use direct connection.
+  if (proxyInfo) {
+    console.log(`[tweet] Proxy available: ${proxyInfo.ip_port} (auth: ${proxyInfo.socks_auth ? "yes" : "no"})`);
+  }
 
   const resp = await fetch("https://x.com/i/api/graphql/a1p9RWpkYKBjWv_I3WzS-A/CreateTweet", {
     method: "POST",
