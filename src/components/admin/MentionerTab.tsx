@@ -321,6 +321,20 @@ export function MentionerTab() {
     }
   };
 
+  const generateTestPitches = async (campaignId: string, count = 20) => {
+    setGeneratingPitches(true);
+    setTestPitches([]);
+    try {
+      const result = await callMentioner("generate_test_pitches", { campaign_id: campaignId, count });
+      setTestPitches(result.pitches || []);
+      toast({ title: `Generated ${result.count} test pitches` });
+    } catch (err: any) {
+      toast({ title: `Generation failed: ${err.message}`, variant: "destructive" });
+    } finally {
+      setGeneratingPitches(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
