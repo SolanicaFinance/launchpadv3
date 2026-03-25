@@ -354,7 +354,7 @@ export function MentionerTab() {
               <div>
                 <Label className="flex items-center gap-2">
                   SOCKS5 Proxy
-                  {socks5Status === "valid" && <CheckCircle className="h-3 w-3 text-green-500" />}
+                  {socks5Status === "valid" && <CheckCircle className="h-3 w-3 text-primary" />}
                   {socks5Status === "invalid" && <XCircle className="h-3 w-3 text-destructive" />}
                   {socks5Status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
                 </Label>
