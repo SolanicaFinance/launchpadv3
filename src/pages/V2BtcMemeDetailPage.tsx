@@ -266,7 +266,7 @@ export default function V2BtcMemeDetailPage() {
             <div className="flex justify-between text-[10px] text-muted-foreground/50 font-mono mb-1.5">
               <span>{tradeType === "buy" ? "Amount (BTC)" : `Amount (${token.ticker})`}</span>
               <span className="flex items-center gap-1">
-                Bal: {tradeType === "buy" ? formatBtc(btcBalance) : formatNum(myBalance?.balance || 0)}
+                Bal: {tradeType === "buy" ? formatBtc(btcBalance) : (myBalance?.balance || 0).toLocaleString()}
                 {tradeType === "buy" && btcBalance === 0 && (
                   <button onClick={() => setShowDeposit(true)} className="ml-1 text-primary hover:text-primary/80 underline">deposit</button>
                 )}
@@ -331,7 +331,7 @@ export default function V2BtcMemeDetailPage() {
           })()}
           {myBalance && myBalance.balance > 0 && (
             <div className="bg-white/[0.03] rounded-lg p-2.5 text-xs space-y-1.5 border border-white/[0.06]">
-              <div className="flex justify-between font-mono"><span className="text-muted-foreground/50">Your tokens</span><span className="text-foreground/80">{formatNum(myBalance.balance)}</span></div>
+              <div className="flex justify-between font-mono"><span className="text-muted-foreground/50">Your tokens</span><span className="text-foreground/80">{myBalance.balance.toLocaleString()}</span></div>
               <div className="flex justify-between font-mono"><span className="text-muted-foreground/50">Avg buy price</span><span className="text-foreground/80">{formatBtc(myBalance.avg_buy_price_btc || 0)}</span></div>
             </div>
           )}
