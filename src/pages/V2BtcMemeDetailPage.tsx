@@ -449,7 +449,7 @@ export default function V2BtcMemeDetailPage() {
         </div>
       </div>
     );
-  };
+  })();
 
   const DescriptionSection = () => {
     if (!token.description) return null;
