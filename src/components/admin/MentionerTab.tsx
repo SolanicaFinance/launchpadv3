@@ -137,6 +137,10 @@ export function MentionerTab() {
   const [todayPurchases, setTodayPurchases] = useState(0);
   const [buyingProxy, setBuyingProxy] = useState(false);
 
+  // Test pitches state
+  const [testPitches, setTestPitches] = useState<Array<{ username: string; message: string }>>([]);
+  const [generatingPitches, setGeneratingPitches] = useState(false);
+
   // New campaign form
   const [showForm, setShowForm] = useState(false);
   const [formAccountId, setFormAccountId] = useState("");
@@ -314,6 +318,20 @@ export function MentionerTab() {
       toast({ title: `Buy failed: ${err.message}`, variant: "destructive" });
     } finally {
       setBuyingProxy(false);
+    }
+  };
+
+  const generateTestPitches = async (campaignId: string, count = 20) => {
+    setGeneratingPitches(true);
+    setTestPitches([]);
+    try {
+      const result = await callMentioner("generate_test_pitches", { campaign_id: campaignId, count });
+      setTestPitches(result.pitches || []);
+      toast({ title: `Generated ${result.count} test pitches` });
+    } catch (err: any) {
+      toast({ title: `Generation failed: ${err.message}`, variant: "destructive" });
+    } finally {
+      setGeneratingPitches(false);
     }
   };
 
@@ -563,6 +581,15 @@ export function MentionerTab() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => generateTestPitches(c.id, 20)}
+                            disabled={generatingPitches || c.total_targets === 0}
+                            title="Test: generate 20 sample pitches"
+                          >
+                            {generatingPitches ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-xs font-bold">AI</span>}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => processNext(c.id)}
                             disabled={sending || c.total_targets === 0}
                             title="Send next mention"
@@ -589,7 +616,36 @@ export function MentionerTab() {
         </CardContent>
       </Card>
 
-      {/* Targets List */}
+      {/* Test Pitches Preview */}
+      {testPitches.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">
+              🧪 Test Pitches Preview
+              <Badge variant="outline" className="ml-2">{testPitches.length} messages</Badge>
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setTestPitches([])}>
+              Clear
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[500px] overflow-y-auto space-y-2">
+              {testPitches.map((p, i) => (
+                <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="outline" className="text-[10px]">#{i + 1}</Badge>
+                    <span className="text-xs font-medium text-primary">@{p.username}</span>
+                  </div>
+                  <p className="text-sm text-foreground/90">{p.message}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{p.message.length} chars</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {selectedCampaign && activeCampaign && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -633,12 +689,13 @@ export function MentionerTab() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : "outline"}
+                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : t.status === "unverified" ? "secondary" : "outline"}
                             className="text-xs"
                           >
                             {t.status === "sent" && <CheckCircle className="h-3 w-3 mr-1" />}
                             {t.status === "failed" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                            {t.status === "unverified" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status}
                           </Badge>
                         </TableCell>
@@ -653,13 +710,13 @@ export function MentionerTab() {
                           {t.sent_at ? new Date(t.sent_at).toLocaleString() : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {t.status === "pending" && (
+                          {(t.status === "pending" || t.status === "unverified" || t.status === "failed") && (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => sendToTarget(selectedCampaign, t.id)}
                               disabled={sending}
-                              title="Send to this user"
+                              title={t.status === "pending" ? "Send to this user" : "Retry"}
                             >
                               <Send className="h-3 w-3" />
                             </Button>

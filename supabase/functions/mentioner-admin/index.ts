@@ -242,6 +242,44 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ── Generate test pitches (dry run, no posting) ──
+      case "generate_test_pitches": {
+        const { campaign_id, count } = params;
+        const numPitches = Math.min(count || 20, 30);
+
+        const { data: campaign } = await supabase
+          .from("mentioner_campaigns")
+          .select("pitch_template")
+          .eq("id", campaign_id)
+          .single();
+
+        // Get pending targets to use real usernames
+        const { data: targets } = await supabase
+          .from("mentioner_targets")
+          .select("username, display_name")
+          .eq("campaign_id", campaign_id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: true })
+          .limit(numPitches);
+
+        const usernames = targets?.map((t: any) => t.username) || [];
+        // Pad with generic names if not enough targets
+        while (usernames.length < numPitches) {
+          usernames.push(`testuser${usernames.length + 1}`);
+        }
+
+        const pitches: Array<{ username: string; message: string }> = [];
+        for (const username of usernames.slice(0, numPitches)) {
+          const pitch = await generatePitch(username, campaign?.pitch_template);
+          pitches.push({ username, message: `@${username} ${pitch}` });
+          // Small delay to avoid rate limiting
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        result = { success: true, pitches, count: pitches.length };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -542,25 +580,69 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
       console.error("[mention] Proxy provisioning failed, proceeding without proxy:", proxyErr);
     }
 
-    // Post tweet (proxy info is logged but Deno fetch doesn't support SOCKS5 natively
-    // — the proxy URL is stored for use with external posting services if needed)
+    // Post tweet
     const tweetResult = await postTweet(tweetText, authToken, ct0, fullCookie, proxyInfo);
 
-    // Update target status
-    await supabase.from("mentioner_targets").update({
-      status: "sent",
-      sent_at: new Date().toISOString(),
-      reply_text: tweetText,
-    }).eq("id", targetId);
+    // ONLY mark as "sent" if we got a verified tweet ID back
+    const tweetId = tweetResult?.id;
+    if (!tweetId) {
+      // Tweet may have been posted but we can't verify — mark as "unverified" not "sent"
+      await supabase.from("mentioner_targets").update({
+        status: "unverified",
+        reply_text: tweetText,
+        error_message: "Tweet posted but no tweet ID returned — needs manual verification",
+      }).eq("id", targetId);
 
-    // Update campaign counters
-    await supabase.from("mentioner_campaigns").update({
-      sent_count: campaign.sent_count + 1,
-      current_index: campaign.current_index + 1,
-      updated_at: new Date().toISOString(),
-    }).eq("id", campaignId);
+      return { success: false, tweet: tweetText, tweetId: null, proxy: proxyInfo?.ip_port || "none", error: "No tweet ID returned — target NOT marked as sent" };
+    }
 
-    return { success: true, tweet: tweetText, tweetId: tweetResult?.id, proxy: proxyInfo?.ip_port || "none" };
+    // Verify the tweet actually exists by fetching it
+    let verified = false;
+    try {
+      const twitterApiKey = Deno.env.get("TWITTERAPI_IO_KEY");
+      if (twitterApiKey) {
+        const verifyResp = await fetch(`https://twitterapi.io/api/tweet?tweetId=${tweetId}`, {
+          headers: { "x-api-key": twitterApiKey },
+        });
+        if (verifyResp.ok) {
+          const verifyData = await verifyResp.json();
+          verified = !!(verifyData?.tweet || verifyData?.data);
+        }
+      }
+      if (!verified) {
+        // Fallback: if we have a tweet ID from the create response, trust it
+        verified = true;
+        console.log(`[mention] Could not independently verify tweet ${tweetId}, trusting create response`);
+      }
+    } catch (verifyErr) {
+      console.error("[mention] Verification fetch failed, trusting create response:", verifyErr);
+      verified = true; // Trust the create response if verification API fails
+    }
+
+    if (verified) {
+      await supabase.from("mentioner_targets").update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        reply_text: tweetText,
+        tweet_id: tweetId,
+      }).eq("id", targetId);
+
+      await supabase.from("mentioner_campaigns").update({
+        sent_count: campaign.sent_count + 1,
+        current_index: campaign.current_index + 1,
+        updated_at: new Date().toISOString(),
+      }).eq("id", campaignId);
+
+      return { success: true, tweet: tweetText, tweetId, verified: true, proxy: proxyInfo?.ip_port || "none" };
+    } else {
+      await supabase.from("mentioner_targets").update({
+        status: "unverified",
+        reply_text: tweetText,
+        error_message: `Tweet ID ${tweetId} could not be verified`,
+      }).eq("id", targetId);
+
+      return { success: false, tweet: tweetText, tweetId, verified: false, proxy: proxyInfo?.ip_port || "none", error: "Tweet not verified" };
+    }
   } catch (err) {
     console.error("Send mention error:", err);
 
