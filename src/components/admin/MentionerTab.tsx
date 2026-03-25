@@ -689,12 +689,13 @@ export function MentionerTab() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : "outline"}
+                            variant={t.status === "sent" ? "default" : t.status === "failed" ? "destructive" : t.status === "unverified" ? "secondary" : "outline"}
                             className="text-xs"
                           >
                             {t.status === "sent" && <CheckCircle className="h-3 w-3 mr-1" />}
                             {t.status === "failed" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                            {t.status === "unverified" && <XCircle className="h-3 w-3 mr-1" />}
                             {t.status}
                           </Badge>
                         </TableCell>
