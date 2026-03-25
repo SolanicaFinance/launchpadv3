@@ -435,7 +435,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const ContractSection = () => {
+  const contractSection = (() => {
     if (!token.genesis_txid) return null;
     return (
       <div className="trade-glass-panel p-5 space-y-2">
