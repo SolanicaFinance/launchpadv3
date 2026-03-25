@@ -14,7 +14,7 @@ const LOCK_OPTIONS = [
 ];
 
 export function PerpCreateMarket() {
-  const { walletAddress, login } = useAuth();
+  const { solanaAddress: walletAddress, login } = useAuth();
   const { lookup, loading: lookupLoading, token, eligible, checks, error, reset } = usePerpTokenLookup();
 
   const [address, setAddress] = useState("");
