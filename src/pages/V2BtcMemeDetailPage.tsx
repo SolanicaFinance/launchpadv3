@@ -232,7 +232,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const TradeSection = () => (
+  const tradeSection = (
     <div className="trade-glass-panel p-4 pb-5 space-y-3">
       <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
         <Activity className="h-3.5 w-3.5 text-primary/50" /> Trade
@@ -334,7 +334,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const DepositWithdrawSection = () => (
+  const depositWithdrawSection = (
     <>
       {isConnected && address && (showDeposit || btcBalance === 0) && (
         <BtcDepositPanel walletAddress={address} currentBalance={btcBalance} />
@@ -345,7 +345,7 @@ export default function V2BtcMemeDetailPage() {
     </>
   );
 
-  const TradeHistorySection = () => (
+  const tradeHistorySection = (
     <div className="trade-glass-panel p-4 flex-1 min-h-0 overflow-hidden flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-2">
@@ -408,7 +408,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const TokenDetailsSection = () => (
+  const tokenDetailsSection = (
     <div className="trade-glass-panel p-5 space-y-2">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
@@ -435,7 +435,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const ContractSection = () => {
+  const contractSection = (() => {
     if (!token.genesis_txid) return null;
     return (
       <div className="trade-glass-panel p-5 space-y-2">
@@ -449,9 +449,9 @@ export default function V2BtcMemeDetailPage() {
         </div>
       </div>
     );
-  };
+  })();
 
-  const DescriptionSection = () => {
+  const descriptionSection = (() => {
     if (!token.description) return null;
     return (
       <div className="trade-glass-panel p-5">
@@ -463,7 +463,7 @@ export default function V2BtcMemeDetailPage() {
         )}
       </div>
     );
-  };
+  })();
 
   return (
     <div className="trade-page-bg -mx-4 -mt-4 px-4 pt-4 md:mx-0 md:mt-0 md:pl-6 md:pr-4 md:pt-4 md:rounded-xl lg:px-6 lg:pt-6">
@@ -625,22 +625,22 @@ export default function V2BtcMemeDetailPage() {
         <div className="md:hidden flex flex-col gap-3">
           {mobileTab === 'trade' && (
             <>
-              <TradeSection />
-              <DepositWithdrawSection />
-              <TradeHistorySection />
+              {tradeSection}
+              {depositWithdrawSection}
+              {tradeHistorySection}
             </>
           )}
           {mobileTab === 'chart' && (
             <>
               <ChartSection chartHeight={360} />
-              <TradeHistorySection />
+              {tradeHistorySection}
             </>
           )}
           {mobileTab === 'info' && (
             <>
-              <TokenDetailsSection />
-              <ContractSection />
-              <DescriptionSection />
+              {tokenDetailsSection}
+              {contractSection}
+              {descriptionSection}
             </>
           )}
         </div>
@@ -649,15 +649,15 @@ export default function V2BtcMemeDetailPage() {
         <div className="hidden md:grid lg:hidden grid-cols-12 gap-4">
           <div className="col-span-7 flex flex-col gap-4">
             <ChartSection chartHeight={440} />
-            <TradeHistorySection />
-            <TokenDetailsSection />
-            <ContractSection />
-            <DescriptionSection />
+            {tradeHistorySection}
+            {tokenDetailsSection}
+            {contractSection}
+            {descriptionSection}
           </div>
           <div className="col-span-5 flex flex-col gap-4">
             <div className="sticky top-4 flex flex-col gap-4">
-              <TradeSection />
-              <DepositWithdrawSection />
+              {tradeSection}
+              {depositWithdrawSection}
             </div>
           </div>
         </div>
@@ -666,14 +666,14 @@ export default function V2BtcMemeDetailPage() {
         <div className="hidden lg:grid grid-cols-12 gap-4 flex-1">
           <div className="col-span-9 flex flex-col gap-4">
             <ChartSection chartHeight={420} />
-            <TradeHistorySection />
+            {tradeHistorySection}
           </div>
           <div className="col-span-3 flex flex-col gap-4">
-            <TradeSection />
-            <DepositWithdrawSection />
-            <TokenDetailsSection />
-            <ContractSection />
-            <DescriptionSection />
+            {tradeSection}
+            {depositWithdrawSection}
+            {tokenDetailsSection}
+            {contractSection}
+            {descriptionSection}
           </div>
         </div>
 
