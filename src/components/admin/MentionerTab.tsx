@@ -710,13 +710,13 @@ export function MentionerTab() {
                           {t.sent_at ? new Date(t.sent_at).toLocaleString() : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {t.status === "pending" && (
+                          {(t.status === "pending" || t.status === "unverified" || t.status === "failed") && (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => sendToTarget(selectedCampaign, t.id)}
                               disabled={sending}
-                              title="Send to this user"
+                              title={t.status === "pending" ? "Send to this user" : "Retry"}
                             >
                               <Send className="h-3 w-3" />
                             </Button>
