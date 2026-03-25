@@ -569,7 +569,8 @@ async function sendMention(supabase: any, campaignId: string, targetId: string) 
       throw new Error("Account missing auth_token or ct0 credentials");
     }
 
-    const tweetText = `@${target.username} ${pitchText}`;
+    // pitchText already starts with @username from generatePitch
+    const tweetText = pitchText;
 
     // Auto-provision proxy
     let proxyInfo: { ip_port: string; socks_auth: string | null } | null = null;
