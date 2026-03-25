@@ -24,7 +24,7 @@ export interface ProfitCardData {
 
 const BNB_LOGO = "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png";
 const SOL_LOGO = "https://assets.coingecko.com/coins/images/4128/small/solana.png";
-const BTC_LOGO = "https://assets.coingecko.com/coins/images/1/small/bitcoin.png";
+const BTC_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/128px-Bitcoin.svg.png";
 
 interface ProfitCardModalProps {
   open: boolean;
@@ -41,9 +41,11 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
 
   if (!data) return null;
 
-  const currencyLabel = data.chain === 'bnb' ? 'BNB' : data.chain === 'btc' ? 'BTC' : 'SOL';
-  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : data.chain === 'btc' ? BTC_LOGO : SOL_LOGO;
+  const isBtc = data.chain === 'btc';
+  const currencyLabel = data.chain === 'bnb' ? 'BNB' : isBtc ? 'BTC' : 'SOL';
+  const chainLogo = data.chain === 'bnb' ? BNB_LOGO : isBtc ? BTC_LOGO : SOL_LOGO;
   const walletAddress = data.chain === 'bnb' ? evmAddress : solanaAddress;
+  const amountDecimals = isBtc ? 8 : 4;
 
   const isBuy = data.action === "buy";
   const hasPnl = data.pnlPercent !== undefined && data.pnlPercent !== null;
@@ -105,7 +107,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
   };
 
   const handleShareX = async () => {
-    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(4)} ${currencyLabel}`;
+    const headline = `${isBuy ? "🟢 Bought" : "🔴 Sold"} $${data.tokenTicker} | ${data.amountSol.toFixed(amountDecimals)} ${currencyLabel}`;
     const pnlLine = hasPnl ? `\nPNL - ${isPositive ? "+" : ""}${pnl.toFixed(2)}%` : "";
     const truncSig = data.signature ? `${data.signature.slice(0, 6)}...${data.signature.slice(-6)}` : "";
     const txLine = truncSig ? `\nTX - ${truncSig}` : "";
@@ -253,7 +255,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                           lineHeight: 1.1,
                         }}
                       >
-                        {data.amountSol.toFixed(4)}
+                      {data.amountSol.toFixed(amountDecimals)}
                         <span style={{ fontSize: 18, marginLeft: 4, color: "rgba(255,255,255,0.4)" }}>{currencyLabel}</span>
                       </div>
                     )}
@@ -270,7 +272,7 @@ export function ProfitCardModal({ open, onClose, data }: ProfitCardModalProps) {
                         color: accentColor,
                       }}
                     >
-                      {isBuy ? "-" : "+"}{data.amountSol.toFixed(4)}
+                      {isBuy ? "-" : "+"}{data.amountSol.toFixed(amountDecimals)}
                     </div>
                     <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "monospace", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
                       <img src={chainLogo} alt={currencyLabel} style={{ width: 14, height: 14, borderRadius: "50%" }} crossOrigin="anonymous" />
