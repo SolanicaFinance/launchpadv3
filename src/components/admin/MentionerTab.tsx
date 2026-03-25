@@ -24,8 +24,9 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Plus, Users, Play, Pause, Trash2, Search,
-  CheckCircle, XCircle, Clock, Send, Shield, RefreshCw,
+  Loader2, Plus, Users, Trash2, Search,
+  CheckCircle, XCircle, Clock, Send, RefreshCw,
+  Wifi, DollarSign, ShoppingCart,
 } from "lucide-react";
 
 interface BotAccount {
@@ -64,6 +65,22 @@ interface Target {
   reply_text: string | null;
   error_message: string | null;
   created_at: string;
+}
+
+interface MentionerProxy {
+  id: string;
+  ip_port: string;
+  socks_auth: string | null;
+  country: string;
+  region: string | null;
+  city: string | null;
+  isp: string | null;
+  ping: number | null;
+  price: number | null;
+  purchased_at: string;
+  expires_at: string;
+  is_active: boolean;
+  failure_count: number;
 }
 
 function getAdminPassword(): string {
@@ -114,16 +131,20 @@ export function MentionerTab() {
   const [sending, setSending] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
 
+  // Proxy state
+  const [nsocksBalance, setNsocksBalance] = useState<string | null>(null);
+  const [activeProxies, setActiveProxies] = useState<MentionerProxy[]>([]);
+  const [todayPurchases, setTodayPurchases] = useState(0);
+  const [buyingProxy, setBuyingProxy] = useState(false);
+
   // New campaign form
   const [showForm, setShowForm] = useState(false);
   const [formAccountId, setFormAccountId] = useState("");
   const [formSourceUrl, setFormSourceUrl] = useState("");
   const [formInterval, setFormInterval] = useState("3");
-  const [formSocks5, setFormSocks5] = useState("");
   const [formPitch, setFormPitch] = useState(
     "Saturn Terminal is a recently launched Trading Terminal product. It supports trading on Solana, BNB Chain, and has launched Bitcoin meme trading with its own protocol called TAT. The platform has a token called CLAW. The team is looking for investors and collaborators."
   );
-  const [socks5Status, setSocks5Status] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
 
   const fetchData = useCallback(async () => {
     try {
@@ -150,6 +171,21 @@ export function MentionerTab() {
     }
   }, []);
 
+  const fetchProxyStatus = useCallback(async () => {
+    try {
+      const [balResult, proxyResult, todayResult] = await Promise.all([
+        callMentioner("nsocks_balance").catch(() => ({ balance: "?" })),
+        callMentioner("nsocks_active_proxies").catch(() => ({ proxies: [] })),
+        callMentioner("nsocks_today_purchases").catch(() => ({ count: 0 })),
+      ]);
+      setNsocksBalance(balResult.balance);
+      setActiveProxies(proxyResult.proxies || []);
+      setTodayPurchases(todayResult.count || 0);
+    } catch (err) {
+      console.error("Proxy status error:", err);
+    }
+  }, []);
+
   const fetchTargets = useCallback(async (campaignId: string) => {
     try {
       const result = await callMentioner("list_targets", { campaign_id: campaignId, limit: 500 });
@@ -159,25 +195,12 @@ export function MentionerTab() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); fetchProxyStatus(); }, [fetchData, fetchProxyStatus]);
   useEffect(() => { if (selectedCampaign) fetchTargets(selectedCampaign); }, [selectedCampaign, fetchTargets]);
 
   const extractUsername = (url: string) => {
     const match = url.match(/x\.com\/([^/]+)/);
     return match ? match[1] : url.replace("@", "");
-  };
-
-  const verifySocks5 = async () => {
-    if (!formSocks5) return;
-    setSocks5Status("checking");
-    try {
-      const result = await callMentioner("verify_socks5", { socks5_url: formSocks5 });
-      setSocks5Status(result.valid ? "valid" : "invalid");
-      toast({ title: result.message });
-    } catch {
-      setSocks5Status("invalid");
-      toast({ title: "SOCKS5 verification failed", variant: "destructive" });
-    }
   };
 
   const createCampaign = async () => {
@@ -193,7 +216,6 @@ export function MentionerTab() {
           source_username: username,
           source_url: formSourceUrl,
           interval_minutes: parseInt(formInterval) || 3,
-          socks5_url: formSocks5 || null,
           pitch_template: formPitch || null,
         },
       });
@@ -252,11 +274,11 @@ export function MentionerTab() {
     try {
       const result = await callMentioner("process_next", { campaign_id: campaignId });
       if (result.success && result.tweet) {
-        toast({ title: "Mention sent!", description: result.tweet.substring(0, 100) + "..." });
+        toast({ title: "Mention sent!", description: `Proxy: ${result.proxy || "none"} | ${result.tweet.substring(0, 80)}...` });
       } else {
         toast({ title: result.message || "No pending targets" });
       }
-      await fetchData();
+      await Promise.all([fetchData(), fetchProxyStatus()]);
       if (selectedCampaign === campaignId) await fetchTargets(campaignId);
     } catch (err: any) {
       toast({ title: `Send failed: ${err.message}`, variant: "destructive" });
@@ -270,16 +292,28 @@ export function MentionerTab() {
     try {
       const result = await callMentioner("send_mention", { campaign_id: campaignId, target_id: targetId });
       if (result.success) {
-        toast({ title: "Mention sent!" });
+        toast({ title: "Mention sent!", description: `Proxy: ${result.proxy || "none"}` });
       } else {
         toast({ title: `Failed: ${result.error}`, variant: "destructive" });
       }
-      await fetchTargets(campaignId);
-      await fetchData();
+      await Promise.all([fetchTargets(campaignId), fetchData(), fetchProxyStatus()]);
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
     } finally {
       setSending(false);
+    }
+  };
+
+  const forceByProxy = async () => {
+    setBuyingProxy(true);
+    try {
+      await callMentioner("nsocks_buy_proxy", {});
+      toast({ title: "New proxy purchased!" });
+      await fetchProxyStatus();
+    } catch (err: any) {
+      toast({ title: `Buy failed: ${err.message}`, variant: "destructive" });
+    } finally {
+      setBuyingProxy(false);
     }
   };
 
@@ -294,6 +328,14 @@ export function MentionerTab() {
   const activeCampaign = campaigns.find(c => c.id === selectedCampaign);
   const accountMap = Object.fromEntries(accounts.map(a => [a.id, a]));
 
+  const getTimeLeft = (expiresAt: string) => {
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    const hours = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    return `${hours}h ${mins}m`;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -302,13 +344,84 @@ export function MentionerTab() {
             <Users className="h-5 w-5" /> Mentioner System
           </h2>
           <p className="text-sm text-muted-foreground">
-            Scrape following lists & send AI-generated pitch mentions
+            Auto-provision SOCKS5 proxies • AI pitch generation • Scrape & mention
           </p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} size="sm">
           <Plus className="w-4 h-4 mr-1" /> New Campaign
         </Button>
       </div>
+
+      {/* Proxy Status Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Wifi className="h-4 w-4" /> SOCKS5 Proxy Status (NSocks Auto)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <DollarSign className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-mono font-bold">${nsocksBalance || "..."}</p>
+              <p className="text-xs text-muted-foreground">NSocks Balance</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <Wifi className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-mono font-bold">{activeProxies.length}</p>
+              <p className="text-xs text-muted-foreground">Active Proxies</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <ShoppingCart className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-mono font-bold">{todayPurchases}/5</p>
+              <p className="text-xs text-muted-foreground">Today's Purchases</p>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Button variant="outline" size="sm" onClick={fetchProxyStatus}>
+                <RefreshCw className="h-3 w-3 mr-1" /> Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={forceByProxy} disabled={buyingProxy}>
+                {buyingProxy ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <ShoppingCart className="h-3 w-3 mr-1" />}
+                Buy
+              </Button>
+            </div>
+          </div>
+
+          {activeProxies.length > 0 && (
+            <div className="space-y-1">
+              {activeProxies.map(p => (
+                <div key={p.id} className="flex items-center justify-between text-xs font-mono px-2 py-1.5 rounded bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={p.is_active ? "default" : "secondary"} className="text-[10px]">
+                      {p.is_active ? "LIVE" : "OFF"}
+                    </Badge>
+                    <span>{p.ip_port}</span>
+                    <span className="text-muted-foreground">
+                      {p.city && `${p.city}, `}{p.region || p.country}
+                    </span>
+                    {p.isp && <span className="text-muted-foreground">({p.isp})</span>}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {p.ping && <span className="text-muted-foreground">{p.ping}ms</span>}
+                    <span className={new Date(p.expires_at).getTime() - Date.now() < 3600000 ? "text-destructive" : "text-muted-foreground"}>
+                      {getTimeLeft(p.expires_at)}
+                    </span>
+                    {p.price && <span className="text-muted-foreground">${p.price}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeProxies.length === 0 && (
+            <Alert>
+              <AlertDescription className="text-xs">
+                No active proxies. One will be auto-purchased when you send the first mention.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Create Campaign Form */}
       {showForm && (
@@ -351,23 +464,10 @@ export function MentionerTab() {
                   placeholder="3"
                 />
               </div>
-              <div>
-                <Label className="flex items-center gap-2">
-                  SOCKS5 Proxy
-                  {socks5Status === "valid" && <CheckCircle className="h-3 w-3 text-primary" />}
-                  {socks5Status === "invalid" && <XCircle className="h-3 w-3 text-destructive" />}
-                  {socks5Status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={formSocks5}
-                    onChange={e => { setFormSocks5(e.target.value); setSocks5Status("idle"); }}
-                    placeholder="socks5://user:pass@host:port"
-                  />
-                  <Button variant="outline" size="sm" onClick={verifySocks5} disabled={!formSocks5}>
-                    <Shield className="h-3 w-3" />
-                  </Button>
-                </div>
+              <div className="flex items-end">
+                <p className="text-xs text-muted-foreground pb-2">
+                  🔒 SOCKS5 proxy is auto-managed via NSocks API. No manual input needed.
+                </p>
               </div>
             </div>
             <div>
@@ -495,7 +595,7 @@ export function MentionerTab() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">
               Targets from @{activeCampaign.source_username}
-                          <Badge variant="outline" className="ml-2">{targets.length} accounts</Badge>
+              <Badge variant="outline" className="ml-2">{targets.length} accounts</Badge>
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => fetchTargets(selectedCampaign)}>
               <RefreshCw className="h-3 w-3 mr-1" /> Refresh
