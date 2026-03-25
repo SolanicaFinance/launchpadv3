@@ -232,7 +232,7 @@ export default function V2BtcMemeDetailPage() {
     </div>
   );
 
-  const TradeSection = () => (
+  const tradeSection = (
     <div className="trade-glass-panel p-4 pb-5 space-y-3">
       <h3 className="text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground/50 flex items-center gap-2">
         <Activity className="h-3.5 w-3.5 text-primary/50" /> Trade
