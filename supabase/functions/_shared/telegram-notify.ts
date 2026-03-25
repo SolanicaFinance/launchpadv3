@@ -38,7 +38,32 @@ export async function sendTelegramNotification(text: string): Promise<void> {
     }
   } catch (err) {
     console.error("[telegram-notify] Error:", err);
+}
+
+/** Post to captcha.social (fire-and-forget style, errors are logged not thrown) */
+async function postToCaptcha(content: string): Promise<void> {
+  const apiKey = Deno.env.get("CAPTCHA_SOCIAL_API_KEY");
+  if (!apiKey) return;
+
+  try {
+    const res = await fetch(`${CAPTCHA_API_BASE}/posts`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content, type: "post" }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error("[captcha-notify] Post failed:", res.status, errBody);
+    } else {
+      console.log("[captcha-notify] ✅ Posted to CAPTCHA.social");
+    }
+  } catch (err) {
+    console.error("[captcha-notify] Error:", err);
   }
+}
 }
 
 // ── SOL trade notification ──
