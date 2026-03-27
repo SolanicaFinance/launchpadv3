@@ -8,16 +8,16 @@
     "api/fees.ts": {
       "maxDuration": 120
     },
-    "api/swap": {
+    "api/swap/execute.ts": {
       "maxDuration": 120
     },
-    "api/treasury": {
+    "api/treasury/claim-batch.ts": {
       "maxDuration": 120
     },
     "api/vanity.ts": {
       "maxDuration": 300
     },
-    "api/admin": {
+    "api/admin/setup-alt.ts": {
       "maxDuration": 60
     }
   },
