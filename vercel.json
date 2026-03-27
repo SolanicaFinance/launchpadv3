@@ -2,46 +2,16 @@
   "version": 2,
   "framework": "vite",
   "functions": {
+    "api/index.ts": {
+      "maxDuration": 300
+    },
     "api/**/*.ts": {
       "maxDuration": 300
     }
   },
   "rewrites": [
     { "source": "/lando", "destination": "/lando/index.html" },
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "authorization, x-client-info, apikey, content-type, x-vanity-secret" }
-      ]
-    },
-    {
-      "source": "/skill.md",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
-      ]
-    },
-    {
-      "source": "/heartbeat.md",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
-      ]
-    },
-    {
-      "source": "/rules.md",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
-      ]
-    },
-    {
-      "source": "/skill.json",
-      "headers": [
-        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
-      ]
-    }
   ]
 }
