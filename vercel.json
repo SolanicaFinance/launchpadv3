@@ -2,8 +2,23 @@
   "version": 2,
   "framework": "vite",
   "functions": {
-    "api/**/*.ts": {
+    "api/pool.ts": {
       "maxDuration": 300
+    },
+    "api/fees.ts": {
+      "maxDuration": 120
+    },
+    "api/swap.ts": {
+      "maxDuration": 120
+    },
+    "api/treasury.ts": {
+      "maxDuration": 120
+    },
+    "api/vanity.ts": {
+      "maxDuration": 300
+    },
+    "api/admin.ts": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
